@@ -458,39 +458,36 @@ app.use((req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 7788;
-
-// Start server
-const server = app.listen(PORT, () => {
-  console.log("🚀=========================🚀");
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🚀 Environment: ${process.env.NODE_ENV}`);
-  console.log(`🚀 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`🚀 CORS test: http://localhost:${PORT}/api/cors-test`);
-  console.log("🚀=========================🚀");
-});
-
-// Enhanced process error handling
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("❌ Unhandled Rejection at:", promise);
-  console.error("❌ Reason:", reason);
-
-  // Close server & exit process
-  server.close(() => {
-    console.log("Server closed due to unhandled rejection");
-    process.exit(1);
+// Start server if run directly (local development)
+if (require.main === module) {
+  const PORT = process.env.PORT || 7788;
+  const server = app.listen(PORT, () => {
+    console.log("🚀=========================🚀");
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🚀 Environment: ${process.env.NODE_ENV}`);
+    console.log(`🚀 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`🚀 CORS test: http://localhost:${PORT}/api/cors-test`);
+    console.log("🚀=========================🚀");
   });
-});
 
-process.on("uncaughtException", (error) => {
-  console.error("❌ Uncaught Exception:", error);
-
-  // Close server & exit process
-  server.close(() => {
-    console.log("Server closed due to uncaught exception");
-    process.exit(1);
+  // Enhanced process error handling for local execution
+  process.on("unhandledRejection", (reason, promise) => {
+    console.error("❌ Unhandled Rejection at:", promise);
+    console.error("❌ Reason:", reason);
+    server.close(() => {
+      console.log("Server closed due to unhandled rejection");
+      process.exit(1);
+    });
   });
-});
+
+  process.on("uncaughtException", (error) => {
+    console.error("❌ Uncaught Exception:", error);
+    server.close(() => {
+      console.log("Server closed due to uncaught exception");
+      process.exit(1);
+    });
+  });
+}
 
 // Graceful shutdown
 process.on("SIGTERM", () => {
