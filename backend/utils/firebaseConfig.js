@@ -1,12 +1,21 @@
 const admin = require("firebase-admin");
 
-const serviceAccount = require("../config/serviceAccountKey.json");
+let bucket = null;
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  storageBucket: "kaalis-store.appspot.com",
-});
+try {
+  // Try to load service account from file (local development)
+  const serviceAccount = require("../config/serviceAccountKey.json");
 
-const bucket = admin.storage().bucket();
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: "kaalis-store.appspot.com",
+  });
+
+  bucket = admin.storage().bucket();
+  console.log("✅ Firebase initialized successfully");
+} catch (error) {
+  console.warn("⚠️  Firebase service account not found - Firebase features will be disabled");
+  console.warn("   This is normal for Vercel deployments without Firebase configured");
+}
 
 module.exports = { admin, bucket };
