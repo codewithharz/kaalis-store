@@ -9,6 +9,7 @@ class PayDunyaService {
   #publicKey = process.env.PAYDUNYA_PUBLIC_KEY_TEST;
   #privateKey = process.env.PAYDUNYA_PRIVATE_KEY_TEST;
   #token = process.env.PAYDUNYA_TOKEN_TEST;
+  #isConfigured = false;
   #redirectUrl =
     process.env.PAYDUNYA_REDIRECT_URL ||
     "http://localhost:7788/api/paydunya/callback";
@@ -21,9 +22,13 @@ class PayDunyaService {
       !this.#privateKey ||
       !this.#token
     ) {
-      throw new Error("PayDunya API keys are missing in environment variables");
+      logger.warn("⚠️  PayDunya API keys are missing - PayDunya payment features will be disabled");
+      logger.warn("   This is normal for Vercel deployments without PayDunya configured");
+      this.#isConfigured = false;
+      return;
     }
 
+    this.#isConfigured = true;
     logger.info("PayDunyaService initialized with test keys", {
       masterKey: this.#masterKey ? "****" : "missing",
       publicKey: this.#publicKey ? "****" : "missing",
@@ -34,6 +39,10 @@ class PayDunyaService {
 
   // Initialize a payment
   async initializePayment(order, customerEmail, customerPhone) {
+    if (!this.#isConfigured) {
+      throw new Error("PayDunya is not configured. Please add API keys to environment variables.");
+    }
+
     try {
       // Convert amount from NGN to XOF
       const amountInXOF = convertNGNToXOF(order.totalAmount);
@@ -135,8 +144,8 @@ class PayDunyaService {
 
         throw new Error(
           response.data.description ||
-            response.data.response_text ||
-            "Failed to initialize PayDunya payment"
+          response.data.response_text ||
+          "Failed to initialize PayDunya payment"
         );
       }
     } catch (error) {
@@ -171,9 +180,9 @@ class PayDunyaService {
       // Throw a more informative error
       throw new Error(
         error.response?.data?.description ||
-          error.response?.data?.message ||
-          error.message ||
-          "Failed to initialize PayDunya payment"
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to initialize PayDunya payment"
       );
     }
   }
@@ -229,8 +238,8 @@ class PayDunyaService {
 
       throw new Error(
         error.response?.data?.description ||
-          error.message ||
-          "Failed to verify PayDunya payment"
+        error.message ||
+        "Failed to verify PayDunya payment"
       );
     }
   }
