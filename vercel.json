@@ -1,5 +1,8 @@
 {
   "version": 2,
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "frontend/dist",
   "builds": [
     {
       "src": "backend/server.js",
@@ -9,6 +12,16 @@
           "backend/**/*"
         ],
         "maxDuration": 60
+      }
+    },
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist",
+        "buildCommand": "cd ../frontend && npm run build",
+        "maxLambdaSize": "15mb",
+        "memory": 3008
       }
     }
   ],
