@@ -1,0 +1,384 @@
+<template>
+    <nav class="py-2 bg-white ">
+        <!-- Horizontal category list -->
+        <div class="flex items-center mb-2 overflow-x-auto category-menu">
+            <button @click="toggleCategoryMenu"
+                class="hidden md:flex items-center space-x-2 text-gray-700 hover:text-gray-900 mr-4">
+                <Menu class="w-6 h-6" />
+                <span class="font-medium text-[15px]">ALL CATEGORIES</span>
+                <ChevronDown class="w-4 h-4" :class="{ 'transform rotate-180': isCategoryMenuOpen }" />
+            </button>
+
+            <!-- amount of to display -->
+            <div class="flex-1 overflow-x-auto scrollbar-hide">
+                <div class="flex">
+                    <router-link v-for="category in rootCategories.slice(7, 16)" :key="category._id"
+                        :to="`/category/${category.slug}`"
+                        class="text-[14px] whitespace-nowrap px-3 py-2 text-gray-700 hover:text-[#f27a1a]"
+                        @mouseover="hideSubcategories">
+                        {{ category.name }}
+                    </router-link>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category dropdown menu -->
+        <div v-if="isCategoryMenuOpen" class="absolute w-[82%] bg-white shadow-lg z-50 mt-1">
+            <div class="flex">
+                <!-- Root categories -->
+                <div class="flex flex-col items-start bg-gray-100 px-4 border-r border-gray-200 w-48">
+                    <button v-for="category in rootCategories" :key="category._id"
+                        @mouseenter="showSubcategories(category)"
+                        class="text-left w-full text-[14px] py-2 pl-3 hover:bg-gray-100 focus:outline-none transition duration-150 ease-in-out">
+                        {{ category.name }}
+                    </button>
+                </div>
+
+                <!-- Subcategories -->
+                <div v-if="selectedCategory" class="flex-grow px-4 py-2 bg-gray-50 overflow-y-auto"
+                    style="max-height: 75vh;">
+                    <div class="flex flex-wrap">
+                        <div v-for="subcategory in selectedCategory.children" :key="subcategory._id"
+                            class="w-1/6 mb-4 pr-4">
+                            <h3 class="font-semibold mb-2 text-[#f27a1a] text-sm">{{ subcategory.name }}</h3>
+                            <ul class="space-y-1">
+                                <li v-for="item in subcategory.children" :key="item._id">
+                                    <router-link :to="`/category/${item.slug}`"
+                                        class="text-[13px] text-gray-600 hover:text-[#f27a1a] transition duration-150 ease-in-out">
+                                        {{ item.name }}
+                                    </router-link>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+</template>
+
+<script>
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { Menu, ChevronDown } from 'lucide-vue-next';
+import { useProductStore } from '../store/productStore.js';
+import { storeToRefs } from 'pinia';
+
+export default {
+    name: 'Categories',
+    components: {
+        Menu,
+        ChevronDown
+    },
+    setup() {
+        const productStore = useProductStore();
+        const { categories } = storeToRefs(productStore);
+
+        const isCategoryMenuOpen = ref(false);
+        const selectedCategory = ref(null);
+        let closeTimeout = null;
+
+        const rootCategories = computed(() => {
+            return categories.value ? categories.value.filter(category => !category.parent) : [];
+        });
+
+        const toggleCategoryMenu = () => {
+            isCategoryMenuOpen.value = !isCategoryMenuOpen.value;
+            if (isCategoryMenuOpen.value && rootCategories.value.length > 0) {
+                showSubcategories(rootCategories.value[11]); // default category
+            }
+        };
+
+        const showSubcategories = (category) => {
+            selectedCategory.value = category;
+            isCategoryMenuOpen.value = true;
+            cancelHideSubcategories();
+        };
+
+        const hideSubcategories = () => {
+            closeTimeout = setTimeout(() => {
+                isCategoryMenuOpen.value = false;
+                selectedCategory.value = null;
+            }, 300);
+        };
+
+        const cancelHideSubcategories = () => {
+            if (closeTimeout) {
+                clearTimeout(closeTimeout);
+                closeTimeout = null;
+            }
+        };
+
+        onMounted(async () => {
+            if (categories.value.length === 0) {
+                await productStore.fetchCategories();
+            }
+        });
+
+        onUnmounted(() => {
+            if (closeTimeout) {
+                clearTimeout(closeTimeout);
+            }
+        });
+
+        return {
+            rootCategories,
+            isCategoryMenuOpen,
+            selectedCategory,
+            toggleCategoryMenu,
+            showSubcategories,
+            hideSubcategories,
+            cancelHideSubcategories
+        };
+    }
+};
+</script>
+
+<style scoped>
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
+}
+
+@media (max-width: 768px) {
+    .category-menu {
+        justify-content: flex-start;
+    }
+}
+</style>
+
+
+===========================================version 2=========================================
+<template>
+    <nav class="py-2 bg-white relative">
+        <!-- Horizontal category list -->
+        <div class="flex items-center mb-2 overflow-x-auto category-menu">
+            <button @click="toggleCategoryMenu" @mouseleave="startCloseTimer"
+                class="hidden lg:flex items-center space-x-2 text-gray-700 hover:text-gray-900 mr-4 flex-shrink-0">
+                <Menu class="w-6 h-6" />
+                <span class="font-medium text-[15px]">ALL CATEGORIES</span>
+                <ChevronDown class="w-4 h-4" :class="{ 'transform rotate-180': isCategoryMenuOpen }" />
+            </button>
+
+            <!-- Scrollable category list -->
+            <div class="flex overflow-x-auto category-scroll-container">
+                <!-- Root categories Side Panel -->
+                <div v-for="category in rootCategories.slice(7, 16)" :key="category._id" class="relative"
+                    @mouseenter="showSubcategories(category)" @mouseleave="startHideTimer">
+                    <router-link :to="`/category/${category.slug}`"
+                        class="text-[14px] whitespace-nowrap px-3 py-2 text-gray-700 hover:text-[#f27a1a] flex-shrink-0 block"
+                        @click="closeDropdown">
+                        {{ category.name }}
+                    </router-link>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category dropdown menu -->
+        <div v-if="isCategoryMenuOpen" class="absolute w-[100%] bg-white shadow-lg z-50 mt-1"
+            @mouseenter="cancelCloseTimer" @mouseleave="startCloseTimer">
+            <div class="flex">
+                <!-- Root categories Side Panel -->
+                <div class="flex flex-col items-start bg-gray-100 px-4 border-r border-gray-200 w-48">
+                    <button v-for="category in rootCategories.slice(7, 16)" :key="category._id"
+                        @mouseenter="showSubcategories(category)"
+                        class="text-left w-full text-[14px] py-2 pl-3 hover:bg-gray-100 focus:outline-none transition duration-150 ease-in-out">
+                        {{ category.name }}
+                    </button>
+                </div>
+
+                <!-- Subcategories Panel -->
+                <div v-if="selectedCategory" class="flex-grow px-4 py-2 bg-gray-50 overflow-y-auto w-1"
+                    style="max-height: 75vh;">
+                    <div class="flex flex-wrap">
+                        <div v-for="subcategory in selectedCategory.children" :key="subcategory._id"
+                            class="w-1/6 mb-4 pr-4">
+                            <h3 class="font-semibold mb-2 text-[#f27a1a] text-sm">{{ subcategory.name }}</h3>
+                            <ul class="space-y-1">
+                                <li v-for="item in subcategory.children" :key="item._id">
+                                    <router-link :to="`/category/${item.slug}`"
+                                        class="text-[13px] text-gray-600 hover:text-[#f27a1a] transition duration-150 ease-in-out"
+                                        @click="closeDropdown">
+                                        {{ item.name }}
+                                    </router-link>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subcategories panel (added hidden lg:flex to hide on mobile) -->
+        <div v-if="selectedCategory && !isCategoryMenuOpen"
+            class="subcategories-panel hidden lg:flex absolute left-0 w-full bg-white shadow-md z-40"
+            @mouseover="cancelHideSubcategories" @mouseleave="hideSubcategories">
+            <div class="container mx-auto px-4 py-4">
+                <div class="grid grid-cols-6 gap-4">
+                    <div v-for="subcategory in selectedCategory.children" :key="subcategory._id" class="space-y-2">
+                        <h3 class="font-semibold text-sm text-gray-900">{{ subcategory.name }}</h3>
+                        <ul class="space-y-1">
+                            <li v-for="item in subcategory.children" :key="item._id">
+                                <router-link :to="`/category/${item.slug}`"
+                                    class="text-[13px] text-gray-600 hover:text-[#f27a1a] transition duration-150 ease-in-out"
+                                    @click="closeDropdown">
+                                    {{ item.name }}
+                                </router-link>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+</template>
+
+<script>
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { Menu, ChevronDown } from 'lucide-vue-next';
+import { useProductStore } from '../store/productStore.js';
+import { storeToRefs } from 'pinia';
+
+export default {
+    name: 'Categories',
+    components: {
+        Menu,
+        ChevronDown
+    },
+    setup() {
+        const productStore = useProductStore();
+        const { categories } = storeToRefs(productStore);
+
+        const isCategoryMenuOpen = ref(false);
+        const selectedCategory = ref(null);
+        let closeTimeout = null;
+        let closeMenuTimeout = null;
+
+        const rootCategories = computed(() => {
+            return categories.value ? categories.value.filter(category => !category.parent) : [];
+        });
+
+        const toggleCategoryMenu = () => {
+            isCategoryMenuOpen.value = !isCategoryMenuOpen.value;
+            if (isCategoryMenuOpen.value && rootCategories.value.length > 0) {
+                const defaultCategory = rootCategories.value.find(cat => cat.children && cat.children.length > 0);
+                if (defaultCategory) {
+                    showSubcategories(defaultCategory);
+                }
+            }
+        };
+
+        const showSubcategories = (category) => {
+            if (category.children && category.children.length > 0) {
+                selectedCategory.value = category;
+                cancelHideSubcategories();
+            } else {
+                selectedCategory.value = null;
+            }
+        };
+
+        const hideSubcategories = () => {
+            closeTimeout = setTimeout(() => {
+                selectedCategory.value = null;
+            }, 300);
+        };
+
+        const cancelHideSubcategories = () => {
+            if (closeTimeout) {
+                clearTimeout(closeTimeout);
+                closeTimeout = null;
+            }
+        };
+
+        const startCloseTimer = () => {
+            closeMenuTimeout = setTimeout(() => {
+                isCategoryMenuOpen.value = false;
+                selectedCategory.value = null;
+            }, 300);
+        };
+
+        const cancelCloseTimer = () => {
+            if (closeMenuTimeout) {
+                clearTimeout(closeMenuTimeout);
+                closeMenuTimeout = null;
+            }
+        };
+
+        const closeDropdown = () => {
+            isCategoryMenuOpen.value = false;
+            selectedCategory.value = null;
+        };
+
+        const handleCategoryClick = (category, event) => {
+            if (event) {
+                event.preventDefault();
+            }
+            if (category.children && category.children.length > 0) {
+                isCategoryMenuOpen.value = true;
+                showSubcategories(category);
+            } else {
+                router.push(`/category/${category.slug}`);
+                closeDropdown();
+            }
+        };
+
+        onMounted(async () => {
+            if (categories.value.length === 0) {
+                await productStore.fetchCategories();
+            }
+        });
+
+        onUnmounted(() => {
+            if (closeTimeout) {
+                clearTimeout(closeTimeout);
+            }
+
+            if (closeMenuTimeout) {
+                clearTimeout(closeMenuTimeout);
+            }
+        });
+
+        return {
+            rootCategories,
+            isCategoryMenuOpen,
+            selectedCategory,
+            toggleCategoryMenu,
+            showSubcategories,
+            hideSubcategories,
+            cancelHideSubcategories,
+            startCloseTimer,
+            cancelCloseTimer,
+            closeDropdown,
+            handleCategoryClick
+        };
+    }
+};
+</script>
+
+<style scoped>
+.category-menu {
+    width: 100%;
+    overflow: hidden;
+}
+
+.category-scroll-container {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.category-scroll-container::-webkit-scrollbar {
+    display: none;
+}
+
+.subcategories-panel {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+</style>

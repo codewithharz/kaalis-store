@@ -1,0 +1,350 @@
+<template>
+    <div class=" min-h-64 justify-center bg-white">
+        <p class="p-3 text-lg font-medium text-[#212121]">Saved Cards</p>
+        <div class=" flex flex-col items-center space-y-4">
+            <CreditCard class="text-[#ccc] h-16 w-16" />
+            <p class="text-sm text-[#666] font-light">
+                Currently you do not have any saved cards
+            </p>
+        </div>
+    </div>
+    <div class="flex justify-between bg-white px-7 py-5 mt-2">
+        <div class="border-[1px] p-4 rounded-md w-1/3 border-[#24a3b5] ">
+            <!-- Page title -->
+            <div class="pb-1 border-b border-[#24a3b5] border-gray-300">
+                <p class="text-xl font-medium text-[#212121]">Wallets</p>
+            </div>
+
+            <!-- wallet card -->
+            <div class="text-end  text-[#555] text-sm space-y-1 pt-10 p-4 rounded-md">
+                <button class="text-[#24a3b5] hover:text-[#fff] hover:bg-[#24a3b5] px-3 py-1 rounded-md">Add
+                    Link</button>
+            </div>
+            <!-- when hover, edit button should appear for user to click and edit form -->
+        </div>
+        <!-- when user click the add address, this should open for the user to fill in details -->
+    </div>
+</template>
+
+<script>
+import { useUserStore } from '../store/user';
+import { computed } from 'vue';
+import { CreditCard } from 'lucide-vue-next';
+
+
+export default {
+    name: 'ProfileManagePaymentCard',
+    components: {
+        CreditCard,
+    },
+
+    setup() {
+        const userStore = useUserStore();
+        const user = computed(() => userStore.user); // Accessing the user data from the Pinia store
+        console.log(user.value)
+        return {
+            user,
+        };
+    },
+};
+</script>
+
+<style scoped>
+/* Add any specific styles for this page */
+</style>
+
+
+
+
+==================================================Version-2==================================================
+<template>
+    <div class="min-h-screen bg-gray-50">
+        <!-- Header Section with Gradient -->
+        <div class="text-white" :style="{ background: getDefaultBackground() }">
+            <div class="container mx-auto px-4 py-8">
+                <div class="max-w-3xl mx-auto text-center">
+                    <h1 class="text-3xl font-bold mb-4">Payment Methods</h1>
+                    <p class="text-lg mb-8 text-white/90">Manage your payment methods and saved cards</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Section -->
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto -mt-16">
+                <!-- Main Card -->
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                    <!-- Saved Cards Section -->
+                    <div class="space-y-6">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-xl font-semibold text-gray-900">Saved Cards</h2>
+                            <button @click="showAddCardModal = true"
+                                class="text-[#ff934b] hover:text-[#ff5e62] font-medium flex items-center gap-2">
+                                <PlusCircle class="w-4 h-4" />
+                                Add New Card
+                            </button>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div v-if="!savedCards.length" class="flex flex-col items-center py-12 space-y-6">
+                            <div class="bg-gray-50 p-6 rounded-full">
+                                <CreditCard class="w-16 h-16 text-gray-400" />
+                            </div>
+                            <div class="text-center space-y-2">
+                                <p class="text-gray-600">You haven't saved any cards yet</p>
+                                <p class="text-sm text-gray-500">Add a card to make future payments easier</p>
+                            </div>
+                            <button @click="showAddCardModal = true"
+                                class="px-6 py-2.5 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white rounded-lg shadow-md transition-all duration-300 flex items-center gap-2">
+                                <PlusCircle class="w-5 h-5" />
+                                <span>Add New Card</span>
+                            </button>
+                        </div>
+
+                        <!-- Cards Grid -->
+                        <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div v-for="card in savedCards" :key="card.id"
+                                class="bg-gray-50 rounded-lg p-6 space-y-4 group hover:shadow-md transition-all duration-300">
+                                <div class="flex justify-between items-start">
+                                    <div class="space-y-2">
+                                        <div class="flex items-center gap-2">
+                                            <CreditCard class="w-5 h-5 text-[#ff934b]" />
+                                            <span class="font-medium text-gray-900">•••• {{ card.last4 }}</span>
+                                        </div>
+                                        <p class="text-sm text-gray-500">Expires {{ card.expMonth }}/{{ card.expYear }}
+                                        </p>
+                                    </div>
+                                    <button @click="deleteCard(card.id)"
+                                        class="text-gray-400 hover:text-[#ff5e62] opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                        <Trash2 class="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Digital Wallets Section -->
+                    <div class="mt-8 space-y-6">
+                        <!-- coming soon -->
+                        <div class="bg-white rounded-lg shadow-sm">
+                            <div class="p-3 border-b">
+                                <p class="text-lg font-medium text-[#212121]">Digital Wallets</p>
+                            </div>
+                            <div class="p-6">
+                                <div class="border rounded-lg p-4">
+                                    <!-- Coming Soon State -->
+                                    <div class="flex flex-col items-center py-8 space-y-4">
+                                        <div class="bg-gray-50 p-6 rounded-full">
+                                            <Wallet class="w-16 h-16 text-gray-400" />
+                                        </div>
+                                        <div class="text-center space-y-2">
+                                            <h3 class="text-[#212121] font-medium">Coming Soon!</h3>
+                                            <p class="text-sm text-gray-500">Digital wallet support will be available
+                                                soon. Stay tuned!</p>
+                                        </div>
+                                        <div class="mt-2">
+                                            <span
+                                                class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-medium bg-[#ff934b]/10 text-[#ff934b]">
+                                                Coming Soon
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- end coming soon -->
+
+                        <!-- <div class="flex items-center justify-between">
+                            <h2 class="text-xl font-semibold text-gray-900">Digital Wallets</h2>
+                            <button @click="showAddWalletModal = true"
+                                class="text-[#ff934b] hover:text-[#ff5e62] font-medium flex items-center gap-2">
+                                <PlusCircle class="w-4 h-4" />
+                                Connect Wallet
+                            </button>
+                        </div> -->
+
+                        <!-- Empty State -->
+                        <!-- <div v-if="!wallets.length" class="flex flex-col items-center py-12 space-y-6">
+                            <div class="bg-gray-50 p-6 rounded-full">
+                                <Wallet class="w-16 h-16 text-gray-400" />
+                            </div>
+                            <div class="text-center space-y-2">
+                                <p class="text-gray-600">No digital wallets connected</p>
+                                <p class="text-sm text-gray-500">Connect a digital wallet for easier payments</p>
+                            </div>
+                            <button @click="showAddWalletModal = true"
+                                class="px-6 py-2.5 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white rounded-lg shadow-md transition-all duration-300 flex items-center gap-2">
+                                <PlusCircle class="w-5 h-5" />
+                                <span>Connect Wallet</span>
+                            </button>
+                        </div> -->
+
+                        <!-- Wallets Grid -->
+                        <!-- <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div v-for="wallet in wallets" :key="wallet.id"
+                                class="bg-gray-50 rounded-lg p-6 space-y-4 group hover:shadow-md transition-all duration-300">
+                                <div class="flex justify-between items-start">
+                                    <div class="space-y-2">
+                                        <div class="flex items-center gap-2">
+                                            <img :src="getWalletIcon(wallet.type)" alt="wallet icon"
+                                                class="w-6 h-6 object-contain" />
+                                            <span class="font-medium text-gray-900">{{ wallet.name }}</span>
+                                        </div>
+                                        <p class="text-sm text-gray-500">Connected {{ formatDate(wallet.connectedAt) }}
+                                        </p>
+                                    </div>
+                                    <button @click="disconnectWallet(wallet.id)"
+                                        class="text-gray-400 hover:text-[#ff5e62] opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                        <Unlink class="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Card Modal -->
+        <div v-if="showAddCardModal"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+            <div class="bg-white rounded-xl shadow-xl w-full max-w-xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-gray-900">Add New Card</h3>
+                    <button @click="showAddCardModal = false" class="text-gray-400 hover:text-gray-500">
+                        <X class="w-5 h-5" />
+                    </button>
+                </div>
+
+                <form @submit.prevent="handleAddCard" class="space-y-6">
+                    <!-- Card Number -->
+                    <div class="space-y-2">
+                        <label class="text-[13px] font-medium text-[#bbb]">Card Number</label>
+                        <div class="relative">
+                            <CreditCard class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                            <input type="text" v-model="cardForm.number"
+                                class="w-full px-4 py-2 pl-11 text-[14px] text-[#555] border-b border-gray-300 focus:border-[#ff934b] focus:outline-none"
+                                placeholder="Enter card number">
+                        </div>
+                    </div>
+
+                    <!-- Other card fields... -->
+
+                    <!-- Form Actions -->
+                    <div class="flex justify-end gap-4 pt-4">
+                        <button type="button" @click="showAddCardModal = false"
+                            class="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded-lg">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                            class="px-4 py-2 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white rounded-lg font-medium">
+                            Add Card
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+import { CreditCard, PlusCircle, Wallet, Trash2, Unlink, X } from 'lucide-vue-next';
+import { useUserStore } from '../store/user';
+import { toast } from 'vue-sonner';
+
+const userStore = useUserStore();
+const user = computed(() => userStore.user);
+
+// State
+const showAddCardModal = ref(false);
+const showAddWalletModal = ref(false);
+const savedCards = ref([]);
+const wallets = ref([]);
+const cardForm = ref({
+    number: '',
+    expiry: '',
+    cvv: '',
+    name: ''
+});
+
+const getDefaultBackground = () => {
+    return `linear-gradient(135deg, rgba(49, 49, 49, 0.03) 0%, rgba(49, 49, 49, 0.03) 50%,rgba(252, 252, 252, 0.03) 50%, rgba(252, 252, 252, 0.03) 100%), linear-gradient(45deg, rgba(106, 106, 106, 0.03) 0%, rgba(106, 106, 106, 0.03) 50%,rgba(220, 220, 220, 0.03) 50%, rgba(220, 220, 220, 0.03) 100%), linear-gradient(90deg, #ff934b, #ff5e62)`;
+};
+
+// Methods remain the same as in your original code...
+
+const formatDate = (date) => {
+    return new Date(date).toLocaleDateString();
+};
+
+const getWalletIcon = (type) => {
+    return `/icons/${type.toLowerCase()}.svg`;
+};
+
+const handleAddCard = async () => {
+    try {
+        // Handle card addition logic
+        toast.success('Card added successfully');
+        showAddCardModal.value = false;
+    } catch (error) {
+        toast.error('Failed to add card');
+    }
+};
+
+const deleteCard = async (cardId) => {
+    try {
+        // Handle card deletion logic
+        toast.success('Card removed successfully');
+    } catch (error) {
+        toast.error('Failed to remove card');
+    }
+};
+
+const disconnectWallet = async (walletId) => {
+    try {
+        // Handle wallet disconnection logic
+        toast.success('Wallet disconnected successfully');
+    } catch (error) {
+        toast.error('Failed to disconnect wallet');
+    }
+};
+</script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+
+/* Form Styles matching your bank details component */
+.form-group {
+    @apply space-y-1.5;
+}
+
+.form-label {
+    @apply block text-sm font-medium text-gray-700;
+}
+
+.form-input {
+    @apply w-full px-4 py-2.5 pl-11 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 text-sm transition-all duration-200;
+}
+
+.form-input:focus {
+    @apply border-[#ff934b] ring-2 ring-[#ff934b]/20 outline-none bg-white;
+}
+
+.icon-input {
+    @apply relative;
+}
+
+.input-icon {
+    @apply absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400;
+}
+</style>

@@ -1,0 +1,509 @@
+import { defineStore } from "pinia"; // Import the defineStore function from Pinia
+import apiClient from "../api/axios"; // Import the Axios API client
+import { toast } from "vue-sonner"; // Import toast notification from vue-sonner
+import { jwtDecode } from "jwt-decode"; // Fix the import for jwtDecode
+import { useSellerStore } from "./sellerStore";
+
+export const useUserStore = defineStore("user", {
+  // Define the store named "user"
+  state: () => {
+    // Define the initial state
+    const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+    const storedToken = localStorage.getItem("token");
+    return {
+      user: storedUser,
+      token: storedToken,
+    };
+  },
+  getters: {
+    // Define getters
+    isLoggedIn: (state) => !!state.user, // Getter to check if the user is logged in
+    isSeller: (state) => state.user && state.user.isSeller,
+  },
+  actions: {
+    // Define actions
+    async getUserProfile() {
+      if (!this.checkTokenExpiration()) return;
+
+      try {
+        const decodedToken = jwtDecode(this.token);
+        const userId = decodedToken.userId;
+        console.log("Fetching profile for user ID:", userId);
+
+        const response = await apiClient.get(`/users/${userId}/profile`, {
+          headers: { Authorization: `Bearer ${this.token}` },
+        });
+
+        console.log("User profile response:", response.data);
+        this.user = { ...this.user, ...response.data };
+        localStorage.setItem("user", JSON.stringify(this.user));
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+        if (error.response && error.response.status === 404) {
+          toast.error("User profile not found. Please contact support.");
+        } else {
+          toast.error("Failed to load user profile. Please try again.");
+        }
+      }
+    },
+
+    async completeUserProfile(userId, userData) {
+      // Action to complete user profile
+      try {
+        if (!this.token) {
+          // Check if token is available
+          throw new Error("No token available");
+        }
+
+        const response = await apiClient.put(
+          `/users/${userId}/profile`,
+          userData,
+          {
+            // Make PUT request to update user profile
+            headers: { Authorization: `Bearer ${this.token}` }, // Set the Authorization header with the token
+          }
+        );
+        console.log("Completed user profile:", response.data); // Log the completed user profile
+        this.user = response.data; // Update user state with new profile data
+        localStorage.setItem("userProfile", JSON.stringify(response.data)); // Update local storage with new user profile
+        toast.success("Profile completed successfully."); // Show success toast notification
+        this.fetchUserProfile(userId);
+      } catch (error) {
+        console.error("Error completing user profile:", error); // Log error
+        this.errorMessage = "Failed to complete user profile."; // Set error message
+        toast.error(this.errorMessage); // Show error toast notification
+      }
+    },
+    async clearUserProfile(userId) {
+      // Action to clear user profile
+      try {
+        if (!this.token) {
+          // Check if token is available
+          throw new Error("No token available");
+        }
+
+        const response = await apiClient.put(
+          `/users/${userId}/clear-profile`,
+          {},
+          {
+            // Make PUT request to clear user profile
+            headers: { Authorization: `Bearer ${this.token}` }, // Set the Authorization header with the token
+          }
+        );
+        console.log("Cleared user profile:", response.data); // Log the cleared user profile
+        this.user = response.data; // Update user state with cleared profile data
+        localStorage.setItem("userProfile", JSON.stringify(response.data)); // Update local storage with cleared user profile
+        toast.success("Profile cleared successfully."); // Show success toast notification
+      } catch (error) {
+        console.error("Error clearing user profile:", error); // Log error
+        this.errorMessage = "Failed to clear user profile."; // Set error message
+        toast.error(this.errorMessage); // Show error toast notification
+      }
+    },
+    async getUserProducts(userId) {
+      // Action to fetch user products
+      try {
+        if (!this.token) {
+          // Check if token is available
+          throw new Error("No token available");
+        }
+
+        const response = await apiClient.get(`/users/${userId}/products`, {
+          // Make GET request to fetch user products
+          headers: { Authorization: `Bearer ${this.token}` }, // Set the Authorization header with the token
+        });
+        console.log("Fetched user products:", response.data); // Log the fetched user products
+        this.user.products = response.data; // Assuming the products are part of the user object, update the user state
+        localStorage.setItem("userProfile", JSON.stringify(this.user)); // Update local storage with new user profile including products
+      } catch (error) {
+        console.error("Error fetching user products:", error); // Log error
+        this.errorMessage = "Failed to load user products."; // Set error message
+        toast.error(this.errorMessage); // Show error toast notification
+      }
+    },
+    setUser(userData, token) {
+      console.log("Setting user data in store:", userData);
+      console.log("Setting token in store:", token);
+
+      this.user = userData;
+      this.token = token;
+
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("token", token);
+
+      console.log("User data and token set in store and localStorage");
+    },
+    checkTokenExpiration() {
+      console.log("Checking token expiration...");
+      console.log("Current token:", this.token);
+
+      if (!this.token) {
+        console.log("No token found");
+        return false;
+      }
+
+      try {
+        console.log("Attempting to decode token...");
+        const decodedToken = jwtDecode(this.token);
+        console.log("Decoded token:", decodedToken);
+
+        const currentTime = Date.now() / 1000;
+        console.log("Current time:", currentTime);
+        console.log("Token expiration time:", decodedToken.exp);
+
+        if (decodedToken.exp < currentTime) {
+          console.log("Token has expired");
+          this.logoutUser();
+          return false;
+        }
+
+        console.log("Token is valid");
+        return true;
+      } catch (error) {
+        console.error("Error decoding token:", error);
+        console.log("Token contents:", this.token);
+        this.logoutUser();
+        return false;
+      }
+    },
+    logoutUser() {
+      console.log("Logging out user...");
+      this.user = null;
+      this.token = null;
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      localStorage.removeItem("sellerProfile");
+      toast.error("Your session has expired. Please log in again.");
+    },
+    clearUser() {
+      // Action to clear user and token
+      this.user = null; // Clear user state
+      this.token = null; // Clear token state
+      localStorage.removeItem("user"); // Remove user data from local storage
+      localStorage.removeItem("token"); // Remove token from local storage
+      // Check if the items were successfully removed
+      console.log("Local storage after clearUser:", localStorage); // Log local storage state after clearing user
+    },
+
+    async becomeSeller(sellerData) {
+      try {
+        if (!this.token) throw new Error("No token available");
+
+        const response = await apiClient.post(
+          `/users/become-seller/${this.user._id}`,
+          sellerData
+        );
+
+        this.user = { ...this.user, ...response.data.user, isSeller: true };
+        localStorage.setItem("user", JSON.stringify(this.user));
+
+        // Update seller profile in local storage
+        localStorage.setItem(
+          "sellerProfile",
+          JSON.stringify(response.data.user.sellerProfile)
+        );
+
+        toast.success("Successfully became a seller.");
+        return response.data;
+      } catch (error) {
+        console.error("Error becoming a seller:", error);
+        toast.error("Failed to become a seller. Please try again.");
+        throw error;
+      }
+    },
+  },
+});
+
+
+=========================================V-2=================================================
+import { defineStore } from "pinia"; // Import the defineStore function from Pinia
+import apiClient from "../api/axios"; // Import the Axios API client
+import { toast } from "vue-sonner"; // Import toast notification from vue-sonner
+import { jwtDecode } from "jwt-decode"; // Fix the import for jwtDecode
+import { useSellerStore } from "./sellerStore";
+
+export const useUserStore = defineStore("user", {
+  // Define the store named "user"
+  state: () => {
+    // Define the initial state
+    const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+    const storedToken = localStorage.getItem("token");
+    const storedRefreshToken = localStorage.getItem("refreshToken");
+
+    return {
+      user: storedUser && storedUser.userId ? storedUser : null,
+      token: storedToken || (storedUser && storedUser.token) || null,
+      refreshToken: storedRefreshToken,
+      isLoading: false,
+      error: null,
+    };
+  },
+  getters: {
+    // Define getters
+    isLoggedIn: (state) => !!state.user, // Getter to check if the user is logged in
+    isSeller: (state) => state.user && state.user.isSeller,
+  },
+  actions: {
+    // Define actions
+    async refreshToken() {
+      try {
+        if (!this.refreshToken) {
+          console.error("No refresh token available");
+          this.logoutUser();
+          return null;
+        }
+
+        const response = await apiClient.post("/auth/refresh-token", {
+          refreshToken: this.refreshToken,
+        });
+
+        this.token = response.data.token;
+        localStorage.setItem("token", this.token);
+
+        apiClient.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${this.token}`;
+
+        return this.token;
+      } catch (error) {
+        console.error("Error refreshing token:", error);
+        this.logoutUser();
+        throw new Error("Failed to refresh token. Please log in again.");
+      }
+    },
+
+    async getUserProfile() {
+      if (!this.checkTokenExpiration()) return;
+
+      try {
+        // const decodedToken = jwtDecode(this.token);
+        // const userId = decodedToken.userId;
+
+        const userId = this.user.userId || this.user._id;
+        console.log("Fetching profile for user ID:", userId);
+
+        const response = await apiClient.get(`/users/${userId}/profile`, {
+          headers: { Authorization: `Bearer ${this.token}` },
+        });
+
+        console.log("User profile response:", response.data);
+
+        this.user = { ...this.user, ...response.data };
+        this.saveUserToLocalStorage();
+
+        // localStorage.setItem("user", JSON.stringify(this.user));
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+        if (error.response && error.response.status === 404) {
+          toast.error("User profile not found. Please contact support.");
+        } else {
+          toast.error("Failed to load user profile. Please try again.");
+        }
+      }
+    },
+
+    async completeUserProfile(userId, userData) {
+      // Action to complete user profile
+      try {
+        if (!this.token) {
+          // Check if token is available
+          throw new Error("No token available");
+        }
+
+        const response = await apiClient.put(
+          `/users/${userId}/profile`,
+          userData,
+          {
+            // Make PUT request to update user profile
+            headers: { Authorization: `Bearer ${this.token}` }, // Set the Authorization header with the token
+          }
+        );
+        console.log("Completed user profile:", response.data); // Log the completed user profile
+        this.user = response.data; // Update user state with new profile data
+        localStorage.setItem("userProfile", JSON.stringify(response.data)); // Update local storage with new user profile
+        toast.success("Profile completed successfully."); // Show success toast notification
+        this.fetchUserProfile(userId);
+      } catch (error) {
+        console.error("Error completing user profile:", error); // Log error
+        this.errorMessage = "Failed to complete user profile."; // Set error message
+        toast.error(this.errorMessage); // Show error toast notification
+      }
+    },
+
+    async clearUserProfile(userId) {
+      // Action to clear user profile
+      try {
+        if (!this.token) {
+          // Check if token is available
+          throw new Error("No token available");
+        }
+
+        const response = await apiClient.put(
+          `/users/${userId}/clear-profile`,
+          {},
+          {
+            // Make PUT request to clear user profile
+            headers: { Authorization: `Bearer ${this.token}` }, // Set the Authorization header with the token
+          }
+        );
+        console.log("Cleared user profile:", response.data); // Log the cleared user profile
+        this.user = response.data; // Update user state with cleared profile data
+        localStorage.setItem("userProfile", JSON.stringify(response.data)); // Update local storage with cleared user profile
+        toast.success("Profile cleared successfully."); // Show success toast notification
+      } catch (error) {
+        console.error("Error clearing user profile:", error); // Log error
+        this.errorMessage = "Failed to clear user profile."; // Set error message
+        toast.error(this.errorMessage); // Show error toast notification
+      }
+    },
+
+    async getUserProducts(userId) {
+      // Action to fetch user products
+      try {
+        if (!this.token) {
+          // Check if token is available
+          throw new Error("No token available");
+        }
+
+        const response = await apiClient.get(`/users/${userId}/products`, {
+          // Make GET request to fetch user products
+          headers: { Authorization: `Bearer ${this.token}` }, // Set the Authorization header with the token
+        });
+        console.log("Fetched user products:", response.data); // Log the fetched user products
+        this.user.products = response.data; // Assuming the products are part of the user object, update the user state
+        localStorage.setItem("userProfile", JSON.stringify(this.user)); // Update local storage with new user profile including products
+      } catch (error) {
+        console.error("Error fetching user products:", error); // Log error
+        this.errorMessage = "Failed to load user products."; // Set error message
+        toast.error(this.errorMessage); // Show error toast notification
+      }
+    },
+
+    setUser(userData, token, refreshToken) {
+      this.user = userData;
+      this.token = token;
+      this.refreshToken = refreshToken;
+
+      this.saveUserToLocalStorage();
+      this.setAuthHeader(token);
+
+      console.log("User data and token set in store and localStorage");
+    },
+
+    saveUserToLocalStorage() {
+      localStorage.setItem("user", JSON.stringify(this.user));
+      localStorage.setItem("token", this.token);
+      if (this.refreshToken) {
+        localStorage.setItem("refreshToken", this.refreshToken);
+      }
+    },
+
+    setAuthHeader(token) {
+      if (token) {
+        apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      } else {
+        delete apiClient.defaults.headers.common["Authorization"];
+      }
+    },
+
+    async checkTokenExpiration() {
+      console.log("Checking token expiration...");
+      console.log("Current token:", this.token);
+
+      if (!this.token) {
+        console.log("No token found");
+        return false;
+      }
+
+      try {
+        console.log("Attempting to decode token...");
+        const decodedToken = jwtDecode(this.token);
+        console.log("Decoded token:", decodedToken);
+
+        const currentTime = Date.now() / 1000;
+        console.log("Current time:", currentTime);
+        console.log("Token expiration time:", decodedToken.exp);
+
+        if (decodedToken.exp - currentTime < 300) {
+          // Less than 5 minutes left
+          await this.refreshToken();
+        }
+
+        console.log("Token is valid");
+        return true;
+      } catch (error) {
+        console.error("Error decoding token:", error);
+        console.log("Token contents:", this.token);
+        this.logoutUser();
+        return false;
+      }
+    },
+
+    logoutUser() {
+      this.user = null;
+      this.token = null;
+      this.refreshToken = null;
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("sellerProfile");
+
+      this.setAuthHeader(null);
+
+      toast.error("Your session has expired. Please log in again.");
+    },
+
+    clearUser() {
+      // Action to clear user and token
+      this.user = null; // Clear user state
+      this.token = null; // Clear token state
+      localStorage.removeItem("user"); // Remove user data from local storage
+      localStorage.removeItem("token"); // Remove token from local storage
+      localStorage.removeItem("refreshToken");
+      // Check if the items were successfully removed
+
+      delete apiClient.defaults.headers.common["Authorization"];
+
+      console.log("Local storage after clearUser:", localStorage); // Log local storage state after clearing user
+    },
+
+    async becomeSeller(sellerData) {
+      try {
+        if (!this.token) throw new Error("No token available");
+
+        // Check if the user is already a seller before making the API call
+        if (this.user && this.user.isSeller) {
+          throw new Error("User is already a seller");
+        }
+
+        const response = await apiClient.post(
+          `/users/become-seller/${this.user._id}`,
+          sellerData
+        );
+
+        this.user = { ...this.user, ...response.data.user, isSeller: true };
+        localStorage.setItem("user", JSON.stringify(this.user));
+
+        // Update seller profile in local storage
+        localStorage.setItem(
+          "sellerProfile",
+          JSON.stringify(response.data.user.sellerProfile)
+        );
+
+        toast.success("Successfully became a seller.");
+        return response.data;
+      } catch (error) {
+        console.error("Error becoming a seller:", error);
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.message
+        ) {
+          throw new Error(error.response.data.message);
+        } else {
+          throw new Error("Failed to become a seller. Please try again.");
+        }
+      }
+    },
+  },
+});

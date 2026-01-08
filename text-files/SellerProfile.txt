@@ -1,0 +1,334 @@
+<template>
+    <div class="bg-gray-100 min-h-screen">
+        <div class="container mx-auto py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
+            <div v-if="sellerProfile" class="bg-white shadow-lg rounded-lg overflow-hidden">
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 sm:p-6 relative">
+                    <div class="flex flex-col sm:flex-row items-center">
+                        <img v-if="sellerProfile.profileImage" :src="sellerProfile.profileImage" alt="Seller Avatar"
+                            class="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 border-white mb-4 sm:mb-0 sm:mr-6">
+                        <img v-else src="/src/assets/images/Kyrian.png" alt="Default Avatar"
+                            class="w-20 h-20 sm:w-24 sm:h-24 rounded-full mb-4 sm:mb-0 sm:mr-4" />
+                        <div class="text-white text-center sm:text-left">
+                            <h1 class="text-2xl sm:text-3xl font-bold">{{ sellerProfile.storeName ||
+                                sellerProfile.username }}</h1>
+                            <p class="text-indigo-200">{{ sellerProfile.tagline || 'Seller on our platform' }}</p>
+                        </div>
+                    </div>
+                    <!-- <div class="absolute top-4 right-4">
+                        <span :class="{
+                            'bg-green-500': !sellerProfile.isVacationMode && sellerProfile.storeOpen,
+                            'bg-yellow-500': sellerProfile.isVacationMode,
+                            'bg-red-500': !sellerProfile.isVacationMode && !sellerProfile.storeOpen
+                        }" class="px-3 py-1 rounded-full text-white text-sm font-semibold">
+                            {{ storeStatus }}
+                        </span>
+                    </div> -->
+
+                    <div class="absolute top-4 right-4">
+                        <span :class="{
+                            'bg-yellow-500': sellerProfile.isVacationMode,
+                            'bg-green-500': !sellerProfile.isVacationMode
+                        }" class="px-3 py-1 rounded-full text-white text-sm font-semibold">
+                            {{ sellerProfile.isVacationMode ? 'On Vacation' : 'Open' }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="p-4 sm:p-6">
+                    <!-- Store Status Notice -->
+                    <div v-if="sellerProfile.isVacationMode || !sellerProfile.storeOpen"
+                        class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
+                        <p class="font-bold">{{ storeStatusMessage }}</p>
+                        <p>{{ storeStatusDescription }}</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Left Column - About and Contact -->
+                        <div class="lg:col-span-2">
+                            <section class="mb-6 sm:mb-8">
+                                <h2 class="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">About the Store</h2>
+                                <p class="text-gray-600">{{ sellerProfile.storeDescription ||
+                                    'No description available.' }}</p>
+                            </section>
+
+                            <section class="mb-6 sm:mb-8">
+                                <h2 class="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">Contact Information</h2>
+                                <ul class="space-y-2">
+                                    <li v-if="sellerProfile.email" class="flex items-center">
+                                        <Mail class="size-5 text-indigo-500 mr-2" />
+                                        <span>{{ sellerProfile.email }}</span>
+                                    </li>
+                                    <li v-if="sellerProfile.phone" class="flex items-center">
+                                        <Phone class="size-5 text-indigo-500 mr-2" />
+                                        <span>{{ sellerProfile.phone }}</span>
+                                    </li>
+                                    <li v-if="sellerProfile.address" class="flex items-center">
+                                        <MapPin class="size-5 text-indigo-500 mr-2" />
+                                        <div class="flex space-x-1 ">
+                                            <span>{{ sellerProfile.address.state }}</span>
+                                            <span>{{ sellerProfile.address.country }}</span>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </section>
+
+                            <section class="mb-6 sm:mb-8">
+                                <h2 class="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">Store Policies</h2>
+                                <div class="bg-gray-100 p-4 rounded-lg">
+                                    <p v-if="sellerProfile.storePolicies" class="text-sm text-gray-600">{{
+                                        sellerProfile.storePolicies }}</p>
+                                    <p v-else class="text-sm text-gray-500 italic">No store policies have been set.</p>
+                                </div>
+                            </section>
+                        </div>
+
+                        <!-- Right Column - Statistics -->
+                        <div>
+                            <section class="bg-white shadow rounded-lg p-4 sm:p-6 mb-6">
+                                <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Store Statistics</h2>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="bg-blue-100 p-3 sm:p-4 rounded-lg text-center">
+                                        <span class="text-xl sm:text-2xl font-bold text-blue-600">{{
+                                            sellerProfile.totalProducts || 0 }}</span>
+                                        <p class="text-xs sm:text-sm text-blue-500">Total Products</p>
+                                    </div>
+                                    <div class="bg-green-100 p-3 sm:p-4 rounded-lg text-center">
+                                        <span class="text-xl sm:text-2xl font-bold text-green-600">{{
+                                            sellerProfile.totalSales || 0 }}</span>
+                                        <p class="text-xs sm:text-sm text-green-500">Total Sales</p>
+                                    </div>
+                                    <div class="bg-yellow-100 p-3 sm:p-4 rounded-lg text-center">
+                                        <span class="text-xl sm:text-2xl font-bold text-yellow-600">{{
+                                            sellerProfile.averageRating ? sellerProfile.averageRating.toFixed(1) : 'N/A'
+                                        }}</span>
+                                        <p class="text-xs sm:text-sm text-yellow-500">Average Rating</p>
+                                    </div>
+                                    <div class="bg-purple-100 p-3 sm:p-4 rounded-lg text-center">
+                                        <span class="text-xl sm:text-2xl font-bold text-purple-600">{{
+                                            formatDate(sellerProfile.createdAt) }}</span>
+                                        <p class="text-xs sm:text-sm text-purple-500">Member Since</p>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+
+                    <!-- Featured Products -->
+                    <section class="mt-6 sm:mt-8">
+                        <h2 class="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">Featured Products</h2>
+                        <div class="flex justify-center">
+                            <div v-if="featuredProducts.length > 0"
+                                class="text-xs grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full md:w-[98%]">
+                                <div v-for="product in featuredProducts" :key="product._id"
+                                    class="bg-white rounded-lg overflow-hidden transition duration-300 transform border hover:shadow-md flex flex-col">
+                                    <CustomImage :src="product.images[0]" :alt="product.name"
+                                        @click="viewProduct(product._id)" />
+                                    <div
+                                        class="p-4 flex-grow flex flex-col justify-between hover:border-t border-t hover:border-[#ff934b]">
+                                        <h3 class="font-semibold text-lg mb-2">{{ product.name }}</h3>
+                                        <p class="text-gray-600 text-sm mb-2">{{
+                                            truncateDescription(product.description) }}</p>
+                                        <div class="flex justify-between items-center mb-2">
+                                            <p class="text-[#f47a24] text-[13px] font-semibold">
+                                                ₦{{ product.price.toFixed(2) }}
+                                            </p>
+                                            <p class="text-gray-500 line-through">₦ {{ calculateOriginalPrice(product)
+                                                }}</p>
+                                        </div>
+                                        <div class="flex items-center justify-between">
+                                            <div v-if="product.averageRating !== undefined"
+                                                class="flex items-center text-sm space-x-2 py-3">
+                                                <span v-if="product.averageRating > 0" class="flex gap-1 text-[10px]">
+                                                    {{ formatRating(product.averageRating) }}
+                                                    <Star class="size-4" v-for="star in 5" :key="star"
+                                                        :class="star <= Math.round(product.averageRating) ? 'text-yellow-400' : 'text-gray-300'" />
+                                                </span>
+                                                <span v-if="product.numberOfRatings > 0"
+                                                    class="ml-2 text-gray-500 text-[10px]">
+                                                    ({{ product.numberOfRatings }} {{ product.numberOfRatings === 1 ?
+                                                        'review' : 'reviews' }})
+                                                </span>
+                                                <span v-else class="ml-2 text-gray-500 text-[10px]">
+                                                    (No reviews yet)
+                                                </span>
+                                            </div>
+                                            <p class="text-[#f47a24]">{{ product.discount }}% off</p>
+                                        </div>
+                                    </div>
+                                    <button @click="navigateToProduct(product._id)"
+                                        class="flex items-center justify-center w-full text-[#ff934b] hover:text-white text-sm bg-white hover:bg-[#ff934b] border-t border-[#ff934b] cursor-pointer py-2 px-4 transition duration-300">
+                                        View Product
+                                        <ShoppingCart class="w-4 h-4 ml-2" />
+                                    </button>
+                                </div>
+                            </div>
+                            <p v-else class="text-gray-500 italic text-center">No featured products available.</p>
+                        </div>
+                    </section>
+
+                    <!-- Ratings and Reviews -->
+                    <section class="mt-6 sm:mt-8">
+                        <h2 class="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">Recent Product Reviews</h2>
+                        <div v-if="Object.keys(productReviews).length > 0" class="space-y-4">
+                            <div v-for="(reviews, productId) in productReviews" :key="productId"
+                                class="bg-white p-4 rounded-lg shadow">
+                                <h3 class="font-semibold text-lg mb-2">{{ getProductName(productId) }}</h3>
+                                <div v-for="review in reviews.slice(0, 2)" :key="review._id" class="mb-4">
+                                    <div class="flex items-center mb-2">
+                                        <div class="flex text-yellow-400">
+                                            <Star v-for="star in 5" :key="star"
+                                                :class="['w-4 h-4', star <= review.rating ? 'text-yellow-400' : 'text-gray-300']" />
+                                        </div>
+                                        <span class="ml-2 text-gray-600">{{ review.rating.toFixed(1) }}</span>
+                                    </div>
+                                    <p class="text-gray-700">{{ review.review }}</p>
+                                    <p class="text-sm text-gray-500 mt-2">By {{ review.user.username }} on {{
+                                        formatDate(review.createdAt) }}</p>
+                                </div>
+                                <button @click="navigateToProduct(productId)"
+                                    class="text-indigo-600 hover:text-indigo-800 font-semibold text-sm">
+                                    View All Reviews for This Product
+                                </button>
+                            </div>
+                        </div>
+                        <p v-else class="text-gray-500 italic">No product reviews available.</p>
+                    </section>
+                </div>
+            </div>
+            <div v-else class="text-center py-8">
+                <p class="text-xl text-gray-600">Loading seller profile...</p>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+import { ref, onMounted, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useSellerStore } from '../store/sellerStore';
+import { useProductStore } from '../store/productStore';
+import CustomImage from './CustomImage.vue';
+import {
+    ShoppingCart, Star, Mail, Phone, MapPin, Camera
+} from 'lucide-vue-next';
+
+export default {
+    name: 'SellerProfile',
+    components: {
+        CustomImage,
+        ShoppingCart,
+        Star,
+        Mail,
+        Phone,
+        MapPin,
+        Camera
+    },
+    setup() {
+        const route = useRoute();
+        const router = useRouter();
+        const sellerStore = useSellerStore();
+        const productStore = useProductStore();
+
+        const sellerProfile = ref(null);
+        const featuredProducts = ref([]);
+        const productReviews = ref({});
+
+        const storeStatusMessage = computed(() => {
+            return sellerProfile.value.isVacationMode
+                ? 'Seller is currently on vacation'
+                : 'Store is open';
+        });
+
+        const storeStatusDescription = computed(() => {
+            return sellerProfile.value.isVacationMode
+                ? 'New orders may be delayed. Please check back later or contact the seller for more information.'
+                : 'Feel free to browse and place orders.';
+        });
+
+        const getProductName = (productId) => {
+            const product = featuredProducts.value.find(p => p._id === productId);
+            return product ? product.name : 'Unknown Product';
+        };
+
+        onMounted(async () => {
+            const sellerId = route.params.id;
+            if (sellerId) {
+                try {
+                    sellerProfile.value = await sellerStore.fetchSellerProfile(sellerId);
+                    console.log('Fetched seller profile:', sellerProfile.value);
+                    await loadFeaturedProducts(sellerId);
+                    await fetchProductReviews();
+                } catch (error) {
+                    console.error('Failed to load seller profile:', error);
+                    // Handle error (e.g., show error message to user)
+                }
+            }
+        });
+
+        const loadFeaturedProducts = async (sellerId) => {
+            try {
+                const products = await sellerStore.fetchSellerProducts(sellerId);
+                featuredProducts.value = products.slice(0, 4); // Get first 4 products as featured
+                console.log('Featured products:', featuredProducts.value);
+            } catch (error) {
+                console.error('Failed to load featured products:', error);
+            }
+        };
+
+        const fetchProductReviews = async () => {
+            for (const product of featuredProducts.value) {
+                try {
+                    const reviews = await productStore.fetchProductReviews(product._id);
+                    if (reviews && reviews.length > 0) {
+                        productReviews.value[product._id] = reviews;
+                    }
+                } catch (error) {
+                    console.error(`Failed to load reviews for product ${product._id}:`, error);
+                }
+            }
+            console.log('Product reviews:', productReviews.value);
+        };
+
+        const viewProduct = (productId) => {
+            router.push({ name: 'ProductDetails', params: { id: productId } });
+        };
+
+        const formatDate = (dateString) => {
+            return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        };
+
+        const formatRating = (rating) => {
+            return rating % 1 === 0 ? rating.toFixed(0) : rating.toFixed(1);
+        };
+
+        const truncateDescription = (description, maxLength = 100) => {
+            return description.length > maxLength ? description.substring(0, maxLength) + '...' : description;
+        };
+
+        const calculateOriginalPrice = (product) => {
+            return product.originalPrice || (product.discount ? Math.round(product.price / (1 - product.discount / 100)) : product.price);
+        };
+
+        const navigateToProduct = (productId) => {
+            router.push({ name: 'ProductDetails', params: { id: productId } });
+        };
+
+        return {
+            sellerProfile,
+            featuredProducts,
+            productReviews,
+            storeStatusMessage,
+            storeStatusDescription,
+            viewProduct,
+            formatDate,
+            formatRating,
+            truncateDescription,
+            calculateOriginalPrice,
+            navigateToProduct,
+            getProductName
+        };
+    }
+};
+</script>

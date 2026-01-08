@@ -1,0 +1,452 @@
+// backend/utils/paystackService.js
+const axios = require("axios");
+const logger = require("../utils/logger");
+const Payment = require("../models/paymentModels");
+const VendorPayout = require("../models/vendorPayoutModels");
+const User = require("../models/userModels");
+require("dotenv").config();
+
+class PaystackService {
+  constructor() {
+    this.secretKey = process.env.PAYSTACK_SECRET_KEY;
+    if (!this.secretKey) {
+      logger.error("PAYSTACK_SECRET_KEY not found in environment variables");
+      throw new Error("Paystack secret key not configured");
+    }
+
+    this.baseUrl = "https://api.paystack.co";
+    this.axios = axios.create({
+      baseURL: this.baseUrl,
+      headers: {
+        Authorization: `Bearer ${this.secretKey}`,
+        "Content-Type": "application/json",
+      },
+      timeout: 30000, // 30 second timeout
+      maxRetries: 3,
+    });
+
+    // Log initialization (but not the secret key)
+    logger.info("PaystackService initialized");
+  }
+
+  async tokenizeCard(data) {
+    try {
+      logger.info("Tokenizing card data:", {
+        expiryMonth: data.expiryMonth,
+        expiryYear: data.expiryYear,
+        email: data.email,
+        last4: data.number.slice(-4),
+      });
+
+      // First attempt card validation
+      const payload = {
+        email: data.email,
+        card: {
+          number: data.number,
+          cvv: data.cvv,
+          expiry_month: data.expiryMonth,
+          expiry_year: data.expiryYear,
+        },
+      };
+
+      logger.info("Sending payload to Paystack:", {
+        ...payload,
+        card: { ...payload.card, number: "****" + data.number.slice(-4) },
+      });
+
+      // First attempt card validation
+      const response = await this.axios.post("/charge/tokenize", payload);
+
+      if (!response.data.status) {
+        logger.error("Paystack tokenization failed:", response.data);
+        throw new Error(response.data.message || "Card tokenization failed");
+      }
+
+      logger.info("Card tokenized successfully:", {
+        card_type: response.data.data.card_type,
+        last4: response.data.data.last4,
+      });
+
+      return {
+        token: response.data.data.authorization_code,
+        card_type: response.data.data.card_type,
+        bin: response.data.data.bin,
+        last4: response.data.data.last4,
+        exp_month: response.data.data.exp_month,
+        exp_year: response.data.data.exp_year,
+        channel: response.data.data.channel,
+        // card_type: response.data.data.card_type,
+        bank: response.data.data.bank,
+        country_code: response.data.data.country_code,
+      };
+    } catch (error) {
+      logger.error("Error in tokenizeCard:", {
+        error: error.message,
+        response: error.response?.data, // Log full Paystack error response
+        stack: error.stack,
+      });
+
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw new Error("Could not tokenize card");
+    }
+  }
+
+  async initializeTransaction(paymentData) {
+    try {
+      logger.info("Initializing Paystack transaction", {
+        email: paymentData.email,
+        amount: paymentData.amount,
+        orderId: paymentData.metadata?.orderId,
+      });
+
+      // Ensure amount is in kobo and is an integer
+      const amountInKobo = Math.round(paymentData.amount * 100); // Convert to kobo
+      const vendorAmountKobo = Math.round(
+        paymentData.metadata.vendorAmount * 100
+      );
+      const platformFeeKobo = Math.round(
+        paymentData.metadata.platformFee * 100
+      );
+
+      // Verify amounts match
+      if (Math.abs(vendorAmountKobo + platformFeeKobo - amountInKobo) > 1) {
+        logger.error("Amount mismatch:", {
+          total: amountInKobo,
+          vendor: vendorAmountKobo,
+          fee: platformFeeKobo,
+          sum: vendorAmountKobo + platformFeeKobo,
+        });
+        throw new Error("Amount mismatch in calculations");
+      }
+
+      const payload = {
+        email: paymentData.email,
+        amount: amountInKobo,
+        callback_url: `${process.env.FRONTEND_URL}/payment/callback`,
+        metadata: {
+          orderId: paymentData.metadata.orderId,
+          customerEmail: paymentData.metadata.userEmail,
+          customerName: paymentData.metadata.customerName,
+          items: paymentData.metadata.items,
+          vendorAmount: vendorAmountKobo,
+          platformFee: platformFeeKobo,
+          cluesBucks: paymentData.metadata.cluesBucks,
+          custom_fields: paymentData.metadata.custom_fields,
+        },
+      };
+
+      // Only add split if vendor Sub-account Code is provided
+      if (paymentData.metadata?.vendorSubaccountCode) {
+        payload.split = {
+          type: "percentage",
+          bearer_type: "account",
+          subaccounts: [
+            {
+              subaccount: paymentData.metadata.vendorSubaccountCode,
+              share: 92,
+            },
+          ],
+        };
+      }
+
+      // Implement retry logic
+      let retries = 0;
+      const maxRetries = 3;
+
+      while (retries < maxRetries) {
+        try {
+          const response = await this.axios.post(
+            "/transaction/initialize",
+            payload
+          );
+
+          if (response.data && response.data.status) {
+            logger.info("Transaction initialized successfully", {
+              reference: response.data.data.reference,
+            });
+            return {
+              status: true,
+              data: response.data.data, // Return nested data directly
+            };
+          }
+          throw new Error(
+            response.data.message || "Failed to initialize transaction"
+          );
+        } catch (error) {
+          retries++;
+          if (retries === maxRetries) throw error;
+
+          // Exponential backoff
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.pow(2, retries) * 1000)
+          );
+        }
+      }
+    } catch (error) {
+      logger.error("Paystack API error:", {
+        error: error.response?.data || error.message,
+        stack: error.stack,
+      });
+
+      error.response.data.message || "Failed to initialize transaction";
+      throw error;
+    }
+  }
+
+  async verifyTransaction(reference) {
+    try {
+      logger.info("Verifying transaction", { reference });
+
+      const response = await this.axios.get(`/transaction/verify/${reference}`);
+      const transactionData = response.data.data;
+
+      if (response.data.status && transactionData.status === "success") {
+        await this.recordSuccessfulPayment(transactionData);
+        await this.scheduleVendorPayout(transactionData);
+        logger.info("Transaction verified successfully", { reference });
+        return { success: true, data: transactionData };
+      }
+
+      logger.warn("Transaction verification failed", {
+        reference,
+        status: transactionData.status,
+      });
+      return { success: false };
+    } catch (error) {
+      logger.error("Transaction verification error:", {
+        reference,
+        error: error.message,
+        stack: error.stack,
+      });
+      throw error;
+    }
+  }
+
+  async recordSuccessfulPayment(transactionData) {
+    const payment = new Payment({
+      orderId: transactionData.metadata.orderId,
+      reference: transactionData.reference,
+      amount: transactionData.amount / 100,
+      status: "success",
+      vendorAmount: (transactionData.amount / 100) * 0.92,
+      platformFee: (transactionData.amount / 100) * 0.08,
+      metadata: transactionData.metadata,
+    });
+
+    await payment.save();
+    return payment;
+  }
+
+  async scheduleVendorPayout(transactionData) {
+    const vendorPayout = new VendorPayout({
+      vendorId: transactionData.metadata.vendorId,
+      orderId: transactionData.metadata.orderId,
+      amount: (transactionData.amount / 100) * 0.92,
+      status: "pending",
+      scheduledDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      transactionReference: transactionData.reference,
+    });
+
+    await vendorPayout.save();
+    return vendorPayout;
+  }
+
+  async processPayouts() {
+    const pendingPayouts = await VendorPayout.find({
+      status: "pending",
+      scheduledDate: { $lte: new Date() },
+    });
+
+    const results = [];
+    for (const payout of pendingPayouts) {
+      try {
+        const result = await this.processSinglePayout(payout);
+        results.push(result);
+      } catch (error) {
+        console.error(`Failed to process payout ${payout._id}:`, error);
+        results.push({
+          id: payout._id,
+          success: false,
+          error: error.message,
+        });
+      }
+    }
+
+    return results;
+  }
+
+  async verifyBankAccount(data) {
+    try {
+      logger.info("Verifying bank account:", {
+        accountNumber: data.accountNumber,
+        bankCode: data.bankCode,
+      });
+
+      const response = await this.axios.get(
+        `/bank/resolve?account_number=${data.accountNumber}&bank_code=${data.bankCode}`
+      );
+
+      if (!response.data.status) {
+        throw new Error(response.data.message || "Could not verify account");
+      }
+
+      logger.info("Bank account verified successfully:", {
+        accountName: response.data.data.account_name,
+      });
+
+      return response.data;
+    } catch (error) {
+      logger.error("Error verifying bank account:", {
+        error: error.message,
+        response: error.response?.data,
+        stack: error.stack,
+      });
+
+      // Handle specific Paystack error messages
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+
+      throw new Error("Could not verify bank account");
+    }
+  }
+
+  async createTransferRecipient(data) {
+    try {
+      // Input validation
+      if (
+        !data.name ||
+        !data.accountNumber ||
+        !data.bankCode ||
+        !data.sellerId
+      ) {
+        throw new Error("Missing required fields");
+      }
+
+      // Validate account number format
+      if (!/^\d{10}$/.test(data.accountNumber)) {
+        throw new Error("Invalid account number format");
+      }
+
+      // Validate bank code format
+      if (!/^\d{3}$/.test(data.bankCode)) {
+        throw new Error("Invalid bank code format");
+      }
+
+      logger.info("Verifying account details:", {
+        accountNumber: data.accountNumber,
+        bankCode: data.bankCode,
+      });
+
+      // First verify account number with better error handling
+      try {
+        const verifyResponse = await this.axios.get(
+          `/bank/resolve?account_number=${data.accountNumber}&bank_code=${data.bankCode}`
+        );
+
+        if (!verifyResponse.data.status) {
+          throw new Error(
+            verifyResponse.data.message || "Could not verify account"
+          );
+        }
+
+        // Log successful verification
+        logger.info("Account verified successfully:", {
+          accountName: verifyResponse.data.data.account_name,
+          accountNumber: data.accountNumber,
+        });
+
+        // Create transfer recipient with verified account name
+        const response = await this.axios.post("/transferrecipient", {
+          type: "nuban",
+          name: verifyResponse.data.data.account_name,
+          account_number: data.accountNumber,
+          bank_code: data.bankCode,
+          currency: "NGN",
+          metadata: {
+            sellerId: data.sellerId,
+          },
+        });
+
+        if (!response.data.status) {
+          throw new Error(
+            response.data.message || "Failed to create transfer recipient"
+          );
+        }
+
+        // Update user model with recipient code and verified details
+        await User.findByIdAndUpdate(data.sellerId, {
+          "paystack.recipientCode": response.data.data.recipient_code,
+          "paystack.accountNumber": data.accountNumber,
+          "paystack.bankCode": data.bankCode,
+          "paystack.accountName": verifyResponse.data.data.account_name,
+        });
+
+        return response.data;
+      } catch (error) {
+        // Handle Paystack API specific errors
+        if (error.response?.data?.message) {
+          logger.error("Paystack API error:", {
+            message: error.response.data.message,
+            code: error.response.data.code,
+            accountNumber: data.accountNumber,
+            bankCode: data.bankCode,
+          });
+          throw new Error(error.response.data.message);
+        }
+        throw error;
+      }
+    } catch (error) {
+      logger.error("Error in createTransferRecipient:", {
+        error: error.message,
+        stack: error.stack,
+      });
+      throw error;
+    }
+  }
+
+  async handleSuccessfulTransfer(transferData) {
+    try {
+      const payout = await VendorPayout.findOne({
+        transferReference: transferData.reference,
+      });
+
+      if (payout) {
+        payout.status = "processed";
+        payout.processedAt = new Date();
+        await payout.save();
+      }
+    } catch (error) {
+      console.error("Error handling successful transfer:", error);
+      throw error;
+    }
+  }
+
+  async handleFailedTransfer(transferData) {
+    try {
+      const payout = await VendorPayout.findOne({
+        transferReference: transferData.reference,
+      });
+
+      if (payout) {
+        payout.status = "failed";
+        payout.errorMessage = transferData.reason;
+        payout.retriesCount = (payout.retriesCount || 0) + 1;
+
+        // Reschedule if within retry limit
+        if (payout.retriesCount < 3) {
+          payout.scheduledDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Try again in 24 hours
+        }
+
+        await payout.save();
+      }
+    } catch (error) {
+      console.error("Error handling failed transfer:", error);
+      throw error;
+    }
+  }
+}
+
+module.exports = PaystackService;

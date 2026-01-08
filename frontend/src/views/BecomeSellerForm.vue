@@ -1,0 +1,113 @@
+<template>
+    <div
+        class="flex flex-col items-center justify-between min-h-[calc(100vh-96px)] bg-[#242424] text-gray-50 mt-1 -mb-11">
+        <div class="w-full grid min-h-[calc(100vh-96px)] grid-cols-1 lg:grid-cols-2">
+            <!-- Left Section: Form -->
+            <div class="flex items-center justify-center py-12">
+                <div class="mx-auto grid w-[350px] gap-6">
+                    <div class="grid gap-2 text-center">
+                        <h1 class="text-3xl font-bold">Become a Seller</h1>
+                        <p class="text-balance text-muted-foreground text-gray-300">Create your store profile</p>
+                    </div>
+                    <!-- Form -->
+                    <form @submit.prevent="submitSellerForm">
+                        <div class="grid gap-4">
+                            <div class="grid gap-2">
+                                <label for="storeName"
+                                    class="block text-lg font-semibold text-gray-300 mb-2 text-left">Store Name</label>
+                                <input type="text" id="storeName" v-model="storeName"
+                                    class="w-full text-gray-800 px-4 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required />
+                            </div>
+                            <div class="grid gap-2">
+                                <label for="storeDescription"
+                                    class="block text-lg font-semibold text-gray-300 mb-2 text-left">Store
+                                    Description</label>
+                                <textarea id="storeDescription" v-model="storeDescription"
+                                    class="w-full text-gray-800 px-4 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required></textarea>
+                            </div>
+                            <button type="submit"
+                                class="w-full text-white font-bold py-2 px-4 button-hover bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white font-bold py-2 px-4 rounded-r focus:outline-none mt-4">Submit</button>
+                            <p v-if="errorMessage" class="mt-4 text-red-500 text-center">{{ errorMessage }}</p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- Right Section: Image -->
+            <div class="relative hidden lg:block overflow-hidden">
+                <img src="https://wallpapercave.com/wp/wp7969113.jpg" alt="Image"
+                    class="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale" />
+                <div
+                    class="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 text-white p-8">
+                    <h2 class="text-5xl font-extrabold mb-4 animate-pulse">Join Us Today!</h2>
+                    <p class="text-lg mb-4 animate-fade-in">Create your store and start selling.</p>
+                    <p class="text-md">Already a seller? Visit your store dashboard!</p>
+                    <router-link to="/seller-store"
+                        class="text-white font-bold py-2 px-4 button-hover bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white hover:text-white rounded-r focus:outline-none mt-4">Visit
+                        Store</router-link>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+import { ref } from 'vue';
+import { useUserStore } from "../store/user.js";
+import { useRouter } from 'vue-router';
+import { toast } from 'vue-sonner';
+
+export default {
+    setup() {
+        const userStore = useUserStore();
+        const router = useRouter();
+
+        const storeName = ref("");
+        const storeDescription = ref("");
+        const errorMessage = ref("");
+
+        const submitSellerForm = async () => {
+            try {
+                await userStore.becomeSeller({
+                    storeName: storeName.value,
+                    storeDescription: storeDescription.value,
+                });
+                toast.success("Successfully became a seller.");
+                router.push({ name: 'UserSellerDashboard' });
+            } catch (error) {
+                console.error("Failed to become seller:", error);
+                errorMessage.value = error.message;
+                toast.error(errorMessage.value);
+            }
+        };
+
+        return {
+            storeName,
+            storeDescription,
+            errorMessage,
+            submitSellerForm
+        };
+    }
+};
+</script>
+
+<style scoped>
+@keyframes fade-in {
+    0% {
+        opacity: 0;
+    }
+
+    5% {
+        opacity: 0.5;
+    }
+
+    100% {
+        opacity: 0.8;
+    }
+}
+
+.animate-fade-in {
+    animation: fade-in 1s ease-in-out;
+}
+</style>

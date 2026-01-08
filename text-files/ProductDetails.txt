@@ -1,0 +1,1303 @@
+<template>
+    <div class="container mx-auto p-4 bg-white">
+        <div v-if="product" class="flex flex-col lg:flex-row">
+            <!-- Image Container -->
+            <div class="w-full lg:w-1/2 p-2">
+                <!-- Image Carousel -->
+                <AlertDialog>
+                    <AlertDialogTrigger>
+                        <div class="relative group">
+                            <img :src="hoveredImage || mainImage" alt="Product Image"
+                                class="w-full h-auto rounded-lg shadow-md cursor-pointer"
+                                :class="{ 'scale-150': isZoomed }" @mousemove="handleImageMove" />
+                            <div class="absolute top-2 right-2 flex space-x-2">
+                                <button @click.stop="toggleZoom"
+                                    class="p-1 bg-white rounded-full shadow-md hover:bg-gray-100 focus:outline-none">
+                                    <component :is="isZoomed ? ZoomOut : ZoomIn" class="w-6 h-6 text-gray-600" />
+                                </button>
+                            </div>
+                        </div>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent class="bg-gray-200 max-w-xl">
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>
+                                <span class="text-[17px] font-medium">{{ product.name }}</span>
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                                <!-- Image Carousel -->
+                                <div class="relative group">
+                                    <!-- Main Image -->
+                                    <div class="flex justify-center items-center">
+                                        <img :src="hoveredImage || mainImage" alt="Product Image"
+                                            class="w-full h-auto rounded-lg shadow-md"
+                                            :style="{ transform: `scale(${zoomLevel})` }"
+                                            @mousemove="handleImageMove" />
+                                    </div>
+                                    <div class="absolute top-2 right-2 flex space-x-2">
+                                        <button v-if="!isZoomed" @click.stop="toggleZoom"
+                                            class="p-1 bg-white rounded-full shadow-md hover:bg-gray-100 focus:outline-none">
+                                            <ZoomIn class="w-6 h-6 text-gray-600" />
+                                        </button>
+                                        <button v-else @click.stop="toggleZoom"
+                                            class="p-1 bg-white rounded-full shadow-md hover:bg-gray-100 focus:outline-none">
+                                            <ZoomOut class="w-6 h-6 text-gray-600" />
+                                        </button>
+                                    </div>
+                                    <!-- Carousel Controls (appear on hover) -->
+                                    <button v-if="!isZoomed" @click="prevImage"
+                                        class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md hover:bg-gray-200 focus:outline-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15 19l-7-7 7-7">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                    <button v-if="!isZoomed" @click="nextImage"
+                                        class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md hover:bg-gray-200 focus:outline-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 5l7 7-7 7">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel class="hover:bg-[#24a6bb] hover:text-white">Close</AlertDialogCancel>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+                <!-- Thumbnail Images -->
+                <div class="flex space-x-2 mt-4 justify-center overflow-x-auto">
+                    <img v-for="image in product.images" :src="image" :key="image" @click="mainImage = image"
+                        @mouseover="hoveredImage = image" @mouseleave="hoveredImage = null"
+                        class="w-16 h-16 rounded-lg cursor-pointer object-cover border-2"
+                        :class="{ 'border-blue-500': mainImage === image || hoveredImage === image }" />
+                </div>
+            </div>
+
+            <!-- Product Details -->
+            <div class="w-full lg:w-1/2 py-2 px-4">
+                <h1 class="text-2xl font-bold text-gray-800 mb-2" :title="product.name">
+                    {{ formatTitle(product.name) }}
+                </h1>
+
+                <p class="text-gray-600 mb-4">
+                    <span v-html="formatDescription(product)"></span>
+                    <span v-if="product.description.length > 100" @click="toggleDescription"
+                        class="text-blue-500 cursor-pointer">
+                        {{ product.showFullDescription ? ' Read less' : ' Read more' }}
+                    </span>
+                </p>
+
+                <div class="flex items-center mb-4">
+                    <span class="text-2xl font-bold text-[#f47a24] mr-4">₦ {{ product.price.toFixed(2) }}</span>
+                    <div class="flex items-center">
+                        <span v-if="product.averageRating > 0" class="flex gap-1 text-[13px]">
+                            {{ formatRating(product.averageRating) }}
+                            <Star class="size-4" v-for="star in 5" :key="star"
+                                :class="star <= Math.round(product.averageRating) ? 'text-yellow-400' : 'text-gray-300'" />
+                        </span>
+                        <span v-if="product.numberOfRatings > 0" class="ml-2 text-gray-500 text-[13px]">
+                            ({{
+                                product.numberOfRatings }} {{
+                                product.numberOfRatings === 1 ? 'review' : 'reviews' }})
+                        </span>
+                        <span v-else class="ml-2 text-gray-500 text-[13px]">
+                            (No reviews yet)
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Color Selection -->
+                <div class="mb-6" v-if="hasColors">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-lg font-semibold">Color:</h2>
+                        <span v-if="selectedColor" class="text-sm text-gray-600 hidden sm:inline-block">
+                            Selected: {{ getSelectedColorName }}
+                        </span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 sm:gap-3">
+                        <!-- Variant Colors -->
+                        <div v-for="variant in product.variants" :key="variant._id" class="relative group"
+                            :title="variant.color.name">
+                            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full cursor-pointer transition-all duration-300 hover:scale-110"
+                                :style="{ backgroundColor: variant.color.hexCode }" @click="selectVariantColor(variant)"
+                                :class="[
+                                    'border-2',
+                                    selectedColor === variant.color.hexCode
+                                        ? 'border-blue-500 shadow-lg scale-110'
+                                        : 'border-gray-200 hover:border-gray-300',
+                                    !variant.color.inStock && 'opacity-50 cursor-not-allowed'
+                                ]">
+                                <div v-if="selectedColor === variant.color.hexCode"
+                                    class="absolute inset-0 rounded-full ring-2 ring-blue-500 ring-offset-2">
+                                </div>
+                                <!-- Out of Stock Indicator -->
+                                <div v-if="!variant.color.inStock"
+                                    class="absolute inset-0 rounded-full flex items-center justify-center bg-black bg-opacity-30">
+                                    <svg class="w-4 h-4 sm:w-6 sm:h-6 text-white" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <!-- Desktop tooltip -->
+                            <div
+                                class="absolute -bottom-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 hidden sm:block">
+                                <span class="text-xs bg-gray-900 text-white px-2 py-1 rounded-md">
+                                    {{ variant.color.name }}
+                                    {{ !variant.color.inStock ? '(Out of Stock)' : '' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+
+
+
+                <!-- Size Selection -->
+                <SizeSelector :product="product" v-model:selectedSize="selectedSize"
+                    v-model:selectedColor="selectedColor" @update:availableColors="updateAvailableColors" />
+
+                <!-- Quantity Selector -->
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold mb-3">Quantity:</h2>
+                    <div class="flex items-center">
+                        <button @click="decrementQuantity"
+                            class="w-10 h-10 flex items-center justify-center text-gray-600 bg-gray-100 rounded-l-lg border border-gray-300 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-150 ease-in-out">
+                            <Minus class="w-4 h-4" />
+                        </button>
+                        <input v-model.number="quantity" type="number" min="1"
+                            class="w-16 h-10 text-center text-gray-700 bg-white border-t border-b border-gray-300 outline-none focus:outline-none focus:ring-1 focus:ring-gray-200 focus:ring-opacity-50 focus:border-gray-300 no-spinner" />
+                        <button @click="incrementQuantity"
+                            class="w-10 h-10 flex items-center justify-center text-gray-600 bg-gray-100 rounded-r-lg border border-gray-300 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-150 ease-in-out">
+                            <Plus class="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stock Alert -->
+                <Alert v-if="showStockAlert" class="mb-4">
+                    <AlertTitle>Low Stock Alert!</AlertTitle>
+                    <AlertDescription>
+                        Only {{ product.stock }} items left. Order soon to avoid disappointment.
+                    </AlertDescription>
+                </Alert>
+
+                <!-- Add to Cart and Wishlist Buttons -->
+                <div class="flex items-center space-x-4 mb-6">
+                    <button @click="addToCart"
+                        class="flex items-center justify-between flex-grow bg-[#24a3b5] hover:bg-[#1c8a9e] cursor-pointer text-white py-3 px-6 rounded-lg text-lg font-semibold transition duration-300">
+                        Add to Cart
+                        <ShoppingCart class="h-5 w-5 ml-2" />
+                    </button>
+                    <button @click="toggleWishlist"
+                        class="p-3 border border-gray-300 rounded-full hover:bg-gray-100 transition duration-300">
+                        <Heart :class="{ 'fill-current text-[#ff5e62]': isInWishlist }"
+                            class="w-6 h-6 text-[#ff5e62] hover:text-[#ff5e62]" />
+                    </button>
+                </div>
+
+                <!-- Delivery Info -->
+                <div class="bg-gray-100 p-4 rounded-lg mb-6">
+                    <div class="flex items-center mb-2">
+                        <Package class="w-5 h-5 mr-2 text-gray-600" />
+                        <span class="font-semibold">Estimated Delivery:</span>
+                    </div>
+                    <p class="text-gray-600">Within 3 days</p>
+                </div>
+
+                <!-- Social Proof -->
+                <div class="mb-6">
+                    <transition name="social-proof-transition">
+                        <div v-if="currentSocialProof" class="bg-gray-100 p-3 rounded-lg">
+                            <component :is="currentSocialProof.icon" class="w-5 h-5 text-[#ff5e62] inline mr-2">
+                            </component>
+                            <span class="text-sm" v-html="currentSocialProof.label"></span>
+                        </div>
+                    </transition>
+                </div>
+
+                <!-- Tabs for Features, Specifications, and Reviews -->
+                <Tabs>
+                    <TabsList>
+                        <TabsTrigger value="features">Features</TabsTrigger>
+                        <TabsTrigger value="specs">Specifications</TabsTrigger>
+                        <TabsTrigger value="reviews">Reviews</TabsTrigger>
+                    </TabsList>
+                    <!-- Featured Features -->
+                    <TabsContent value="features">
+                        <ul class="space-y-2 text-sm text-gray-600">
+                            <li v-for="(feature, index) in featuredFeatures" :key="index" class="flex items-start">
+                                <span class="inline-block w-2 h-2 mt-1.5 mr-2 bg-[#24a6bb] rounded-full"></span>
+                                <span v-html="feature"></span>
+                            </li>
+                        </ul>
+                    </TabsContent>
+                    <!-- Featured Specifications -->
+                    <TabsContent value="specs">
+                        <!-- Add specifications content here -->
+                    </TabsContent>
+                    <!-- Featured reviews -->
+                    <TabsContent value="reviews">
+                        <!-- Add reviews content here -->
+                        <div class="space-y-4">
+                            <!-- Review Summary -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="text-lg font-semibold">Customer Reviews</h3>
+                                    <div class="flex items-center">
+                                        <Star v-for="star in 5" :key="star"
+                                            :class="['w-5 h-5', star <= Math.round(product.averageRating) ? 'text-yellow-400' : 'text-gray-300']" />
+                                        <span class="ml-2">{{ product.averageRating.toFixed(1) }} out of 5</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600">{{ product.numberOfRatings }} global ratings</p>
+                                </div>
+
+                                <button v-if="canReview" @click="openReviewModal"
+                                    class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                                    Write a review
+                                </button>
+
+                            </div>
+
+                            <!-- Review List -->
+                            <div v-if="reviews.length > 0" class="space-y-4">
+                                <div v-for="review in reviews" :key="review._id" class="border-b pb-4">
+                                    <div class="flex items-center mb-2">
+                                        <Star v-for="star in 5" :key="star"
+                                            :class="['w-4 h-4', star <= review.rating ? 'text-yellow-400' : 'text-gray-300']" />
+                                        <span class="ml-2 font-semibold">{{ review.rating.toFixed(1) }}</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mb-2">By {{ review.user.username }} on {{
+                                        formatDate(review.createdAt) }}</p>
+                                    <p>{{ review.review }}</p>
+                                </div>
+                            </div>
+                            <p v-else class="text-gray-600">No reviews yet.</p>
+                        </div>
+                    </TabsContent>
+
+                    <!-- Review Modal -->
+                    <AlertDialog v-model:open="showReviewModal">
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Write a Review</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Rating</label>
+                                            <div class="flex items-center">
+                                                <Star v-for="star in 5" :key="star" @click="newReview.rating = star"
+                                                    :class="['w-6 h-6 cursor-pointer', star <= newReview.rating ? 'text-yellow-400' : 'text-gray-300']" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label for="review"
+                                                class="block text-sm font-medium text-gray-700">Review</label>
+                                            <textarea id="review" v-model="newReview.review" rows="6"
+                                                class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
+                                        </div>
+                                    </div>
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel @click="closeReviewModal">Cancel</AlertDialogCancel>
+                                <AlertDialogAction @click="submitReview">Submit Review</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </Tabs>
+
+                <!-- Seller Information -->
+                <div class="border-t pt-4 mt-6">
+                    <h2 class="text-lg font-semibold mb-2">Seller Information:</h2>
+                    <div v-if="product && product?.user" class="flex items-center">
+                        <img :src="product.user?.sellerProfile?.profileImage || randomAvatarUrl"
+                            :alt="product.user.username || 'Seller Avatar'" class="w-12 h-12 rounded-full mr-4">
+                        <div>
+                            <p class="font-medium">{{ product.user.username || 'Unknown Seller' }}</p>
+                            <p class="text-sm text-gray-600">
+                                {{ product.user.address?.city || 'Unknown City' }},
+                                {{ product.user.address?.country || 'Unknown Country' }}
+                            </p>
+                        </div>
+                    </div>
+                    <button @click="visitSellerStore" class="mt-2 text-blue-500 hover:underline">
+                        Visit Seller Store
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div v-else class="text-center py-8">
+            <p class="text-xl text-gray-600">Loading...</p>
+        </div>
+
+        <!-- Similar Products Section -->
+        <div v-if="displayProducts.length > 0" class="mt-8 md:mt-12">
+            <h2 class="text-xl md:text-2xl font-semibold mb-4 md:mb-6 text-center md:text-left">
+                {{ relatedProducts.length > 0 ? 'Related Products' : 'You May Also Like' }}
+            </h2>
+            <div class="flex justify-center">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 w-full">
+                    <ProductCard v-for="product in displayProducts" :key="product._id" :product="product"
+                        @click="navigateToProduct(product._id)" />
+                </div>
+            </div>
+        </div>
+
+    </div>
+</template>
+
+<script>
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
+import apiClient from '../api/axios';
+import { useUserStore } from '../store/user.js';
+import { useAddressStore } from '../store/addressStore.js';
+import { useSellerStore } from '../store/sellerStore.js';
+import { useWishlistStore } from '../store/wishlistStore.js';
+import { useProductStore } from '../store/productStore.js';
+import { useCartStore } from '../store/cart.js';
+import { useOrderStore } from '../store/orderStore';
+import { useRouter } from 'vue-router';
+import { toast } from "vue-sonner";
+import CustomImage from './CustomImage.vue';
+import SizeSelector from './SizeSelector.vue';
+
+import ProductCard from './ProductCard.vue';
+
+import {
+    Shirt, ShoppingCart, Eye, Heart, Package, Star, ZoomIn, ZoomOut, Plus, Minus,
+} from 'lucide-vue-next';
+
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+
+export default {
+    name: 'ProductDetails',
+    components: {
+        Shirt,
+        ShoppingCart,
+        Eye,
+        Heart,
+        Package,
+        Star,
+        ZoomIn,
+        ZoomOut,
+        Minus,
+        Plus,
+        CustomImage,
+        AlertDialog,
+        AlertDialogAction,
+        AlertDialogCancel,
+        AlertDialogContent,
+        AlertDialogDescription,
+        AlertDialogFooter,
+        AlertDialogHeader,
+        AlertDialogTitle,
+        AlertDialogTrigger,
+        Alert,
+        AlertTitle,
+        AlertDescription,
+        Tabs,
+        TabsList,
+        TabsTrigger,
+        TabsContent,
+        SizeSelector,
+
+        ProductCard
+    },
+    props: {
+        id: {
+            type: String,
+            required: true,
+        },
+    },
+    setup(props) {
+        console.log("Product ID from props:", props.id);
+
+        const router = useRouter();
+        const zoomLevel = ref(1);
+        const mainImageRef = ref(null);
+        const isZoomed = computed(() => zoomLevel.value > 1);
+        const mainImage = ref('');
+        const hoveredImage = ref(null);
+        const sizes = ref(['XS', 'S', 'M', 'L', 'XL', '10-12 Years']);
+        const socialProof = ref([
+            { label: "In the basket of <span class='text-[#ff5e62]'>5,027 people</span>, buy it before it runs out!", icon: ShoppingCart },
+            { label: `Popular product! <span class='text-[#ff5e62]'>3,579 people</span> viewed in the last 24 hours!`, icon: Eye },
+            { label: "Favorite product! <span class='text-[#ff5e62]'>112K people</span> favored!", icon: Heart }
+        ]);
+
+        const userStore = useUserStore();
+        const addressStore = useAddressStore();
+        const sellerStore = useSellerStore();
+        const wishlistStore = useWishlistStore();
+        const productStore = useProductStore();
+        const cartStore = useCartStore();
+
+        const orderStore = useOrderStore();
+        const reviews = ref([]);
+        const showReviewModal = ref(false);
+        const newReview = ref({ rating: 0, review: '' });
+        const canReview = ref(false);
+
+        const product = ref(null);
+        const relatedProducts = ref([]);
+        const randomProducts = ref([]);
+        const user = ref(null);
+        const address = ref(null);
+        const sellerId = ref(null);
+        const isInWishlist = ref(false);
+        const selectedColor = ref(null);
+        const selectedSize = ref(null);
+        const quantity = ref(1);
+        const showStockAlert = ref(false);
+
+        const showSizeGuide = ref(false);
+        const lowStockThreshold = ref(5);
+
+        const availableColors = ref([]);
+
+        const hasSizes = computed(() => {
+            return product.value?.variants?.some(variant =>
+                variant.attributes?.some(attr => attr.name.toLowerCase() === 'size')
+            );
+        });
+
+        const availableSizes = computed(() => {
+            if (!product.value?.variants) return [];
+
+            // Get all size variants
+            const sizeVariants = product.value.variants
+                .filter(variant => variant.attributes?.some(attr =>
+                    attr.name.toLowerCase() === 'size'
+                ))
+                .map(variant => ({
+                    size: variant.attributes.find(attr =>
+                        attr.name.toLowerCase() === 'size'
+                    ).value,
+                    stock: variant.stock,
+                    inStock: variant.stock > 0,
+                    color: variant.color,
+                    price: variant.price
+                }));
+
+            // Group by size and combine stock
+            return Object.values(sizeVariants.reduce((acc, variant) => {
+                const size = variant.size;
+                if (!acc[size]) {
+                    acc[size] = {
+                        size,
+                        stock: 0,
+                        inStock: false,
+                        variants: []
+                    };
+                }
+                acc[size].stock += variant.stock;
+                acc[size].inStock = acc[size].inStock || variant.stock > 0;
+                acc[size].variants.push(variant);
+                return acc;
+            }, {}));
+        });
+
+
+        const getSelectedVariantStock = computed(() => {
+            if (!selectedSize.value || !selectedColor.value) return null;
+
+            const variant = product.value?.variants?.find(v =>
+                v.attributes?.some(attr =>
+                    attr.name.toLowerCase() === 'size' &&
+                    attr.value === selectedSize.value
+                ) &&
+                v.color?.hexCode === selectedColor.value
+            );
+
+            return variant?.stock || null;
+        });
+
+        const sizeGuideMetrics = computed(() => {
+            const category = product.value?.category?.name?.toLowerCase() || '';
+            if (category.includes('shoe')) {
+                return ['US', 'UK', 'EU', 'CM'];
+            }
+            if (category.includes('clothing')) {
+                return ['Chest', 'Waist', 'Length'];
+            }
+            return ['Size', 'Measurement'];
+        });
+
+        const getSizeGuideData = computed(() => {
+            const category = product.value?.category?.name?.toLowerCase() || '';
+            return getSizeGuideForCategory(category, availableSizes.value);
+        });
+
+        const selectSize = (sizeOption) => {
+            if (!sizeOption.inStock) return;
+
+            selectedSize.value = sizeOption.size;
+            console.log('Size selected:', sizeOption.size);
+
+            // Find all variants with the selected size
+            const sizeVariants = product.value.variants.filter(v => {
+                const sizeAttribute = v.attributes.find(attr =>
+                    (attr.name.toLowerCase() === 'size' || attr.name.toLowerCase() === 'shape')
+                );
+                return sizeAttribute?.value === sizeOption.size;
+            });
+
+            console.log('Available variants for size:', sizeVariants);
+
+            // If we have a selected color, find the specific variant
+            let matchingVariant;
+            if (selectedColor.value) {
+                matchingVariant = sizeVariants.find(v => v.color?.hexCode === selectedColor.value);
+            }
+
+            // If no matching variant with current color, take the first available variant
+            if (!matchingVariant && sizeVariants.length > 0) {
+                matchingVariant = sizeVariants[0];
+                // Update selected color to match the found variant
+                if (matchingVariant.color?.hexCode) {
+                    selectedColor.value = matchingVariant.color.hexCode;
+                    console.log('Updated color to match size variant:', matchingVariant.color.hexCode);
+                }
+            }
+
+            // Update price if we found a matching variant
+            if (matchingVariant) {
+                console.log('Size selection - Found matching variant with price:', matchingVariant.price);
+                product.value.price = matchingVariant.price;
+            }
+
+            // Update available colors for this size
+            const colors = sizeVariants
+                .filter(v => v.stock > 0)
+                .map(v => ({
+                    hexCode: v.color?.hexCode,
+                    name: v.color?.name,
+                    inStock: v.stock > 0,
+                    price: v.price
+                }));
+
+            // Update available colors
+            availableColors.value = colors;
+            console.log('Updated available colors for size:', colors);
+        };
+
+
+        const updateAvailableColorsForSize = (size) => {
+            if (!product.value?.variants) return;
+
+            const variantsForSize = product.value.variants.filter(v =>
+                v.attributes?.some(attr =>
+                    (attr.name.toLowerCase() === 'size' || attr.name.toLowerCase() === 'shape') &&
+                    attr.value === size
+                )
+            );
+
+            availableColors.value = variantsForSize
+                .filter(v => v.stock > 0)
+                .map(v => ({
+                    hexCode: v.color?.hexCode,
+                    name: v.color?.name,
+                    inStock: v.stock > 0,
+                    price: v.price
+                }))
+                .filter((c, index, self) =>
+                    index === self.findIndex(t => t.hexCode === c.hexCode)
+                );
+
+            // If current color is not available for new size, select first available color
+            if (selectedColor.value && !availableColors.value.some(c => c.hexCode === selectedColor.value)) {
+                if (availableColors.value.length > 0) {
+                    selectedColor.value = availableColors.value[0].hexCode;
+                    // Update price to match the new color's price
+                    const newVariant = variantsForSize.find(v => v.color?.hexCode === selectedColor.value);
+                    if (newVariant) {
+                        product.value.price = newVariant.price;
+                    }
+                }
+            }
+        };
+
+        const updateAvailableColors = (colors) => {
+            availableColors.value = colors;
+        };
+
+        const getSizeGuideForCategory = (category, sizes) => {
+            // Implement size guide data based on your product categories
+            // This should ideally come from your backend or a configuration
+            const defaultSizes = sizes.map(s => ({
+                size: s.size,
+                measurement: `${s.size} standard measurement`
+            }));
+
+            // Add your size guide data for different categories
+            const sizeGuides = {
+                shoes: [
+                    { size: 'S', us: '7', uk: '6', eu: '40', cm: '25' },
+                    { size: 'M', us: '8', uk: '7', eu: '41', cm: '26' },
+                    { size: 'L', us: '9', uk: '8', eu: '42', cm: '27' }
+                ],
+                clothing: [
+                    { size: 'S', chest: '36-38', waist: '30-32', length: '28' },
+                    { size: 'M', chest: '38-40', waist: '32-34', length: '29' },
+                    { size: 'L', chest: '40-42', waist: '34-36', length: '30' }
+                ]
+            };
+
+            return sizeGuides[category] || defaultSizes;
+        };
+
+        const formatRating = (rating) => {
+            return rating % 1 === 0 ? rating.toFixed(0) : rating.toFixed(1);
+        };
+
+        const toggleWishlist = async () => {
+            if (!userStore.isLoggedIn) {
+                toast.error('Please log in to add items to your wishlist');
+                return;
+            }
+
+            try {
+                let wishlist = wishlistStore.wishlists[0]; // Assume the first wishlist
+                if (!wishlist) {
+                    wishlist = await wishlistStore.createWishlist({
+                        name: 'My Wishlist',
+                        visibility: 'private',
+                    });
+                }
+
+                if (isInWishlist.value) {
+                    await wishlistStore.removeFromWishlist(wishlist._id, props.id);
+                    isInWishlist.value = false;
+                    toast.success('Removed from wishlist');
+                } else {
+                    await wishlistStore.addToWishlist(wishlist._id, props.id);
+                    isInWishlist.value = true;
+                    toast.success('Added to wishlist');
+                }
+            } catch (error) {
+                console.error('Error toggling wishlist:', error);
+                toast.error('Failed to update wishlist');
+            }
+        };
+
+        const featuredFeatures = computed(() => [
+            `This product is sold by <span class="text-[#ff5e62]">${product.value?.user?.username || 'the seller'}</span>`,
+            `More than <span class="text-[#ff5e62]">${product.value?.stock || 'Zero'}</span> stocks available`,
+            "Seller determines the price",
+            `More than <span class="text-[#ff5e62]">${product.value?.variants?.[0]?.stock || 'Zero'}</span> variants have been offered to be sold at the campaign price.`,
+            "The seller determines the sales price of the product you have examined.",
+            "A product can be sold by multiple vendors. The sellers of the products offered for sale by more than one seller are listed according to the price they determine for the product, the seller points, delivery status, promotions on the products, whether the cargo is free and whether the products can be delivered with fast delivery, the stock and categories of the products."
+        ]);
+
+        const randomAvatarUrl = computed(() => {
+            const randomSeed = Math.random().toString(36).substring(7);
+            return `https://api.dicebear.com/6.x/identicon/svg?seed=${randomSeed}`;
+        });
+
+        const formatTitle = (title) => {
+            const capitalizedTitle = title.split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+            return capitalizedTitle.length <= 50 ? capitalizedTitle : capitalizedTitle.slice(0, 47) + '...';
+        };
+
+        const formatDescription = (product) => {
+            if (!product.description) return '';
+            let description = product.description.toLowerCase();
+            description = description.replace(/(^\s*\w|[.!?]\s*\w)/g, c => c.toUpperCase());
+            return product.showFullDescription || description.length <= 100
+                ? description
+                : description.slice(0, 100) + '...';
+        };
+
+        const toggleDescription = () => {
+            product.value.showFullDescription = !product.value.showFullDescription;
+        };
+
+
+        const hasColors = computed(() => {
+            return product.value?.variants?.some(variant => variant?.color?.hexCode);
+        });
+
+        const getSelectedColorName = computed(() => {
+            if (!selectedColor.value) return '';
+
+            const variant = product.value?.variants?.find(
+                v => v.color?.hexCode === selectedColor.value
+            );
+            return variant?.color?.name || 'Default';
+        });
+
+        const selectVariantColor = (variant) => {
+            if (!variant.color.inStock) return;
+
+            selectedColor.value = variant.color.hexCode;
+
+            // Directly update price from the selected variant
+            product.value.price = variant.price;
+            console.log('Price updated to:', variant.price, 'from variant:', variant);
+
+            // If no size selected and variant has a size/shape attribute, select it
+            const sizeAttribute = variant.attributes.find(attr =>
+                attr.name.toLowerCase() === 'shape' || attr.name.toLowerCase() === 'size'
+            );
+            if (sizeAttribute) {
+                selectedSize.value = sizeAttribute.value;
+            }
+        };
+
+        const fetchProductDetails = async () => {
+            try {
+                const response = await apiClient.get(`/products/${props.id}`);
+                product.value = {
+                    ...response.data,
+                    showFullDescription: false
+                };
+
+                // Debug logs
+                console.log('Product Color:', product.value.color);
+                console.log('Product Variants:', product.value.variants);
+
+                // Initialize color from variants if available
+                if (product.value?.variants?.length > 0) {
+                    const firstAvailableColor = product.value.variants.find(
+                        variant => variant?.color?.hexCode && variant?.color?.inStock
+                    );
+                    if (firstAvailableColor) {
+                        selectedColor.value = firstAvailableColor.color.hexCode;
+                    }
+                }
+
+
+                if (product.value && product.value.images && product.value.images.length > 0) {
+                    mainImage.value = product.value.images[0];
+                }
+                console.log('product.value: ', product.value);
+                if (product.value && product.value.user && product.value.user.address) {
+                    console.log('user address city: ', product.value.user.address.city);
+                    console.log('user address country: ', product.value.user.address.country);
+                }
+
+                if (product.value && product.value.seller) {
+                    user.value = product.value.seller;
+                    console.log('user.value: ', user.value);
+
+                    if (user.value.address) {
+                        address.value = user.value.address;
+                        console.log('address.value: ', address.value);
+                    }
+                }
+
+                if (product.value && product.value.seller) {
+                    sellerId.value = product.value.seller._id;
+                }
+
+                showStockAlert.value = product.value.stock < 10;
+            } catch (error) {
+                console.error('Error fetching product details:', error);
+                toast.error('Failed to load product details');
+            }
+        };
+
+        const visitSellerStore = async () => {
+            if (!product.value) {
+                toast.error('Product details not available');
+                return;
+            }
+
+            const sellerId = product.value.user?.sellerProfile?._id;
+            if (!sellerId) {
+                toast.error('Seller store not available.');
+                return;
+            }
+
+            try {
+                await sellerStore.fetchSellerProfile(sellerId);
+                router.push({ name: 'SellerProducts', params: { id: sellerId } });
+            } catch (error) {
+                console.error('Error fetching seller profile:', error);
+                toast.error('Failed to load seller profile');
+            }
+        };
+
+        const currentSocialProof = ref(socialProof.value[0]);
+        let socialProofIndex = 0;
+        let interval;
+
+        const startSocialProofLoop = () => {
+            interval = setInterval(() => {
+                socialProofIndex = (socialProofIndex + 1) % socialProof.value.length;
+                currentSocialProof.value = socialProof.value[socialProofIndex];
+            }, 3000);
+        };
+
+        const prevImage = () => {
+            const currentIndex = product.value.images.indexOf(mainImage.value);
+            const prevIndex = (currentIndex - 1 + product.value.images.length) % product.value.images.length;
+            mainImage.value = product.value.images[prevIndex];
+        };
+
+        const nextImage = () => {
+            const currentIndex = product.value.images.indexOf(mainImage.value);
+            const nextIndex = (currentIndex + 1) % product.value.images.length;
+            mainImage.value = product.value.images[nextIndex];
+        };
+
+        const initWishlist = async () => {
+            if (userStore.isLoggedIn) {
+                console.log('Fetching wishlists for user:', userStore.user._id);
+                await wishlistStore.fetchUserWishlists(userStore.user._id);
+                // console.log('Fetched wishlists:', wishlistStore.wishlists);
+                isInWishlist.value = wishlistStore.wishlists.some(
+                    wishlist => wishlist.products.includes(props.id)
+                );
+                // console.log('Is product in wishlist:', isInWishlist.value);
+            }
+        };
+
+        const toggleZoom = () => {
+            zoomLevel.value = isZoomed.value ? 1 : 1.6;
+        };
+
+        const handleImageMove = (e) => {
+            if (isZoomed.value && mainImageRef.value) {
+                const image = mainImageRef.value;
+                const rect = image.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / rect.width;
+                const y = (e.clientY - rect.top) / rect.height;
+
+                image.style.transformOrigin = `${x * 100}% ${y * 100}%`;
+            }
+        };
+
+        const isInCart = computed(() => {
+            return cartStore.items.some(item => item.product._id === product.value._id);
+        });
+
+        const cartItem = computed(() => {
+            const item = cartStore.items.find(item => item.product._id === product.value._id);
+            if (item && item.product.selectedVariant) {
+                // Use the variant price if available
+                item.product.price = item.product.selectedVariant.price;
+            }
+            return item;
+        });
+
+        const decrementQuantity = async () => {
+            if (isInCart.value) {
+                if (cartItem.value.quantity > 1) {
+                    await cartStore.updateQuantity(product.value._id, cartItem.value.quantity - 1);
+                } else {
+                    await cartStore.removeFromCart(product.value._id);
+                }
+            } else if (quantity.value > 1) {
+                quantity.value--;
+            }
+        };
+
+        const incrementQuantity = async () => {
+            if (isInCart.value) {
+                await cartStore.updateQuantity(product.value._id, cartItem.value.quantity + 1);
+            } else {
+                quantity.value++;
+            }
+        };
+
+        // In ProductDetails.vue
+        const addToCart = async () => {
+            if (!selectedColor.value) {
+                toast.error('Please select a color before adding to cart');
+                return;
+            }
+            if (!selectedSize.value) {
+                toast.error('Please select a size before adding to cart');
+                return;
+            }
+
+            // Find the current variant based on selected color and size
+            const currentVariant = product.value.variants.find(v => {
+                const sizeAttribute = v.attributes.find(attr =>
+                    (attr.name.toLowerCase() === 'size' || attr.name.toLowerCase() === 'shape')
+                );
+                return v.color?.hexCode === selectedColor.value &&
+                    sizeAttribute?.value === selectedSize.value;
+            });
+
+            if (!currentVariant) {
+                toast.error('Selected combination is not available');
+                return;
+            }
+
+            // Check if selected variant is in stock
+            if (!currentVariant.stock) {
+                toast.error('Selected variant is out of stock');
+                return;
+            }
+
+            try {
+                const addedQuantity = quantity.value;
+
+                // Create the payload with the correct variant information
+                const payload = {
+                    _id: product.value._id,
+                    name: product.value.name,
+                    price: currentVariant.price, // Use variant price instead of product price
+                    selectedVariant: currentVariant,
+                    quantity: addedQuantity
+                };
+
+                // Add to cart with explicit variant details
+                await cartStore.addToCart(payload, addedQuantity, {
+                    variant: {
+                        _id: currentVariant._id,
+                        color: selectedColor.value,
+                        size: selectedSize.value,
+                        price: currentVariant.price, // Make sure variant price is passed
+                        attributes: currentVariant.attributes
+                    }
+                });
+
+                await cartStore.fetchCart();
+                toast.success(`Added ${addedQuantity} item(s) to cart`);
+                quantity.value = 1;
+
+            } catch (error) {
+                console.error('Error adding to cart:', error);
+                toast.error('Failed to add item to cart');
+            }
+        };
+
+        // Add this computed property if not already present
+        const cartCount = computed(() => cartStore.cartCount);
+
+        const displayProducts = computed(() => {
+            return relatedProducts.value.length > 0 ? relatedProducts.value : randomProducts.value;
+        });
+
+        const fetchRelatedProducts = async () => {
+            try {
+                relatedProducts.value = await productStore.fetchRelatedProducts(props.id);
+                if (relatedProducts.value.length === 0) {
+                    // If no related products, fetch random products
+                    randomProducts.value = await productStore.fetchRandomProducts(4, props.id);
+                }
+            } catch (error) {
+                console.error('Error fetching related products:', error);
+                toast.error('Failed to load related products');
+            }
+        };
+
+        const truncateDescription = (description, maxLength = 100) => {
+            return description.length > maxLength ? description.substring(0, maxLength) + '...' : description;
+        };
+
+        const calculateOriginalPrice = (product) => {
+            return product.originalPrice || (product.discount ? Math.round(product.price / (1 - product.discount / 100)) : product.price);
+        };
+
+        // Reviews Start
+        const fetchReviews = async () => {
+            try {
+                const response = await apiClient.get(`/products/${props.id}/ratings`);
+                reviews.value = response.data;
+            } catch (error) {
+                console.error('Error fetching reviews:', error);
+                toast.error('Failed to load reviews');
+            }
+        };
+
+        const checkCanReview = async () => {
+            if (!userStore.isLoggedIn) {
+                console.log("User is not logged in");
+                canReview.value = false;
+                return;
+            }
+            try {
+                const orders = await orderStore.fetchUserOrders();
+                // console.log("Fetched orders:", orders);
+
+                // Check if the user has already reviewed this product
+                const hasAlreadyReviewed = reviews.value.some(review =>
+                    review.user._id === userStore.user._id
+                );
+
+                if (hasAlreadyReviewed) {
+                    console.log("User has already reviewed this product");
+                    canReview.value = false;
+                    return;
+                }
+
+                canReview.value = orders.some(order => {
+                    // console.log("Checking order:", order._id);
+                    const productMatch = order.products.some(item => {
+                        // console.log("Checking product:", item.product, "against:", props.id);
+                        // Check if item.product is an object or a string
+                        const productId = typeof item.product === 'object' ? item.product._id : item.product;
+                        return String(productId) === String(props.id);
+                    });
+                    // console.log("Product match:", productMatch);
+                    // console.log("Order status:", order.status);
+                    // console.log("Product rated:", order.ratedProducts.some(p => String(p.product) === String(props.id)));
+                    return productMatch &&
+                        order.status === 'Delivered' &&
+                        !order.ratedProducts.some(p => String(p.product) === String(props.id));
+                });
+                // console.log("Can review (after check):", canReview.value, "for product:", props.id);
+            } catch (error) {
+                console.error('Error checking review eligibility:', error);
+                canReview.value = false;
+            }
+        };
+
+        const openReviewModal = () => {
+            if (!userStore.isLoggedIn) {
+                toast.error('Please log in to write a review');
+                return;
+            }
+            if (canReview.value) {
+                showReviewModal.value = true;
+            } else {
+                if (reviews.value.some(review => review.user._id === userStore.user._id)) {
+                    toast.error('You have already reviewed this product');
+                } else {
+                    toast.error('You can only review products you have purchased and received');
+                }
+            }
+        };
+
+        const closeReviewModal = () => {
+            showReviewModal.value = false;
+            newReview.value = { rating: 0, review: '' };
+        };
+
+        const submitReview = async () => {
+            try {
+                await productStore.rateProduct(props.id, newReview.value.rating, newReview.value.review);
+                await orderStore.updateProductRatedStatus(props.id);
+
+                toast.success('Review submitted successfully');
+                closeReviewModal();
+                fetchReviews();  // Re-check if user can review (which should now be false)
+                canReview.value = false; // Update canReview after submitting
+
+                fetchProductDetails(); // Update product details to reflect new average rating
+
+            } catch (error) {
+                console.error('Error submitting review:', error);
+                toast.error('Failed to submit review');
+            }
+        };
+
+        const formatDate = (dateString) => {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }; //Reviews end
+
+        onMounted(async () => {
+            await fetchProductDetails();
+            startSocialProofLoop();
+            initWishlist();
+            await fetchRelatedProducts();
+            if (isInCart.value) {
+                quantity.value = cartItem.value.quantity;
+            }
+            fetchReviews();
+            await checkCanReview(); // Call this after fetching product details
+
+        });
+
+        onUnmounted(() => {
+            clearInterval(interval);
+        });
+
+        // Update the watch effect
+        watch(() => product.value, (newProduct) => {
+            if (newProduct) {
+                // Set default color based on available options
+                if (newProduct.color) {
+                    selectedColor.value = newProduct.color;
+                } else if (newProduct.variants?.length > 0 && newProduct.variants[0]?.color?.hexCode) {
+                    selectedColor.value = newProduct.variants[0].color.hexCode;
+                }
+                console.log('Selected Color:', selectedColor.value);
+            }
+        }, { immediate: true });
+
+        // Add watchers for both size and color changes
+        watch(selectedSize, (newSize, oldSize) => {
+            if (newSize !== oldSize) {
+                console.log('Size changed from', oldSize, 'to', newSize);
+                // Find matching variant and update price
+                const variant = product.value?.variants?.find(v => {
+                    const sizeAttribute = v.attributes.find(attr =>
+                        (attr.name.toLowerCase() === 'size' || attr.name.toLowerCase() === 'shape')
+                    );
+                    return sizeAttribute?.value === newSize &&
+                        (!selectedColor.value || v.color?.hexCode === selectedColor.value);
+                });
+
+                if (variant) {
+                    console.log('Size watcher - Updating price to:', variant.price);
+                    product.value.price = variant.price;
+                }
+            }
+        });
+
+        watch(selectedColor, (newColor, oldColor) => {
+            if (newColor !== oldColor) {
+                console.log('Color changed from', oldColor, 'to', newColor);
+                // Find matching variant and update price
+                const variant = product.value?.variants?.find(v => {
+                    const sizeAttribute = v.attributes.find(attr =>
+                        (attr.name.toLowerCase() === 'size' || attr.name.toLowerCase() === 'shape')
+                    );
+                    return v.color?.hexCode === newColor &&
+                        (!selectedSize.value || sizeAttribute?.value === selectedSize.value);
+                });
+
+                if (variant) {
+                    console.log('Color watcher - Updating price to:', variant.price);
+                    product.value.price = variant.price;
+                }
+            }
+        });
+
+
+        const navigateToProduct = (productId) => {
+            // Check if we're already on the product page we're trying to navigate to
+            if (props.id === productId) {
+                // If so, just refresh the current page
+                window.location.reload();
+            } else {
+                // Otherwise, navigate to the new product page
+                router.push({ name: 'ProductDetails', params: { id: productId } });
+            }
+        };
+
+        return {
+            product,
+            mainImage,
+            hoveredImage,
+            sizes,
+            socialProof,
+            currentSocialProof,
+            prevImage,
+            nextImage,
+            user,
+            address,
+            visitSellerStore,
+            selectedColor,
+            selectedSize,
+            featuredFeatures,
+            randomAvatarUrl,
+            isInWishlist,
+            toggleWishlist,
+            zoomLevel,
+            isZoomed,
+            mainImageRef,
+            toggleZoom,
+            handleImageMove,
+            quantity,
+            decrementQuantity,
+            incrementQuantity,
+            addToCart,
+            cartCount,
+            showStockAlert,
+            formatRating,
+            relatedProducts,
+            randomProducts,
+            displayProducts,
+            navigateToProduct,
+            truncateDescription,
+            calculateOriginalPrice,
+            reviews,
+            showReviewModal,
+            newReview,
+            canReview,
+            openReviewModal,
+            closeReviewModal,
+            submitReview,
+            formatTitle,
+            formatDescription,
+            toggleDescription,
+            formatDate,
+            hasColors,
+            getSelectedColorName,
+
+            selectVariantColor,
+
+            showSizeGuide,
+            hasSizes,
+            availableSizes,
+            getSelectedVariantStock,
+            sizeGuideMetrics,
+            getSizeGuideData,
+            selectSize,
+
+            SizeSelector,
+            availableColors,
+            updateAvailableColors,
+        };
+    },
+};
+</script>
+
+<style scoped>
+.container {
+    max-width: 1200px;
+}
+
+.social-proof-transition-enter-active,
+.social-proof-transition-leave-active {
+    transition: opacity 0.5s, transform 0.5s;
+}
+
+.social-proof-transition-enter,
+.social-proof-transition-leave-to {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+/* Add any additional styles here */
+.no-spinner::-webkit-inner-spin-button,
+.no-spinner::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.no-spinner {
+    -moz-appearance: textfield;
+}
+
+.color-tooltip {
+    @apply invisible group-hover:visible absolute -bottom-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap text-xs bg-gray-900 text-white px-2 py-1 rounded-md;
+}
+</style>

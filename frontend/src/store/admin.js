@@ -1,0 +1,701 @@
+// frontend/src/store/admin.js
+import { defineStore } from "pinia";
+import apiClient from "@/api/axios";
+import { toast } from "vue-sonner";
+
+export const useAdminStore = defineStore("admin", {
+  state: () => ({
+    adminUser: JSON.parse(localStorage.getItem("adminUser")) || null,
+    token: localStorage.getItem("adminToken") || null,
+    dashboardStats: {
+      totalUsers: 0,
+      totalProducts: 0,
+      totalOrders: 0,
+      totalRevenue: 0,
+      userGrowth: 0,
+      productGrowth: 0,
+      orderGrowth: 0,
+      revenueGrowth: 0,
+      userStats: [],
+      orderStats: [],
+      productStats: [],
+      revenueStats: [],
+      avgUsers: 0,
+      avgOrders: 0,
+      avgProducts: 0,
+      avgRevenue: 0,
+    },
+    isLoading: false,
+    error: null,
+
+    sellers: [],
+    selectedSeller: null,
+    loading: false,
+    error: null,
+    pagination: {
+      total: 0,
+      currentPage: 1,
+      itemsPerPage: 10,
+    },
+  }),
+
+  getters: {
+    isAdminLoggedIn: (state) => !!state.token,
+  },
+
+  actions: {
+    // User Actions
+    async resetUserPassword(userId, userType) {
+      try {
+        const endpoint =
+          userType === "sellers"
+            ? `/admin/sellers/${userId}/reset-password`
+            : userType === "admins"
+            ? `/admin/users/${userId}/reset-password`
+            : `/admin/regular-users/${userId}/reset-password`;
+
+        const response = await apiClient.post(endpoint);
+        const tempPassword = response.data.tempPassword;
+        toast.success(
+          `Password reset successful. Temporary password: ${tempPassword}`
+        );
+
+        return {
+          success: true,
+          message: response.data.message,
+          tempPassword: response.data.tempPassword,
+        };
+      } catch (error) {
+        console.error("Reset password error:", error);
+        throw error;
+      }
+    },
+
+    async toggle2FA(userId, userType) {
+      try {
+        const endpoint =
+          userType === "sellers"
+            ? `/admin/sellers/${userId}/toggle-2fa`
+            : userType === "admins"
+            ? `/admin/users/${userId}/toggle-2fa`
+            : `/admin/regular-users/${userId}/toggle-2fa`;
+
+        const response = await apiClient.post(endpoint);
+
+        // Also update seller user reference in DB
+        if (userType === "sellers") {
+          const seller = await apiClient.get(`/admin/sellers/${userId}`);
+          localStorage.setItem(
+            "sellers",
+            JSON.stringify([
+              {
+                ...seller.data,
+                twoFactorEnabled: response.data.twoFactorEnabled,
+              },
+            ])
+          );
+        }
+
+        return {
+          success: true,
+          message: "2FA status updated successfully.",
+          user: response.data,
+          twoFactorEnabled: response.data.twoFactorEnabled,
+        };
+      } catch (error) {
+        console.error("Toggle 2FA error:", error);
+        throw error;
+      }
+    },
+
+    // async toggleBlockStatus(userId, userType) {
+    //   try {
+    //     const endpoint =
+    //       userType === "sellers"
+    //         ? `/admin/sellers/${userId}/toggle-block`
+    //         : `/admin/users/${userId}/toggle-block`;
+
+    //     const response = await apiClient.post(endpoint);
+
+    //     if (userType === "sellers") {
+    //       // Get updated seller data
+    //       const sellerResponse = await apiClient.get(
+    //         `/admin/sellers/${userId}`
+    //       );
+
+    //       // Update localStorage
+    //       localStorage.setItem(
+    //         "sellers",
+    //         JSON.stringify([
+    //           {
+    //             ...sellerResponse.data,
+    //             isBlocked: response.data.isBlocked,
+    //           },
+    //         ])
+    //       );
+    //     }
+
+    //     return {
+    //       success: true,
+    //       message: `User ${
+    //         response.data.isBlocked ? "blocked" : "unblocked"
+    //       } successfully.`,
+    //       user: response.data,
+    //       isBlocked: response.data.isBlocked,
+    //     };
+    //   } catch (error) {
+    //     throw error;
+    //   }
+    // },
+
+    async toggleBlockStatus(userId, userType) {
+      try {
+        const endpoint =
+          userType === "sellers"
+            ? `/admin/sellers/${userId}/toggle-block`
+            : userType === "users"
+            ? `/admin/regular-users/${userId}/toggle-block`
+            : `/admin/users/${userId}/toggle-block`;
+
+        const response = await apiClient.post(endpoint);
+        return {
+          success: true,
+          message: `User ${
+            response.data.isBlocked ? "blocked" : "unblocked"
+          } successfully.`,
+          user: response.data,
+          isBlocked: response.data.isBlocked,
+        };
+      } catch (error) {
+        throw error;
+      }
+    },
+
+    async getUserActivity(userId, userType) {
+      try {
+        const endpoint =
+          userType === "sellers"
+            ? `/admin/sellers/${userId}/activity`
+            : userType === "admins"
+            ? `/admin/users/${userId}/activity`
+            : `/admin/regular-users/${userId}/activity`;
+
+        const response = await apiClient.get(endpoint);
+        return response.data;
+      } catch (error) {
+        console.error("Get user activity error:", error);
+        throw error;
+      }
+    },
+
+    async forceLogout(userId, userType) {
+      try {
+        const endpoint =
+          userType === "sellers"
+            ? `/admin/sellers/${userId}/force-logout`
+            : userType === "admins"
+            ? `/admin/users/${userId}/force-logout`
+            : `/admin/regular-users/${userId}/force-logout`;
+
+        const response = await apiClient.post(endpoint);
+        return response.data;
+      } catch (error) {
+        console.error("Force logout error:", error);
+        throw error;
+      }
+    },
+
+    async loginAdmin({ identifier, password }) {
+      try {
+        const response = await apiClient.post("/admin/login", {
+          identifier,
+          password,
+        });
+
+        this.adminUser = response.data.adminUser;
+        this.token = response.data.token;
+
+        localStorage.setItem("adminToken", response.data.token);
+        localStorage.setItem(
+          "adminUser",
+          JSON.stringify(response.data.adminUser)
+        );
+
+        // Set auth header for future requests
+        apiClient.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${response.data.token}`;
+
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
+    },
+
+    // async changePassword({ currentPassword, newPassword }) {
+    //   try {
+    //     const response = await apiClient.post("/admin/change-password", {
+    //       currentPassword,
+    //       newPassword,
+    //     });
+    //     return response.data;
+    //   } catch (error) {
+    //     throw error;
+    //   }
+    // },
+
+    async changePassword({ currentPassword, newPassword }) {
+      try {
+        const response = await apiClient.post("/admin/change-password", {
+          currentPassword,
+          newPassword,
+        });
+
+        // Log successful password change
+        console.log("Password changed successfully");
+
+        // Clear any stored credentials that might be using the old password
+        const token = localStorage.getItem("adminToken");
+        if (token) {
+          // Update the Authorization header with the current token
+          apiClient.defaults.headers.common[
+            "Authorization"
+          ] = `Bearer ${token}`;
+        }
+
+        return response.data;
+      } catch (error) {
+        console.error(
+          "Password change error:",
+          error.response?.data || error.message
+        );
+
+        // Throw a more detailed error that includes the server's response
+        throw {
+          message: error.response?.data?.message || "Failed to change password",
+          status: error.response?.status,
+          response: error.response?.data,
+        };
+      }
+    },
+
+    async fetchDashboardStats({ period = "30d", startDate = new Date() } = {}) {
+      this.isLoading = true;
+      try {
+        // Convert period to days
+        const days =
+          period === "7d"
+            ? 7
+            : period === "30d"
+            ? 30
+            : period === "90d"
+            ? 90
+            : period === "1y"
+            ? 365
+            : 30;
+
+        // Fetch both stats simultaneously
+        const [revenueResponse, dashboardResponse] = await Promise.all([
+          apiClient.get(`/admin/revenue-stats?days=${days}`),
+          apiClient.get(
+            `/admin/dashboard/stats?days=${days}&startDate=${startDate.toISOString()}`
+          ),
+        ]);
+
+        if (dashboardResponse.data && revenueResponse.data) {
+          // Process revenue data
+          const revenueData =
+            revenueResponse.data.revenueData?.map((item) => ({
+              date: new Date(item.date).toISOString().split("T")[0],
+              value: item.amount,
+            })) || [];
+
+          // Update dashboard stats
+          this.dashboardStats = {
+            ...dashboardResponse.data.stats,
+            revenueStats: revenueData,
+            userStats: dashboardResponse.data.userStats || [],
+            orderStats: dashboardResponse.data.orderStats || [],
+            productStats: dashboardResponse.data.productStats || [],
+            avgRevenue: revenueResponse.data.summary.averageDaily || 0,
+            avgUsers: dashboardResponse.data.stats.avgUsers || 0,
+            avgOrders: dashboardResponse.data.stats.avgOrders || 0,
+            avgProducts: dashboardResponse.data.stats.avgProducts || 0,
+          };
+
+          return {
+            recentActivities: dashboardResponse.data.recentActivities || [],
+            popularProducts: dashboardResponse.data.popularProducts || [],
+            stats: this.dashboardStats,
+          };
+        }
+
+        throw new Error("Invalid response data");
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+        toast.error("Failed to load dashboard statistics");
+        this.error = error.message;
+        throw error;
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    // Add more admin actions
+    async fetchAdminUsers() {
+      try {
+        const response = await apiClient.get("/admin/users");
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
+    },
+
+    async fetchRevenueStats(days = 7) {
+      try {
+        console.log("Fetching revenue stats...");
+        const response = await apiClient.get(
+          `/admin/revenue-stats?days=${days}`
+        );
+        console.log("Revenue stats response:", response.data);
+        return response.data;
+      } catch (error) {
+        console.error("Error fetching revenue stats:", error);
+        console.error("Error details:", error.response?.data);
+        toast.error("Failed to load revenue statistics");
+        throw error;
+      }
+    },
+
+    async fetchOrders(params) {
+      this.isLoading = true;
+      try {
+        // Match the enum values from your orderSchema
+        const queryParams = new URLSearchParams({
+          page: params.page || 1,
+          limit: params.limit || 10,
+          status: params.status || "", // Will be one of: Pending, Processing, Shipped, Delivered, Cancelled
+          search: params.search || "",
+          dateFrom: params.dateFrom || "",
+          dateTo: params.dateTo || "",
+          includeRevenue: true,
+        });
+
+        const response = await apiClient.get(`/admin/orders?${queryParams}`);
+
+        // Add proper error checking for the response
+        if (!response.data) {
+          throw new Error("No data received from server");
+        }
+
+        return {
+          orders: response.data.orders || [],
+          pagination: {
+            total: response.data.pagination?.total || 0,
+            currentPage: response.data.pagination?.page || 1,
+          },
+          totalRevenue: response.data.summary?.totalRevenue || 0,
+        };
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+        toast.error(error.message || "Failed to fetch orders");
+        throw error;
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async updateOrderStatus(orderId, data) {
+      try {
+        const response = await apiClient.put(
+          `/admin/orders/${orderId}/status`,
+          data
+        );
+        toast.success("Order status updated successfully");
+        return response.data;
+      } catch (error) {
+        console.error("Error updating order status:", error);
+        toast.error("Failed to update order status");
+        throw error;
+      }
+    },
+
+    async updateAdminUser(userId, userData) {
+      try {
+        const response = await apiClient.put(
+          `/admin/users/${userId}`,
+          userData
+        );
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
+    },
+
+    async fetchSellers(params = {}) {
+      this.loading = true;
+      try {
+        const queryParams = new URLSearchParams({
+          page: params.page || 1,
+          limit: params.limit || 10,
+          verificationStatus: params.verificationStatus || "", // Changed from status to verificationStatus
+          search: params.search || "",
+          sortBy: params.sortBy || "createdAt",
+          order: params.order || "desc",
+        });
+
+        const response = await apiClient.get(`/admin/sellers?${queryParams}`);
+
+        // Debug raw response data
+        console.log(
+          "Raw seller data from API:",
+          response.data.sellers.map((s) => ({
+            id: s._id,
+            verificationStatus: s.verificationStatus,
+            isVerified: s.isVerified, // Log the raw isVerified value
+          }))
+        );
+
+        this.sellers = response.data.sellers.map((sellerData) => {
+          // Log before transformation
+          console.log("Pre-transform seller data:", {
+            id: sellerData._id,
+            isVerified: sellerData.isVerified,
+            verificationStatus: sellerData.verificationStatus,
+          });
+
+          const transformedData = {
+            ...sellerData,
+            username: sellerData.user?.username || "Unknown User",
+            email: sellerData.user?.email || "No Email",
+            productCount: sellerData.products?.length || 0,
+            orderCount: sellerData.orders?.length || 0,
+            totalSales: sellerData.totalSales || 0,
+            rating: sellerData.averageRating || 0,
+            storeName: sellerData.storeName || "Unnamed Store",
+            isVacationMode: sellerData.isVacationMode || false,
+            // Keep original isVerified without default value
+            isVerified: sellerData.isVerified,
+            verificationStatus:
+              sellerData.verificationStatus || "not_submitted",
+          };
+
+          // Log after transformation
+          console.log("Post-transform seller data:", {
+            id: transformedData._id,
+            isVerified: transformedData.isVerified,
+            verificationStatus: transformedData.verificationStatus,
+          });
+
+          return transformedData;
+        });
+
+        this.pagination = {
+          total: response.data.pagination.total,
+          currentPage: response.data.pagination.currentPage,
+          itemsPerPage: response.data.pagination.limit,
+        };
+
+        // Log final state
+        console.log(
+          "Final sellers state:",
+          this.sellers.map((s) => ({
+            id: s._id,
+            verificationStatus: s.verificationStatus,
+            isVerified: s.isVerified,
+          }))
+        );
+        return this.sellers;
+      } catch (error) {
+        console.error("Error fetching sellers:", error);
+        toast.error("Failed to fetch sellers");
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    mapVerificationStatusToStatus(verificationStatus) {
+      const statusMap = {
+        not_submitted: "pending",
+        submitted: "pending_review",
+        under_review: "under_review",
+        approved: "active",
+        rejected: "rejected",
+      };
+      return statusMap[verificationStatus] || "pending";
+    },
+
+    async fetchSellerDetails(sellerId) {
+      try {
+        const response = await apiClient.get(`/admin/sellers/${sellerId}`);
+
+        // Add recent reviews to the seller data
+        const reviewsResponse = await apiClient.get(
+          `/admin/sellers/${sellerId}/reviews`
+        );
+        const sellerWithReviews = {
+          ...response.data,
+          recentReviews: reviewsResponse.data.reviews,
+        };
+
+        this.selectedSeller = sellerWithReviews;
+        return sellerWithReviews;
+      } catch (error) {
+        console.error("Error fetching seller details:", error);
+        toast.error("Failed to fetch seller details");
+        throw error;
+      }
+    },
+
+    // async updateSellerStatus(sellerId, data) {
+    //   try {
+    //     console.log("Updating seller status:", { sellerId, data });
+
+    //     const response = await apiClient.put(
+    //       `/admin/sellers/${sellerId}/status`,
+    //       data
+    //     );
+
+    //     if (response.data.success) {
+    //       // Update the seller in the local state
+    //       const updatedSeller = response.data.seller;
+    //       const index = this.sellers.findIndex((s) => s._id === sellerId);
+
+    //       if (index !== -1) {
+    //         // Update the seller with all the new data
+    //         this.sellers[index] = {
+    //           ...this.sellers[index],
+    //           verificationStatus: data.verificationStatus,
+    //           isVerified: data.isVerified,
+    //           username:
+    //             updatedSeller.user?.username || this.sellers[index].username,
+    //           email: updatedSeller.user?.email || this.sellers[index].email,
+    //         };
+
+    //         console.log("Updated seller in state:", this.sellers[index]); // Debug log
+    //       }
+
+    //       // Force a refetch to ensure data consistency
+    //       await this.fetchSellers({
+    //         page: this.pagination.currentPage,
+    //         limit: this.pagination.itemsPerPage,
+    //         verificationStatus: this.filters?.verificationStatus || "",
+    //         search: this.filters?.search || "",
+    //         sortBy: this.filters?.sortBy || "createdAt",
+    //         order: this.filters?.order || "desc",
+    //       });
+    //     }
+
+    //     return response.data;
+    //   } catch (error) {
+    //     console.error("Error updating seller status:", error);
+    //     toast.error("Failed to update seller status");
+    //     throw error;
+    //   }
+    // },
+
+    async updateSellerStatus(sellerId, data) {
+      try {
+        console.log("Updating seller status - Request:", {
+          sellerId,
+          verificationStatus: data.verificationStatus,
+          isVerified: data.isVerified,
+        });
+
+        const response = await apiClient.put(
+          `/admin/sellers/${sellerId}/status`,
+          data
+        );
+
+        console.log("Update response from server:", {
+          success: response.data.success,
+          seller: {
+            id: response.data.seller?._id,
+            verificationStatus: response.data.seller?.verificationStatus,
+            isVerified: response.data.seller?.isVerified,
+          },
+        });
+
+        if (response.data.success) {
+          const index = this.sellers.findIndex((s) => s._id === sellerId);
+
+          if (index !== -1) {
+            // Log state before update
+            console.log("Seller state before update:", {
+              id: this.sellers[index]._id,
+              verificationStatus: this.sellers[index].verificationStatus,
+              isVerified: this.sellers[index].isVerified,
+            });
+
+            this.sellers[index] = {
+              ...this.sellers[index],
+              verificationStatus: data.verificationStatus,
+              isVerified: data.isVerified,
+            };
+
+            // Log state after update
+            console.log("Seller state after update:", {
+              id: this.sellers[index]._id,
+              verificationStatus: this.sellers[index].verificationStatus,
+              isVerified: this.sellers[index].isVerified,
+            });
+          }
+        }
+
+        return response.data;
+      } catch (error) {
+        console.error("Error updating seller status:", error);
+        throw error;
+      }
+    },
+
+    async verifySellerAccount(sellerId) {
+      try {
+        const response = await apiClient.put(
+          `/admin/sellers/${sellerId}/verify`,
+          {
+            status: "approved",
+          }
+        );
+
+        toast.success("Seller verified successfully");
+        return response.data;
+      } catch (error) {
+        console.error("Error verifying seller:", error);
+        toast.error("Failed to verify seller");
+        throw error;
+      }
+    },
+
+    async suspendSellerAccount(sellerId, reason) {
+      try {
+        const response = await apiClient.put(
+          `/admin/sellers/${sellerId}/status`,
+          {
+            status: "suspended",
+            note: reason,
+          }
+        );
+
+        toast.success("Seller suspended successfully");
+        return response.data;
+      } catch (error) {
+        console.error("Error suspending seller:", error);
+        toast.error("Failed to suspend seller");
+        throw error;
+      }
+    },
+
+    logoutAdmin() {
+      return new Promise((resolve) => {
+        this.adminUser = null;
+        this.token = null;
+        localStorage.removeItem("adminToken");
+        localStorage.removeItem("adminUser");
+        delete apiClient.defaults.headers.common["Authorization"];
+        resolve();
+      });
+    },
+  },
+});

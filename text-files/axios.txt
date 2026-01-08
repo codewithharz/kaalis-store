@@ -1,0 +1,279 @@
+import axios from "axios";
+import { useUserStore } from "../store/user";
+
+const apiClient = axios.create({
+  baseURL: "http://127.0.0.1:7787/api", // LOCAL
+  // baseURL: `${import.meta.env.VITE_API_URL}/api`, //Vite's way of accessing environment variables PRODUCTION
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+apiClient.interceptors.request.use(
+  (config) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user && user.token) {
+      config.headers.Authorization = `Bearer ${user.token}`;
+      console.log("Token:", user.token); // Log the token
+    } else {
+      console.log("No token found");
+    }
+    console.log("Request Config:", config); // Log the entire request configuration
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// apiClient.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     console.error(
+//       "API Error:",
+//       error.response ? error.response.data : error.message
+//     );
+//     console.error("Request URL:", error.config.url);
+//     console.error("Request Method:", error.config.method);
+//     if (error.response && error.response.status === 401) {
+//       // Clear user data and redirect to login
+//       const userStore = useUserStore();
+//       userStore.logoutUser();
+//       window.location.href = "/login"; // Redirect to login page
+//     }
+//     return Promise.reject(error);
+//   }
+// );
+
+apiClient.interceptors.response.use(
+  (response) => {
+    console.log("Response:", response);
+    return response;
+  },
+  (error) => {
+    console.error(
+      "API Error:",
+      error.response ? error.response.data : error.message
+    );
+    console.error("Request URL:", error.config.url);
+    console.error("Request Method:", error.config.method);
+    console.error("Request Headers:", error.config.headers);
+    console.error("Request Data:", error.config.data);
+    if (error.response && error.response.status === 401) {
+      const userStore = useUserStore();
+      userStore.logoutUser();
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default apiClient;
+
+
+
+
+
+
+====================v2=========================
+// import axios from "axios";
+// import { useUserStore } from "../store/user";
+
+// const apiClient = axios.create({
+//   baseURL: "http://127.0.0.1:7787/api", // LOCAL
+//   // baseURL: `${import.meta.env.VITE_API_URL}/api`, //Vite's way of accessing environment variables PRODUCTION
+//   headers: {
+//     "Content-Type": "application/json",
+//   },
+// });
+
+// apiClient.interceptors.request.use(
+//   (config) => {
+//     const user = JSON.parse(localStorage.getItem("user"));
+//     if (user && user.token) {
+//       config.headers.Authorization = `Bearer ${user.token}`;
+//       console.log("Token:", user.token); // Log the token
+//     } else {
+//       console.log("No token found");
+//     }
+//     console.log("Request Config:", config); // Log the entire request configuration
+//     return config;
+//   },
+//   (error) => {
+//     return Promise.reject(error);
+//   }
+// );
+
+// apiClient.interceptors.response.use(
+//   (response) => {
+//     console.log("Response:", response);
+//     return response;
+//   },
+//   (error) => {
+//     console.error(
+//       "API Error:",
+//       error.response ? error.response.data : error.message
+//     );
+//     console.error("Request URL:", error.config.url);
+//     console.error("Request Method:", error.config.method);
+//     console.error("Request Headers:", error.config.headers);
+//     console.error("Request Data:", error.config.data);
+
+//     if (error.response && error.response.status === 401) {
+//       // Use a function to handle logout to avoid circular dependency
+//       handleUnauthorizedError();
+//     }
+//     return Promise.reject(error);
+//   }
+// );
+
+// // Separate function to handle unauthorized errors
+// function handleUnauthorizedError() {
+//   const userStore = useUserStore();
+//   userStore.logoutUser();
+//   window.location.href = "/login";
+// }
+
+// export default apiClient;
+
+import axios from "axios";
+import { useUserStore } from "../store/user";
+
+const apiClient = axios.create({
+  baseURL: "http://127.0.0.1:7787/api", // LOCAL
+  // baseURL: `${import.meta.env.VITE_API_URL}/api`, //Vite's way of accessing environment variables PRODUCTION
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// Request Interceptor with enhanced logging and error handling
+apiClient.interceptors.request.use(
+  (config) => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (user && user.token) {
+        config.headers.Authorization = `Bearer ${user.token}`;
+        console.log("Token:", user.token);
+      } else {
+        console.log("No token found");
+      }
+
+      // Log clean version of config (without sensitive data)
+      const sanitizedConfig = {
+        ...config,
+        headers: {
+          ...config.headers,
+          Authorization: config.headers.Authorization
+            ? "[PRESENT]"
+            : "[ABSENT]",
+        },
+      };
+      console.log("Request Config:", sanitizedConfig);
+
+      // Add retry configuration
+      config.retries = config.retries ?? 3;
+      config.retryDelay = config.retryDelay ?? 1000;
+
+      return config;
+    } catch (error) {
+      console.error("Error in request interceptor:", error);
+      return Promise.reject(error);
+    }
+  },
+  (error) => {
+    console.error("Request interceptor error:", error);
+    return Promise.reject(error);
+  }
+);
+
+// Response Interceptor with enhanced error handling and retry logic
+apiClient.interceptors.response.use(
+  (response) => {
+    console.log("Response:", {
+      status: response.status,
+      statusText: response.statusText,
+      data: response.data,
+    });
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Log error details
+    console.error("API Error:", {
+      message: error.response?.data?.message || error.message,
+      status: error.response?.status,
+      url: originalRequest.url,
+      method: originalRequest.method,
+    });
+
+    // Handle network errors
+    if (error.code === "ERR_NETWORK" || error.code === "ECONNABORTED") {
+      if (originalRequest.retries > 0) {
+        originalRequest.retries--;
+        await new Promise((resolve) =>
+          setTimeout(resolve, originalRequest.retryDelay)
+        );
+        console.log(
+          `Retrying request (${originalRequest.retries} attempts left)`
+        );
+        return apiClient(originalRequest);
+      } else {
+        console.error("Network error: Maximum retries reached");
+        return Promise.reject({
+          message:
+            "Network connection error. Please check your internet connection.",
+          code: "NETWORK_ERROR",
+        });
+      }
+    }
+
+    // Handle Unauthorized (401) errors
+    if (error.response?.status === 401) {
+      console.log("Unauthorized access detected");
+      handleUnauthorizedError();
+      return Promise.reject(error);
+    }
+
+    // Handle Paystack-specific errors
+    if (
+      error.response?.data?.status === false &&
+      error.response?.data?.message
+    ) {
+      return Promise.reject({
+        message: error.response.data.message,
+        code: "PAYSTACK_ERROR",
+      });
+    }
+
+    // Log detailed error information for debugging
+    console.error("Request Details:", {
+      url: originalRequest.url,
+      method: originalRequest.method,
+      headers: {
+        ...originalRequest.headers,
+        Authorization: originalRequest.headers.Authorization
+          ? "[PRESENT]"
+          : "[ABSENT]",
+      },
+      data: originalRequest.data,
+    });
+
+    return Promise.reject(error);
+  }
+);
+
+// Enhanced unauthorized error handler
+function handleUnauthorizedError() {
+  try {
+    const userStore = useUserStore();
+    userStore.logoutUser();
+    window.location.href = "/login?reason=session_expired";
+  } catch (error) {
+    console.error("Error during unauthorized error handling:", error);
+    window.location.href = "/login";
+  }
+}
+
+export default apiClient;

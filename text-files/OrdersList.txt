@@ -1,0 +1,278 @@
+<!-- OrdersList.vue -->
+<template>
+    <div class="container mx-auto px-4">
+        <div v-if="isLoading" class="text-center py-8">
+            <div class="animate-spin h-8 w-8 border-b-2 border-amber-500 rounded-full mx-auto"></div>
+            <p class="mt-2 text-gray-600">Loading orders...</p>
+        </div>
+
+        <div v-else-if="error" class="text-center py-8 text-red-600">
+            {{ error }}
+        </div>
+
+        <div v-else-if="!orders?.length" class="text-center py-8">
+            <p class="text-gray-600">No orders found</p>
+        </div>
+
+        <div v-else class="space-y-4">
+            <ProfileOrderCard v-for="order in orders" :key="order._id" :order="order" @order-updated="loadOrders" />
+        </div>
+    </div>
+</template>
+
+<script>
+import { useOrderStore } from '../store/orderStore';
+import { ref, onMounted } from 'vue';
+import ProfileOrderCard from '../views/ProfileOrderCard.vue';
+
+export default {
+    name: 'OrdersList',
+    components: {
+        ProfileOrderCard
+    },
+    setup() {
+        const orderStore = useOrderStore();
+        const orders = ref([]);
+        const isLoading = ref(true);
+        const error = ref(null);
+
+        const loadOrders = async () => {
+            try {
+                isLoading.value = true;
+                error.value = null;
+                const response = await orderStore.fetchUserOrders();
+                console.log('Fetched orders:', response);
+                orders.value = Array.isArray(response) ? response : response?.orders || [];
+            } catch (err) {
+                console.error('Error loading orders:', err);
+                error.value = 'Failed to load orders. Please try again.';
+            } finally {
+                isLoading.value = false;
+            }
+        };
+
+        onMounted(loadOrders);
+
+        return {
+            orders,
+            isLoading,
+            error,
+            loadOrders
+        };
+    }
+};
+</script>
+
+
+======================version-2=========================
+<template>
+    <div class="container mx-auto px-4">
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-gray-500 text-sm">Total Orders</h3>
+                <p class="text-2xl font-bold">{{ orders.length }}</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-gray-500 text-sm">Total Spent</h3>
+                <p class="text-2xl font-bold">₦{{ formatAmount(getTotalSpent) }}</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-gray-500 text-sm">Active Orders</h3>
+                <p class="text-2xl font-bold">{{ getActiveOrders }}</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-gray-500 text-sm">Average Order Value</h3>
+                <p class="text-2xl font-bold">₦{{ formatAmount(getAverageOrderValue) }}</p>
+            </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="bg-white p-4 rounded-lg shadow mb-6">
+            <div class="flex flex-col md:flex-row gap-4">
+                <!-- Status Filter -->
+                <select v-model="filters.status"
+                    class="border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                    <option value="all">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+
+                <!-- Date Range Filter -->
+                <select v-model="filters.dateRange"
+                    class="border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                    <option value="all">All Time</option>
+                    <option value="7">Last 7 Days</option>
+                    <option value="30">Last 30 Days</option>
+                    <option value="90">Last 3 Months</option>
+                    <option value="180">Last 6 Months</option>
+                </select>
+
+                <!-- Search Input -->
+                <div class="relative flex-1">
+                    <input type="text" v-model="filters.search" placeholder="Search by Order ID or Product Name"
+                        class="w-full border rounded-md px-3 py-2 pl-10 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500" />
+                    <Search class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                </div>
+
+                <!-- Sort By -->
+                <select v-model="filters.sortBy"
+                    class="border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                    <option value="date-desc">Newest First</option>
+                    <option value="date-asc">Oldest First</option>
+                    <option value="amount-desc">Amount: High to Low</option>
+                    <option value="amount-asc">Amount: Low to High</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Orders List -->
+        <div v-if="isLoading" class="text-center py-8">
+            <div class="animate-spin h-8 w-8 border-b-2 border-amber-500 rounded-full mx-auto"></div>
+            <p class="mt-2 text-gray-600">Loading orders...</p>
+        </div>
+        <div v-else-if="error" class="text-center py-8 text-red-600">
+            {{ error }}
+        </div>
+        <div v-else-if="!filteredOrders.length" class="text-center py-8">
+            <p class="text-gray-600">No orders found</p>
+        </div>
+        <div v-else class="space-y-4">
+            <ProfileOrderCard v-for="order in filteredOrders" :key="order._id" :order="order"
+                @order-updated="loadOrders" />
+        </div>
+    </div>
+</template>
+
+<script>
+import { ref, computed, onMounted } from 'vue';
+import { Search } from 'lucide-vue-next';
+import { useOrderStore } from '../store/orderStore';
+import ProfileOrderCard from '../views/ProfileOrderCard.vue';
+
+export default {
+    name: 'OrdersList',
+    components: {
+        ProfileOrderCard,
+        Search
+    },
+    setup() {
+        const orderStore = useOrderStore();
+        const orders = ref([]);
+        const isLoading = ref(true);
+        const error = ref(null);
+
+        const filters = ref({
+            status: 'all',
+            dateRange: 'all',
+            search: '',
+            sortBy: 'date-desc'
+        });
+
+        // Computed properties for statistics
+        const getTotalSpent = computed(() => {
+            return orders.value.reduce((total, order) => total + order.totalAmount, 0);
+        });
+
+        const getActiveOrders = computed(() => {
+            return orders.value.filter(order =>
+                ['pending', 'processing', 'shipped'].includes(order.status.toLowerCase())
+            ).length;
+        });
+
+        const getAverageOrderValue = computed(() => {
+            return orders.value.length ? getTotalSpent.value / orders.value.length : 0;
+        });
+
+        // Filtered and sorted orders
+        const filteredOrders = computed(() => {
+            let filtered = [...orders.value];
+
+            // Status filter
+            if (filters.value.status !== 'all') {
+                filtered = filtered.filter(order =>
+                    order.status.toLowerCase() === filters.value.status.toLowerCase()
+                );
+            }
+
+            // Date range filter
+            if (filters.value.dateRange !== 'all') {
+                const daysAgo = parseInt(filters.value.dateRange);
+                const cutoffDate = new Date();
+                cutoffDate.setDate(cutoffDate.getDate() - daysAgo);
+                filtered = filtered.filter(order =>
+                    new Date(order.createdAt) >= cutoffDate
+                );
+            }
+
+            // Search filter
+            if (filters.value.search) {
+                const searchTerm = filters.value.search.toLowerCase();
+                filtered = filtered.filter(order =>
+                    order.orderId.toLowerCase().includes(searchTerm) ||
+                    order.products.some(product =>
+                        product.product?.name?.toLowerCase().includes(searchTerm)
+                    )
+                );
+            }
+
+            // Sorting
+            filtered.sort((a, b) => {
+                switch (filters.value.sortBy) {
+                    case 'date-asc':
+                        return new Date(a.createdAt) - new Date(b.createdAt);
+                    case 'date-desc':
+                        return new Date(b.createdAt) - new Date(a.createdAt);
+                    case 'amount-asc':
+                        return a.totalAmount - b.totalAmount;
+                    case 'amount-desc':
+                        return b.totalAmount - a.totalAmount;
+                    default:
+                        return 0;
+                }
+            });
+
+            return filtered;
+        });
+
+        const formatAmount = (amount) => {
+            return amount.toLocaleString('en-NG', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        };
+
+        const loadOrders = async () => {
+            try {
+                isLoading.value = true;
+                error.value = null;
+                const response = await orderStore.fetchUserOrders();
+                orders.value = Array.isArray(response) ? response : response?.orders || [];
+            } catch (err) {
+                console.error('Error loading orders:', err);
+                error.value = 'Failed to load orders. Please try again.';
+            } finally {
+                isLoading.value = false;
+            }
+        };
+
+        onMounted(loadOrders);
+
+        return {
+            orders,
+            isLoading,
+            error,
+            filters,
+            filteredOrders,
+            getTotalSpent,
+            getActiveOrders,
+            getAverageOrderValue,
+            formatAmount,
+            loadOrders
+        };
+    }
+};
+</script>

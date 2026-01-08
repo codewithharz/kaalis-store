@@ -1,0 +1,51 @@
+%% mmdc -i architecture.mmd -o architecture.svg
+%% https://mermaid.live
+
+
+flowchart TB
+subgraph Frontend
+    CP[CheckoutPage.vue]
+    PSuc[PaymentSuccess.vue]
+    PCb[PaymentCallback.vue]
+    PStr[PaymentStore]
+end
+
+subgraph Backend["Backend (Express)"]
+    subgraph Controllers
+        PCtrl[PaystackController]
+    end
+    subgraph Services
+        PSvc[PaystackService]
+        PO[PayoutService]
+        NS[NotificationService]
+    end
+    subgraph Models
+        PM[PaymentModel]
+        VPM[VendorPayoutModel]
+        UM[UserModel]
+    end
+    subgraph Config
+        PConf[PayoutConfig]
+        CJ[CronJobs]
+    end
+    subgraph Middleware
+        PWH[PaystackWebhook]
+        LM[LoggerMiddleware]
+    end
+end
+
+subgraph External
+    PA["Paystack API"]
+end
+
+%% Flow connections
+CP -->|"Initiates Payment"| PSuc
+PSuc -->|"API Calls"| PCtrl
+PCtrl -->|"Processes Payment"| PSvc
+PSvc -->|"Interacts"| PA
+PSvc -->|"Creates"| VPM
+CJ -->|"Schedules"| PO
+PO -->|"Processes"| VPM
+PO -->|"Notifies"| NS
+PWH -->|"Validates"| PCtrl
+PCtrl -->|"Uses"| LM

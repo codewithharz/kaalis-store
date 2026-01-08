@@ -1,0 +1,378 @@
+<template>
+    <div class="w-full max-w-7xl mx-auto pb-9 bg-white px-4 sm:px-6 lg:px-8">
+        <div v-if="sellerStore.loading" class="text-center py-8">
+            <div class="spinner"></div>
+            <p class="mt-4">Loading products...</p>
+        </div>
+        <div v-else-if="sellerStore.errorMessage" class="text-center text-red-500 py-8">
+            {{ sellerStore.errorMessage }}
+        </div>
+        <div v-else class="flex flex-col md:flex-row">
+            <!-- Mobile Filter Toggle -->
+            <button @click="toggleFilters" class="lg:hidden mb-4 text-blue-500 font-semibold">
+                {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
+            </button>
+
+            <!-- Sidebar Filter -->
+            <div :class="['lg:w-1/6 text-sm p-4 rounded-lg mb-4 lg:mb-0 lg:mr-4', { 'hidden lg:block': !showFilters }]">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="font-bold">Brand</h2>
+                    <button @click="clearFilters"
+                        class="text-blue-500 hover:text-blue-700 text-xs transition duration-300">Clear</button>
+                </div>
+
+                <!-- Price Filter -->
+                <div class="mb-4">
+                    <h3 class="font-semibold mb-2">Price</h3>
+                    <div v-for="(range, index) in priceCounts" :key="index" class="flex items-center text-[13px] mb-1">
+                        <input type="checkbox" :id="'price-' + index" v-model="selectedPriceRanges" :value="range.value"
+                            class="mr-2">
+                        <label :for="'price-' + index">{{ range.label }} ({{ range.count }})</label>
+                    </div>
+                </div>
+
+                <!-- Discount Filter -->
+                <div class="mb-4">
+                    <h3 class="font-semibold mb-2">Discount</h3>
+                    <div v-for="(range, index) in discountCounts" :key="index"
+                        class="flex items-center text-[13px] mb-1">
+                        <input type="checkbox" :id="'discount-' + index" v-model="selectedDiscountRanges"
+                            :value="range.value" class="mr-2">
+                        <label :for="'discount-' + index">{{ range.label }} ({{ range.count }})</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Listing -->
+            <div class="flex-1 mx-auto">
+                <h3 class="text-lg font-semibold mb-4">Products Found ({{ filteredAndSortedProducts.length }})</h3>
+
+                <!-- Search and Sort -->
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
+                    <!-- Search Field -->
+                    <div class="w-full sm:w-auto mb-2 sm:mb-0 relative">
+                        <input v-model="searchQuery" type="text" placeholder="Search products..."
+                            class="w-full sm:w-72 text-sm border border-gray-300 rounded-md py-2 px-3 pr-10 bg-gray-200 placeholder:text-xs placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ff934b] focus:border-transparent">
+                        <Search class=" absolute size-5 right-3 top-1/2 transform -translate-y-1/2 text-[#ff934b]" />
+                    </div>
+
+                    <!-- Sort Options -->
+                    <div class="w-full sm:w-auto">
+                        <select v-model="sortOption" class="w-full sm:w-auto border p-2 rounded text-sm">
+                            <option value="">Sort By</option>
+                            <option value="price-low-high">Price Low to High</option>
+                            <option value="price-high-low">Price High to Low</option>
+                            <option value="name-a-z">Name (A to Z)</option>
+                            <option value="name-z-a">Name (Z to A)</option>
+                            <option value="discount">Discount</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div v-if="filteredAndSortedProducts.length">
+                    <!-- Product Grid -->
+                    <div class="flex justify-center">
+                        <div class="text-xs grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full md:w-[98%]">
+                            <div v-for="product in filteredAndSortedProducts" :key="product._id"
+                                class="bg-white rounded-lg overflow-hidden transition duration-300 transform border hover:shadow-md flex flex-col">
+                                <CustomImage :src="product.images[0]" :alt="product.name" :showButton="true"
+                                    @click="viewProduct(product._id)" />
+
+                                <div
+                                    class="p-4 flex-grow flex flex-col justify-between hover:border-t border-t hover:border-[#ff934b]">
+                                    <div>
+                                        <div class="pb-3 space-x-1">
+                                            <span @click="viewProduct(product._id)"
+                                                class="font-medium cursor-pointer ">{{ product.name
+                                                }}</span>
+                                            <span class="text-[#363636]">{{ truncateDescription(product.description)
+                                                }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center mb-2">
+                                            <p class="text-[#f47a24] text-[13px] font-semibold">
+                                                ₦ {{ (product.price).toFixed(2) }}
+                                            </p>
+                                            <p class="text-gray-500 line-through">₦ {{ (product.originalPrice) }}</p>
+                                        </div>
+                                        <p class="text-[#f47a24] mb-2">{{ product.discount }}% off</p>
+                                    </div>
+                                    <div class="flex items-center text-sm space-x-2">
+                                        <transition name="social-proof-transition">
+                                            <div v-if="product.socialProof" class="bg-rd-400 w-full flex items-center">
+                                                <component
+                                                    :is="product.socialProof[product.currentSocialProofIndex].icon"
+                                                    class="w-4 h-4 text-[#f47a24]">
+                                                </component>
+                                                <span class="text-xs ml-2"
+                                                    v-html="product.socialProof[product.currentSocialProofIndex].label"></span>
+                                            </div>
+                                        </transition>
+                                    </div>
+                                    <!-- Conditional Rendering for Ratings -->
+                                    <div v-if="product.averageRating !== undefined"
+                                        class="flex items-center text-sm space-x-2 py-3">
+                                        <span v-if="product.averageRating > 0" class="flex gap-1 text-[10px]">
+                                            {{ formatRating(product.averageRating) }}
+                                            <Star class="size-4" v-for="star in 5" :key="star"
+                                                :class="star <= Math.round(product.averageRating) ? 'text-yellow-400' : 'text-gray-300'" />
+                                        </span>
+                                        <span v-if="product.numberOfRatings > 0" class="ml-2 text-gray-500 text-[10px]">
+                                            ({{
+                                                product.numberOfRatings }} {{
+                                                product.numberOfRatings === 1 ? 'review' : 'reviews' }})
+                                        </span>
+                                        <span v-else class="ml-2 text-gray-500 text-[10px]">
+                                            (No reviews yet)
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-else>
+                    No products available.
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+import { ref, onMounted, computed } from 'vue';
+// import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
+import { useSellerStore } from '../store/sellerStore.js';
+import { Shirt, ShoppingCart, Heart, Star, Search, Camera } from 'lucide-vue-next';
+import CustomImage from './CustomImage.vue';
+
+export default {
+    name: 'SellerProducts',
+    components: {
+        Shirt, ShoppingCart, Heart, Star, Search, Camera,
+        CustomImage,
+    },
+    props: ['sellerId'],
+    methods: {
+        formatRating(rating) {
+            return rating % 1 === 0 ? rating.toFixed(0) : rating.toFixed(1);
+        }
+    },
+    setup() {
+        const route = useRoute();
+        const router = useRouter();
+        const sellerStore = useSellerStore();
+        const products = ref([]);
+        const sortOption = ref('');
+        const searchQuery = ref('');
+        const selectedPriceRanges = ref([]);
+        const selectedDiscountRanges = ref([]);
+
+        const fetchProducts = async () => {
+            try {
+                const sellerId = route.params.id;
+                console.log('Fetching products for seller ID:', sellerId);
+                const fetchedProducts = await sellerStore.fetchSellerProducts(sellerId);
+                console.log('Fetched products:', fetchedProducts);
+                products.value = Array.isArray(fetchedProducts) ? fetchedProducts : [];
+            } catch (error) {
+                console.error('Failed to fetch products:', error);
+                // Remove the setErrorMessage call as it's not defined
+            }
+        };
+
+        const truncateDescription = (description, maxLength = 100) => {
+            return description.length > maxLength ? description.substring(0, maxLength) + '...' : description;
+        };
+
+        onMounted(() => {
+            fetchProducts();
+        });
+
+        const viewProduct = (productId) => {
+            router.push({ name: 'ProductDetails', params: { id: productId } });
+        };
+
+        const filteredAndSortedProducts = computed(() => {
+            if (!Array.isArray(products.value)) return [];
+
+            let filteredProducts = products.value.filter(product => {
+                if (!product) return false;
+
+                let priceMatch = selectedPriceRanges.value.length === 0 || selectedPriceRanges.value.some(range => {
+                    const price = product.price;
+                    switch (range) {
+                        case '0-1000': return price < 1000;
+                        case '1000-5000': return price >= 1000 && price <= 5000;
+                        case '5000-10000': return price >= 5000 && price <= 10000;
+                        case '10000-50000': return price >= 10000 && price <= 50000;
+                        case '50000-100000': return price >= 50000 && price <= 100000;
+                        case 'above-100000': return price > 100000;
+                        default: return true;
+                    }
+                });
+
+                let discountMatch = selectedDiscountRanges.value.length === 0 || selectedDiscountRanges.value.some(range => {
+                    switch (range) {
+                        case '10-above': return product.discount >= 10;
+                        case '20-above': return product.discount >= 20;
+                        case '30-above': return product.discount >= 30;
+                        case '40-above': return product.discount >= 40;
+                        case '50-above': return product.discount >= 50;
+                        default: return true;
+                    }
+                });
+
+                let searchMatch = product.name && product.name.toLowerCase().includes(searchQuery.value.toLowerCase());
+
+                return priceMatch && discountMatch && searchMatch;
+
+            }).map(product => ({
+                ...product,
+                originalPrice: product.originalPrice || (product.discount ? Math.round(product.price / (1 - product.discount / 100)) : product.price)
+            }));
+
+            switch (sortOption.value) {
+                case 'price-low-high':
+                    filteredProducts.sort((a, b) => a.price - b.price);
+                    break;
+                case 'price-high-low':
+                    filteredProducts.sort((a, b) => b.price - a.price);
+                    break;
+                case 'name-a-z':
+                    filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+                case 'name-z-a':
+                    filteredProducts.sort((a, b) => b.name.localeCompare(a.name));
+                    break;
+                case 'discount':
+                    filteredProducts.sort((a, b) => b.discount - a.discount);
+                    break;
+            }
+
+            return filteredProducts;
+        });
+
+        const clearFilters = () => {
+            selectedPriceRanges.value = [];
+            selectedDiscountRanges.value = [];
+            searchQuery.value = '';
+            sortOption.value = '';
+        };
+
+        // Count the number of products in each price range
+        const priceCounts = computed(() => {
+            const priceRanges = [
+                { label: '₦ 0 - ₦ 1,000', value: '0-1000' },
+                { label: '₦ 1,000 - ₦ 5,000', value: '1000-5000' },
+                { label: '₦ 5,000 - ₦ 10,000', value: '5000-10000' },
+                { label: '₦ 10,000 - ₦ 50,000', value: '10000-50000' },
+                { label: '₦ 50,000 - ₦ 100,000', value: '50000-100000' },
+                { label: 'Above ₦ 100,000', value: 'above-100000' },
+            ];
+
+            return priceRanges.map(range => {
+                const count = products.value.filter(product => {
+                    const price = product.price;
+                    switch (range.value) {
+                        case '0-1000': return price < 1000;
+                        case '1000-5000': return price >= 1000 && price <= 5000;
+                        case '5000-10000': return price >= 5000 && price <= 10000;
+                        case '10000-50000': return price >= 10000 && price <= 50000;
+                        case '50000-100000': return price >= 50000 && price <= 100000;
+                        case 'above-100000': return price > 100000;
+                        default: return false;
+                    }
+                }).length;
+
+                return { ...range, count };
+            });
+        });
+
+        // Count the number of products in each discount range
+        const discountCounts = computed(() => {
+            const discountRanges = [
+                { label: '10% and above', value: '10-above' },
+                { label: '20% and above', value: '20-above' },
+                { label: '30% and above', value: '30-above' },
+                { label: '40% and above', value: '40-above' },
+                { label: '50% and above', value: '50-above' },
+            ];
+
+            return discountRanges.map(range => {
+                const count = products.value.filter(product => {
+                    switch (range.value) {
+                        case '10-above': return product.discount >= 10;
+                        case '20-above': return product.discount >= 20;
+                        case '30-above': return product.discount >= 30;
+                        case '40-above': return product.discount >= 40;
+                        case '50-above': return product.discount >= 50;
+                        default: return false;
+                    }
+                }).length;
+
+                return { ...range, count };
+            });
+        });
+
+        const showFilters = ref(false);
+
+        const toggleFilters = () => {
+            showFilters.value = !showFilters.value;
+        };
+
+
+        return {
+            products,
+            truncateDescription,
+            filteredAndSortedProducts,
+            sortOption,
+            searchQuery,
+            selectedPriceRanges,
+            selectedDiscountRanges,
+            clearFilters,
+            priceCounts,
+            discountCounts,
+            sellerStore,
+            viewProduct,
+            showFilters,
+            toggleFilters
+        };
+    }
+};
+</script>
+
+<style scoped>
+.social-proof-transition-enter-active,
+.social-proof-transition-leave-active {
+    transition: opacity 0.5s, transform 0.5s;
+    color: #f47a24;
+}
+
+.social-proof-transition-enter,
+.social-proof-transition-leave-to {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+</style>

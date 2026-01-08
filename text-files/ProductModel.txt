@@ -1,0 +1,249 @@
+const mongoose = require("mongoose");
+
+const unitSchema = new mongoose.Schema({
+  base: {
+    type: String,
+    required: true,
+    enum: [
+      "piece",
+      "gram",
+      "kilogram",
+      "milliliter",
+      "liter",
+      "centimeter",
+      "meter",
+      "pair",
+    ],
+  },
+  value: {
+    type: Number,
+    required: true,
+    min: 0,
+  },
+  display: String, // For compound units, e.g., "ml/bottle"
+});
+
+const productSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    slug: { type: String, required: true, unique: true }, // SEO-friendly URL
+    description: { type: String, required: true },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    seller: { type: mongoose.Schema.Types.ObjectId, ref: "Seller" },
+    price: { type: Number, required: true, min: 0 },
+    originalPrice: { type: Number, min: 0 },
+    images: [{ type: String, required: true }],
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
+    },
+    stock: { type: Number, default: 0, min: 0 },
+    discount: { type: Number, default: 0, min: 0, max: 100 }, // Percentage discount
+    variants: [
+      {
+        color: { type: String },
+        size: { type: String },
+        stock: { type: Number },
+      },
+    ],
+    averageRating: { type: Number, default: 0 },
+    numberOfRatings: { type: Number, default: 0 },
+    brand: { type: String },
+    unit: unitSchema,
+    unitCategory: {
+      type: String,
+      required: true,
+      enum: ["weight", "volume", "length", "quantity"],
+    },
+    bulkPricing: [
+      {
+        quantity: Number,
+        price: Number,
+      },
+    ],
+    customUnit: String,
+
+    tags: {
+      type: [{ type: String }],
+      validate: {
+        validator: function (v) {
+          return v.length <= 3;
+        },
+        message: "You can specify up to 3 tags only.",
+      },
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// Indexes to improve search performance
+productSchema.index({ name: 1 });
+productSchema.index({ slug: 1 });
+productSchema.index({ category: 1 });
+productSchema.index({ tags: 1 });
+
+// Pre-save hook to generate slug from name if not provided
+productSchema.pre("save", function (next) {
+  if (!this.slug) {
+    this.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  }
+  next();
+});
+
+const Product = mongoose.model("Product", productSchema);
+module.exports = Product;
+
+
+=====================================================V-2============================================
+const mongoose = require("mongoose");
+
+// Enhanced Unit Schema
+const unitSchema = new mongoose.Schema({
+  category: {
+    type: String,
+    required: true,
+    enum: ["weight", "volume", "length", "area", "quantity", "time", "other"],
+  },
+  baseUnit: {
+    type: String,
+    required: true,
+  },
+  conversionFactor: {
+    type: Number,
+    required: true,
+    min: 0,
+  },
+  value: {
+    type: Number,
+    required: true,
+    min: 0,
+  },
+  displayUnit: String,
+  packagingUnit: String,
+  precision: {
+    type: Number,
+    default: 2,
+    min: 0,
+    max: 10,
+  },
+  compoundUnit: {
+    numerator: String,
+    denominator: String,
+  },
+  regionSpecificDisplay: {
+    type: Map,
+    of: String,
+  },
+});
+
+// Product Schema
+const productSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    slug: { type: String, required: true, unique: true },
+    description: { type: String, required: true },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    seller: { type: mongoose.Schema.Types.ObjectId, ref: "Seller" },
+    price: { type: Number, required: true, min: 0 },
+    originalPrice: { type: Number, min: 0 },
+    images: [{ type: String, required: true }],
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
+    },
+    stock: { type: Number, default: 0, min: 0 },
+    reservedStock: { type: Number, default: 0, min: 0 },
+    discount: { type: Number, default: 0, min: 0, max: 100 },
+    isAvailable: { type: Boolean, default: true },
+    variants: [
+      {
+        attributes: [
+          {
+            name: { type: String },
+            value: { type: String },
+          },
+        ],
+        price: { type: Number },
+        stock: { type: Number },
+        sku: { type: String, unique: true },
+        barcode: {
+          type: String,
+          validate: {
+            validator: function (v) {
+              return /^[0-9]{12,14}$/.test(v);
+            },
+            message: (props) => `${props.value} is not a valid barcode!`,
+          },
+        },
+        weight: { type: Number },
+        dimensions: {
+          length: { type: Number },
+          width: { type: Number },
+          height: { type: Number },
+        },
+        images: [{ type: String }],
+      },
+    ],
+    averageRating: { type: Number, default: 0 },
+    numberOfRatings: { type: Number, default: 0 },
+    brand: { type: String },
+    unit: unitSchema,
+    bulkPricing: [
+      {
+        quantity: Number,
+        price: Number,
+      },
+    ],
+    tags: {
+      type: [{ type: String }],
+      validate: {
+        validator: function (v) {
+          return v.length <= 3;
+        },
+        message: "You can specify up to 3 tags only.",
+      },
+    },
+    metaTitle: { type: String, maxlength: 60 },
+    metaDescription: { type: String, maxlength: 160 },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// Indexes to improve search performance
+productSchema.index({ name: 1 });
+productSchema.index({ slug: 1 });
+productSchema.index({ category: 1 });
+productSchema.index({ tags: 1 });
+productSchema.index({ "variants.sku": 1 });
+
+// Pre-save hook to generate slug from name if not provided
+productSchema.pre("save", function (next) {
+  if (!this.slug) {
+    this.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  }
+  next();
+});
+
+// Virtual for available stock
+productSchema.virtual("availableStock").get(function () {
+  return this.stock - this.reservedStock;
+});
+
+// Method to check if product is in stock
+productSchema.methods.isInStock = function () {
+  return this.availableStock > 0;
+};
+
+// Static method to find products by tag
+productSchema.statics.findByTag = function (tag) {
+  return this.find({ tags: tag });
+};
+
+const Product = mongoose.model("Product", productSchema);
+module.exports = Product;

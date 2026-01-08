@@ -1,0 +1,2071 @@
+<template>
+    <div v-if="isEditModalOpen" class="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-lg transform transition-all">
+                <div class="flex items-center justify-between p-6 border-b">
+                    <h2 class="text-2xl font-bold text-gray-900">Edit Product</h2>
+                    <button @click="closeModal" class="text-gray-400 hover:text-gray-500">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <form @submit.prevent="saveProduct" class="p-6 space-y-6">
+                    <div class="space-y-2">
+                        <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                        <input id="name" v-model="editingProduct.name" type="text"
+                            class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                            required>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea id="description" v-model="editingProduct.description" rows="3"
+                            class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                            required></textarea>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="price" class="block text-sm font-medium text-gray-700">Price</label>
+                        <div class="relative rounded-lg shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">₦</span>
+                            </div>
+                            <input id="price" v-model="editingProduct.price" type="number" step="0.01"
+                                class="block w-full pl-8 pr-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                                required>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="price" class="block text-sm font-medium text-gray-700">Discount</label>
+                        <div class="relative rounded-lg shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">%</span>
+                            </div>
+                            <input id="price" v-model="editingProduct.discount" type="number" step="1"
+                                class="block w-full pl-8 pr-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                                required>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="image" class="block text-sm font-medium text-gray-700">Image</label>
+                        <div class="mt-1 flex items-center space-x-4">
+                            <div
+                                class="flex-shrink-0 h-24 w-24 rounded-lg overflow-hidden bg-gray-100 border border-gray-300">
+                                <img v-if="imagePreview" :src="imagePreview" alt="Product image preview"
+                                    class="h-full w-full object-cover">
+                                <div v-else class="h-full w-full flex items-center justify-center text-gray-400">
+                                    <svg class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <label for="file-upload"
+                                class="cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                <span>Upload a file</span>
+                                <input id="file-upload" name="file-upload" type="file" @change="handleImageChange"
+                                    accept="image/*" class="sr-only">
+                            </label>
+                        </div>
+                    </div>
+                </form>
+                <div class="flex justify-end px-6 py-4 bg-gray-50 rounded-b-lg">
+                    <button type="button" @click="closeModal"
+                        class="mr-3 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancel
+                    </button>
+                    <button type="button" @click="saveProduct"
+                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+import { ref, watch } from 'vue';
+import { useProductStore } from '../store/productStore.js';
+import { useUserStore } from '../store/user.js';
+import { toast } from 'vue-sonner';
+import { storage } from '../utils/firebase.js';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+
+export default {
+    name: 'EditWishlistProductModal',
+    props: {
+        isEditModalOpen: {
+            type: Boolean,
+            required: true
+        },
+        editingProduct: {
+            type: Object,
+            required: true
+        }
+    },
+    setup(props, { emit }) {
+        const productStore = useProductStore();
+        const userStore = useUserStore();
+        const imageFile = ref(null);
+        const imagePreview = ref(null);
+
+        watch(() => props.editingProduct, (newProduct) => {
+            if (newProduct && newProduct.images && newProduct.images.length > 0) {
+                imagePreview.value = newProduct.images[0];
+            } else {
+                imagePreview.value = null;
+            }
+        }, { immediate: true });
+
+        const handleImageChange = (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                imageFile.value = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.value = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        const uploadImage = async () => {
+            if (imageFile.value) {
+                const fileName = `${Date.now()}_${imageFile.value.name}`;
+                const fileRef = storageRef(storage, `products/${fileName}`);
+                await uploadBytes(fileRef, imageFile.value);
+                return await getDownloadURL(fileRef);
+            }
+            return null;
+        };
+
+        const closeModal = () => {
+            emit('update:isEditModalOpen', false);
+        };
+
+        const saveProduct = async () => {
+            try {
+                let imageUrl = null;
+                if (imageFile.value) {
+                    imageUrl = await uploadImage();
+                }
+
+                const updatedProduct = { ...props.editingProduct };
+                if (imageUrl) {
+                    updatedProduct.images = [imageUrl];
+                }
+
+                // await productStore.updateProduct(updatedProduct._id, updatedProduct);
+                // closeModal();
+                // await productStore.fetchProducts();
+                // toast.success('Product updated successfully');
+                const result = await productStore.updateProduct(updatedProduct._id, updatedProduct);
+                emit('product-updated', result);  // Emit the updated product
+                closeModal();
+                toast.success('Product updated successfully');
+            } catch (err) {
+                console.error('Error updating product:', err);
+                toast.error('Failed to update product');
+            }
+        };
+
+        return {
+            closeModal,
+            saveProduct,
+            handleImageChange,
+            imagePreview
+        };
+    }
+};
+</script>
+
+<style scoped>
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Custom styles for input placeholders */
+input::placeholder,
+textarea::placeholder {
+    color: #9CA3AF;
+}
+
+/* Custom styles for number input arrows */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+</style>
+
+=====================================================================================
+
+<template>
+    <div v-if="isEditModalOpen" class="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-lg transform transition-all">
+                <div class="flex items-center justify-between p-6 border-b">
+                    <h2 class="text-2xl font-bold text-gray-900">Edit Product</h2>
+                    <button @click="closeModal" class="text-gray-400 hover:text-gray-500">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <form @submit.prevent="saveProduct" class="p-6 space-y-6">
+                    <div class="space-y-2">
+                        <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                        <input id="name" v-model="editingProduct.name" type="text"
+                            class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                            required>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea id="description" v-model="editingProduct.description" rows="3"
+                            class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                            required></textarea>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="price" class="block text-sm font-medium text-gray-700">Price</label>
+                        <div class="relative rounded-lg shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">₦</span>
+                            </div>
+                            <input id="price" v-model="editingProduct.price" type="number" step="0.01"
+                                class="block w-full pl-8 pr-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                                required>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="discount" class="block text-sm font-medium text-gray-700">Discount</label>
+                        <div class="relative rounded-lg shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">%</span>
+                            </div>
+                            <input id="discount" v-model="editingProduct.discount" type="number" step="1"
+                                class="block w-full pl-8 pr-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                                required>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="stock" class="block text-sm font-medium text-gray-700">Stock</label>
+                        <input id="stock" v-model="editingProduct.stock" type="number"
+                            class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                            required>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                        <select id="category" v-model="editingProduct.category"
+                            class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                            required>
+                            <option value="" disabled>Select a category</option>
+                            <option v-for="category in categories" :key="category._id" :value="category._id">
+                                {{ category.name }}
+                            </option>
+                            <option value="suggest">Suggest New Category</option>
+                        </select>
+                        <div v-if="editingProduct.category === 'suggest'" class="mt-2">
+                            <input v-model="newCategorySuggestion" placeholder="Suggest a new category"
+                                class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40">
+                            <button @click.prevent="submitCategorySuggestion"
+                                class="mt-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg">
+                                Submit Suggestion
+                            </button>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="tags" class="block text-sm font-medium text-gray-700">Tags (comma-separated)</label>
+                        <input id="tags" v-model="tagsInput"
+                            class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                            placeholder="e.g. electronics, smartphone, sale">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">Variants</label>
+                        <div v-for="(variant, index) in editingProduct.variants" :key="index"
+                            class="flex flex-wrap gap-2 mb-2">
+                            <input v-model="variant.color" placeholder="Color"
+                                class="flex-grow px-4 py-3 border rounded-lg">
+                            <input v-model="variant.size" placeholder="Size"
+                                class="flex-grow px-4 py-3 border rounded-lg">
+                            <input v-model.number="variant.stock" type="number" placeholder="Stock"
+                                class="flex-grow px-4 py-3 border rounded-lg">
+                        </div>
+                        <button @click.prevent="addVariant"
+                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg">
+                            Add Variant
+                        </button>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="image" class="block text-sm font-medium text-gray-700">Image</label>
+                        <div class="mt-1 flex items-center space-x-4">
+                            <div
+                                class="flex-shrink-0 h-24 w-24 rounded-lg overflow-hidden bg-gray-100 border border-gray-300">
+                                <img v-if="imagePreview" :src="imagePreview" alt="Product image preview"
+                                    class="h-full w-full object-cover">
+                                <div v-else class="h-full w-full flex items-center justify-center text-gray-400">
+                                    <svg class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <label for="file-upload"
+                                class="cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                <span>Upload a file</span>
+                                <input id="file-upload" name="file-upload" type="file" @change="handleImageChange"
+                                    accept="image/*" class="sr-only">
+                            </label>
+                        </div>
+                    </div>
+                </form>
+                <div class="flex justify-end px-6 py-4 bg-gray-50 rounded-b-lg">
+                    <button type="button" @click="closeModal"
+                        class="mr-3 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancel
+                    </button>
+                    <button type="button" @click="saveProduct"
+                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+import { ref, watch, onMounted, toRef } from 'vue';
+import { useProductStore } from '../store/productStore.js';
+import { useUserStore } from '../store/user.js';
+import { toast } from 'vue-sonner';
+import { storage } from '../utils/firebase.js';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+
+export default {
+    name: 'EditWishlistProductModal',
+    props: {
+        isEditModalOpen: {
+            type: Boolean,
+            required: true
+        },
+        editingProduct: {
+            type: Object,
+            required: true
+        }
+    },
+    setup(props, { emit }) {
+        const productStore = useProductStore();
+        const userStore = useUserStore();
+        const imageFile = ref(null);
+        const imagePreview = ref(null);
+        const categories = ref([]);
+        const tagsInput = ref('');
+        const newCategorySuggestion = ref('');
+        const editingProduct = toRef(props, 'editingProduct');
+
+        onMounted(async () => {
+            categories.value = await productStore.fetchCategories();
+        });
+
+        watch(editingProduct, (newProduct) => {
+            if (newProduct) {
+                if (newProduct.images && newProduct.images.length > 0) {
+                    imagePreview.value = newProduct.images[0];
+                } else {
+                    imagePreview.value = null;
+                }
+                tagsInput.value = newProduct.tags ? newProduct.tags.join(', ') : '';
+            }
+        }, { immediate: true });
+
+        const handleImageChange = (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                imageFile.value = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.value = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        const uploadImage = async () => {
+            if (imageFile.value) {
+                const fileName = `${Date.now()}_${imageFile.value.name}`;
+                const fileRef = storageRef(storage, `products/${fileName}`);
+                await uploadBytes(fileRef, imageFile.value);
+                return await getDownloadURL(fileRef);
+            }
+            return null;
+        };
+
+        const closeModal = () => {
+            emit('update:isEditModalOpen', false);
+        };
+
+        const addVariant = () => {
+            if (!props.editingProduct.variants) {
+                props.editingProduct.variants = [];
+            }
+            props.editingProduct.variants.push({ color: '', size: '', stock: 0 });
+        };
+
+        const saveProduct = async () => {
+            try {
+                let imageUrl = null;
+                if (imageFile.value) {
+                    imageUrl = await uploadImage();
+                }
+
+                const updatedProduct = { ...editingProduct.value };
+                if (imageUrl) {
+                    updatedProduct.images = [imageUrl];
+                }
+                updatedProduct.tags = tagsInput.value.split(',').map(tag => tag.trim());
+
+                const result = await productStore.updateProduct(updatedProduct._id, updatedProduct);
+                emit('product-updated', result);
+                closeModal();
+                toast.success('Product updated successfully');
+            } catch (err) {
+                console.error('Error updating product:', err);
+                toast.error('Failed to update product');
+            }
+        };
+
+        const submitCategorySuggestion = async () => {
+            try {
+                const suggestedCategory = await productStore.suggestNewCategory(newCategorySuggestion.value);
+                props.editingProduct.category = suggestedCategory._id;
+                toast.success('Category suggestion submitted and applied');
+                newCategorySuggestion.value = '';
+            } catch (error) {
+                console.error('Error submitting category suggestion:', error);
+                toast.error('Failed to submit category suggestion');
+            }
+        };
+
+        return {
+            closeModal,
+            saveProduct,
+            handleImageChange,
+            imagePreview,
+            categories,
+            tagsInput,
+            addVariant,
+            newCategorySuggestion,
+            submitCategorySuggestion,
+        };
+    }
+};
+</script>
+
+<style scoped>
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Custom styles for input placeholders */
+input::placeholder,
+textarea::placeholder {
+    color: #9CA3AF;
+}
+
+/* Custom styles for number input arrows */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+</style>
+
+
+
+
+========================================================================
+<template>
+    <div v-if="isEditModalOpen" class="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-lg transform transition-all">
+                <div class="flex items-center justify-between p-6 border-b">
+                    <h2 class="text-2xl font-bold text-gray-900">Edit Wishlist Product</h2>
+                    <button @click="closeModal" class="text-gray-400 hover:text-gray-500">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <form @submit.prevent="saveProduct" class="p-6 space-y-6">
+                    <!-- Basic Product Information -->
+                    <div class="space-y-2">
+                        <label for="name" class="block text-sm font-medium text-gray-700">Product Name</label>
+                        <input id="name" v-model="editingProduct.name" type="text"
+                            class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                            required>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea id="description" v-model="editingProduct.description" rows="3"
+                            class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                            required></textarea>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="brand" class="block text-sm font-medium text-gray-700">Brand</label>
+                        <input id="brand" v-model="editingProduct.brand" type="text"
+                            class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40">
+                    </div>
+                    <div class="space-y-2">
+                        <label for="estimatedPrice" class="block text-sm font-medium text-gray-700">Estimated
+                            Price</label>
+                        <div class="relative rounded-lg shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">₦</span>
+                            </div>
+                            <input id="estimatedPrice" v-model="editingProduct.estimatedPrice" type="number" step="0.01"
+                                class="block w-full pl-8 pr-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                                required>
+                        </div>
+                    </div>
+
+                    <!-- Category Selection -->
+                    <div class="space-y-2">
+                        <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                        <HierarchicalCategorySelector :categories="categories"
+                            v-model:selectedCategories="selectedCategories"
+                            @update:selectedCategories="updateSelectedCategories" />
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="space-y-2">
+                        <label for="tags" class="block text-sm font-medium text-gray-700">Tags (comma-separated, max
+                            3)</label>
+                        <input id="tags" v-model="tagsInput"
+                            class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                            placeholder="e.g. electronics, smartphone, sale">
+                    </div>
+
+                    <!-- Product Images -->
+                    <div class="space-y-2">
+                        <label for="image" class="block text-sm font-medium text-gray-700">Images</label>
+                        <input @change="handleImageUpload"
+                            class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                            id="images" type="file" multiple accept="image/*">
+                        <div v-if="imagePreview" class="mt-2">
+                            <img :src="imagePreview" alt="Product preview" class="w-32 h-32 object-cover rounded">
+                        </div>
+                    </div>
+                </form>
+                <div class="flex justify-end px-6 py-4 bg-gray-50 rounded-b-lg">
+                    <button type="button" @click="closeModal"
+                        class="mr-3 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancel
+                    </button>
+                    <button type="button" @click="saveProduct"
+                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Update Product
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+import { ref, watch, onMounted, toRef } from 'vue';
+import { useProductStore } from '../store/productStore.js';
+import { useWishlistStore } from '../store/wishlistStore.js';
+import { toast } from 'vue-sonner';
+import { storage } from '../utils/firebase.js';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import HierarchicalCategorySelector from './HierarchicalCategorySelector.vue';
+
+export default {
+    name: 'EditWishlistProductModal',
+    components: {
+        HierarchicalCategorySelector,
+    },
+    props: {
+        isEditModalOpen: {
+            type: Boolean,
+            required: true
+        },
+        editingProduct: {
+            type: Object,
+            required: true
+        }
+    },
+    setup(props, { emit }) {
+        const productStore = useProductStore();
+        const wishlistStore = useWishlistStore();
+        const categories = ref([]);
+        const selectedCategories = ref([]);
+        const tagsInput = ref('');
+        const imagePreview = ref(null);
+        const editingProduct = toRef(props, 'editingProduct');
+
+        onMounted(async () => {
+            try {
+                categories.value = await productStore.fetchCategories();
+                if (editingProduct.value.category) {
+                    selectedCategories.value = await productStore.getCategoryPath(editingProduct.value.category);
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                toast.error('Failed to load product data');
+            }
+        });
+
+        watch(editingProduct, (newProduct) => {
+            if (newProduct) {
+                if (newProduct.images && newProduct.images.length > 0) {
+                    imagePreview.value = newProduct.images[0];
+                } else {
+                    imagePreview.value = null;
+                }
+                tagsInput.value = newProduct.tags ? newProduct.tags.join(', ') : '';
+            }
+        }, { immediate: true });
+
+        const handleImageUpload = async (event) => {
+            const files = event.target.files;
+            editingProduct.value.images = [];
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                try {
+                    const fileName = `${Date.now()}_${file.name}`;
+                    const fileRef = storageRef(storage, `wishlist/${fileName}`);
+                    await uploadBytes(fileRef, file);
+                    const downloadURL = await getDownloadURL(fileRef);
+                    editingProduct.value.images.push(downloadURL);
+
+                    if (i === 0) {
+                        imagePreview.value = downloadURL;
+                    }
+                } catch (error) {
+                    console.error('Error uploading image:', error);
+                    toast.error(`Failed to upload image: ${file.name}`);
+                }
+            }
+        };
+
+        const updateSelectedCategories = (newSelectedCategories) => {
+            selectedCategories.value = newSelectedCategories;
+            if (selectedCategories.value.length > 0) {
+                const lastCategory = selectedCategories.value[selectedCategories.value.length - 1];
+                editingProduct.value.category = lastCategory._id;
+            } else {
+                editingProduct.value.category = null;
+            }
+        };
+
+        const closeModal = () => {
+            emit('update:isEditModalOpen', false);
+        };
+
+        const saveProduct = async () => {
+            try {
+                if (!editingProduct.value.category) {
+                    toast.error('Please select a category');
+                    return;
+                }
+
+                const updatedProduct = { ...editingProduct.value };
+                updatedProduct.tags = tagsInput.value.split(',').map(tag => tag.trim()).slice(0, 3);
+
+                const result = await wishlistStore.updateWishlistProduct(updatedProduct._id, updatedProduct);
+                emit('product-updated', result);
+                closeModal();
+                toast.success('Wishlist product updated successfully');
+            } catch (error) {
+                console.error('Error updating wishlist product:', error);
+                toast.error('Failed to update wishlist product: ' + (error.response?.data?.error || error.message));
+            }
+        };
+
+        return {
+            closeModal,
+            saveProduct,
+            handleImageUpload,
+            imagePreview,
+            categories,
+            selectedCategories,
+            updateSelectedCategories,
+            tagsInput,
+        };
+    }
+};
+</script>
+
+<style scoped>
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Custom styles for input placeholders */
+input::placeholder,
+textarea::placeholder {
+    color: #9CA3AF;
+}
+
+/* Custom styles for number input arrows */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+</style>
+
+
+===================================================version-2=====================================
+<template>
+    <div v-if="isEditModalOpen" class="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-lg transform transition-all">
+                <div class="flex items-center justify-between p-6 border-b">
+                    <h2 class="text-2xl font-bold text-gray-900">Edit Product</h2>
+                    <button @click="closeModal" class="text-gray-400 hover:text-gray-500">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <form @submit.prevent="saveProduct" class="p-6 space-y-6">
+                    <div class="space-y-2">
+                        <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                        <input id="name" v-model="editingProduct.name" type="text"
+                            class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                            required>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea id="description" v-model="editingProduct.description" rows="3"
+                            class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                            required></textarea>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="price" class="block text-sm font-medium text-gray-700">Price</label>
+                        <div class="relative rounded-lg shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">₦</span>
+                            </div>
+                            <input id="price" v-model="editingProduct.price" type="number" step="0.01"
+                                class="block w-full pl-8 pr-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                                required>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="discount" class="block text-sm font-medium text-gray-700">Discount</label>
+                        <div class="relative rounded-lg shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">%</span>
+                            </div>
+                            <input id="discount" v-model="editingProduct.discount" type="number" step="1"
+                                class="block w-full pl-8 pr-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                                required>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="stock" class="block text-sm font-medium text-gray-700">Stock</label>
+                        <input id="stock" v-model="editingProduct.stock" type="number"
+                            class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                            required>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                        <select id="category" v-model="editingProduct.category"
+                            class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                            required>
+                            <option value="" disabled>Select a category</option>
+                            <option v-for="category in categories" :key="category._id" :value="category._id">
+                                {{ category.name }}
+                            </option>
+                            <option value="suggest">Suggest New Category</option>
+                        </select>
+                        <div v-if="editingProduct.category === 'suggest'" class="mt-2">
+                            <input v-model="newCategorySuggestion" placeholder="Suggest a new category"
+                                class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40">
+                            <button @click.prevent="submitCategorySuggestion"
+                                class="mt-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg">
+                                Submit Suggestion
+                            </button>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="tags" class="block text-sm font-medium text-gray-700">Tags (comma-separated)</label>
+                        <input id="tags" v-model="tagsInput"
+                            class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring focus:ring-opacity-40"
+                            placeholder="e.g. electronics, smartphone, sale">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">Variants</label>
+                        <div v-for="(variant, index) in editingProduct.variants" :key="index"
+                            class="flex flex-wrap gap-2 mb-2">
+                            <input v-model="variant.color" placeholder="Color"
+                                class="flex-grow px-4 py-3 border rounded-lg">
+                            <input v-model="variant.size" placeholder="Size"
+                                class="flex-grow px-4 py-3 border rounded-lg">
+                            <input v-model.number="variant.stock" type="number" placeholder="Stock"
+                                class="flex-grow px-4 py-3 border rounded-lg">
+                        </div>
+                        <button @click.prevent="addVariant"
+                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg">
+                            Add Variant
+                        </button>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="image" class="block text-sm font-medium text-gray-700">Image</label>
+                        <div class="mt-1 flex items-center space-x-4">
+                            <div
+                                class="flex-shrink-0 h-24 w-24 rounded-lg overflow-hidden bg-gray-100 border border-gray-300">
+                                <img v-if="imagePreview" :src="imagePreview" alt="Product image preview"
+                                    class="h-full w-full object-cover">
+                                <div v-else class="h-full w-full flex items-center justify-center text-gray-400">
+                                    <svg class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <label for="file-upload"
+                                class="cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                <span>Upload a file</span>
+                                <input id="file-upload" name="file-upload" type="file" @change="handleImageChange"
+                                    accept="image/*" class="sr-only">
+                            </label>
+                        </div>
+                    </div>
+                </form>
+                <div class="flex justify-end px-6 py-4 bg-gray-50 rounded-b-lg">
+                    <button type="button" @click="closeModal"
+                        class="mr-3 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancel
+                    </button>
+                    <button type="button" @click="saveProduct"
+                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+import { ref, watch, onMounted, toRef } from 'vue';
+import { useProductStore } from '../store/productStore.js';
+import { useUserStore } from '../store/user.js';
+import { toast } from 'vue-sonner';
+import { storage } from '../utils/firebase.js';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+
+export default {
+    name: 'EditWishlistProductModal',
+    props: {
+        isEditModalOpen: {
+            type: Boolean,
+            required: true
+        },
+        editingProduct: {
+            type: Object,
+            required: true
+        }
+    },
+    setup(props, { emit }) {
+        const productStore = useProductStore();
+        const userStore = useUserStore();
+        const imageFile = ref(null);
+        const imagePreview = ref(null);
+        const categories = ref([]);
+        const tagsInput = ref('');
+        const newCategorySuggestion = ref('');
+        const editingProduct = toRef(props, 'editingProduct');
+
+        onMounted(async () => {
+            categories.value = await productStore.fetchCategories();
+        });
+
+        watch(editingProduct, (newProduct) => {
+            if (newProduct) {
+                if (newProduct.images && newProduct.images.length > 0) {
+                    imagePreview.value = newProduct.images[0];
+                } else {
+                    imagePreview.value = null;
+                }
+                tagsInput.value = newProduct.tags ? newProduct.tags.join(', ') : '';
+            }
+        }, { immediate: true });
+
+        const handleImageChange = (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                imageFile.value = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.value = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        const uploadImage = async () => {
+            if (imageFile.value) {
+                const fileName = `${Date.now()}_${imageFile.value.name}`;
+                const fileRef = storageRef(storage, `products/${fileName}`);
+                await uploadBytes(fileRef, imageFile.value);
+                return await getDownloadURL(fileRef);
+            }
+            return null;
+        };
+
+        const closeModal = () => {
+            emit('update:isEditModalOpen', false);
+        };
+
+        const addVariant = () => {
+            if (!props.editingProduct.variants) {
+                props.editingProduct.variants = [];
+            }
+            props.editingProduct.variants.push({ color: '', size: '', stock: 0 });
+        };
+
+        const saveProduct = async () => {
+            try {
+                let imageUrl = null;
+                if (imageFile.value) {
+                    imageUrl = await uploadImage();
+                }
+
+                const updatedProduct = { ...editingProduct.value };
+                if (imageUrl) {
+                    updatedProduct.images = [imageUrl];
+                }
+                updatedProduct.tags = tagsInput.value.split(',').map(tag => tag.trim());
+
+                const result = await productStore.updateProduct(updatedProduct._id, updatedProduct);
+                emit('product-updated', result);
+                closeModal();
+                toast.success('Product updated successfully');
+            } catch (err) {
+                console.error('Error updating product:', err);
+                toast.error('Failed to update product');
+            }
+        };
+
+        const submitCategorySuggestion = async () => {
+            try {
+                const suggestedCategory = await productStore.suggestNewCategory(newCategorySuggestion.value);
+                props.editingProduct.category = suggestedCategory._id;
+                toast.success('Category suggestion submitted and applied');
+                newCategorySuggestion.value = '';
+            } catch (error) {
+                console.error('Error submitting category suggestion:', error);
+                toast.error('Failed to submit category suggestion');
+            }
+        };
+
+        return {
+            closeModal,
+            saveProduct,
+            handleImageChange,
+            imagePreview,
+            categories,
+            tagsInput,
+            addVariant,
+            newCategorySuggestion,
+            submitCategorySuggestion,
+        };
+    }
+};
+</script>
+
+<style scoped>
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Custom styles for input placeholders */
+input::placeholder,
+textarea::placeholder {
+    color: #9CA3AF;
+}
+
+/* Custom styles for number input arrows */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+</style>
+
+
+=========================================version-3====================================
+<template>
+    <div v-if="isEditModalOpen" class="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl transform transition-all">
+                <div class="flex items-center justify-between p-6 border-b">
+                    <h2 class="text-2xl font-bold text-gray-900">Edit Product</h2>
+                    <button @click="closeModal" class="text-gray-400 hover:text-gray-500">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <form @submit.prevent="saveProduct" class="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+                    <!-- Category Selection -->
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="category">Category</label>
+                        <HierarchicalCategorySelector :categories="categories"
+                            v-model:selectedCategories="selectedCategories"
+                            @update:selectedCategories="updateSelectedCategories" />
+                    </div>
+
+                    <!-- Basic Product Information -->
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="name">Product Name</label>
+                        <input v-model="editingProduct.name"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="name" type="text" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="description">Description</label>
+                        <textarea v-model="editingProduct.description"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="description" rows="3" required></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="brand">Brand</label>
+                        <input v-model="editingProduct.brand"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="brand" type="text">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="tags">Tags (comma-separated, max
+                            3)</label>
+                        <input v-model="tagsInput"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="tags" type="text">
+                    </div>
+
+                    <!-- Product Images -->
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="images">Images</label>
+                        <input @change="handleImageUpload"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="images" type="file" multiple accept="image/*">
+                    </div>
+                    <div v-if="imagePreview" class="mb-4">
+                        <img :src="imagePreview" alt="Product preview" class="w-32 h-32 object-cover rounded">
+                    </div>
+
+                    <!-- Base Product Details -->
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="price">Base Price</label>
+                        <input v-model.number="editingProduct.price"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="price" type="number" step="0.01" min="0" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="discount">Discount (%)</label>
+                        <input v-model.number="editingProduct.discount"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="discount" type="number" step="1" min="0" max="100">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="stock">Base Stock</label>
+                        <input v-model.number="editingProduct.stock"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="stock" type="number" min="0" required>
+                    </div>
+
+                    <!-- Unit Information -->
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="unitCategory">Unit
+                            Category</label>
+                        <select v-model="editingProduct.unitCategory" @change="updateUnitOptions"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="unitCategory" required>
+                            <option value="weight">Weight</option>
+                            <option value="volume">Volume</option>
+                            <option value="length">Length</option>
+                            <option value="quantity">Quantity</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="unit">Unit</label>
+                        <div v-if="editingProduct && editingProduct.unit">
+                            <select v-model="editingProduct.unit.base">
+                                <option v-for="unit in unitOptions" :key="unit" :value="unit">{{ unit }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="unitValue">Unit Value</label>
+                        <input v-model.number="editingProduct.unit.value"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="unitValue" type="number" step="0.01" min="0" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="unitDisplay">Display Unit (e.g.,
+                            ml/bottle)</label>
+                        <input v-model="editingProduct.unit.display"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="unitDisplay" type="text">
+                    </div>
+
+                    <!-- Product Variants -->
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Variants</label>
+                        <div v-for="(variant, index) in editingProduct.variants" :key="index"
+                            class="mb-2 p-4 border rounded">
+                            <div class="flex mb-2 items-center">
+                                <div class="relative w-1/3 mr-2">
+                                    <select v-model="variant.color"
+                                        class="shadow appearance-none border rounded w-full py-2 pl-8 pr-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                        <option value="">Select Color</option>
+                                        <option v-for="color in colorOptions" :key="color.value" :value="color.value">
+                                            {{ color.label }}
+                                        </option>
+                                    </select>
+                                    <div class="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full"
+                                        :style="getColorStyle(getColorOption(variant.color))">
+                                    </div>
+                                </div>
+                                <input v-model="variant.size"
+                                    class="shadow appearance-none border rounded w-1/3 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2"
+                                    type="text" placeholder="Size">
+                                <input v-model.number="variant.stock"
+                                    class="shadow appearance-none border rounded w-1/3 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                    type="number" placeholder="Stock" min="0">
+                            </div>
+                            <button @click.prevent="removeVariant(index)" class="mt-2 text-red-500 hover:text-red-700">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </div>
+                        <button @click.prevent="addVariant"
+                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-2">
+                            Add Variant
+                        </button>
+                    </div>
+
+                    <!-- Bulk Pricing -->
+                    <div class="mb-4">
+                        <h3 class="text-lg font-bold mb-2">Bulk Pricing</h3>
+                        <div v-for="(pricing, index) in editingProduct.bulkPricing" :key="index" class="flex mb-2">
+                            <input v-model.number="pricing.quantity"
+                                class="shadow appearance-none border rounded w-1/3 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2"
+                                type="number" placeholder="Quantity">
+                            <input v-model.number="pricing.price"
+                                class="shadow appearance-none border rounded w-1/3 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2"
+                                type="number" step="0.01" placeholder="Price">
+                            <button @click="removeBulkPricing(index)"
+                                class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Remove</button>
+                        </div>
+                        <button @click="addBulkPricing"
+                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-2">Add
+                            Bulk Pricing</button>
+                    </div>
+                </form>
+                <div class="flex justify-end px-6 py-4 bg-gray-50 rounded-b-lg">
+                    <button type="button" @click="closeModal"
+                        class="mr-3 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancel
+                    </button>
+                    <button type="button" @click="saveProduct"
+                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+import { ref, watch, onMounted, reactive, toRefs } from 'vue';
+import { useProductStore } from '../store/productStore.js';
+import { useUserStore } from '../store/user.js';
+import { toast } from 'vue-sonner';
+import { storage } from '../utils/firebase.js';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import HierarchicalCategorySelector from './HierarchicalCategorySelector.vue';
+
+export default {
+    name: 'EditWishlistProductModal',
+    components: {
+        HierarchicalCategorySelector,
+    },
+    props: {
+        isEditModalOpen: {
+            type: Boolean,
+            required: true
+        },
+        localEditingProduct: {
+            type: Object,
+            required: true
+        },
+        userId: {
+            type: String,
+            required: true
+        }
+    },
+    setup(props, { emit }) {
+        try {
+            const productStore = useProductStore();
+            const userStore = useUserStore();
+            const imageFile = ref(null);
+            const imagePreview = ref(null);
+            const categories = ref([]);
+            const tagsInput = ref('');
+            const newCategorySuggestion = ref('');
+            const selectedCategories = ref([]);
+            const unitOptions = ref([]);
+
+            const initializeProduct = () => ({
+                _id: '',
+                name: '',
+                description: '',
+                brand: '',
+                price: 0,
+                discount: 0,
+                stock: 0,
+                unitCategory: '',
+                unit: { base: '', value: 1, display: '' },
+                variants: [],
+                bulkPricing: [],
+                tags: [],
+                images: [],
+                category: null,
+            });
+
+            const editingProduct = reactive(initializeProduct());
+
+            const { localEditingProduct: localEditingProductProp } = toRefs(props);
+
+
+            const colorOptions = [
+                { value: 'red', label: 'Red', hex: '#FF0000' },
+                { value: 'blue', label: 'Blue', hex: '#0000FF' },
+                { value: 'green', label: 'Green', hex: '#008000' },
+                // ... add more color options as needed
+            ];
+
+            onMounted(async () => {
+                try {
+                    categories.value = await productStore.fetchCategories();
+                } catch (error) {
+                    console.error('Error fetching categories:', error);
+                    toast.error('Failed to load categories');
+                }
+            });
+
+            watch(localEditingProductProp, (newProduct) => {
+                if (newProduct) {
+                    try {
+                        Object.keys(editingProduct).forEach(key => {
+                            if (newProduct.hasOwnProperty(key)) {
+                                if (key === 'unit' && newProduct[key]) {
+                                    editingProduct.unit = { ...initializeProduct().unit, ...newProduct[key] };
+                                } else {
+                                    editingProduct[key] = newProduct[key];
+                                }
+                            }
+                        });
+
+                        imagePreview.value = editingProduct.images?.[0] || null;
+                        tagsInput.value = editingProduct.tags?.join(', ') || '';
+                        if (editingProduct.category) {
+                            updateSelectedCategories(editingProduct.category);
+                        }
+                        updateUnitOptions();
+                    } catch (error) {
+                        console.error('Error in product watcher:', error);
+                        toast.error('An error occurred while updating the product');
+                    }
+                }
+            }, { immediate: true, deep: true });
+
+            const handleImageUpload = (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    imageFile.value = file;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        imagePreview.value = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            const uploadImage = async () => {
+                if (imageFile.value) {
+                    const fileName = `${Date.now()}_${imageFile.value.name}`;
+                    const fileRef = storageRef(storage, `products/${fileName}`);
+                    await uploadBytes(fileRef, imageFile.value);
+                    return await getDownloadURL(fileRef);
+                }
+                return null;
+            };
+
+            const closeModal = () => {
+                emit('update:isEditModalOpen', false);
+            };
+
+            const addVariant = () => {
+                localEditingProduct.variants.push({ color: '', size: '', stock: 0 });
+            };
+
+            const removeVariant = (index) => {
+                localEditingProduct.variants.splice(index, 1);
+            };
+
+            const getColorOption = (colorValue) => {
+                return colorOptions.find(color => color.value === colorValue) || {};
+            };
+
+            const getColorStyle = (color) => {
+                if (color && color.gradient) {
+                    return {
+                        background: 'linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet)',
+                    };
+                }
+                return color && color.hex ? { backgroundColor: color.hex } : {};
+            };
+
+            const updateSelectedCategories = (categoryId) => {
+                // Helper function to find the category path
+                const findCategoryPath = (categories, targetId, path = []) => {
+                    for (const category of categories) {
+                        if (category._id === targetId) {
+                            return [...path, category];
+                        }
+                        if (category.children && category.children.length > 0) {
+                            const result = findCategoryPath(category.children, targetId, [...path, category]);
+                            if (result) return result;
+                        }
+                    }
+                    return null;
+                };
+
+                // Find the category path
+                const categoryPath = findCategoryPath(categories.value, categoryId);
+
+                // Update selectedCategories if a valid path is found
+                if (categoryPath) {
+                    selectedCategories.value = categoryPath;
+                } else {
+                    console.warn(`Category with id ${categoryId} not found`);
+                    selectedCategories.value = []; // Reset if category is not found
+                }
+            };
+
+            const updateUnitOptions = () => {
+                switch (localEditingProduct.unitCategory) {
+                    case 'weight':
+                        unitOptions.value = ['gram', 'kilogram'];
+                        break;
+                    case 'volume':
+                        unitOptions.value = ['milliliter', 'liter'];
+                        break;
+                    case 'length':
+                        unitOptions.value = ['centimeter', 'meter'];
+                        break;
+                    case 'quantity':
+                        unitOptions.value = ['piece', 'pair'];
+                        break;
+                    default:
+                        unitOptions.value = [];
+                }
+
+                if (!unitOptions.value.includes(localEditingProduct.unit.base)) {
+                    localEditingProduct.unit.base = unitOptions.value[0] || '';
+                }
+            };
+
+            const addBulkPricing = () => {
+                localEditingProduct.bulkPricing.push({ quantity: 0, price: 0 });
+            };
+
+            const removeBulkPricing = (index) => {
+                localEditingProduct.bulkPricing.splice(index, 1);
+            };
+
+            const saveProduct = async () => {
+                try {
+                    let imageUrl = null;
+                    if (imageFile.value) {
+                        imageUrl = await uploadImage();
+                    }
+
+                    const updatedProduct = { ...editingProduct };
+
+                    if (imageUrl) {
+                        updatedProduct.images = [imageUrl];
+                    }
+                    updatedProduct.tags = tagsInput.value.split(',').map(tag => tag.trim()).slice(0, 3);
+
+                    if (selectedCategories.value.length > 0) {
+                        updatedProduct.category = selectedCategories.value[selectedCategories.value.length - 1]._id;
+                    }
+
+                    emit('product-updated', updatedProduct);
+                    closeModal();
+                    toast.success('Product updated successfully');
+                } catch (err) {
+                    console.error('Error updating product:', err);
+                    toast.error('Failed to update product');
+                }
+            };
+
+            return {
+                closeModal,
+                saveProduct,
+                handleImageUpload,
+                imagePreview,
+                categories,
+                tagsInput,
+                addVariant,
+                removeVariant,
+                colorOptions,
+                getColorOption,
+                getColorStyle,
+                selectedCategories,
+                updateSelectedCategories,
+                unitOptions,
+                updateUnitOptions,
+                addBulkPricing,
+                removeBulkPricing,
+                editingProduct,
+            };
+        } catch (setupError) {
+            console.error('Error in setup function:', setupError);
+            toast.error('An error occurred while setting up the component');
+            return {}; // Return an empty object to prevent further errors
+        }
+    }
+};
+</script>
+
+<style scoped>
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Custom styles for input placeholders */
+input::placeholder,
+textarea::placeholder {
+    color: #9CA3AF;
+}
+
+/* Custom styles for number input arrows */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Add these styles to handle the multi-colored option */
+.multi-colored-bg {
+    background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+}
+</style>
+
+
+
+=====================================version-4================================
+<template>
+    <div v-if="isEditModalOpen" class="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl transform transition-all">
+                <div class="flex items-center justify-between p-6 border-b">
+                    <h2 class="text-2xl font-bold text-gray-900">Edit Product</h2>
+                    <button @click="closeModal" class="text-gray-400 hover:text-gray-500">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <form @submit.prevent="saveProduct" class="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+                    <!-- Category Selection -->
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="category">Category</label>
+                        <HierarchicalCategorySelector :categories="categories"
+                            v-model:selectedCategories="selectedCategories"
+                            @update:selectedCategories="updateSelectedCategories" />
+                    </div>
+
+                    <!-- Basic Product Information -->
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="name">Product Name</label>
+                        <input v-model="editingProduct.name"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="name" type="text" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="description">Description</label>
+                        <textarea v-model="editingProduct.description"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="description" rows="3" required></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="brand">Brand</label>
+                        <input v-model="editingProduct.brand"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="brand" type="text">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="tags">Tags (comma-separated, max
+                            3)</label>
+                        <input v-model="tagsInput"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="tags" type="text">
+                    </div>
+
+                    <!-- Product Images -->
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="images">Images</label>
+                        <input @change="handleImageUpload"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="images" type="file" multiple accept="image/*">
+                    </div>
+                    <div v-if="imagePreview" class="mb-4">
+                        <img :src="imagePreview" alt="Product preview" class="w-32 h-32 object-cover rounded">
+                    </div>
+
+                    <!-- Base Product Details -->
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="price">Base Price</label>
+                        <input v-model.number="editingProduct.price"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="price" type="number" step="0.01" min="0" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="discount">Discount (%)</label>
+                        <input v-model.number="editingProduct.discount"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="discount" type="number" step="1" min="0" max="100">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="stock">Base Stock</label>
+                        <input v-model.number="editingProduct.stock"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="stock" type="number" min="0" required>
+                    </div>
+
+                    <!-- Unit Information -->
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="unitCategory">Unit
+                            Category</label>
+                        <select v-model="editingProduct.unitCategory" @change="updateUnitOptions"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="unitCategory" required>
+                            <option value="weight">Weight</option>
+                            <option value="volume">Volume</option>
+                            <option value="length">Length</option>
+                            <option value="quantity">Quantity</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="unit">Unit</label>
+                        <select v-model="editingProduct.unit.base"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="">Select Unit</option>
+                            <option v-for="unit in unitOptions" :key="unit" :value="unit">{{ unit }}</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="unitValue">Unit Value</label>
+                        <input v-model.number="editingProduct.unit.value"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="unitValue" type="number" step="0.01" min="0" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="unitDisplay">Display Unit (e.g.,
+                            ml/bottle)</label>
+                        <input v-model="editingProduct.unit.display"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="unitDisplay" type="text">
+                    </div>
+
+                    <!-- Product Variants -->
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Variants</label>
+                        <div v-for="(variant, index) in editingProduct.variants" :key="index"
+                            class="mb-2 p-4 border rounded">
+                            <div class="flex mb-2 items-center">
+                                <div class="relative w-1/3 mr-2">
+                                    <select v-model="variant.color"
+                                        class="shadow appearance-none border rounded w-full py-2 pl-8 pr-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                        <option value="">Select Color</option>
+                                        <option v-for="color in colorOptions" :key="color.value" :value="color.value">
+                                            {{ color.label }}
+                                        </option>
+                                    </select>
+                                    <div class="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full"
+                                        :style="getColorStyle(getColorOption(variant.color))">
+                                    </div>
+                                </div>
+                                <input v-model="variant.size"
+                                    class="shadow appearance-none border rounded w-1/3 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2"
+                                    type="text" placeholder="Size">
+                                <input v-model.number="variant.stock"
+                                    class="shadow appearance-none border rounded w-1/3 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                    type="number" placeholder="Stock" min="0">
+                            </div>
+                            <button @click.prevent="removeVariant(index)" class="mt-2 text-red-500 hover:text-red-700">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </div>
+                        <button @click.prevent="addVariant"
+                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-2">
+                            Add Variant
+                        </button>
+                    </div>
+
+                    <!-- Bulk Pricing -->
+                    <div class="mb-4">
+                        <h3 class="text-lg font-bold mb-2">Bulk Pricing</h3>
+                        <div v-for="(pricing, index) in editingProduct.bulkPricing" :key="index" class="flex mb-2">
+                            <input v-model.number="pricing.quantity"
+                                class="shadow appearance-none border rounded w-1/3 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2"
+                                type="number" placeholder="Quantity">
+                            <input v-model.number="pricing.price"
+                                class="shadow appearance-none border rounded w-1/3 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2"
+                                type="number" step="0.01" placeholder="Price">
+                            <button @click="removeBulkPricing(index)"
+                                class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Remove</button>
+                        </div>
+                        <button @click="addBulkPricing"
+                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-2">Add
+                            Bulk Pricing</button>
+                    </div>
+                </form>
+                <div class="flex justify-end px-6 py-4 bg-gray-50 rounded-b-lg">
+                    <button type="button" @click="closeModal"
+                        class="mr-3 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancel
+                    </button>
+                    <button type="button" @click="saveProduct"
+                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+import { ref, watch, onMounted, reactive, toRefs } from 'vue';
+import { useProductStore } from '../store/productStore.js';
+import { useUserStore } from '../store/user.js';
+import { toast } from 'vue-sonner';
+import { storage } from '../utils/firebase.js';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import HierarchicalCategorySelector from './HierarchicalCategorySelector.vue';
+
+export default {
+    name: 'EditWishlistProductModal',
+    components: {
+        HierarchicalCategorySelector,
+    },
+    props: {
+        isEditModalOpen: {
+            type: Boolean,
+            required: true
+        },
+        localEditingProduct: {
+            type: Object,
+            required: true
+        },
+        userId: {
+            type: String,
+            required: true
+        }
+    },
+    setup(props, { emit }) {
+        try {
+            const productStore = useProductStore();
+            const userStore = useUserStore();
+            const imageFile = ref(null);
+            const imagePreview = ref(null);
+            const categories = ref([]);
+            const tagsInput = ref('');
+            const newCategorySuggestion = ref('');
+            const selectedCategories = ref([]);
+            const unitOptions = ref([]);
+
+            const initializeProduct = () => ({
+                name: '',
+                description: '',
+                price: 0,
+                discount: 0,
+                stock: 0,
+                category: null,
+                tags: [],
+                images: [],
+                brand: '',
+                unitCategory: '',
+                unit: {
+                    base: '',
+                    value: 1,
+                    display: ''
+                },
+                variants: [],
+                bulkPricing: []
+            });
+
+            const { localEditingProduct: localEditingProductProp } = toRefs(props);
+
+            const editingProduct = reactive(initializeProduct());
+
+            const colorOptions = [
+                { value: 'red', label: 'Red', hex: '#FF0000' },
+                { value: 'blue', label: 'Blue', hex: '#0000FF' },
+                { value: 'green', label: 'Green', hex: '#008000' },
+                // ... add more color options as needed
+            ];
+
+            onMounted(async () => {
+                try {
+                    categories.value = await productStore.fetchCategories();
+                } catch (error) {
+                    console.error('Error fetching categories:', error);
+                    toast.error('Failed to load categories');
+                }
+            });
+
+            watch(localEditingProductProp, (newProduct) => {
+                if (newProduct) {
+                    try {
+                        Object.keys(editingProduct).forEach(key => {
+                            console.log(`Updating ${key}: `, newProduct[key]);
+
+                            if (newProduct.hasOwnProperty(key)) {
+                                if (key === 'unit' && newProduct[key]) {
+                                    editingProduct.unit = {
+                                        base: typeof newProduct[key].base === 'string' ? newProduct[key].base : '',
+                                        value: newProduct[key].value || 1,
+                                        display: typeof newProduct[key].display === 'string' ? newProduct[key].display : ''
+                                    };
+                                } else {
+                                    editingProduct[key] = newProduct[key] ?? editingProduct[key];
+                                }
+                            }
+                        });
+
+                        console.log('All properties updated');
+
+                        // Ensure _id is set
+                        editingProduct._id = newProduct._id;
+                        console.log('Product ID set:', editingProduct._id);
+
+                        // Wrap these operations in try-catch blocks
+                        try {
+                            imagePreview.value = newProduct.images?.[0] || null;
+                            console.log('Image preview updated');
+                        } catch (error) {
+                            console.error('Error updating image preview:', error);
+                        }
+
+                        try {
+                            tagsInput.value = newProduct.tags?.join(', ') || '';
+                            console.log('Tags input updated');
+                        } catch (error) {
+                            console.error('Error updating tags input:', error);
+                        }
+
+                        try {
+                            if (newProduct.category) {
+                                updateSelectedCategories(newProduct.category);
+                            }
+                            console.log('Selected categories updated');
+                        } catch (error) {
+                            console.error('Error updating selected categories:', error);
+                        }
+
+                        try {
+                            updateUnitOptions();
+                            console.log('Unit options updated');
+                        } catch (error) {
+                            console.error('Error updating unit options:', error);
+                        }
+
+                        console.log('All operations completed');
+                    } catch (error) {
+                        console.error('Error in product watcher:', error);
+                        console.error('Stack trace:', error.stack);
+                        toast.error('An error occurred while updating the product');
+                    }
+                }
+            }, { immediate: true, deep: true });
+
+            const handleImageUpload = (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    imageFile.value = file;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        imagePreview.value = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            const uploadImage = async () => {
+                if (imageFile.value) {
+                    const fileName = `${Date.now()}_${imageFile.value.name}`;
+                    const fileRef = storageRef(storage, `products/${fileName}`);
+                    await uploadBytes(fileRef, imageFile.value);
+                    return await getDownloadURL(fileRef);
+                }
+                return null;
+            };
+
+            const closeModal = () => {
+                emit('update:isEditModalOpen', false);
+            };
+
+            const addVariant = () => {
+                editingProduct.variants.push({ color: '', size: '', stock: 0 });
+            };
+
+            const removeVariant = (index) => {
+                editingProduct.variants.splice(index, 1);
+            };
+
+            const getColorOption = (colorValue) => {
+                return colorOptions.find(color => color.value === colorValue) || {};
+            };
+
+            const getColorStyle = (color) => {
+                if (color && color.gradient) {
+                    return {
+                        background: 'linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet)',
+                    };
+                }
+                return color && color.hex ? { backgroundColor: color.hex } : {};
+            };
+
+            const updateSelectedCategories = (categoryId) => {
+                try {
+                    if (!categories.value || categories.value.length === 0) {
+                        console.warn('Categories not loaded yet');
+                        return;
+                    }
+                    // Helper function to find the category path
+                    const findCategoryPath = (categories, targetId, path = []) => {
+                        for (const category of categories) {
+                            if (category._id === targetId) {
+                                return [...path, category];
+                            }
+                            if (category.children && category.children.length > 0) {
+                                const result = findCategoryPath(category.children, targetId, [...path, category]);
+                                if (result) return result;
+                            }
+                        }
+                        return null;
+                    };
+
+                    // Find the category path
+                    const categoryPath = findCategoryPath(categories.value, categoryId);
+
+                    // Update selectedCategories if a valid path is found
+                    if (categoryPath) {
+                        selectedCategories.value = categoryPath;
+                    } else {
+                        console.warn(`Category with id ${categoryId} not found`);
+                        selectedCategories.value = []; // Reset if category is not found
+                    }
+                } catch (error) {
+                    console.error('Error in updateSelectedCategories:', error);
+                }
+            };
+
+            const updateUnitOptions = () => {
+                try {
+                    if (!editingProduct || !editingProduct.unitCategory) {
+                        console.warn('Editing product or unit category not initialized');
+                        return;
+                    }
+                    switch (editingProduct.unitCategory) {
+                        case 'weight':
+                            unitOptions.value = ['gram', 'kilogram'];
+                            break;
+                        case 'volume':
+                            unitOptions.value = ['milliliter', 'liter'];
+                            break;
+                        case 'length':
+                            unitOptions.value = ['centimeter', 'meter'];
+                            break;
+                        case 'quantity':
+                            unitOptions.value = ['piece', 'pair'];
+                            break;
+                        default:
+                            unitOptions.value = [];
+                    }
+
+                    if (typeof editingProduct.unit.base !== 'string' || !unitOptions.value.includes(editingProduct.unit.base)) {
+                        editingProduct.unit.base = unitOptions.value[0] || '';
+                    }
+
+                    if (typeof editingProduct.unit.display !== 'string') {
+                        editingProduct.unit.display = '';
+                    }
+
+                    console.log('Unit options updated successfully:', unitOptions.value);
+                } catch (error) {
+                    console.error('Error in updateUnitOptions:', error);
+                }
+            };
+
+            const addBulkPricing = () => {
+                editingProduct.bulkPricing.push({ quantity: 0, price: 0 });
+            };
+
+            const removeBulkPricing = (index) => {
+                editingProduct.bulkPricing.splice(index, 1);
+            };
+
+            const saveProduct = async () => {
+                try {
+                    let imageUrl = null;
+                    if (imageFile.value) {
+                        imageUrl = await uploadImage();
+                    }
+
+                    const updatedProduct = { ...editingProduct };
+
+                    // Ensure _id is included
+                    updatedProduct._id = props.localEditingProduct._id;
+
+                    console.log("Product ID being set:", updatedProduct._id);
+
+                    // Ensure unit.base is a string
+                    if (updatedProduct.unit) {
+                        updatedProduct.unit = {
+                            base: String(updatedProduct.unit.base || ''),
+                            value: Number(updatedProduct.unit.value || 1),
+                            display: String(updatedProduct.unit.display || '')
+                        };
+                    }
+                    if (imageUrl) {
+                        updatedProduct.images = [imageUrl];
+                    }
+
+                    updatedProduct.tags = tagsInput.value.split(',').map(tag => tag.trim()).slice(0, 3);
+
+                    if (selectedCategories.value.length > 0) {
+                        updatedProduct.category = selectedCategories.value[selectedCategories.value.length - 1]._id;
+                    }
+
+                    console.log('Emitting updated product:', JSON.stringify(updatedProduct, null, 2));
+
+                    emit('product-updated', updatedProduct);
+                    closeModal();
+                    toast.success('Product updated successfully');
+                } catch (err) {
+                    console.error('Error updating product:', err);
+                    toast.error('Failed to update product');
+                }
+            };
+
+            return {
+                closeModal,
+                saveProduct,
+                handleImageUpload,
+                imagePreview,
+                categories,
+                tagsInput,
+                addVariant,
+                removeVariant,
+                colorOptions,
+                getColorOption,
+                getColorStyle,
+                selectedCategories,
+                updateSelectedCategories,
+                unitOptions,
+                updateUnitOptions,
+                addBulkPricing,
+                removeBulkPricing,
+                editingProduct,
+            };
+        } catch (setupError) {
+            console.error('Error in setup function:', setupError);
+            toast.error('An error occurred while setting up the component');
+            return {}; // Return an empty object to prevent further errors
+        }
+    }
+};
+</script>
+
+<style scoped>
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Custom styles for input placeholders */
+input::placeholder,
+textarea::placeholder {
+    color: #9CA3AF;
+}
+
+/* Custom styles for number input arrows */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Add these styles to handle the multi-colored option */
+.multi-colored-bg {
+    background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+}
+</style>

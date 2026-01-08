@@ -1,0 +1,150 @@
+<template>
+    <div class="flex flex-wrap justify-center p-4 bg-gray-50 md:max-w-[97%] mx-auto">
+        <ProductCard v-for="product in products" :key="product._id" :product="product"
+            @productDeleted="handleProductDeleted" custom-class="product-list-card"
+            tags-button-class="product-list-card" />
+    </div>
+</template>
+
+<script>
+import { ref, onMounted, computed } from 'vue';
+import ProductCard from './ProductCard.vue';
+import apiClient from '../api/axios';
+
+export default {
+    name: 'ProductList',
+    components: {
+        ProductCard,
+    },
+    setup() {
+        const products = ref([]);
+
+        const fetchProducts = async () => {
+            try {
+                const response = await apiClient.get('/products');
+                console.log('API response:', response.data); // Log the entire response
+                if (Array.isArray(response.data.products)) {
+                    products.value = response.data.products;
+                } else if (Array.isArray(response.data)) {
+                    products.value = response.data;
+                } else {
+                    console.error('Unexpected API response format:', response.data);
+                    products.value = [];
+                }
+                console.log('Processed products:', products.value); // Log the processed products
+            } catch (error) {
+                console.error('Error fetching products:', error);
+                products.value = [];
+            }
+        };
+
+        const handleProductDeleted = (deletedProductId) => {
+            products.value = products.value.filter(p => p._id !== deletedProductId);
+        };
+
+        onMounted(() => {
+            fetchProducts();
+        });
+
+        return {
+            products,
+            handleProductDeleted
+        };
+    }
+}
+</script>
+
+<style scoped>
+.product-list-card {
+    width: 100% !important;
+}
+
+@media (min-width: 640px) {
+    .product-list-card {
+        width: 50% !important;
+    }
+}
+
+@media (min-width: 768px) {
+    .product-list-card {
+        width: 33.333% !important;
+    }
+}
+
+@media (min-width: 1024px) {
+    .product-list-card {
+        width: 45% !important;
+    }
+}
+
+@media (min-width: 1280px) {
+    .product-list-card {
+        /* width: 24.5% !important; */
+        width: 20% !important;
+    }
+}
+</style>
+
+
+
+====================================================== version 2 ==================================================
+
+<template>
+    <div class="max-w-[1280px] mx-auto px-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <ProductCard v-for="product in products" :key="product._id" :product="product"
+                @productDeleted="handleProductDeleted" class="w-full" />
+        </div>
+    </div>
+</template>
+
+<script>
+import { ref, onMounted } from 'vue';
+import ProductCard from './ProductCard.vue';
+import apiClient from '../api/axios';
+
+export default {
+    name: 'ProductList',
+    components: {
+        ProductCard,
+    },
+    setup() {
+        const products = ref([]);
+
+        const fetchProducts = async () => {
+            try {
+                const response = await apiClient.get('/products');
+                if (Array.isArray(response.data.products)) {
+                    products.value = response.data.products;
+                } else if (Array.isArray(response.data)) {
+                    products.value = response.data;
+                } else {
+                    console.error('Unexpected API response format:', response.data);
+                    products.value = [];
+                }
+            } catch (error) {
+                console.error('Error fetching products:', error);
+                products.value = [];
+            }
+        };
+
+        const handleProductDeleted = (deletedProductId) => {
+            products.value = products.value.filter(p => p._id !== deletedProductId);
+        };
+
+        onMounted(() => {
+            fetchProducts();
+        });
+
+        return {
+            products,
+            handleProductDeleted
+        };
+    }
+}
+</script>
+
+<style scoped>
+/* Remove all previous media queries as we're using grid now */
+/* Add any custom styles here if needed */
+</style>

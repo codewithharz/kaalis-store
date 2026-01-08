@@ -1,0 +1,297 @@
+<template>
+    <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2" for="category">
+            Category
+        </label>
+        <div class="relative">
+            <input v-model="categorySearch" @input="searchCategories"
+                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                type="text" placeholder="Search or select a category">
+            <div v-if="filteredCategories.length > 0"
+                class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg">
+                <div v-for="category in filteredCategories" :key="category._id"
+                    class="p-2 hover:bg-gray-100 cursor-pointer flex items-center" @click="selectCategory(category)">
+                    <span v-if="category.icon" class="mr-2" v-html="category.icon"></span>
+                    {{ category.name }}
+                    <span v-if="category.description" class="text-xs text-gray-500 ml-2">{{ category.description
+                        }}</span>
+                </div>
+            </div>
+        </div>
+        <div v-if="selectedCategories.length > 0" class="mt-2">
+            <span v-for="cat in selectedCategories" :key="cat._id"
+                class="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">
+                {{ cat.name }}
+                <button @click="removeCategory(cat)" class="ml-1 text-red-500">&times;</button>
+            </span>
+        </div>
+        <button @click="showNewCategoryModal = true"
+            class="mt-2 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+            Create New Category
+        </button>
+    </div>
+
+    <!-- Modal for creating new category -->
+    <div v-if="showNewCategoryModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <h3 class="text-lg font-bold mb-4">Create New Category</h3>
+            <input v-model="newCategory.name"
+                class="mb-2 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                type="text" placeholder="Category Name">
+            <input v-model="newCategory.description"
+                class="mb-2 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                type="text" placeholder="Category Description">
+            <button @click="createNewCategory"
+                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Create</button>
+            <button @click="showNewCategoryModal = false"
+                class="ml-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Cancel</button>
+        </div>
+    </div>
+</template>
+
+<script>
+import { ref, computed } from 'vue';
+
+export default {
+    props: {
+        categories: {
+            type: Array,
+            required: true
+        }
+    },
+    emits: ['update:category'],
+    setup(props, { emit }) {
+        const categorySearch = ref('');
+        const selectedCategories = ref([]);
+        const showNewCategoryModal = ref(false);
+        const newCategory = ref({ name: '', description: '' });
+
+        const filteredCategories = computed(() => {
+            if (categorySearch.value === '') return props.categories;
+            return props.categories.filter(category =>
+                category.name.toLowerCase().includes(categorySearch.value.toLowerCase())
+            );
+        });
+
+        const searchCategories = () => {
+            // This function can be expanded if you want to fetch categories from an API based on search
+        };
+
+        const selectCategory = (category) => {
+            if (!selectedCategories.value.some(cat => cat._id === category._id)) {
+                selectedCategories.value.push(category);
+                emit('update:category', selectedCategories.value.map(cat => cat._id));
+            }
+            categorySearch.value = '';
+        };
+
+        const removeCategory = (category) => {
+            selectedCategories.value = selectedCategories.value.filter(cat => cat._id !== category._id);
+            emit('update:category', selectedCategories.value.map(cat => cat._id));
+        };
+
+        const createNewCategory = async () => {
+            // Here you would typically make an API call to create the new category
+            // For now, we'll just add it to the local list
+            const newCategoryId = Date.now().toString(); // This is a placeholder. In reality, the ID would come from your backend
+            const createdCategory = {
+                _id: newCategoryId,
+                name: newCategory.value.name,
+                description: newCategory.value.description
+            };
+            props.categories.push(createdCategory);
+            selectCategory(createdCategory);
+            showNewCategoryModal.value = false;
+            newCategory.value = { name: '', description: '' };
+        };
+
+        return {
+            categorySearch,
+            filteredCategories,
+            selectedCategories,
+            showNewCategoryModal,
+            newCategory,
+            searchCategories,
+            selectCategory,
+            removeCategory,
+            createNewCategory
+        };
+    }
+};
+</script>
+
+
+
+
+==========================================================version============================================
+<template>
+    <div class="category-selector">
+        <label class="block text-gray-700 text-sm font-bold mb-2" for="category">
+            Category
+        </label>
+        <div class="flex space-x-2 mb-2">
+            <div class="relative flex-grow">
+                <input v-model="searchQuery" @input="searchCategories"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    type="text" placeholder="Search or select a category">
+
+                <div v-if="filteredCategories.length > 0 && searchQuery"
+                    class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-60 overflow-y-auto">
+                    <div v-for="category in filteredCategories" :key="category._id" @click="toggleCategory(category)"
+                        class="p-2 hover:bg-gray-100 cursor-pointer"
+                        :style="{ paddingLeft: `${(getCategoryDepth(category) * 20) + 8}px` }">
+                        <span :class="{ 'font-bold': isSelected(category) }">
+                            {{ category.name }}
+                        </span>
+                        <span v-if="category.description" class="text-xs text-gray-500 ml-2">
+                            {{ category.description }}
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+            <button @click="showNewCategoryModal = true"
+                class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline whitespace-nowrap">
+                Create New Category
+            </button>
+        </div>
+        <div v-if="selectedCategories.length > 0" class="mt-2">
+            <span v-for="category in selectedCategories" :key="category._id"
+                class="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">
+                {{ category.name }}
+                <button @click="toggleCategory(category)" class="ml-1 text-red-500">&times;</button>
+            </span>
+        </div>
+
+        <!-- Modal for creating new category -->
+        <div v-if="showNewCategoryModal"
+            class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+            <div class="relative p-5 border w-96 shadow-lg rounded-md bg-white">
+                <h3 class="text-lg font-bold mb-4">Create New Category</h3>
+                <input v-model="newCategory.name"
+                    class="mb-2 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    type="text" placeholder="Category Name">
+                <input v-model="newCategory.description"
+                    class="mb-2 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    type="text" placeholder="Category Description">
+                <select v-model="newCategory.parent"
+                    class="mb-2 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <option value="">No Parent (Top Level Category)</option>
+                    <option v-for="category in categories" :key="category._id" :value="category._id">
+                        {{ category.name }}
+                    </option>
+                </select>
+                <button @click="createNewCategory"
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Create</button>
+                <button @click="showNewCategoryModal = false"
+                    class="ml-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Cancel</button>
+            </div>
+        </div>
+    </div>
+</template>
+
+
+<script>
+import { ref, computed } from 'vue';
+import { useProductStore } from '../store/productStore.js'; // Adjust the import path as needed
+import { toast } from 'vue-sonner';
+
+export default {
+    name: 'HierarchicalCategorySelector',
+    props: {
+        categories: {
+            type: Array,
+            required: true,
+            default: () => [] // Add this line
+        }
+    },
+    emits: ['update:selectedCategories', 'category-created'],
+    setup(props, { emit }) {
+        const productStore = useProductStore();
+        const searchQuery = ref('');
+        const selectedCategories = ref([]);
+        const showNewCategoryModal = ref(false);
+        const newCategory = ref({ name: '', description: '', parent: '' });
+        const newCategoryName = ref('');
+
+        const filteredCategories = computed(() => {
+            if (searchQuery.value === '') return props.categories;
+            return props.categories.filter(category =>
+                category.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+                category.description.toLowerCase().includes(searchQuery.value.toLowerCase())
+            );
+        });
+
+        const getCategoryDepth = (category) => {
+            let depth = 0;
+            let currentCategory = category;
+            while (currentCategory.parent) {
+                depth++;
+                currentCategory = props.categories.find(cat => cat._id === currentCategory.parent);
+            }
+            return depth;
+        };
+
+        const isSelected = (category) => {
+            return selectedCategories.value.some(cat => cat._id === category._id);
+        };
+
+        const searchOrCreateCategory = () => {
+            const matchingCategory = props.categories.find(
+                cat => cat.name.toLowerCase() === newCategoryName.value.toLowerCase()
+            );
+
+            if (matchingCategory) {
+                toggleCategory(matchingCategory);
+            } else {
+                // Allow creating a new category
+                const newCat = {
+                    _id: newCategoryName.value, // Use the name as a temporary ID
+                    name: newCategoryName.value
+                };
+                toggleCategory(newCat);
+            }
+        };
+
+        const toggleCategory = (category) => {
+            selectedCategories.value = [category];
+            emit('update:selectedCategories', selectedCategories.value);
+            console.log('Selected category:', category._id || category.name);
+        };
+
+
+        const createNewCategory = async () => {
+            try {
+                const categoryData = {
+                    name: newCategory.value.name,
+                    description: newCategory.value.description,
+                    parent: newCategory.value.parent || null
+                };
+                const createdCategory = await productStore.createCategory(categoryData);
+                emit('category-created', createdCategory);
+                toggleCategory(createdCategory);
+                showNewCategoryModal.value = false;
+                newCategory.value = { name: '', description: '', parent: '' };
+                toast.success('Category created successfully');
+            } catch (error) {
+                console.error('Error creating new category:', error);
+                toast.error('Failed to create category: ' + error.message);
+            }
+        };
+
+        return {
+            searchQuery,
+            filteredCategories,
+            selectedCategories,
+            showNewCategoryModal,
+            newCategory,
+            getCategoryDepth,
+            isSelected,
+            toggleCategory,
+            createNewCategory,
+            newCategoryName,
+            searchOrCreateCategory,
+        };
+    }
+};
+</script>

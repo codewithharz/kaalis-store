@@ -1,0 +1,1678 @@
+<!-- frontend/src/views/ManageOrders.vue -->
+<template>
+    <div class="min-h-screen bg-gray-50 py-4 sm:py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Header with Back Button and Actions -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <button @click="router.back()"
+                    class="flex items-center text-gray-600 hover:text-gray-800 transition duration-150">
+                    <ArrowLeft class="w-5 h-5 mr-2" />
+                    <span class="text-sm sm:text-base">Back to Dashboard</span>
+                </button>
+                <div class="flex flex-col sm:flex-row gap-3 sm:space-x-4">
+                    <!-- Order Status Filter -->
+                    <select v-model="statusFilter"
+                        class="w-full sm:w-auto border rounded-md px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                        <option value="all">All Orders</option>
+                        <option value="pending">Pending</option>
+                        <option value="processing">Processing</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <!-- Date Range Filter -->
+                    <select v-model="dateRange"
+                        class="w-full sm:w-auto border rounded-md px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="year">This Year</option>
+                    </select>
+                    <!-- Refresh Button -->
+                    <button @click="refreshOrders"
+                        class="flex items-center justify-center px-4 py-2 bg-white border rounded-md text-gray-600 hover:bg-gray-50">
+                        <RefreshCcw class="w-4 h-4 mr-2" />
+                        <span class="text-sm sm:text-base">Refresh</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Orders Overview Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div v-for="stat in orderStats" :key="stat.title"
+                    class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-gray-600 text-sm">{{ stat.title }}</span>
+                        <component :is="stat.icon" class="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div class="text-2xl font-bold">{{ stat.value }}</div>
+                </div>
+            </div>
+
+            <!-- Orders Table -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <!-- Table Header with Search -->
+                <div class="p-4 border-b border-gray-200">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <h2 class="text-lg font-semibold">Orders</h2>
+                        <div class="relative">
+                            <input type="text" v-model="searchQuery" placeholder="Search orders..."
+                                class="w-full sm:w-64 pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                            <Search class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Content -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    No.
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Order ID
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Customer
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Date
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Status
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Total
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr v-for="(order, index) in paginatedOrders" :key="`${order.id}-${index}`"
+                                class="hover:bg-gray-50 transition duration-150">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ getRowNumber(index) }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-sm font-medium text-gray-900">#{{ order.id }}</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ order.customer.name }}</div>
+                                    <div class="text-sm text-gray-500">{{ order.customer.email }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-sm text-gray-500">{{ formatDate(order.date) }}</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span :class="[
+                                        'px-2 py-1 text-xs font-semibold rounded-full',
+                                        getStatusClass(order.status)
+                                    ]">
+                                        {{ order.status }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-sm text-gray-900">₦{{ formatAmount(order.total) }}</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                    <button @click="viewOrder(order.id)"
+                                        class="text-amber-600 hover:text-amber-900">View</button>
+                                    <button @click="updateStatus(order.id)"
+                                        class="text-blue-600 hover:text-blue-900">Update</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex items-center justify-between px-4 py-3 border-t border-gray-200 sm:px-6">
+                    <!-- Mobile view -->
+                    <div class="flex-1 flex justify-between sm:hidden">
+                        <button @click="prevPage" :disabled="currentPage === 1"
+                            class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Previous
+                        </button>
+                        <button @click="nextPage" :disabled="currentPage === totalPages"
+                            class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Next
+                        </button>
+                    </div>
+
+                    <!-- Desktop view -->
+                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                        <!-- Items per page selector -->
+                        <div class="flex items-center gap-4">
+                            <span class="text-sm text-gray-700">Show</span>
+                            <select v-model="itemsPerPage"
+                                class="border-gray-300 rounded-md text-sm focus:ring-amber-500 focus:border-amber-500"
+                                @change="handleItemsPerPageChange">
+                                <option v-for="size in pageSizes" :key="size" :value="size">
+                                    {{ size }}
+                                </option>
+                            </select>
+                            <span class="text-sm text-gray-700">entries</span>
+                        </div>
+
+                        <!-- Pagination info -->
+                        <div class="flex items-center gap-4">
+                            <p class="text-sm text-gray-700">
+                                Showing
+                                <span class="font-medium">{{ paginationStart }}</span>
+                                to
+                                <span class="font-medium">{{ paginationEnd }}</span>
+                                of
+                                <span class="font-medium">{{ totalOrders }}</span>
+                                results
+                            </p>
+
+                            <!-- Page navigation -->
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                                <!-- First page -->
+                                <button @click="goToPage(1)" :disabled="currentPage === 1"
+                                    class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">First</span>
+                                    <ChevronsLeft class="h-5 w-5" />
+                                </button>
+
+                                <!-- Previous page -->
+                                <button @click="prevPage" :disabled="currentPage === 1"
+                                    class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">Previous</span>
+                                    <ChevronLeft class="h-5 w-5" />
+                                </button>
+
+                                <!-- Page numbers -->
+                                <template v-for="pageNum in displayedPages" :key="pageNum">
+                                    <button v-if="pageNum !== '...'" @click="goToPage(pageNum)" :class="[
+                                        'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
+                                        currentPage === pageNum
+                                            ? 'z-10 bg-amber-50 border-amber-500 text-amber-600'
+                                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                    ]">
+                                        {{ pageNum }}
+                                    </button>
+                                    <span v-else
+                                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                        ...
+                                    </span>
+                                </template>
+
+                                <!-- Next page -->
+                                <button @click="nextPage" :disabled="currentPage === totalPages"
+                                    class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">Next</span>
+                                    <ChevronRight class="h-5 w-5" />
+                                </button>
+
+                                <!-- Last page -->
+                                <button @click="goToPage(totalPages)" :disabled="currentPage === totalPages"
+                                    class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">Last</span>
+                                    <ChevronsRight class="h-5 w-5" />
+                                </button>
+                            </nav>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div v-if="isLoading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white p-4 rounded-lg flex items-center space-x-3">
+                <svg class="animate-spin h-5 w-5 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                </svg>
+                <span class="text-gray-700">Loading...</span>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+import { ref, computed, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import {
+    ArrowLeft,
+    RefreshCcw,
+    Search,
+    ChevronLeft,
+    ChevronRight,
+    ShoppingBag,
+    Clock,
+    Truck,
+    Ban,
+    ChevronsRight,
+    ChevronsLeft,
+} from 'lucide-vue-next';
+import { useSellerStore } from '../store/sellerStore';
+import { toast } from 'vue-sonner';
+
+export default {
+    components: {
+        ArrowLeft,
+        RefreshCcw,
+        Search,
+        ChevronLeft,
+        ChevronRight,
+        ShoppingBag,
+        Clock,
+        Truck,
+        Ban,
+        ChevronsRight,
+        ChevronsLeft,
+    },
+
+    setup() {
+        const router = useRouter();
+        const sellerStore = useSellerStore();
+        const isLoading = ref(false);
+        const statusFilter = ref('all');
+        const dateRange = ref('month');
+        const searchQuery = ref('');
+        const currentPage = ref(1);
+        const itemsPerPage = ref(10);
+        const pageSizes = [10, 15, 25, 50, 100, 150];
+
+        // Sample order stats
+        const orderStats = ref([
+            {
+                title: 'Total Orders',
+                value: '156',
+                icon: 'ShoppingBag'
+            },
+            {
+                title: 'Pending',
+                value: '23',
+                icon: 'Clock'
+            },
+            {
+                title: 'Shipped',
+                value: '48',
+                icon: 'Truck'
+            },
+            {
+                title: 'Cancelled',
+                value: '8',
+                icon: 'Ban'
+            }
+        ]);
+
+        // Sample orders data
+        const orders = ref([
+            {
+                id: 'F7E16F',
+                customer: {
+                    name: 'John Doe',
+                    email: 'john@example.com'
+                },
+                date: '2024-10-18',
+                status: 'processing',
+                total: 4900.00
+            },
+            {
+                id: 'Z9E78D',
+                customer: {
+                    name: 'Harry Truman',
+                    email: 'truman@example.com'
+                },
+                date: '2024-09-15',
+                status: 'shipped',
+                total: 5900.00
+            },
+            {
+                id: 'M3Q19C',
+                customer: {
+                    name: 'Amy Whine',
+                    email: 'whine@example.com'
+                },
+                date: '2024-06-11',
+                status: 'delivered',
+                total: 9900.00
+            },
+
+            {
+                id: 'F7E16F',
+                customer: {
+                    name: 'John Doe',
+                    email: 'john@example.com'
+                },
+                date: '2024-10-18',
+                status: 'pending',
+                total: 8300.00
+            },
+            {
+                id: 'Z9E78D',
+                customer: {
+                    name: 'Harry Truman',
+                    email: 'truman@example.com'
+                },
+                date: '2024-09-15',
+                status: 'shipped',
+                total: 3900.00
+            },
+            {
+                id: 'M3Q19C',
+                customer: {
+                    name: 'Amy Whine',
+                    email: 'whine@example.com'
+                },
+                date: '2024-06-11',
+                status: 'cancelled',
+                total: 6900.00
+            },
+
+            {
+                id: 'F7E16F',
+                customer: {
+                    name: 'John Doe',
+                    email: 'john@example.com'
+                },
+                date: '2024-10-18',
+                status: 'processing',
+                total: 4900.00
+            },
+            {
+                id: 'Z9E78D',
+                customer: {
+                    name: 'Harry Truman',
+                    email: 'truman@example.com'
+                },
+                date: '2024-09-15',
+                status: 'shipped',
+                total: 5900.00
+            },
+            {
+                id: 'M3Q19C',
+                customer: {
+                    name: 'Amy Whine',
+                    email: 'whine@example.com'
+                },
+                date: '2024-06-11',
+                status: 'delivered',
+                total: 9900.00
+            },
+
+            {
+                id: 'F7E16F',
+                customer: {
+                    name: 'John Doe',
+                    email: 'john@example.com'
+                },
+                date: '2024-10-18',
+                status: 'pending',
+                total: 8300.00
+            },
+            {
+                id: 'Z9E78D',
+                customer: {
+                    name: 'Harry Truman',
+                    email: 'truman@example.com'
+                },
+                date: '2024-09-15',
+                status: 'shipped',
+                total: 3900.00
+            },
+            {
+                id: 'M3Q19C',
+                customer: {
+                    name: 'Amy Whine',
+                    email: 'whine@example.com'
+                },
+                date: '2024-06-11',
+                status: 'cancelled',
+                total: 6900.00
+            },
+
+            {
+                id: 'F7E16F',
+                customer: {
+                    name: 'John Doe',
+                    email: 'john@example.com'
+                },
+                date: '2024-10-18',
+                status: 'processing',
+                total: 4900.00
+            },
+            {
+                id: 'Z9E78D',
+                customer: {
+                    name: 'Harry Truman',
+                    email: 'truman@example.com'
+                },
+                date: '2024-09-15',
+                status: 'shipped',
+                total: 5900.00
+            },
+            {
+                id: 'M3Q19C',
+                customer: {
+                    name: 'Amy Whine',
+                    email: 'whine@example.com'
+                },
+                date: '2024-06-11',
+                status: 'delivered',
+                total: 9900.00
+            },
+
+            {
+                id: 'F7E16F',
+                customer: {
+                    name: 'John Doe',
+                    email: 'john@example.com'
+                },
+                date: '2024-10-18',
+                status: 'pending',
+                total: 8300.00
+            },
+            {
+                id: 'Z9E78D',
+                customer: {
+                    name: 'Harry Truman',
+                    email: 'truman@example.com'
+                },
+                date: '2024-09-15',
+                status: 'shipped',
+                total: 3900.00
+            },
+            {
+                id: 'M3Q19C',
+                customer: {
+                    name: 'Amy Whine',
+                    email: 'whine@example.com'
+                },
+                date: '2024-06-11',
+                status: 'cancelled',
+                total: 6900.00
+            },
+            // Add more sample orders as needed
+        ]);
+
+        // Computed property for displayed page numbers
+        const displayedPages = computed(() => {
+            const total = totalPages.value;
+            const current = currentPage.value;
+            const pages = [];
+
+            if (total <= 7) {
+                // If total pages are 7 or less, show all pages
+                for (let i = 1; i <= total; i++) {
+                    pages.push(i);
+                }
+            } else {
+                // Always show first page
+                pages.push(1);
+
+                if (current > 3) {
+                    pages.push('...');
+                }
+
+                // Show pages around current page
+                for (let i = Math.max(2, current - 1); i <= Math.min(current + 1, total - 1); i++) {
+                    pages.push(i);
+                }
+
+                if (current < total - 2) {
+                    pages.push('...');
+                }
+
+                // Always show last page
+                if (total > 1) {
+                    pages.push(total);
+                }
+            }
+
+            return pages;
+        });
+
+        // Methods for pagination
+        const goToPage = (page) => {
+            currentPage.value = Number(page);
+        };
+
+        const handleItemsPerPageChange = () => {
+            // Ensure itemsPerPage is treated as a number
+            itemsPerPage.value = Number(itemsPerPage.value);
+            currentPage.value = 1; // Reset to first page
+        };
+
+        // Computed properties for filtering and pagination
+        const filteredOrders = computed(() => {
+            let filtered = orders.value;
+
+            if (statusFilter.value !== 'all') {
+                filtered = filtered.filter(order => order.status === statusFilter.value);
+            }
+
+            if (searchQuery.value) {
+                const query = searchQuery.value.toLowerCase();
+                filtered = filtered.filter(order =>
+                    order.id.toLowerCase().includes(query) ||
+                    order.customer.name.toLowerCase().includes(query) ||
+                    order.customer.email.toLowerCase().includes(query)
+                );
+            }
+
+            return filtered;
+        });
+
+        // Add computed property for row numbers
+        const getRowNumber = (index) => {
+            const page = Number(currentPage.value) || 1;
+            const items = Number(itemsPerPage.value) || 10;
+            const rowIndex = Number(index) || 0;
+            return ((page - 1) * items) + rowIndex + 1;
+        };
+
+        // Clear and update orders when pagination changes
+        // const paginatedOrders = computed(() => {
+        //     const startIndex = (currentPage.value - 1) * Number(itemsPerPage.value);
+        //     const endIndex = startIndex + Number(itemsPerPage.value);
+        //     return filteredOrders.value.slice(startIndex, endIndex);
+        // });
+        const paginatedOrders = computed(() => {
+            const start = (Number(currentPage.value) - 1) * Number(itemsPerPage.value);
+            const end = start + Number(itemsPerPage.value);
+            return [...filteredOrders.value].slice(start, end);
+        });
+
+        const totalOrders = computed(() => filteredOrders.value.length);
+
+        // const totalPages = computed(() => Math.ceil(totalOrders.value / Number(itemsPerPage.value)));
+        const totalPages = computed(() =>
+            Math.max(1, Math.ceil(totalOrders.value / Number(itemsPerPage.value)))
+        );
+
+        const paginationStart = computed(() => {
+            if (totalOrders.value === 0) return 0;
+            return ((Number(currentPage.value) - 1) * Number(itemsPerPage.value)) + 1;
+        });
+
+        const paginationEnd = computed(() => {
+            if (totalOrders.value === 0) return 0;
+            return Math.min(currentPage.value * Number(itemsPerPage.value), totalOrders.value);
+        });
+
+        // Methods
+        const getStatusClass = (status) => {
+            const classes = {
+                pending: 'bg-yellow-100 text-yellow-800',
+                processing: 'bg-blue-100 text-blue-800',
+                shipped: 'bg-green-100 text-green-800',
+                delivered: 'bg-purple-100 text-purple-800',
+                cancelled: 'bg-red-100 text-red-800'
+            };
+            return classes[status] || 'bg-gray-100 text-gray-800';
+        };
+
+        const formatDate = (date) => {
+            return new Date(date).toLocaleDateString('en-NG', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        };
+
+        const formatAmount = (amount) => {
+            return amount.toLocaleString('en-NG', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        };
+
+        const refreshOrders = async () => {
+            try {
+                isLoading.value = true;
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                toast.success('Orders refreshed successfully');
+            } catch (error) {
+                toast.error('Failed to refresh orders');
+                console.error('Error refreshing orders:', error);
+            } finally {
+                isLoading.value = false;
+            }
+        };
+
+        const viewOrder = (orderId) => {
+            router.push(`/orders/${orderId}`);
+        };
+
+        const updateStatus = async (orderId) => {
+            try {
+                isLoading.value = true;
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                toast.success('Order status updated successfully');
+            } catch (error) {
+                toast.error('Failed to update order status');
+                console.error('Error updating order status:', error);
+            } finally {
+                isLoading.value = false;
+            }
+        };
+
+        // Update pagination navigation methods
+        const prevPage = () => {
+            if (currentPage.value > 1) {
+                currentPage.value = Math.max(1, Number(currentPage.value) - 1);
+            }
+        };
+
+        const nextPage = () => {
+            if (currentPage.value < totalPages.value) {
+                currentPage.value = Math.min(
+                    totalPages.value,
+                    Number(currentPage.value) + 1
+                );
+            }
+        };
+
+        // Watch for changes that affect pagination
+        watch([statusFilter, dateRange, searchQuery, itemsPerPage], () => {
+            currentPage.value = 1;
+        }, { immediate: true });
+
+        // Lifecycle hooks
+        onMounted(async () => {
+            try {
+                isLoading.value = true;
+                // Simulate API call to fetch initial orders
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            } catch (error) {
+                toast.error('Failed to load orders');
+                console.error('Error loading orders:', error);
+            } finally {
+                isLoading.value = false;
+            }
+        });
+
+        return {
+            router,
+            isLoading,
+            statusFilter,
+            dateRange,
+            searchQuery,
+            currentPage,
+            orderStats,
+            itemsPerPage,
+            pageSizes,
+            displayedPages,
+            goToPage,
+            handleItemsPerPageChange,
+            filteredOrders,
+            paginatedOrders,
+            getRowNumber,
+            totalOrders,
+            totalPages,
+            paginationStart,
+            paginationEnd,
+            getStatusClass,
+            formatDate,
+            formatAmount,
+            refreshOrders,
+            viewOrder,
+            updateStatus,
+            prevPage,
+            nextPage,
+
+            currentPage,
+            itemsPerPage
+        };
+    }
+};
+</script>
+
+
+
+
+============================================Version-2==================================
+<!-- frontend/src/views/ManageOrders.vue -->
+<template>
+    <div class="min-h-screen bg-gray-50 py-4 sm:py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Header with Back Button and Actions -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <button @click="router.back()"
+                    class="flex items-center text-gray-600 hover:text-gray-800 transition duration-150">
+                    <ArrowLeft class="w-5 h-5 mr-2" />
+                    <span class="text-sm sm:text-base">Back to Dashboard</span>
+                </button>
+                <div class="flex flex-col sm:flex-row gap-3 sm:space-x-4">
+                    <!-- Order Status Filter -->
+                    <select v-model="statusFilter"
+                        class="w-full sm:w-auto border rounded-md px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                        <option value="all">All Orders</option>
+                        <option v-for="status in availableStatuses" :key="status" :value="status.toLowerCase()">
+                            {{ status }}
+                        </option>
+                    </select>
+                    <!-- Date Range Filter -->
+                    <select v-model="dateRange"
+                        class="w-full sm:w-auto border rounded-md px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="year">This Year</option>
+                    </select>
+                    <!-- Refresh Button -->
+                    <button @click="refreshOrders"
+                        class="flex items-center justify-center px-4 py-2 bg-white border rounded-md text-gray-600 hover:bg-gray-50">
+                        <RefreshCcw class="w-4 h-4 mr-2" />
+                        <span class="text-sm sm:text-base">Refresh</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Orders Overview Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div v-for="stat in orderStats" :key="stat.title"
+                    class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-gray-600 text-sm">{{ stat.title }}</span>
+                        <component :is="stat.icon" class="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div class="text-2xl font-bold">{{ stat.value }}</div>
+                </div>
+            </div>
+
+            <!-- Orders Table -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <!-- Table Header with Search -->
+                <div class="p-4 border-b border-gray-200">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <h2 class="text-lg font-semibold">Orders</h2>
+                        <div class="relative">
+                            <input type="text" v-model="searchQuery" placeholder="Search orders..."
+                                class="w-full sm:w-64 pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                            <Search class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Content -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    No.
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Order ID
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Customer
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Date
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Status
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Total
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr v-for="(order, index) in paginatedOrders" :key="`${order.id}-${index}`"
+                                class="hover:bg-gray-50 transition duration-150">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ getRowNumber(index) }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-sm font-medium text-gray-900">{{ order.id }}</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ order.customer.name }}</div>
+                                    <div class="text-sm text-gray-500">{{ order.customer.email }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-sm text-gray-500">{{ formatDate(order.date) }}</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span :class="[
+                                        'px-2 py-1 text-xs font-semibold rounded-full',
+                                        getStatusClass(order.status.toLowerCase())
+                                    ]">
+                                        {{ order.status }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-sm text-gray-900">₦{{ formatAmount(order.total) }}</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                    <button @click="viewOrder(order.id)"
+                                        class="text-amber-600 hover:text-amber-900">View</button>
+                                    <button @click="updateStatus(order.id, order.status)"
+                                        class="text-blue-600 hover:text-blue-900">Update</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex items-center justify-between px-4 py-3 border-t border-gray-200 sm:px-6">
+                    <!-- Mobile view -->
+                    <div class="flex-1 flex justify-between sm:hidden">
+                        <button @click="prevPage" :disabled="currentPage === 1"
+                            class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Previous
+                        </button>
+                        <button @click="nextPage" :disabled="currentPage === totalPages"
+                            class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Next
+                        </button>
+                    </div>
+
+                    <!-- Desktop view -->
+                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                        <!-- Items per page selector -->
+                        <div class="flex items-center gap-4">
+                            <span class="text-sm text-gray-700">Show</span>
+                            <select v-model="itemsPerPage"
+                                class="border-gray-300 rounded-md text-sm focus:ring-amber-500 focus:border-amber-500"
+                                @change="handleItemsPerPageChange">
+                                <option v-for="size in pageSizes" :key="size" :value="size">
+                                    {{ size }}
+                                </option>
+                            </select>
+                            <span class="text-sm text-gray-700">entries</span>
+                        </div>
+
+                        <!-- Pagination info -->
+                        <div class="flex items-center gap-4">
+                            <p class="text-sm text-gray-700">
+                                Showing
+                                <span class="font-medium">{{ paginationStart }}</span>
+                                to
+                                <span class="font-medium">{{ paginationEnd }}</span>
+                                of
+                                <span class="font-medium">{{ totalOrders }}</span>
+                                results
+                            </p>
+
+                            <!-- Page navigation -->
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                                <!-- First page -->
+                                <button @click="goToPage(1)" :disabled="currentPage === 1"
+                                    class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">First</span>
+                                    <ChevronsLeft class="h-5 w-5" />
+                                </button>
+
+                                <!-- Previous page -->
+                                <button @click="prevPage" :disabled="currentPage === 1"
+                                    class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">Previous</span>
+                                    <ChevronLeft class="h-5 w-5" />
+                                </button>
+
+                                <!-- Page numbers -->
+                                <template v-for="pageNum in displayedPages" :key="pageNum">
+                                    <button v-if="pageNum !== '...'" @click="goToPage(pageNum)" :class="[
+                                        'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
+                                        currentPage === pageNum
+                                            ? 'z-10 bg-amber-50 border-amber-500 text-amber-600'
+                                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                    ]">
+                                        {{ pageNum }}
+                                    </button>
+                                    <span v-else
+                                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                        ...
+                                    </span>
+                                </template>
+
+                                <!-- Next page -->
+                                <button @click="nextPage" :disabled="currentPage === totalPages"
+                                    class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">Next</span>
+                                    <ChevronRight class="h-5 w-5" />
+                                </button>
+
+                                <!-- Last page -->
+                                <button @click="goToPage(totalPages)" :disabled="currentPage === totalPages"
+                                    class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">Last</span>
+                                    <ChevronsRight class="h-5 w-5" />
+                                </button>
+                            </nav>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div v-if="isLoading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white p-4 rounded-lg flex items-center space-x-3">
+                <svg class="animate-spin h-5 w-5 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                </svg>
+                <span class="text-gray-700">Loading...</span>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+import { ref, computed, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import {
+    ArrowLeft,
+    RefreshCcw,
+    Search,
+    ChevronLeft,
+    ChevronRight,
+    ShoppingBag,
+    Clock,
+    Truck,
+    Ban,
+    ChevronsRight,
+    ChevronsLeft,
+    Package
+} from 'lucide-vue-next';
+import { useSellerStore } from '../store/sellerStore';
+import { toast } from 'vue-sonner';
+
+export default {
+    components: {
+        ArrowLeft,
+        RefreshCcw,
+        Search,
+        ChevronLeft,
+        ChevronRight,
+        ShoppingBag,
+        Clock,
+        Truck,
+        Ban,
+        ChevronsRight,
+        ChevronsLeft,
+        Package
+    },
+
+    setup() {
+        const router = useRouter();
+        const sellerStore = useSellerStore();
+        const isLoading = ref(true);
+        const statusFilter = ref('all');
+        const dateRange = ref('month');
+        const searchQuery = ref('');
+        const currentPage = ref(1);
+        const itemsPerPage = ref(10);
+        const pageSizes = [10, 15, 25, 50, 100, 150];
+
+        const availableStatuses = ref([]);
+
+        // // Sample order stats
+        // const orderStats = ref([
+        //     {
+        //         title: 'Total Orders',
+        //         value: '156',
+        //         icon: 'ShoppingBag'
+        //     },
+        //     {
+        //         title: 'Pending',
+        //         value: '23',
+        //         icon: 'Clock'
+        //     },
+        //     {
+        //         title: 'Shipped',
+        //         value: '48',
+        //         icon: 'Truck'
+        //     },
+        //     {
+        //         title: 'Cancelled',
+        //         value: '8',
+        //         icon: 'Ban'
+        //     }
+        // ]);
+
+        // // Sample orders data
+        // const orders = ref([
+        //     {
+        //         id: 'F7E16F',
+        //         customer: {
+        //             name: 'John Doe',
+        //             email: 'john@example.com'
+        //         },
+        //         date: '2024-10-18',
+        //         status: 'processing',
+        //         total: 4900.00
+        //     },
+        //     {
+        //         id: 'Z9E78D',
+        //         customer: {
+        //             name: 'Harry Truman',
+        //             email: 'truman@example.com'
+        //         },
+        //         date: '2024-09-15',
+        //         status: 'shipped',
+        //         total: 5900.00
+        //     },
+        //     {
+        //         id: 'M3Q19C',
+        //         customer: {
+        //             name: 'Amy Whine',
+        //             email: 'whine@example.com'
+        //         },
+        //         date: '2024-06-11',
+        //         status: 'delivered',
+        //         total: 9900.00
+        //     },
+
+        //     {
+        //         id: 'F7E16F',
+        //         customer: {
+        //             name: 'John Doe',
+        //             email: 'john@example.com'
+        //         },
+        //         date: '2024-10-18',
+        //         status: 'pending',
+        //         total: 8300.00
+        //     },
+        //     {
+        //         id: 'Z9E78D',
+        //         customer: {
+        //             name: 'Harry Truman',
+        //             email: 'truman@example.com'
+        //         },
+        //         date: '2024-09-15',
+        //         status: 'shipped',
+        //         total: 3900.00
+        //     },
+        //     {
+        //         id: 'M3Q19C',
+        //         customer: {
+        //             name: 'Amy Whine',
+        //             email: 'whine@example.com'
+        //         },
+        //         date: '2024-06-11',
+        //         status: 'cancelled',
+        //         total: 6900.00
+        //     },
+
+        //     {
+        //         id: 'F7E16F',
+        //         customer: {
+        //             name: 'John Doe',
+        //             email: 'john@example.com'
+        //         },
+        //         date: '2024-10-18',
+        //         status: 'processing',
+        //         total: 4900.00
+        //     },
+        //     {
+        //         id: 'Z9E78D',
+        //         customer: {
+        //             name: 'Harry Truman',
+        //             email: 'truman@example.com'
+        //         },
+        //         date: '2024-09-15',
+        //         status: 'shipped',
+        //         total: 5900.00
+        //     },
+        //     {
+        //         id: 'M3Q19C',
+        //         customer: {
+        //             name: 'Amy Whine',
+        //             email: 'whine@example.com'
+        //         },
+        //         date: '2024-06-11',
+        //         status: 'delivered',
+        //         total: 9900.00
+        //     },
+
+        //     {
+        //         id: 'F7E16F',
+        //         customer: {
+        //             name: 'John Doe',
+        //             email: 'john@example.com'
+        //         },
+        //         date: '2024-10-18',
+        //         status: 'pending',
+        //         total: 8300.00
+        //     },
+        //     {
+        //         id: 'Z9E78D',
+        //         customer: {
+        //             name: 'Harry Truman',
+        //             email: 'truman@example.com'
+        //         },
+        //         date: '2024-09-15',
+        //         status: 'shipped',
+        //         total: 3900.00
+        //     },
+        //     {
+        //         id: 'M3Q19C',
+        //         customer: {
+        //             name: 'Amy Whine',
+        //             email: 'whine@example.com'
+        //         },
+        //         date: '2024-06-11',
+        //         status: 'cancelled',
+        //         total: 6900.00
+        //     },
+
+        //     {
+        //         id: 'F7E16F',
+        //         customer: {
+        //             name: 'John Doe',
+        //             email: 'john@example.com'
+        //         },
+        //         date: '2024-10-18',
+        //         status: 'processing',
+        //         total: 4900.00
+        //     },
+        //     {
+        //         id: 'Z9E78D',
+        //         customer: {
+        //             name: 'Harry Truman',
+        //             email: 'truman@example.com'
+        //         },
+        //         date: '2024-09-15',
+        //         status: 'shipped',
+        //         total: 5900.00
+        //     },
+        //     {
+        //         id: 'M3Q19C',
+        //         customer: {
+        //             name: 'Amy Whine',
+        //             email: 'whine@example.com'
+        //         },
+        //         date: '2024-06-11',
+        //         status: 'delivered',
+        //         total: 9900.00
+        //     },
+
+        //     {
+        //         id: 'F7E16F',
+        //         customer: {
+        //             name: 'John Doe',
+        //             email: 'john@example.com'
+        //         },
+        //         date: '2024-10-18',
+        //         status: 'pending',
+        //         total: 8300.00
+        //     },
+        //     {
+        //         id: 'Z9E78D',
+        //         customer: {
+        //             name: 'Harry Truman',
+        //             email: 'truman@example.com'
+        //         },
+        //         date: '2024-09-15',
+        //         status: 'shipped',
+        //         total: 3900.00
+        //     },
+        //     {
+        //         id: 'M3Q19C',
+        //         customer: {
+        //             name: 'Amy Whine',
+        //             email: 'whine@example.com'
+        //         },
+        //         date: '2024-06-11',
+        //         status: 'cancelled',
+        //         total: 6900.00
+        //     },
+        //     // Add more sample orders as needed
+        // ]);
+
+        // Refs for storing API data
+        const orders = ref([]);
+        const orderStats = ref([
+            { title: 'Total Orders', value: '0', icon: 'ShoppingBag' },
+            { title: 'Pending', value: '0', icon: 'Clock' },
+            { title: 'Shipped', value: '0', icon: 'Truck' },
+            { title: 'Cancelled', value: '0', icon: 'Ban' }
+        ]);
+
+        // Load orders data
+        const loadOrdersData = async () => {
+            try {
+                isLoading.value = true;
+
+                // Fetch orders from seller store
+                console.log('Starting to fetch orders...');
+
+                const startTime = performance.now()
+                const response = await sellerStore.fetchAllSellerOrders();
+                const endTime = performance.now()
+
+                console.log(`Orders fetch took ${endTime - startTime}ms`)
+                console.log('Response:', response)
+
+                if (!response) {
+                    console.error('No response received from API');
+                    return;
+                }
+
+                if (!Array.isArray(response)) {
+                    console.error('Response is not an array:', response);
+                    return;
+                }
+
+                if (Array.isArray(response)) {
+                    // Map the orders with proper field access
+                    orders.value = response.map(order => ({
+                        id: order.orderNumber || order._id?.substring(order._id.length - 6).toUpperCase(),
+                        _id: order._id,
+                        customer: {
+                            name: order.user?.username || order.user?.name || order.customerName || 'N/A',
+                            email: order.user?.email || order.customerEmail || 'N/A'
+                        },
+                        date: order.createdAt || order.date,
+                        status: order.status || 'Pending',
+                        total: order.totalAmount || order.total || 0,
+                        products: Array.isArray(order.products) ? order.products.map(prod => ({
+                            id: prod.product?._id || prod.id,
+                            name: prod.product?.name || 'Product',
+                            quantity: prod.quantity || 0,
+                            price: prod.price || 0
+                        })) : []
+                    }));
+
+                    // Set available statuses
+                    availableStatuses.value = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+
+                    // Update stats with proper counting
+                    const stats = {
+                        total: orders.value.length,
+                        pending: orders.value.filter(o => o.status.toLowerCase() === 'pending').length,
+                        processing: orders.value.filter(o => o.status.toLowerCase() === 'processing').length,
+                        shipped: orders.value.filter(o => o.status.toLowerCase() === 'shipped').length,
+                        delivered: orders.value.filter(o => o.status.toLowerCase() === 'delivered').length,
+                        cancelled: orders.value.filter(o => o.status.toLowerCase() === 'cancelled').length
+                    };
+
+                    orderStats.value = [
+                        { title: 'Total Orders', value: stats.total.toString(), icon: 'ShoppingBag' },
+                        { title: 'Pending', value: stats.pending.toString(), icon: 'Clock' },
+                        { title: 'Processing', value: stats.processing.toString(), icon: 'RefreshCcw' },
+                        { title: 'Shipped', value: stats.shipped.toString(), icon: 'Truck' },
+                        { title: 'Delivered', value: stats.delivered.toString(), icon: 'Package' },
+                        { title: 'Cancelled', value: stats.cancelled.toString(), icon: 'Ban' }
+                    ];
+
+                    console.log('Processed Orders:', orders.value);
+                    console.log('Stats:', stats);
+                }
+
+                console.log('Processed Orders:', orders.value);
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                toast.error('Failed to load orders. Please try again.');
+            } finally {
+                isLoading.value = false;
+            }
+        };
+
+        // Computed property for displayed page numbers
+        const displayedPages = computed(() => {
+            const total = totalPages.value;
+            const current = currentPage.value;
+            const pages = [];
+
+            if (total <= 7) {
+                // If total pages are 7 or less, show all pages
+                for (let i = 1; i <= total; i++) {
+                    pages.push(i);
+                }
+            } else {
+                // Always show first page
+                pages.push(1);
+
+                if (current > 3) {
+                    pages.push('...');
+                }
+
+                // Show pages around current page
+                for (let i = Math.max(2, current - 1); i <= Math.min(current + 1, total - 1); i++) {
+                    pages.push(i);
+                }
+
+                if (current < total - 2) {
+                    pages.push('...');
+                }
+
+                // Always show last page
+                if (total > 1) {
+                    pages.push(total);
+                }
+            }
+
+            return pages;
+        });
+
+        // Methods for pagination
+        const goToPage = (page) => {
+            currentPage.value = Number(page);
+        };
+
+        const handleItemsPerPageChange = () => {
+            // Ensure itemsPerPage is treated as a number
+            itemsPerPage.value = Number(itemsPerPage.value);
+            currentPage.value = 1; // Reset to first page
+        };
+
+        // Computed properties for filtering and pagination
+        const filteredOrders = computed(() => {
+            let filtered = orders.value;
+
+            if (statusFilter.value !== 'all') {
+                const targetStatus = statusFilter.value.toLowerCase();
+                filtered = filtered.filter(order =>
+                    order.status?.toLowerCase() === targetStatus
+                );
+            }
+
+            if (searchQuery.value) {
+                const query = searchQuery.value.toLowerCase();
+                filtered = filtered.filter(order =>
+                    order.id?.toLowerCase().includes(query) ||
+                    order.customer?.name?.toLowerCase().includes(query) ||
+                    order.customer?.email?.toLowerCase().includes(query)
+                );
+            }
+
+            // Date filtering
+            if (dateRange.value && dateRange.value !== 'all') {
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+                filtered = filtered.filter(order => {
+                    const orderDate = new Date(order.date);
+                    if (isNaN(orderDate.getTime())) return false;
+
+                    switch (dateRange.value) {
+                        case 'today':
+                            return orderDate.toDateString() === today.toDateString();
+                        case 'week': {
+                            const weekAgo = new Date(today);
+                            weekAgo.setDate(weekAgo.getDate() - 7);
+                            return orderDate >= weekAgo;
+                        }
+                        case 'month': {
+                            const monthAgo = new Date(today);
+                            monthAgo.setMonth(monthAgo.getMonth() - 1);
+                            return orderDate >= monthAgo;
+                        }
+                        case 'year': {
+                            const yearAgo = new Date(today);
+                            yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+                            return orderDate >= yearAgo;
+                        }
+                        default:
+                            return true;
+                    }
+                });
+            }
+
+            return filtered;
+        });
+
+        // Add computed property for row numbers
+        const getRowNumber = (index) => {
+            const page = Number(currentPage.value) || 1;
+            const items = Number(itemsPerPage.value) || 10;
+            const rowIndex = Number(index) || 0;
+            return ((page - 1) * items) + rowIndex + 1;
+        };
+
+        // Pagination computed properties
+        const paginatedOrders = computed(() => {
+            const start = (Number(currentPage.value) - 1) * Number(itemsPerPage.value);
+            const end = start + Number(itemsPerPage.value);
+            return [...filteredOrders.value].slice(start, end);
+        });
+
+        const totalOrders = computed(() => filteredOrders.value.length);
+
+        const totalPages = computed(() =>
+            Math.max(1, Math.ceil(totalOrders.value / Number(itemsPerPage.value)))
+        );
+
+        const paginationStart = computed(() => {
+            if (totalOrders.value === 0) return 0;
+            return ((Number(currentPage.value) - 1) * Number(itemsPerPage.value)) + 1;
+        });
+
+        const paginationEnd = computed(() => {
+            if (totalOrders.value === 0) return 0;
+            return Math.min(currentPage.value * Number(itemsPerPage.value), totalOrders.value);
+        });
+
+        // Methods
+        const getStatusClass = (status) => {
+            const classes = {
+                pending: 'bg-yellow-100 text-yellow-800',
+                processing: 'bg-blue-100 text-blue-800',
+                shipped: 'bg-green-100 text-green-800',
+                delivered: 'bg-purple-100 text-purple-800',
+                cancelled: 'bg-red-100 text-red-800'
+            };
+            return classes[status] || 'bg-gray-100 text-gray-800';
+        };
+
+        const formatDate = (date) => {
+            return new Date(date).toLocaleDateString('en-NG', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        };
+
+        const formatAmount = (amount) => {
+            return amount.toLocaleString('en-NG', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        };
+
+        // Actions
+        const refreshOrders = async () => {
+            try {
+                isLoading.value = true;
+                await loadOrdersData();
+                toast.success('Orders refreshed successfully');
+            } catch (error) {
+                toast.error('Failed to refresh orders');
+            } finally {
+                isLoading.value = false;
+            }
+        };
+
+        // Navigation methods
+        // const viewOrder = (orderId) => {
+        //     router.push({
+        //         name: 'ManageOrderDetails',
+        //         params: { id: orderId }
+        //     });
+        // };
+
+        const viewOrder = (orderId) => {
+            // Find the full order object using the ID
+            const order = orders.value.find(o => o.id === orderId || o._id === orderId);
+
+            if (!order) {
+                toast.error('Order not found');
+                return;
+            }
+
+            // Use the full MongoDB _id for navigation
+            router.push({
+                name: 'ManageOrderDetails',
+                params: { id: order._id }  // Use the full _id instead of the shortened ID
+            });
+        };
+
+        // Updated status update method
+        const updateStatus = async (orderId) => {
+            try {
+                const order = orders.value.find(o => o.id === orderId || o._id === orderId);
+                if (!order) throw new Error('Order not found');
+
+                const currentStatus = order.status.toLowerCase();
+
+                // Define status flow including recovery from cancelled
+                const statusFlow = {
+                    'pending': 'Processing',
+                    'processing': 'Shipped',
+                    'shipped': 'Delivered',
+                    'delivered': 'Delivered', // Final state
+                    'cancelled': 'Pending'  // Allow reactivation to Pending
+                };
+
+                const nextStatus = statusFlow[currentStatus];
+
+                if (!nextStatus) {
+                    toast.info('No status change available for this order');
+                    return;
+                }
+
+                // If moving from cancelled to pending, show confirmation
+                if (currentStatus === 'cancelled') {
+                    if (!window.confirm('Are you sure you want to reactivate this cancelled order?')) {
+                        return;
+                    }
+                }
+
+                isLoading.value = true;
+                await sellerStore.updateOrderStatus(order._id, nextStatus);
+                await loadOrdersData();
+
+                const message = currentStatus === 'cancelled'
+                    ? `Order reactivated and set to ${nextStatus}`
+                    : `Order status updated to ${nextStatus}`;
+
+                toast.success(message);
+            } catch (error) {
+                console.error('Error updating order status:', error);
+                toast.error('Failed to update order status');
+            } finally {
+                isLoading.value = false;
+            }
+        };
+
+        // Add error boundary component
+        const handleError = (error) => {
+            console.error('Component Error:', error);
+            toast.error('Something went wrong. Please try again.');
+        };
+
+        // Update pagination navigation methods
+        const prevPage = () => {
+            if (currentPage.value > 1) {
+                currentPage.value = Math.max(1, Number(currentPage.value) - 1);
+            }
+        };
+
+        const nextPage = () => {
+            if (currentPage.value < totalPages.value) {
+                currentPage.value = Math.min(
+                    totalPages.value,
+                    Number(currentPage.value) + 1
+                );
+            }
+        };
+
+        // Watch for changes that affect pagination
+        watch([statusFilter, dateRange, searchQuery, itemsPerPage], () => {
+            currentPage.value = 1;
+        }, { immediate: true });
+
+        // Lifecycle hooks
+        // onMounted(async () => {
+        //     try {
+        //         isLoading.value = true;
+        //         // Simulate API call to fetch initial orders
+        //         await new Promise(resolve => setTimeout(resolve, 1000));
+        //     } catch (error) {
+        //         toast.error('Failed to load orders');
+        //         console.error('Error loading orders:', error);
+        //     } finally {
+        //         isLoading.value = false;
+        //     }
+        // });
+
+        // Initial data load
+        onMounted(loadOrdersData);
+
+        return {
+            router,
+
+            // State
+            isLoading,
+            statusFilter,
+            dateRange,
+            searchQuery,
+            currentPage,
+            itemsPerPage,
+            pageSizes,
+            orders,
+            orderStats,
+
+            // Computed
+            filteredOrders,
+            paginatedOrders,
+            totalOrders,
+            totalPages,
+            paginationStart,
+            paginationEnd,
+            displayedPages,
+
+            // Methods
+            refreshOrders,
+            updateStatus,
+            viewOrder,
+            prevPage,
+            nextPage,
+            goToPage,
+            handleItemsPerPageChange,
+            getRowNumber,
+            availableStatuses,
+            getStatusClass,
+            formatDate,
+            formatAmount,
+            handleError
+        };
+    }
+};
+</script>

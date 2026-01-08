@@ -1,0 +1,876 @@
+import { defineStore } from "pinia";
+import apiClient from "../api/axios";
+import { toast } from "vue-sonner";
+import { jwtDecode } from "jwt-decode";
+import { useUserStore } from "./user";
+
+export const useSellerStore = defineStore("seller", {
+  state: () => ({
+    sellerProfile: JSON.parse(localStorage.getItem("sellerProfile")) || null,
+    token: localStorage.getItem("token") || null,
+    errorMessage: "",
+  }),
+  getters: {
+    isLoggedIn: (state) => !!state.sellerProfile,
+    isSellerProfileLoaded: (state) => !!state.sellerProfile,
+  },
+  actions: {
+    async fetchSellerProfile(sellerId) {
+      console.log("fetchSellerProfile called with sellerId:", sellerId);
+
+      const userStore = useUserStore();
+      try {
+        if (!userStore.token) throw new Error("No token available");
+
+        // First, try to fetch the seller profile directly
+        let response = await apiClient.get(`/seller/${sellerId}`, {
+          headers: { Authorization: `Bearer ${userStore.token}` },
+        });
+
+        if (response.data) {
+          console.log("Fetched seller profile:", response.data);
+          this.sellerProfile = response.data;
+          localStorage.setItem("sellerProfile", JSON.stringify(response.data));
+          return response.data;
+        }
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          // If seller profile not found, try to fetch user profile
+          try {
+            const userResponse = await this.fetchUserProfile(id);
+            if (userResponse && userResponse.sellerProfile) {
+              return this.fetchSellerProfile(userResponse.sellerProfile);
+            } else {
+              console.log("User is not a seller");
+              this.sellerProfile = null;
+              localStorage.removeItem("sellerProfile");
+              return null;
+            }
+          } catch (userError) {
+            console.error("Error fetching user profile:", userError);
+            throw userError;
+          }
+        } else {
+          console.error("Error fetching seller profile:", error);
+          toast.error("Failed to load seller profile. Please try again.");
+          throw error;
+        }
+      }
+    },
+
+    async fetchSellerByUserId(userId) {
+      console.log("fetchSellerByUserId called with userId:", userId);
+
+      const userStore = useUserStore();
+      try {
+        if (!userStore.token) throw new Error("No token available");
+
+        const userResponse = await this.fetchUserProfile(userId);
+        if (userResponse && userResponse.sellerProfile) {
+          return this.fetchSellerProfile(userResponse.sellerProfile);
+        } else {
+          console.log("User is not a seller");
+          return null;
+        }
+      } catch (error) {
+        console.error("Error fetching seller by user ID:", error);
+        toast.error("Failed to load seller information. Please try again.");
+        throw error;
+      }
+    },
+
+    async fetchDashboardData() {
+      try {
+        if (!this.token) throw new Error("No token available");
+        if (!this.sellerProfile) throw new Error("Seller profile not loaded");
+
+        const sellerId = this.sellerProfile._id;
+        console.log("Fetching dashboard data for seller:", sellerId);
+
+        const response = await apiClient.get(`/seller/${sellerId}/dashboard`, {
+          headers: { Authorization: `Bearer ${this.token}` },
+        });
+
+        console.log("Dashboard data response:", response.data);
+        return response.data;
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        this.errorMessage = "Failed to load dashboard data.";
+        toast.error(this.errorMessage);
+        throw error;
+      }
+    },
+
+    async loadSellerProfile() {
+      console.log("loadSellerProfile called");
+      console.log("Current token:", this.token);
+      console.log("Current sellerProfile:", this.sellerProfile);
+
+      if (!this.token) {
+        console.error("No token available in store");
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        if (storedUser.token) {
+          console.log(
+            "Token found in localStorage, setting in store: ",
+            storedUser.token
+          );
+          this.token = storedUser.token;
+        } else {
+          console.error("No token found in localStorage");
+          this.errorMessage =
+            "No authentication token available. Please log in again.";
+          toast.error(this.errorMessage);
+          return;
+        }
+      }
+
+      if (this.sellerProfile) {
+        console.log("Seller profile already loaded from local storage");
+        return;
+      }
+
+      try {
+        const decodedToken = jwtDecode(this.token);
+        console.log("Decoded token:", decodedToken);
+        if (!decodedToken.userId) {
+          throw new Error("Invalid token: missing user ID");
+        }
+        // await this.fetchSellerProfile(decodedToken.userId); //original to show only user id
+        const user = await this.fetchUserProfile(decodedToken.userId); //fetchUserProfile function to get the user Id and profile
+        if (user.sellerProfile) {
+          await this.fetchSellerProfile(user.sellerProfile);
+        } else {
+          throw new Error("User is not a seller");
+        }
+      } catch (error) {
+        console.error("Error loading seller profile:", error);
+        this.errorMessage =
+          "Failed to load seller profile. Please log in again.";
+        toast.error(this.errorMessage);
+        this.clearSeller();
+        throw error;
+      }
+    },
+
+    async addSellerReview(sellerId, reviewData) {
+      try {
+        const userStore = useUserStore();
+        if (!userStore.token) throw new Error("No token available");
+
+        const response = await apiClient.post(
+          `/seller/${sellerId}/reviews`,
+          reviewData,
+          {
+            headers: { Authorization: `Bearer ${userStore.token}` },
+          }
+        );
+
+        console.log("Review submitted:", response.data);
+
+        // Update the local seller profile with the new review
+        if (this.sellerProfile && this.sellerProfile._id === sellerId) {
+          if (!this.sellerProfile.reviews) {
+            this.sellerProfile.reviews = [];
+          }
+          this.sellerProfile.reviews.push(response.data);
+
+          // Recalculate average rating
+          const totalRating = this.sellerProfile.reviews.reduce(
+            (sum, review) => sum + review.rating,
+            0
+          );
+          this.sellerProfile.averageRating =
+            totalRating / this.sellerProfile.reviews.length;
+
+          localStorage.setItem(
+            "sellerProfile",
+            JSON.stringify(this.sellerProfile)
+          );
+        }
+
+        toast.success("Review submitted successfully.");
+        return response.data;
+      } catch (error) {
+        console.error("Error submitting review:", error);
+        toast.error("Failed to submit review. Please try again.");
+        throw error;
+      }
+    },
+
+    async fetchSellerReviews(sellerId, page = 1, itemsPerPage = 5) {
+      try {
+        const response = await apiClient.get(`/seller/${sellerId}/reviews`, {
+          params: { page, itemsPerPage },
+          headers: { Authorization: `Bearer ${this.token}` },
+        });
+        return response.data;
+      } catch (error) {
+        console.error("Error fetching seller reviews:", error);
+        throw error;
+      }
+    },
+
+    //function for loadSellerProfile
+    async fetchUserProfile(userId) {
+      const response = await apiClient.get(`/users/${userId}/profile`, {
+        headers: { Authorization: `Bearer ${this.token}` },
+      });
+      return response.data;
+    },
+
+    async fetchAllSellerOrders() {
+      try {
+        if (!this.token) throw new Error("No token available");
+        const sellerId = this.sellerProfile._id;
+        const response = await apiClient.get(`/seller/${sellerId}/all-orders`, {
+          headers: { Authorization: `Bearer ${this.token}` },
+        });
+        return response.data;
+      } catch (error) {
+        console.error(
+          "Error fetching all seller orders:",
+          error.response || error
+        );
+        this.errorMessage = "Failed to load all orders.";
+        toast.error(this.errorMessage);
+        throw error;
+      }
+    },
+
+    async fetchSellerOrders() {
+      try {
+        if (!this.token) throw new Error("No token available");
+
+        const sellerId = this.sellerProfile._id;
+        console.log("Fetching orders for seller:", sellerId);
+
+        const response = await apiClient.get(`/seller/${sellerId}/orders`, {
+          headers: { Authorization: `Bearer ${this.token}` },
+        });
+
+        console.log("Fetched orders:", response.data);
+        return response.data;
+      } catch (error) {
+        console.error("Error fetching seller orders:", error.response || error);
+        this.errorMessage = "Failed to load orders.";
+        toast.error(this.errorMessage);
+        throw error;
+      }
+    },
+
+    async updateSellerProfile(sellerId, updatedData) {
+      try {
+        if (!this.token) throw new Error("No token available");
+
+        const response = await apiClient.put(
+          `/seller/${sellerId}/profile`,
+          updatedData,
+          { headers: { Authorization: `Bearer ${this.token}` } }
+        );
+        this.sellerProfile = response.data;
+        localStorage.setItem("sellerProfile", JSON.stringify(response.data));
+        toast.success("Profile updated successfully.");
+      } catch (error) {
+        console.error("Error updating seller profile:", error);
+        this.errorMessage = "Failed to update seller profile.";
+        toast.error(this.errorMessage);
+      }
+    },
+
+    async deleteSellerAccount(sellerId) {
+      try {
+        if (!this.token) throw new Error("No token available");
+
+        await apiClient.delete(`/seller/${sellerId}`, {
+          headers: { Authorization: `Bearer ${this.token}` },
+        });
+        this.sellerProfile = null;
+        localStorage.removeItem("sellerProfile");
+        toast.success("Seller account deleted successfully.");
+      } catch (error) {
+        console.error("Error deleting seller account:", error);
+        this.errorMessage = "Failed to delete seller account.";
+        toast.error(this.errorMessage);
+      }
+    },
+
+    async fetchSellerProducts(sellerId) {
+      try {
+        if (!this.token) throw new Error("No token available");
+
+        console.log("Fetching products for seller:", sellerId);
+        console.log("Using token:", this.token);
+
+        const response = await apiClient.get(`/seller/${sellerId}/products`, {
+          headers: { Authorization: `Bearer ${this.token}` },
+        });
+
+        console.log("API Response:", response.data);
+        return response.data;
+      } catch (error) {
+        console.error("Error fetching seller products:", error);
+        if (error.response) {
+          console.error("Response data:", error.response.data);
+          console.error("Response status:", error.response.status);
+          console.error("Response headers:", error.response.headers);
+        } else if (error.request) {
+          console.error("No response received:", error.request);
+        } else {
+          console.error("Error setting up request:", error.message);
+        }
+        this.errorMessage = "Failed to load seller products.";
+        toast.error(this.errorMessage);
+        throw error;
+      }
+    },
+
+    async toggleVacationMode() {
+      try {
+        if (!this.token) throw new Error("No token available");
+        if (!this.sellerProfile) throw new Error("Seller profile not loaded");
+  
+        const sellerId = this.sellerProfile._id;
+        const response = await apiClient.post(`/seller/${sellerId}/toggle-vacation-mode`, {}, {
+          headers: { Authorization: `Bearer ${this.token}` },
+        });
+  
+        this.sellerProfile.isVacationMode = response.data.isVacationMode;
+        localStorage.setItem("sellerProfile", JSON.stringify(this.sellerProfile));
+  
+        return response.data.isVacationMode;
+      } catch (error) {
+        console.error("Error toggling vacation mode:", error);
+        toast.error("Failed to toggle vacation mode. Please try again.");
+        throw error;
+      }
+    },
+
+    checkTokenExpiration() {
+      try {
+        if (this.token) {
+          const decodedToken = jwtDecode(this.token);
+          const expirationTime = decodedToken.exp * 1000; // Convert to milliseconds
+          const currentTime = Date.now();
+
+          if (expirationTime - currentTime <= 10000) {
+            // Less than 10 seconds remaining
+            this.initiateLogoutCountdown();
+          }
+        }
+      } catch (error) {
+        console.error("Error checking token expiration:", error);
+        this.logoutUser();
+      }
+    },
+
+    initiateLogoutCountdown() {
+      toast.warning("Session expired. Logging out in 10 seconds...", {
+        duration: 10000,
+      });
+
+      setTimeout(() => {
+        this.logoutUser();
+      }, 10000);
+    },
+
+    logoutUser() {
+      this.sellerProfile = null;
+      this.token = null;
+      localStorage.removeItem("sellerProfile");
+      localStorage.removeItem("token");
+      toast.error("Your session has expired. Please log in again.");
+    },
+
+    setSeller(seller, token) {
+      this.sellerProfile = seller;
+      this.token = token;
+      localStorage.setItem("sellerProfile", JSON.stringify(seller));
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ token, userId: seller._id })
+      );
+    },
+
+    clearSeller() {
+      this.sellerProfile = null;
+      this.token = null;
+      localStorage.removeItem("sellerProfile");
+      localStorage.removeItem("token");
+    },
+  },
+});
+
+
+
+
+
+
+
+
+
+
+====================================2===========================================
+import { defineStore } from "pinia";
+import apiClient from "../api/axios";
+import { toast } from "vue-sonner";
+import { jwtDecode } from "jwt-decode";
+import { useUserStore } from "./user";
+
+export const useSellerStore = defineStore("seller", {
+  state: () => ({
+    sellerProfile: JSON.parse(localStorage.getItem("sellerProfile")) || null,
+    token: localStorage.getItem("token") || null,
+    errorMessage: "",
+  }),
+  getters: {
+    isLoggedIn: (state) => !!state.sellerProfile,
+    isSellerProfileLoaded: (state) => !!state.sellerProfile,
+  },
+  actions: {
+    async fetchSellerProfile(sellerId) {
+      console.log("fetchSellerProfile called with sellerId:", sellerId);
+
+      const userStore = useUserStore();
+      try {
+        if (!userStore.token) throw new Error("No token available");
+
+        // First, try to fetch the seller profile directly
+        let response = await apiClient.get(`/seller/${sellerId}`, {
+          headers: { Authorization: `Bearer ${userStore.token}` },
+        });
+
+        if (response.data) {
+          console.log("Fetched seller profile:", response.data);
+          this.sellerProfile = response.data;
+          localStorage.setItem("sellerProfile", JSON.stringify(response.data));
+          return response.data;
+        }
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          // If seller profile not found, try to fetch user profile
+          try {
+            const userResponse = await this.fetchUserProfile(id);
+            if (userResponse && userResponse.sellerProfile) {
+              return this.fetchSellerProfile(userResponse.sellerProfile);
+            } else {
+              console.log("User is not a seller");
+              this.sellerProfile = null;
+              localStorage.removeItem("sellerProfile");
+              return null;
+            }
+          } catch (userError) {
+            console.error("Error fetching user profile:", userError);
+            throw userError;
+          }
+        } else {
+          console.error("Error fetching seller profile:", error);
+          toast.error("Failed to load seller profile. Please try again.");
+          throw error;
+        }
+      }
+    },
+
+    async fetchSellerByUserId(userId) {
+      console.log("fetchSellerByUserId called with userId:", userId);
+
+      const userStore = useUserStore();
+      try {
+        if (!userStore.token) throw new Error("No token available");
+
+        const userResponse = await this.fetchUserProfile(userId);
+        if (userResponse && userResponse.sellerProfile) {
+          return this.fetchSellerProfile(userResponse.sellerProfile);
+        } else {
+          console.log("User is not a seller");
+          return null;
+        }
+      } catch (error) {
+        console.error("Error fetching seller by user ID:", error);
+        toast.error("Failed to load seller information. Please try again.");
+        throw error;
+      }
+    },
+
+    async fetchDashboardData() {
+      try {
+        if (!this.token) throw new Error("No token available");
+        if (!this.sellerProfile) throw new Error("Seller profile not loaded");
+
+        const sellerId = this.sellerProfile._id;
+        console.log("Fetching dashboard data for seller:", sellerId);
+
+        const response = await apiClient.get(`/seller/${sellerId}/dashboard`, {
+          headers: { Authorization: `Bearer ${this.token}` },
+        });
+
+        console.log("Dashboard data response:", response.data);
+        return response.data;
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        if (error.message === "Seller profile not loaded") {
+          toast.error(
+            "Please complete your seller profile before accessing the dashboard."
+          );
+        } else {
+          toast.error("Failed to load dashboard data. Please try again.");
+        }
+        throw error;
+      }
+    },
+
+    async loadSellerProfile() {
+      console.log("loadSellerProfile called");
+      console.log("Current token:", this.token);
+      console.log("Current sellerProfile:", this.sellerProfile);
+
+      if (!this.token) {
+        console.error("No token available in store");
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        if (storedUser.token) {
+          console.log(
+            "Token found in localStorage, setting in store: ",
+            storedUser.token
+          );
+          this.token = storedUser.token;
+        } else {
+          console.error("No token found in localStorage");
+          this.errorMessage =
+            "No authentication token available. Please log in again.";
+          toast.error(this.errorMessage);
+          return;
+        }
+      }
+
+      if (this.sellerProfile) {
+        console.log("Seller profile already loaded from local storage");
+        return;
+      }
+
+      try {
+        const decodedToken = jwtDecode(this.token);
+        console.log("Decoded token:", decodedToken);
+        if (!decodedToken.userId) {
+          throw new Error("Invalid token: missing user ID");
+        }
+        // await this.fetchSellerProfile(decodedToken.userId); //original to show only user id
+        const user = await this.fetchUserProfile(decodedToken.userId); //fetchUserProfile function to get the user Id and profile
+        if (user.sellerProfile) {
+          await this.fetchSellerProfile(user.sellerProfile);
+        } else {
+          throw new Error("User is not a seller");
+        }
+      } catch (error) {
+        console.error("Error loading seller profile:", error);
+        this.errorMessage =
+          "Failed to load seller profile. Please log in again.";
+        toast.error(this.errorMessage);
+        this.clearSeller();
+        throw error;
+      }
+    },
+
+    async addSellerReview(sellerId, reviewData) {
+      try {
+        const userStore = useUserStore();
+        if (!userStore.token) throw new Error("No token available");
+
+        const response = await apiClient.post(
+          `/seller/${sellerId}/reviews`,
+          reviewData,
+          {
+            headers: { Authorization: `Bearer ${userStore.token}` },
+          }
+        );
+
+        console.log("Review submitted:", response.data);
+
+        // Update the local seller profile with the new review
+        if (this.sellerProfile && this.sellerProfile._id === sellerId) {
+          if (!this.sellerProfile.reviews) {
+            this.sellerProfile.reviews = [];
+          }
+          this.sellerProfile.reviews.push(response.data);
+
+          // Recalculate average rating
+          const totalRating = this.sellerProfile.reviews.reduce(
+            (sum, review) => sum + review.rating,
+            0
+          );
+          this.sellerProfile.averageRating =
+            totalRating / this.sellerProfile.reviews.length;
+
+          localStorage.setItem(
+            "sellerProfile",
+            JSON.stringify(this.sellerProfile)
+          );
+        }
+
+        toast.success("Review submitted successfully.");
+        return response.data;
+      } catch (error) {
+        console.error("Error submitting review:", error);
+        toast.error("Failed to submit review. Please try again.");
+        throw error;
+      }
+    },
+
+    async fetchSellerReviews(sellerId, page = 1, itemsPerPage = 5) {
+      try {
+        const response = await apiClient.get(`/seller/${sellerId}/reviews`, {
+          params: { page, itemsPerPage },
+          headers: { Authorization: `Bearer ${this.token}` },
+        });
+        return response.data;
+      } catch (error) {
+        console.error("Error fetching seller reviews:", error);
+        throw error;
+      }
+    },
+
+    //function for loadSellerProfile
+    async loadSellerProfile() {
+      console.log("loadSellerProfile called");
+      console.log("Current token:", this.token);
+      console.log("Current sellerProfile:", this.sellerProfile);
+
+      if (!this.token) {
+        console.error("No token available in store");
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        if (storedUser.token) {
+          console.log(
+            "Token found in localStorage, setting in store: ",
+            storedUser.token
+          );
+          this.token = storedUser.token;
+        } else {
+          console.error("No token found in localStorage");
+          this.errorMessage =
+            "No authentication token available. Please log in again.";
+          toast.error(this.errorMessage);
+          return;
+        }
+      }
+
+      if (this.sellerProfile) {
+        console.log("Seller profile already loaded from local storage");
+        return;
+      }
+
+      try {
+        const userStore = useUserStore();
+        if (!userStore.user || !userStore.user.isSeller) {
+          console.log("User is not a seller");
+          return;
+        }
+
+        const sellerId = userStore.user.sellerProfile;
+        if (!sellerId) {
+          console.error("Seller ID not found");
+          throw new Error("Seller ID not found in user profile");
+        }
+
+        const response = await apiClient.get(`/seller/${sellerId}/profile`, {
+          headers: { Authorization: `Bearer ${this.token}` },
+        });
+
+        this.sellerProfile = response.data;
+        localStorage.setItem("sellerProfile", JSON.stringify(response.data));
+        console.log("Seller profile loaded successfully:", this.sellerProfile);
+      } catch (error) {
+        console.error("Error loading seller profile:", error);
+        this.errorMessage =
+          "Failed to load seller profile. Please log in again.";
+        toast.error(this.errorMessage);
+        this.clearSeller();
+        throw error;
+      }
+    },
+
+    async fetchAllSellerOrders() {
+      try {
+        if (!this.token) throw new Error("No token available");
+        const sellerId = this.sellerProfile._id;
+        const response = await apiClient.get(`/seller/${sellerId}/all-orders`, {
+          headers: { Authorization: `Bearer ${this.token}` },
+        });
+        return response.data;
+      } catch (error) {
+        console.error(
+          "Error fetching all seller orders:",
+          error.response || error
+        );
+        this.errorMessage = "Failed to load all orders.";
+        toast.error(this.errorMessage);
+        throw error;
+      }
+    },
+
+    async fetchSellerOrders() {
+      try {
+        if (!this.token) throw new Error("No token available");
+
+        const sellerId = this.sellerProfile._id;
+        console.log("Fetching orders for seller:", sellerId);
+
+        const response = await apiClient.get(`/seller/${sellerId}/orders`, {
+          headers: { Authorization: `Bearer ${this.token}` },
+        });
+
+        console.log("Fetched orders:", response.data);
+        return response.data;
+      } catch (error) {
+        console.error("Error fetching seller orders:", error.response || error);
+        this.errorMessage = "Failed to load orders.";
+        toast.error(this.errorMessage);
+        throw error;
+      }
+    },
+
+    async updateSellerProfile(sellerId, updatedData) {
+      try {
+        if (!this.token) throw new Error("No token available");
+
+        const response = await apiClient.put(
+          `/seller/${sellerId}/profile`,
+          updatedData,
+          { headers: { Authorization: `Bearer ${this.token}` } }
+        );
+        this.sellerProfile = response.data;
+        localStorage.setItem("sellerProfile", JSON.stringify(response.data));
+        toast.success("Profile updated successfully.");
+      } catch (error) {
+        console.error("Error updating seller profile:", error);
+        this.errorMessage = "Failed to update seller profile.";
+        toast.error(this.errorMessage);
+      }
+    },
+
+    async deleteSellerAccount(sellerId) {
+      try {
+        if (!this.token) throw new Error("No token available");
+
+        await apiClient.delete(`/seller/${sellerId}`, {
+          headers: { Authorization: `Bearer ${this.token}` },
+        });
+        this.sellerProfile = null;
+        localStorage.removeItem("sellerProfile");
+        toast.success("Seller account deleted successfully.");
+      } catch (error) {
+        console.error("Error deleting seller account:", error);
+        this.errorMessage = "Failed to delete seller account.";
+        toast.error(this.errorMessage);
+      }
+    },
+
+    async fetchSellerProducts(sellerId) {
+      try {
+        if (!this.token) throw new Error("No token available");
+
+        console.log("Fetching products for seller:", sellerId);
+        console.log("Using token:", this.token);
+
+        const response = await apiClient.get(`/seller/${sellerId}/products`, {
+          headers: { Authorization: `Bearer ${this.token}` },
+        });
+
+        console.log("API Response:", response.data);
+        return response.data;
+      } catch (error) {
+        console.error("Error fetching seller products:", error);
+        if (error.response) {
+          console.error("Response data:", error.response.data);
+          console.error("Response status:", error.response.status);
+          console.error("Response headers:", error.response.headers);
+        } else if (error.request) {
+          console.error("No response received:", error.request);
+        } else {
+          console.error("Error setting up request:", error.message);
+        }
+        this.errorMessage = "Failed to load seller products.";
+        toast.error(this.errorMessage);
+        throw error;
+      }
+    },
+
+    async toggleVacationMode() {
+      try {
+        if (!this.token) throw new Error("No token available");
+        if (!this.sellerProfile) throw new Error("Seller profile not loaded");
+
+        const sellerId = this.sellerProfile._id;
+        const response = await apiClient.post(
+          `/seller/${sellerId}/toggle-vacation-mode`,
+          {},
+          {
+            headers: { Authorization: `Bearer ${this.token}` },
+          }
+        );
+
+        this.sellerProfile.isVacationMode = response.data.isVacationMode;
+        localStorage.setItem(
+          "sellerProfile",
+          JSON.stringify(this.sellerProfile)
+        );
+
+        return response.data.isVacationMode;
+      } catch (error) {
+        console.error("Error toggling vacation mode:", error);
+        toast.error("Failed to toggle vacation mode. Please try again.");
+        throw error;
+      }
+    },
+
+    checkTokenExpiration() {
+      try {
+        if (this.token) {
+          const decodedToken = jwtDecode(this.token);
+          const expirationTime = decodedToken.exp * 1000; // Convert to milliseconds
+          const currentTime = Date.now();
+
+          if (expirationTime - currentTime <= 10000) {
+            // Less than 10 seconds remaining
+            this.initiateLogoutCountdown();
+          }
+        }
+      } catch (error) {
+        console.error("Error checking token expiration:", error);
+        this.logoutUser();
+      }
+    },
+
+    initiateLogoutCountdown() {
+      toast.warning("Session expired. Logging out in 10 seconds...", {
+        duration: 10000,
+      });
+
+      setTimeout(() => {
+        this.logoutUser();
+      }, 10000);
+    },
+
+    logoutUser() {
+      this.sellerProfile = null;
+      this.token = null;
+      localStorage.removeItem("sellerProfile");
+      localStorage.removeItem("token");
+      toast.error("Your session has expired. Please log in again.");
+    },
+
+    setSeller(seller, token) {
+      this.sellerProfile = seller;
+      this.token = token;
+      localStorage.setItem("sellerProfile", JSON.stringify(seller));
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ token, userId: seller._id })
+      );
+    },
+
+    clearSeller() {
+      this.sellerProfile = null;
+      this.token = null;
+      localStorage.removeItem("sellerProfile");
+      localStorage.removeItem("token");
+    },
+  },
+});

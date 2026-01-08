@@ -1,0 +1,755 @@
+<template>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-2xl font-bold mb-6">Add New Product</h1>
+        <form @submit.prevent="handleSubmit" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="category">
+                    Category
+                </label>
+                <p v-if="!selectedCategories.length" class="text-sm text-gray-600 mb-2">
+                    Please select a category for your product
+                </p>
+                <HierarchicalCategorySelector :categories="categories" v-model:selectedCategories="selectedCategories"
+                    @update:selectedCategories="updateSelectedCategories" />
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="name">
+                    Product Name
+                </label>
+                <input v-model="product.name"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="name" type="text" required>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="description">
+                    Description
+                </label>
+                <textarea v-model="product.description"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="description" rows="3" required></textarea>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="price">
+                    Price
+                </label>
+                <input v-model.number="product.price"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="price" type="number" step="0.01" min="0" required>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="discount">
+                    Discount (%)
+                </label>
+                <input v-model.number="product.discount"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="discount" type="number" step="1" min="0" max="100">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="stock">
+                    Stock
+                </label>
+                <input v-model.number="product.stock"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="stock" type="number" min="0" required>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="tags">
+                    Tags (comma-separated, max 3)
+                </label>
+                <input v-model="tagsInput"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="tags" type="text">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="brand">
+                    Brand
+                </label>
+                <input v-model="product.brand"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="brand" type="text">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="weight">
+                    Weight (kg)
+                </label>
+                <input v-model.number="product.weight"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="weight" type="number" step="0.01" min="0">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="dimensions">
+                    Dimensions (L x W x H cm)
+                </label>
+                <input v-model="product.dimensions"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="dimensions" type="text" placeholder="e.g., 10 x 5 x 2">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="images">
+                    Images
+                </label>
+                <input @change="handleImageUpload"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="images" type="file" multiple accept="image/*">
+            </div>
+            <div v-if="imagePreview" class="mb-4">
+                <img :src="imagePreview" alt="Product preview" class="w-32 h-32 object-cover rounded">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Variants</label>
+                <div v-for="(variant, index) in product.variants" :key="index" class="flex mb-2">
+                    <input v-model="variant.color"
+                        class="shadow appearance-none border rounded w-1/3 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2"
+                        type="text" placeholder="Color">
+                    <input v-model="variant.size"
+                        class="shadow appearance-none border rounded w-1/3 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2"
+                        type="text" placeholder="Size">
+                    <input v-model.number="variant.stock"
+                        class="shadow appearance-none border rounded w-1/3 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2"
+                        type="number" placeholder="Stock" min="0">
+                    <button @click.prevent="removeVariant(index)" class="text-red-500 hover:text-red-700">
+                        <span class="material-icons">delete</span>
+                    </button>
+                </div>
+                <button @click.prevent="addVariant"
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-2">
+                    Add Variant
+                </button>
+            </div>
+            <div class="flex items-center justify-between">
+                <button
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                    type="submit">
+                    Add Product
+                </button>
+                <button @click="cancelAddProduct"
+                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                    type="button">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</template>
+
+<script>
+import { ref, reactive, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useProductStore } from '../store/productStore.js';
+import { useUserStore } from '../store/user.js';
+import { storage } from '../utils/firebase';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { toast } from 'vue-sonner';
+import HierarchicalCategorySelector from './HierarchicalCategorySelector.vue';
+
+export default {
+    name: 'AddProduct',
+    components: {
+        HierarchicalCategorySelector,
+    },
+    setup() {
+        const router = useRouter();
+        const productStore = useProductStore();
+        const userStore = useUserStore();
+        const categories = ref([]);
+        const product = reactive({
+            name: '',
+            description: '',
+            price: 0,
+            discount: 0,
+            stock: 0,
+            category: null,
+            tags: [],
+            images: [],
+            brand: '',
+            weight: 0,
+            dimensions: '',
+            variants: []
+        });
+        const tagsInput = ref('');
+        const imagePreview = ref(null);
+        const selectedCategories = ref([]);
+
+        onMounted(async () => {
+            try {
+                categories.value = await productStore.fetchCategories();
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+                toast.error('Failed to load categories');
+                categories.value = [];
+            }
+        });
+
+        const handleImageUpload = async (event) => {
+            const files = event.target.files;
+            console.log('Files selected:', files.length);
+            product.images = []; // Reset images array
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                try {
+                    const fileName = `${Date.now()}_${file.name}`;
+                    const fileRef = storageRef(storage, `products/${fileName}`);
+                    console.log('Uploading file:', fileName);
+                    await uploadBytes(fileRef, file);
+                    const downloadURL = await getDownloadURL(fileRef);
+                    console.log('File uploaded, URL:', downloadURL);
+                    product.images.push(downloadURL);
+
+                    // Set the first image as preview
+                    if (i === 0) {
+                        imagePreview.value = downloadURL;
+                    }
+                } catch (error) {
+                    console.error('Error uploading image:', error);
+                    toast.error(`Failed to upload image: ${file.name}`);
+                }
+            }
+            console.log('Final product.images:', product.images);
+        };
+
+        const updateSelectedCategories = (newSelectedCategories) => {
+            selectedCategories.value = newSelectedCategories;
+            if (selectedCategories.value.length > 0) {
+                const lastCategory = selectedCategories.value[selectedCategories.value.length - 1];
+                product.category = lastCategory._id;
+            } else {
+                product.category = null;
+            }
+        };
+
+        const addVariant = () => {
+            product.variants.push({ color: '', size: '', stock: 0 });
+        };
+
+        const removeVariant = (index) => {
+            product.variants.splice(index, 1);
+        };
+
+        const cancelAddProduct = () => {
+            // Confirm with the user before cancelling
+            if (confirm('Are you sure you want to cancel adding this product? All entered data will be lost.')) {
+                router.push('/account/profile/profile-user');
+            }
+        };
+
+        const handleSubmit = async () => {
+            try {
+                if (!product.category) {
+                    toast.error('Please select a category');
+                    return;
+                }
+
+                console.log('Category being sent:', product.category);
+                console.log('Submitting product:', product);
+
+                const productData = {
+                    ...product,
+                    tags: tagsInput.value.split(',').map(tag => tag.trim()).slice(0, 3)
+                };
+
+                console.log('Product data before submission:', productData);
+                console.log('Images being sent:', productData.images);
+
+                const newProduct = await productStore.createProduct(productData);
+                console.log('New product created:', newProduct);
+                toast.success('Product added successfully');
+
+                router.push({
+                    path: '/account/my-products',
+                });
+            } catch (error) {
+                console.error('Error adding product:', error);
+                if (error.response && error.response.data) {
+                    console.error('Server error details:', error.response.data);
+                }
+                toast.error('Failed to add product: ' + (error.response?.data?.error || error.message));
+            }
+        };
+
+        return {
+            product,
+            tagsInput,
+            selectedCategories,
+            categories,
+            handleImageUpload,
+            handleSubmit,
+            imagePreview,
+            updateSelectedCategories,
+            addVariant,
+            removeVariant,
+            cancelAddProduct
+        };
+    },
+};
+</script>
+
+
+
+================================version 2==============================
+
+<template>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-2xl font-bold mb-6">Add New Product</h1>
+        <form @submit.prevent="handleSubmit" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="category">
+                    Category
+                </label>
+                <p v-if="!selectedCategories.length" class="text-sm text-gray-600 mb-2">
+                    Please select a category for your product
+                </p>
+                <HierarchicalCategorySelector :categories="categories" v-model:selectedCategories="selectedCategories"
+                    @update:selectedCategories="updateSelectedCategories" />
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="name">
+                    Product Name
+                </label>
+                <input v-model="product.name"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="name" type="text" required>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="description">
+                    Description
+                </label>
+                <textarea v-model="product.description"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="description" rows="3" required></textarea>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="price">
+                    Price
+                </label>
+                <input v-model.number="product.price"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="price" type="number" step="0.01" min="0" required>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="discount">
+                    Discount (%)
+                </label>
+                <input v-model.number="product.discount"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="discount" type="number" step="1" min="0" max="100">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="stock">
+                    Stock
+                </label>
+                <input v-model.number="product.stock"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="stock" type="number" min="0" required>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="tags">
+                    Tags (comma-separated, max 3)
+                </label>
+                <input v-model="tagsInput"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="tags" type="text">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="brand">
+                    Brand
+                </label>
+                <input v-model="product.brand"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="brand" type="text">
+            </div>
+
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="unitCategory">
+                    Unit Category
+                </label>
+                <select v-model="product.unitCategory" @change="updateUnitOptions"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="unitCategory" required>
+                    <option value="weight">Weight</option>
+                    <option value="volume">Volume</option>
+                    <option value="length">Length</option>
+                    <option value="quantity">Quantity</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="unit">
+                    Unit
+                </label>
+                <select v-model="product.unit.base"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="unit" required>
+                    <option v-for="unit in unitOptions" :key="unit" :value="unit">{{ unit }}</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="unitValue">
+                    Unit Value
+                </label>
+                <input v-model.number="product.unit.value"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="unitValue" type="number" step="0.01" min="0" required>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="unitDisplay">
+                    Display Unit (e.g., ml/bottle)
+                </label>
+                <input v-model="product.unit.display"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="unitDisplay" type="text">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="customUnit">
+                    Custom Unit (if applicable)
+                </label>
+                <input v-model="product.customUnit"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="customUnit" type="text">
+            </div>
+            <!-- Bulk Pricing Section -->
+            <div class="mb-4">
+                <h3 class="text-lg font-bold mb-2">Bulk Pricing</h3>
+                <div v-for="(pricing, index) in product.bulkPricing" :key="index" class="flex mb-2">
+                    <input v-model.number="pricing.quantity" type="number" placeholder="Quantity" class="mr-2">
+                    <input v-model.number="pricing.price" type="number" step="0.01" placeholder="Price" class="mr-2">
+                    <button @click="removeBulkPricing(index)"
+                        class="bg-red-500 text-white px-2 py-1 rounded">Remove</button>
+                </div>
+                <button @click="addBulkPricing" class="bg-blue-500 text-white px-2 py-1 rounded mt-2">Add Bulk
+                    Pricing</button>
+            </div>
+
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="weight">
+                    Weight (kg)
+                </label>
+                <input v-model.number="product.weight"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="weight" type="number" step="0.01" min="0">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="dimensions">
+                    Dimensions (L x W x H cm)
+                </label>
+                <input v-model="product.dimensions"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="dimensions" type="text" placeholder="e.g., 10 x 5 x 2">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="images">
+                    Images
+                </label>
+                <input @change="handleImageUpload"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="images" type="file" multiple accept="image/*">
+            </div>
+            <div v-if="imagePreview" class="mb-4">
+                <img :src="imagePreview" alt="Product preview" class="w-32 h-32 object-cover rounded">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Variants</label>
+                <div v-for="(variant, index) in product.variants" :key="index" class="flex mb-2 items-center">
+                    <!-- Color Dropdown and Display -->
+                    <div class="relative w-1/3 mr-2">
+                        <select v-model="variant.color"
+                            class="shadow appearance-none border rounded w-full py-2 pl-8 pr-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="">Select Color</option>
+                            <option v-for="color in colorOptions" :key="color.value" :value="color.value">
+                                {{ color.label }}
+                            </option>
+                        </select>
+                        <div class="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full"
+                            :style="getColorStyle(getColorOption(variant.color))">
+                        </div>
+                    </div>
+
+                    <input v-model="variant.size"
+                        class="shadow appearance-none border rounded w-1/3 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2"
+                        type="text" placeholder="Size">
+                    <input v-model.number="variant.stock"
+                        class="shadow appearance-none border rounded w-1/3 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2"
+                        type="number" placeholder="Stock" min="0">
+                    <button @click.prevent="removeVariant(index)" class="text-red-500 hover:text-red-700">
+                        <span class="material-icons">delete</span>
+                    </button>
+                </div>
+                <button @click.prevent="addVariant"
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-2">
+                    Add Variant
+                </button>
+            </div>
+            <div class="flex items-center justify-between">
+                <button
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                    type="submit">
+                    Add Product
+                </button>
+                <button @click="cancelAddProduct"
+                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                    type="button">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</template>
+
+<script>
+import { ref, reactive, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import { useProductStore } from '../store/productStore.js';
+import { useUserStore } from '../store/user.js';
+import { storage } from '../utils/firebase';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { toast } from 'vue-sonner';
+import HierarchicalCategorySelector from './HierarchicalCategorySelector.vue';
+
+export default {
+    name: 'AddProduct',
+    components: {
+        HierarchicalCategorySelector,
+    },
+    setup() {
+        const router = useRouter();
+        const productStore = useProductStore();
+        const userStore = useUserStore();
+        const categories = ref([]);
+        const product = reactive({
+            name: '',
+            description: '',
+            price: 0,
+            discount: 0,
+            stock: 0,
+            category: null,
+            tags: [],
+            images: [],
+            brand: '',
+            weight: 0,
+            dimensions: '',
+            variants: [],
+
+            unitCategory: '',
+            unit: {
+                base: '',
+                value: 1,
+                display: ''
+            },
+            customUnit: '',
+            bulkPricing: []
+        });
+
+        const colorOptions = [
+            { value: 'red', label: 'Red', hex: '#FF0000' },
+            { value: 'dark-red', label: 'Dark Red', hex: '#8B0000' },
+            { value: 'burgundy', label: 'Burgundy', hex: '#800020' },
+            { value: 'pink', label: 'Pink', hex: '#FFC0CB' },
+            { value: 'hot-pink', label: 'Hot Pink', hex: '#FF69B4' },
+            { value: 'coral', label: 'Coral', hex: '#FF7F50' },
+            { value: 'orange', label: 'Orange', hex: '#FFA500' },
+            { value: 'yellow', label: 'Yellow', hex: '#FFFF00' },
+            { value: 'gold', label: 'Gold', hex: '#FFD700' },
+            { value: 'green', label: 'Green', hex: '#008000' },
+            { value: 'olive', label: 'Olive', hex: '#808000' },
+            { value: 'lime', label: 'Lime', hex: '#00FF00' },
+            { value: 'teal', label: 'Teal', hex: '#008080' },
+            { value: 'cyan', label: 'Cyan', hex: '#00FFFF' },
+            { value: 'turquoise', label: 'Turquoise', hex: '#40E0D0' },
+            { value: 'blue', label: 'Blue', hex: '#0000FF' },
+            { value: 'navy-blue', label: 'Navy Blue', hex: '#000080' },
+            { value: 'light-blue', label: 'Light Blue', hex: '#ADD8E6' },
+            { value: 'purple', label: 'Purple', hex: '#800080' },
+            { value: 'lavender', label: 'Lavender', hex: '#E6E6FA' },
+            { value: 'indigo', label: 'Indigo', hex: '#4B0082' },
+            { value: 'brown', label: 'Brown', hex: '#A52A2A' },
+            { value: 'beige', label: 'Beige', hex: '#F5F5DC' },
+            { value: 'tan', label: 'Tan', hex: '#D2B48C' },
+            { value: 'khaki', label: 'Khaki', hex: '#C3B091' },
+            { value: 'gray', label: 'Gray', hex: '#808080' },
+            { value: 'light-gray', label: 'Light Gray', hex: '#D3D3D3' },
+            { value: 'charcoal', label: 'Charcoal', hex: '#36454F' },
+            { value: 'black', label: 'Black', hex: '#000000' },
+            { value: 'white', label: 'White', hex: '#FFFFFF' },
+            { value: 'off-white', label: 'Off-White', hex: '#FAF9F6' },
+            { value: 'ivory', label: 'Ivory', hex: '#FFFFF0' },
+            { value: 'cream', label: 'Cream', hex: '#FFFDD0' },
+            { value: 'silver', label: 'Silver', hex: '#C0C0C0' },
+            { value: 'metallic', label: 'Metallic', hex: '#D3D3D3' },
+            { value: 'multi-colored', label: 'Multi-Colored', gradient: true },
+        ];
+
+        const tagsInput = ref('');
+        const imagePreview = ref(null);
+        const selectedCategories = ref([]);
+
+        const unitOptions = ref([]);
+
+        onMounted(async () => {
+            try {
+                categories.value = await productStore.fetchCategories();
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+                toast.error('Failed to load categories');
+                categories.value = [];
+            }
+        });
+
+        const handleImageUpload = async (event) => {
+            const files = event.target.files;
+            console.log('Files selected:', files.length);
+            product.images = []; // Reset images array
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                try {
+                    const fileName = `${Date.now()}_${file.name}`;
+                    const fileRef = storageRef(storage, `products/${fileName}`);
+                    console.log('Uploading file:', fileName);
+                    await uploadBytes(fileRef, file);
+                    const downloadURL = await getDownloadURL(fileRef);
+                    console.log('File uploaded, URL:', downloadURL);
+                    product.images.push(downloadURL);
+
+                    // Set the first image as preview
+                    if (i === 0) {
+                        imagePreview.value = downloadURL;
+                    }
+                } catch (error) {
+                    console.error('Error uploading image:', error);
+                    toast.error(`Failed to upload image: ${file.name}`);
+                }
+            }
+            console.log('Final product.images:', product.images);
+        };
+
+        const updateSelectedCategories = (newSelectedCategories) => {
+            selectedCategories.value = newSelectedCategories;
+            if (selectedCategories.value.length > 0) {
+                const lastCategory = selectedCategories.value[selectedCategories.value.length - 1];
+                product.category = lastCategory._id;
+            } else {
+                product.category = null;
+            }
+        };
+
+        const addVariant = () => {
+            product.variants.push({ color: '', size: '', stock: 0 });
+        };
+
+        const removeVariant = (index) => {
+            product.variants.splice(index, 1);
+        };
+
+        const getColorOption = (colorValue) => {
+            return colorOptions.find(color => color.value === colorValue) || {};
+        };
+
+        const getColorStyle = (color) => {
+            if (color.gradient) {
+                return {
+                    background: 'linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet)',
+                };
+            }
+            return { backgroundColor: color.hex };
+        };
+
+        const cancelAddProduct = () => {
+            // Confirm with the user before cancelling
+            if (confirm('Are you sure you want to cancel adding this product? All entered data will be lost.')) {
+                router.push('/account/profile/profile-user');
+            }
+        };
+
+        const handleSubmit = async () => {
+            try {
+                if (!product.category) {
+                    toast.error('Please select a category');
+                    return;
+                }
+
+                console.log('Category being sent:', product.category);
+                console.log('Submitting product:', product);
+
+                const productData = {
+                    ...product,
+                    tags: tagsInput.value.split(',').map(tag => tag.trim()).slice(0, 3)
+                };
+
+                console.log('Product data before submission:', productData);
+                console.log('Images being sent:', productData.images);
+
+                const newProduct = await productStore.createProduct(productData);
+                console.log('New product created:', newProduct);
+                toast.success('Product added successfully');
+
+                router.push({
+                    path: '/account/my-products',
+                });
+            } catch (error) {
+                console.error('Error adding product:', error);
+                if (error.response && error.response.data) {
+                    console.error('Server error details:', error.response.data);
+                }
+                toast.error('Failed to add product: ' + (error.response?.data?.error || error.message));
+            }
+        };
+
+        const updateUnitOptions = () => {
+            switch (product.unitCategory) {
+                case 'weight':
+                    unitOptions.value = ['gram', 'kilogram'];
+                    break;
+                case 'volume':
+                    unitOptions.value = ['milliliter', 'liter'];
+                    break;
+                case 'length':
+                    unitOptions.value = ['centimeter', 'meter'];
+                    break;
+                case 'quantity':
+                    unitOptions.value = ['piece', 'pair'];
+                    break;
+                default:
+                    unitOptions.value = [];
+            }
+            product.unit.base = unitOptions.value[0] || '';
+        };
+
+        const addBulkPricing = () => {
+            product.bulkPricing.push({ quantity: 0, price: 0 });
+        };
+
+        const removeBulkPricing = (index) => {
+            product.bulkPricing.splice(index, 1);
+        };
+
+        watch(() => product.unitCategory, updateUnitOptions);
+
+        return {
+            product,
+            tagsInput,
+            selectedCategories,
+            categories,
+            handleImageUpload,
+            handleSubmit,
+            imagePreview,
+            updateSelectedCategories,
+            addVariant,
+            removeVariant,
+            colorOptions,
+            getColorOption,
+            getColorStyle,
+            cancelAddProduct,
+            unitOptions,
+            updateUnitOptions,
+            addBulkPricing,
+            removeBulkPricing
+        };
+    },
+};
+</script>
+
+<style scoped>
+/* Add these styles to handle the multi-colored option */
+.multi-colored-bg {
+    background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+}
+</style>

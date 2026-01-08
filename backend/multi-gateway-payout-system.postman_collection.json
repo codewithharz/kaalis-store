@@ -1,0 +1,665 @@
+{
+    "info": {
+      "name": "Multi-Gateway Payout System",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+      "description": "A collection for testing the multi-gateway payout system with Paystack, PayDunya, and Orange Money."
+    },
+    "item": [
+      {
+        "name": "Authentication",
+        "item": [
+          {
+            "name": "Admin Login",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"identifier\": \"admin@example.com\",\n    \"password\": \"adminpassword\"\n}"
+            },
+              "url": {
+                "raw": "{{baseUrl}}/api/admin/login",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "admin", "login"]
+              },
+              "description": "Login as admin to test the payout system"
+            },
+            "response": []
+          },
+          {
+            "name": "Seller Login",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"identifier\": \"seller@example.com\",\n    \"password\": \"sellerpassword\"\n}"
+            },
+              "url": {
+                "raw": "{{baseUrl}}/api/users/login",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "users", "login"]
+              },
+              "description": "Login as a seller to test the payout system"
+            },
+            "response": []
+          }
+        ],
+        "description": "Authenticate with the system"
+      },
+      {
+        "name": "Mock Setup (Test Environment)",
+        "item": [
+          {
+            "name": "Create Mock Nigerian Vendor",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{adminToken}}"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"username\": \"nigerian.vendor\",\n    \"email\": \"nigerian.vendor@example.com\",\n    \"firstName\": \"Nigerian\",\n    \"lastName\": \"Vendor\",\n    \"currency\": \"NGN\",\n    \"paymentMethod\": \"Paystack\",\n    \"countryCode\": \"NG\",\n    \"accountNumber\": \"0123456789\",\n    \"bankCode\": \"058\",\n    \"bankName\": \"GTBank\"\n}"
+            },
+              "url": {
+                "raw": "{{baseUrl}}/api/payout-test/vendor/create",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "payout-test", "vendor", "create"]
+              },
+              "description": "Create a mock Nigerian vendor with Paystack setup"
+            },
+            "response": []
+          },
+          {
+            "name": "Create Mock Senegalese Vendor",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{adminToken}}"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"username\": \"senegalese.vendor\",\n    \"email\": \"senegalese.vendor@example.com\",\n    \"firstName\": \"Senegalese\",\n    \"lastName\": \"Vendor\",\n    \"currency\": \"XOF\",\n    \"paymentMethod\": \"PayDunya\",\n    \"countryCode\": \"SN\",\n    \"mobileNumber\": \"+221771234567\"\n}"
+            },
+              "url": {
+                "raw": "{{baseUrl}}/api/payout-test/vendor/create",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "payout-test", "vendor", "create"]
+              },
+              "description": "Create a mock Senegalese vendor with PayDunya setup"
+            },
+            "response": []
+          },
+          {
+            "name": "Create Mock Ivorian Vendor",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{adminToken}}"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"username\": \"ivorian.vendor\",\n    \"email\": \"ivorian.vendor@example.com\",\n    \"firstName\": \"Ivorian\",\n    \"lastName\": \"Vendor\",\n    \"currency\": \"XOF\",\n    \"paymentMethod\": \"OrangeMoney\",\n    \"countryCode\": \"CI\",\n    \"mobileNumber\": \"+2250123456789\"\n}"
+            },
+              "url": {
+                "raw": "{{baseUrl}}/api/payout-test/vendor/create",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "payout-test", "vendor", "create"]
+              },
+              "description": "Create a mock Ivorian vendor with Orange Money setup"
+            },
+            "response": []
+          },
+          {
+            "name": "Create Mock Order for Paystack",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{sellerToken}}"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"totalAmount\": 10000,\n    \"vendorId\": \"{{nigerianVendorId}}\",\n    \"currency\": \"NGN\",\n    \"paymentMethod\": \"Paystack\"\n}"
+              },
+              "url": {
+                "raw": "{{baseUrl}}/api/payout-test/order/create",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "payout-test", "order", "create"]
+              },
+              "description": "Create a mock order for a Nigerian vendor with Paystack"
+            },
+            "response": []
+          },
+          {
+            "name": "Create Mock Order for PayDunya",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{sellerToken}}"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"totalAmount\": 5000,\n    \"vendorId\": \"{{senegaleseVendorId}}\",\n    \"currency\": \"XOF\",\n    \"paymentMethod\": \"PayDunya\"\n}"
+              },
+              "url": {
+                "raw": "{{baseUrl}}/api/payout-test/order/create",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "payout-test", "order", "create"]
+              },
+              "description": "Create a mock order for a Senegalese vendor with PayDunya"
+            },
+            "response": []
+          },
+          {
+            "name": "Create Mock Order for Orange Money",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{sellerToken}}"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"totalAmount\": 7500,\n    \"vendorId\": \"{{ivorianVendorId}}\",\n    \"currency\": \"XOF\",\n    \"paymentMethod\": \"OrangeMoney\"\n}"
+              },
+              "url": {
+                "raw": "{{baseUrl}}/api/payout-test/order/create",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "payout-test", "order", "create"]
+              },
+              "description": "Create a mock order for an Ivorian vendor with Orange Money"
+            },
+            "response": []
+          },
+          {
+            "name": "Reset Mock Data",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{adminToken}}"
+                }
+              ],
+              "url": {
+                "raw": "{{baseUrl}}/api/payout-test/reset",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "payout-test", "reset"]
+              },
+              "description": "Reset all mock data"
+            },
+            "response": []
+          }
+        ],
+        "description": "Setup mock data for testing the payout system"
+      },
+      {
+        "name": "Test Gateway-Specific Payouts",
+        "item": [
+          {
+            "name": "Test Paystack Transfer",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{sellerToken}}"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"amount\": 5000,\n    \"currency\": \"NGN\"\n}"
+              },
+              "url": {
+                "raw": "{{baseUrl}}/api/payout-test/gateway/paystack",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "payout-test", "gateway", "paystack"]
+              },
+              "description": "Test a Paystack transfer"
+            },
+            "response": []
+          },
+          {
+            "name": "Test PayDunya Withdrawal",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{sellerToken}}"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"amount\": 5000,\n    \"currency\": \"XOF\",\n    \"mobileNumber\": \"+221771234567\"\n}"
+              },
+              "url": {
+                "raw": "{{baseUrl}}/api/payout-test/gateway/paydunya",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "payout-test", "gateway", "paydunya"]
+              },
+              "description": "Test a PayDunya withdrawal"
+            },
+            "response": []
+          },
+          {
+            "name": "Test Orange Money Transfer",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{sellerToken}}"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"amount\": 5000,\n    \"currency\": \"XOF\",\n    \"mobileNumber\": \"+2250123456789\"\n}"
+              },
+              "url": {
+                "raw": "{{baseUrl}}/api/payout-test/gateway/orangemoney",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "payout-test", "gateway", "orangemoney"]
+              },
+              "description": "Test an Orange Money transfer"
+            },
+            "response": []
+          },
+          {
+            "name": "Check Paystack Transfer Status",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{sellerToken}}"
+                }
+              ],
+              "url": {
+                "raw": "{{baseUrl}}/api/payout-test/status/paystack/{{paystackReference}}",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "payout-test", "status", "paystack", "{{paystackReference}}"]
+              },
+              "description": "Check the status of a Paystack transfer"
+            },
+            "response": []
+          },
+          {
+            "name": "Check PayDunya Withdrawal Status",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{sellerToken}}"
+                }
+              ],
+              "url": {
+                "raw": "{{baseUrl}}/api/payout-test/status/paydunya/{{paydunyaToken}}",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "payout-test", "status", "paydunya", "{{paydunyaToken}}"]
+              },
+              "description": "Check the status of a PayDunya withdrawal"
+            },
+            "response": []
+          },
+          {
+            "name": "Check Orange Money Transfer Status",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{sellerToken}}"
+                }
+              ],
+              "url": {
+                "raw": "{{baseUrl}}/api/payout-test/status/orangemoney/{{orangeMoneyPayoutId}}",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "payout-test", "status", "orangemoney", "{{orangeMoneyPayoutId}}"]
+              },
+              "description": "Check the status of an Orange Money transfer"
+            },
+            "response": []
+          }
+        ],
+        "description": "Test individual gateway payouts"
+      },
+      {
+        "name": "Vendor Payout Management",
+        "item": [
+          {
+            "name": "Get Vendor Payouts",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{sellerToken}}"
+                }
+              ],
+              "url": {
+                "raw": "{{baseUrl}}/api/vendor-payout/payouts",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "vendor-payout", "payouts"]
+              },
+              "description": "Get vendor's payout history"
+            },
+            "response": []
+          },
+          {
+            "name": "Get Payout Stats",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{sellerToken}}"
+                }
+              ],
+              "url": {
+                "raw": "{{baseUrl}}/api/vendor-payout/payout-stats",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "vendor-payout", "payout-stats"]
+              },
+              "description": "Get vendor's payout statistics"
+            },
+            "response": []
+          },
+          {
+            "name": "Get Payment Providers",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{sellerToken}}"
+                }
+              ],
+              "url": {
+                "raw": "{{baseUrl}}/api/vendor-payout/providers",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "vendor-payout", "providers"]
+              },
+              "description": "Get available payment providers for vendor"
+            },
+            "response": []
+          },
+          {
+            "name": "Get Payment Setup Status",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{sellerToken}}"
+                }
+              ],
+              "url": {
+                "raw": "{{baseUrl}}/api/vendor-payout/setup-status",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "vendor-payout", "setup-status"]
+              },
+              "description": "Get vendor's payment setup status"
+            },
+            "response": []
+          },
+          {
+            "name": "Setup Paystack Bank Account",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{sellerToken}}"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"bankCode\": \"058\",\n    \"accountNumber\": \"0123456789\"\n}"
+              },
+              "url": {
+                "raw": "{{baseUrl}}/api/vendor-payout/paystack/setup",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "vendor-payout", "paystack", "setup"]
+              },
+              "description": "Setup Paystack bank account for Nigerian vendors"
+            },
+            "response": []
+          },
+          {
+            "name": "Setup Mobile Wallet",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{sellerToken}}"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"mobileNumber\": \"+221771234567\",\n    \"provider\": \"PayDunya\",\n    \"countryCode\": \"SN\"\n}"
+              },
+              "url": {
+                "raw": "{{baseUrl}}/api/vendor-payout/mobile/setup",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "vendor-payout", "mobile", "setup"]
+              },
+              "description": "Setup mobile wallet for XOF vendors"
+            },
+            "response": []
+          },
+          {
+            "name": "Update Payment Preferences",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{sellerToken}}"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"paymentMethod\": \"PayDunya\",\n    \"currency\": \"XOF\"\n}"
+              },
+              "url": {
+                "raw": "{{baseUrl}}/api/vendor-payout/preferences",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "vendor-payout", "preferences"]
+              },
+              "description": "Update vendor's payment preferences"
+            },
+            "response": []
+          }
+        ],
+        "description": "Manage vendor payment methods and payout settings"
+      },
+      {
+        "name": "Admin Process Management",
+        "item": [
+          {
+            "name": "Process All Pending Payouts",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{adminToken}}"
+                }
+              ],
+              "url": {
+                "raw": "{{baseUrl}}/api/payout-test/process-all",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "payout-test", "process-all"]
+              },
+              "description": "Trigger processing of all pending payouts"
+            },
+            "response": []
+          },
+          {
+            "name": "Get All Mock Transactions",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{adminToken}}"
+                }
+              ],
+              "url": {
+                "raw": "{{baseUrl}}/api/payout-test/transactions",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "payout-test", "transactions"]
+              },
+              "description": "Get all mock transactions"
+            },
+            "response": []
+          },
+          {
+            "name": "Get Mock Account Balances",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{adminToken}}"
+                }
+              ],
+              "url": {
+                "raw": "{{baseUrl}}/api/payout-test/balances",
+                "host": ["{{baseUrl}}"],
+                "path": ["api", "payout-test", "balances"]
+              },
+              "description": "Get mock account balances for all payment gateways"
+            },
+            "response": []
+          }
+        ],
+        "description": "Admin processes for managing payouts"
+      }
+    ],
+    "variable": [
+      {
+        "key": "baseUrl",
+        "value": "http://localhost:7788",
+        "type": "string"
+      },
+      {
+        "key": "adminToken",
+        "value": "YOUR_ADMIN_TOKEN",
+        "type": "string"
+      },
+      {
+        "key": "sellerToken",
+        "value": "YOUR_SELLER_TOKEN",
+        "type": "string"
+      },
+      {
+        "key": "nigerianVendorId",
+        "value": "VENDOR_ID_HERE",
+        "type": "string"
+      },
+      {
+        "key": "senegaleseVendorId",
+        "value": "VENDOR_ID_HERE",
+        "type": "string"
+      },
+      {
+        "key": "ivorianVendorId",
+        "value": "VENDOR_ID_HERE",
+        "type": "string"
+      },
+      {
+        "key": "paystackReference",
+        "value": "REFERENCE_HERE",
+        "type": "string"
+      },
+      {
+        "key": "paydunyaToken",
+        "value": "TOKEN_HERE",
+        "type": "string"
+      },
+      {
+        "key": "orangeMoneyPayoutId",
+        "value": "PAYOUT_ID_HERE",
+        "type": "string"
+      }
+    ]
+  }

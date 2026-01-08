@@ -1,0 +1,2181 @@
+const Product = require("../models/productModels");
+const User = require("../models/userModels");
+const Review = require("../models/reviewRatingModels");
+const Seller = require("../models/sellerModels");
+const Order = require("../models/orderModels");
+const ProductRating = require("../models/productRatingModel");
+const Category = require("../models/categoryModels");
+const mongoose = require("mongoose");
+
+const { bucket } = require("../utils/firebaseConfig");
+const { v4: uuidv4 } = require("uuid");
+
+// Add multiple products
+exports.addProducts = async (req, res) => {
+  try {
+    const products = req.body;
+    const savedProducts = await Product.insertMany(products);
+    res.status(201).json(savedProducts);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+exports.getAllProducts = async (req, res) => {
+  try {
+    const { random, limit = 10, excludeId } = req.query;
+    let query = Product.find();
+
+    if (random === "true") {
+      // If random is requested, use aggregation to get random products
+      const randomProducts = await Product.aggregate([
+        { $match: excludeId ? { _id: { $ne: excludeId } } : {} },
+        { $sample: { size: parseInt(limit) } },
+      ]);
+
+      const productsWithRatings = await Promise.all(
+        randomProducts.map(async (product) => {
+          const reviews = await Review.find({ product: product._id });
+          const averageRating =
+            reviews.length > 0
+              ? reviews.reduce((acc, review) => acc + review.rating, 0) /
+                reviews.length
+              : 0;
+          const numberOfRatings = reviews.length;
+
+          return {
+            ...product,
+            averageRating,
+            numberOfRatings,
+          };
+        })
+      );
+
+      return res.status(200).json(productsWithRatings);
+    }
+
+    // If not random, proceed with the original logic
+    const products = await query.populate("user");
+
+    const productsWithRatings = await Promise.all(
+      products.map(async (product) => {
+        const reviews = await Review.find({ product: product._id });
+        const averageRating =
+          reviews.length > 0
+            ? reviews.reduce((acc, review) => acc + review.rating, 0) /
+              reviews.length
+            : 0;
+        const numberOfRatings = reviews.length;
+
+        return {
+          ...product.toObject(),
+          averageRating,
+          numberOfRatings,
+        };
+      })
+    );
+
+    res.status(200).json(productsWithRatings);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getAllProductsByCategory = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+
+    // Find the category and all its descendants
+    const category = await Category.findById(categoryId);
+    const descendantCategories = await Category.find({ ancestors: categoryId });
+    const allCategoryIds = [
+      category._id,
+      ...descendantCategories.map((c) => c._id),
+    ];
+
+    // Find products in the category and all its subcategories
+    const products = await Product.find({ category: { $in: allCategoryIds } });
+
+    res.status(200).json(products);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get a single product by ID
+exports.getProductById = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.productId)
+      .populate({
+        path: "user",
+        select: "username isSeller sellerProfile",
+        populate: {
+          path: "addresses",
+          model: "Address",
+          select: "city country",
+        },
+      })
+      .populate({
+        path: "user",
+        populate: {
+          path: "sellerProfile",
+          model: "Seller",
+        },
+      });
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Get reviews for the product
+    const reviews = await Review.find({ product: product._id });
+    const averageRating =
+      reviews.length > 0
+        ? reviews.reduce((acc, review) => acc + review.rating, 0) /
+          reviews.length
+        : 0;
+    const numberOfRatings = reviews.length;
+
+    // Prepare the response object
+    const productResponse = {
+      ...product.toObject(),
+      averageRating,
+      numberOfRatings,
+      seller: {
+        username: product.user.username,
+        isSeller: product.user.isSeller,
+        sellerProfile: product.user.sellerProfile,
+        address:
+          product.user.addresses.length > 0
+            ? {
+                city: product.user.addresses[0].city,
+                country: product.user.addresses[0].country,
+              }
+            : null,
+      },
+    };
+
+    res.status(200).json(productResponse);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// exports.rateProduct = async (req, res) => {
+//   const { productId } = req.params;
+//   const { rating, review } = req.body;
+//   const userId = req.user._id;
+
+//   try {
+//     // Check if the user has purchased the product
+//     const order = await Order.findOne({
+//       user: userId,
+//       "products.product": productId,
+//       status: "Delivered",
+//     });
+
+//     if (!order) {
+//       return res
+//         .status(403)
+//         .json({ message: "You can only rate products you have purchased" });
+//     }
+
+//     // Check if the product has already been rated by this user
+//     const existingRating = await ProductRating.findOne({
+//       user: userId,
+//       product: productId,
+//     });
+//     if (existingRating) {
+//       return res
+//         .status(400)
+//         .json({ message: "You have already rated this product" });
+//     }
+
+//     // Create new rating
+//     const newRating = new ProductRating({
+//       user: userId,
+//       product: productId,
+//       rating,
+//       review,
+//     });
+
+//     await newRating.save();
+
+//     // Update the product's average rating
+//     const product = await Product.findById(productId);
+//     const allRatings = await ProductRating.find({ product: productId });
+//     const averageRating =
+//       allRatings.reduce((acc, curr) => acc + curr.rating, 0) /
+//       allRatings.length;
+//     product.averageRating = averageRating;
+//     product.numberOfRatings = allRatings.length;
+//     await product.save();
+
+//     // Mark the product as rated in the order
+//     await Order.findOneAndUpdate(
+//       { _id: order._id, "products.product": productId },
+//       { $set: { "products.$.rated": true } }
+//     );
+
+//     res
+//       .status(201)
+//       .json({ message: "Product rated successfully", rating: newRating });
+//   } catch (error) {
+//     console.error("Error rating product:", error);
+//     res
+//       .status(500)
+//       .json({ message: "Error rating product", error: error.message });
+//   }
+// };
+
+exports.rateProduct = async (req, res) => {
+  const { productId } = req.params;
+  const { rating, review } = req.body;
+  const userId = req.user._id;
+
+  console.log(
+    `Attempting to rate product. User: ${userId}, Product: ${productId}`
+  );
+
+  try {
+    const order = await Order.findOne({
+      user: userId,
+      "products.product": productId,
+      status: "Delivered",
+    });
+
+    console.log(`Order found: ${order ? "Yes" : "No"}`);
+    if (order) {
+      console.log(`Order details: ${JSON.stringify(order)}`);
+    }
+
+    if (!order) {
+      console.log(
+        `No matching order found for user ${userId} and product ${productId}`
+      );
+      return res
+        .status(403)
+        .json({ message: "You can only rate products you have purchased" });
+    }
+
+    // Check if the product has already been rated by this user
+    const existingRating = await ProductRating.findOne({
+      user: userId,
+      product: productId,
+    });
+    if (existingRating) {
+      return res
+        .status(400)
+        .json({ message: "You have already rated this product" });
+    }
+
+    // Create new rating
+    const newRating = new ProductRating({
+      user: userId,
+      product: productId,
+      rating,
+      review,
+    });
+    await newRating.save();
+
+    // Update the product's average rating and number of ratings
+    const allRatings = await ProductRating.find({ product: productId });
+    const averageRating =
+      allRatings.reduce((acc, curr) => acc + curr.rating, 0) /
+      allRatings.length;
+
+    await Product.findByIdAndUpdate(
+      productId,
+      {
+        $set: {
+          averageRating: averageRating,
+          numberOfRatings: allRatings.length,
+        },
+      },
+      { new: true, runValidators: false }
+    );
+
+    // Mark the product as rated in the order and add to ratedProducts array
+    const updatedOrder = await Order.findOneAndUpdate(
+      { _id: order._id, "products.product": productId },
+      {
+        $set: { "products.$.rated": true },
+        $push: { ratedProducts: { product: productId, rated: true } },
+      },
+      { new: true }
+    );
+
+    console.log(`Updated order: ${JSON.stringify(updatedOrder)}`);
+
+    res
+      .status(201)
+      .json({ message: "Product rated successfully", rating: newRating });
+  } catch (error) {
+    console.error("Error rating product:", error);
+    res
+      .status(500)
+      .json({ message: "Error rating product", error: error.message });
+  }
+};
+
+exports.getProductRatings = async (req, res) => {
+  const { productId } = req.params;
+
+  try {
+    const ratings = await ProductRating.find({ product: productId })
+      .populate("user", "username")
+      .sort("-createdAt");
+
+    res.status(200).json(ratings);
+  } catch (error) {
+    console.error("Error fetching product ratings:", error);
+    res.status(500).json({
+      message: "Error fetching product ratings",
+      error: error.message,
+    });
+  }
+};
+
+// Update a product by ID
+exports.updateProduct = async (req, res) => {
+  const { userId, productId } = req.params;
+  try {
+    const updatedProduct = await Product.findOneAndUpdate(
+      { _id: productId, user: userId },
+      req.body,
+      { new: true }
+    );
+    if (!updatedProduct)
+      return res
+        .status(403)
+        .json({ error: "Unauthorized or product not found" });
+    res.json(updatedProduct);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.uploadProduct = async (req, res) => {
+  const { userId } = req.params;
+  const {
+    name,
+    description,
+    price,
+    category,
+    stock,
+    discount,
+    variants,
+    tags,
+    images,
+  } = req.body;
+
+  try {
+    console.log("Received category:", category);
+    console.log("Category type:", typeof category);
+
+    // Create slug from product name
+    const slug = `${name.toLowerCase().replace(/ /g, "-")}-${Date.now()}`;
+
+    // Validate if the category is a valid ObjectId
+    let categoryId;
+    if (mongoose.Types.ObjectId.isValid(category)) {
+      // If a valid ObjectId is provided, use it
+      categoryId = new mongoose.Types.ObjectId(category);
+    } else {
+      // If not, treat it as a category name and find or create the category
+      let existingCategory = await Category.findOne({ name: category });
+      if (!existingCategory) {
+        // Create a new category
+        const newCategory = new Category({
+          name: category,
+          slug: category.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        });
+        existingCategory = await newCategory.save();
+      }
+      categoryId = existingCategory._id;
+    }
+
+    const newProduct = new Product({
+      name,
+      slug,
+      description,
+      user: userId,
+      price,
+      images: images || [], // Use the image URLs sent from the frontend
+      // category,
+      category: categoryId,
+      stock,
+      discount,
+      variants: typeof variants === "string" ? JSON.parse(variants) : variants,
+      tags: typeof tags === "string" ? JSON.parse(tags) : tags,
+    });
+
+    await newProduct.save();
+
+    // Update user's products array
+    await User.findByIdAndUpdate(userId, {
+      $push: { products: newProduct._id },
+    });
+
+    // Update seller's products array
+    const user = await User.findById(userId);
+    if (user.isSeller && user.sellerProfile) {
+      await Seller.findByIdAndUpdate(user.sellerProfile, {
+        $push: { products: newProduct._id },
+      });
+    }
+
+    res.status(201).json(newProduct);
+  } catch (error) {
+    console.error("Error uploading product:", error);
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// Delete a product by ID
+exports.deleteProduct = async (req, res) => {
+  const { userId, productId } = req.params;
+  try {
+    const deletedProduct = await Product.findOneAndDelete({
+      _id: productId,
+      user: userId,
+    });
+    if (!deletedProduct)
+      return res
+        .status(403)
+        .json({ error: "Unauthorized or product not found" });
+
+    // Remove product from user's products array
+    await User.findByIdAndUpdate(userId, {
+      $pull: { products: productId },
+    });
+
+    // Remove product from seller's products array
+    const user = await User.findById(userId);
+    if (user.isSeller && user.sellerProfile) {
+      await Seller.findByIdAndUpdate(user.sellerProfile, {
+        $pull: { products: productId },
+      });
+    }
+
+    res.json({ message: "Product deleted" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get user's products
+exports.getUserProducts = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const products = await Product.find({ user: userId });
+    res.status(200).json(products);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get related products
+exports.getRelatedProducts = async (req, res) => {
+  const { productId } = req.params;
+  const { page = 1, limit = 10 } = req.query;
+
+  try {
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    const relatedProducts = await Product.find({
+      _id: { $ne: productId },
+      tags: { $in: product.tags },
+    })
+      .limit(parseInt(limit))
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .exec();
+
+    const count = await Product.countDocuments({
+      _id: { $ne: productId },
+      tags: { $in: product.tags },
+    });
+
+    res.json({
+      relatedProducts,
+      totalPages: Math.ceil(count / limit),
+      currentPage: parseInt(page),
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+=================================================version-2============================================
+const Product = require("../models/productModels");
+const User = require("../models/userModels");
+const Review = require("../models/reviewRatingModels");
+const Seller = require("../models/sellerModels");
+const Order = require("../models/orderModels");
+const ProductRating = require("../models/productRatingModel");
+const Category = require("../models/categoryModels");
+const mongoose = require("mongoose");
+
+const { bucket } = require("../utils/firebaseConfig");
+const { v4: uuidv4 } = require("uuid");
+
+// Add multiple products
+exports.addProducts = async (req, res) => {
+  try {
+    const products = req.body;
+    const savedProducts = await Product.insertMany(products);
+    res.status(201).json(savedProducts);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+exports.getAllProducts = async (req, res) => {
+  try {
+    const {
+      random,
+      limit = 10,
+      excludeId,
+      unitCategory,
+      unitRange,
+      ...otherFilters
+    } = req.query;
+    let query = {};
+
+    if (unitCategory) {
+      query.unitCategory = unitCategory;
+    }
+
+    if (unitRange) {
+      const [min, max] = unitRange.split("-");
+      query["unit.value"] = { $gte: Number(min), $lte: Number(max) };
+    }
+
+    // Add other filters
+    Object.keys(otherFilters).forEach((key) => {
+      query[key] = otherFilters[key];
+    });
+
+    if (random === "true") {
+      const matchQuery = {
+        ...query,
+      };
+
+      if (excludeId) {
+        matchQuery._id = { $ne: new mongoose.Types.ObjectId(excludeId) };
+      }
+
+      const randomProducts = await Product.aggregate([
+        { $match: matchQuery },
+        { $sample: { size: parseInt(limit) } },
+      ]);
+
+      const productsWithRatings = await Promise.all(
+        randomProducts.map(async (product) => {
+          const reviews = await Review.find({ product: product._id });
+          const averageRating =
+            reviews.length > 0
+              ? reviews.reduce((acc, review) => acc + review.rating, 0) /
+                reviews.length
+              : 0;
+          const numberOfRatings = reviews.length;
+
+          return {
+            ...product,
+            averageRating,
+            numberOfRatings,
+          };
+        })
+      );
+
+      return res.status(200).json(productsWithRatings);
+    }
+
+    const products = await Product.find(query).populate("user");
+
+    const productsWithRatings = await Promise.all(
+      products.map(async (product) => {
+        const reviews = await Review.find({ product: product._id });
+        const averageRating =
+          reviews.length > 0
+            ? reviews.reduce((acc, review) => acc + review.rating, 0) /
+              reviews.length
+            : 0;
+        const numberOfRatings = reviews.length;
+
+        return {
+          ...product.toObject(),
+          averageRating,
+          numberOfRatings,
+        };
+      })
+    );
+
+    res.status(200).json(productsWithRatings);
+  } catch (error) {
+    console.error("Error in getAllProducts:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getAllProductsByCategory = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+
+    // Find the category and all its descendants
+    const category = await Category.findById(categoryId);
+    const descendantCategories = await Category.find({ ancestors: categoryId });
+    const allCategoryIds = [
+      category._id,
+      ...descendantCategories.map((c) => c._id),
+    ];
+
+    // Find products in the category and all its subcategories
+    const products = await Product.find({ category: { $in: allCategoryIds } });
+
+    res.status(200).json(products);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get a single product by ID
+exports.getProductById = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.productId)
+      .populate({
+        path: "user",
+        select: "username isSeller sellerProfile",
+        populate: {
+          path: "addresses",
+          model: "Address",
+          select: "city country",
+        },
+      })
+      .populate({
+        path: "user",
+        populate: {
+          path: "sellerProfile",
+          model: "Seller",
+        },
+      });
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Get reviews for the product
+    const reviews = await Review.find({ product: product._id });
+    const averageRating =
+      reviews.length > 0
+        ? reviews.reduce((acc, review) => acc + review.rating, 0) /
+          reviews.length
+        : 0;
+    const numberOfRatings = reviews.length;
+
+    // Prepare the response object
+    const productResponse = {
+      ...product.toObject(),
+      averageRating,
+      numberOfRatings,
+      seller: {
+        username: product.user.username,
+        isSeller: product.user.isSeller,
+        sellerProfile: product.user.sellerProfile,
+        address:
+          product.user.addresses.length > 0
+            ? {
+                city: product.user.addresses[0].city,
+                country: product.user.addresses[0].country,
+              }
+            : null,
+      },
+    };
+
+    res.status(200).json(productResponse);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.rateProduct = async (req, res) => {
+  const { productId } = req.params;
+  const { rating, review } = req.body;
+  const userId = req.user._id;
+
+  console.log(
+    `Attempting to rate product. User: ${userId}, Product: ${productId}`
+  );
+
+  try {
+    const order = await Order.findOne({
+      user: userId,
+      "products.product": productId,
+      status: "Delivered",
+    });
+
+    console.log(`Order found: ${order ? "Yes" : "No"}`);
+    if (order) {
+      console.log(`Order details: ${JSON.stringify(order)}`);
+    }
+
+    if (!order) {
+      console.log(
+        `No matching order found for user ${userId} and product ${productId}`
+      );
+      return res
+        .status(403)
+        .json({ message: "You can only rate products you have purchased" });
+    }
+
+    // Check if the product has already been rated by this user
+    const existingRating = await ProductRating.findOne({
+      user: userId,
+      product: productId,
+    });
+    if (existingRating) {
+      return res
+        .status(400)
+        .json({ message: "You have already rated this product" });
+    }
+
+    // Create new rating
+    const newRating = new ProductRating({
+      user: userId,
+      product: productId,
+      rating,
+      review,
+    });
+    await newRating.save();
+
+    // Update the product's average rating and number of ratings
+    const allRatings = await ProductRating.find({ product: productId });
+    const averageRating =
+      allRatings.reduce((acc, curr) => acc + curr.rating, 0) /
+      allRatings.length;
+
+    await Product.findByIdAndUpdate(
+      productId,
+      {
+        $set: {
+          averageRating: averageRating,
+          numberOfRatings: allRatings.length,
+        },
+      },
+      { new: true, runValidators: false }
+    );
+
+    // Mark the product as rated in the order and add to ratedProducts array
+    const updatedOrder = await Order.findOneAndUpdate(
+      { _id: order._id, "products.product": productId },
+      {
+        $set: { "products.$.rated": true },
+        $push: { ratedProducts: { product: productId, rated: true } },
+      },
+      { new: true }
+    );
+
+    console.log(`Updated order: ${JSON.stringify(updatedOrder)}`);
+
+    res
+      .status(201)
+      .json({ message: "Product rated successfully", rating: newRating });
+  } catch (error) {
+    console.error("Error rating product:", error);
+    res
+      .status(500)
+      .json({ message: "Error rating product", error: error.message });
+  }
+};
+
+exports.getProductRatings = async (req, res) => {
+  const { productId } = req.params;
+
+  try {
+    const ratings = await ProductRating.find({ product: productId })
+      .populate("user", "username")
+      .sort("-createdAt");
+
+    res.status(200).json(ratings);
+  } catch (error) {
+    console.error("Error fetching product ratings:", error);
+    res.status(500).json({
+      message: "Error fetching product ratings",
+      error: error.message,
+    });
+  }
+};
+
+// Update a product by ID
+
+exports.updateProduct = async (req, res) => {
+  const { userId, productId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(productId)) {
+    return res.status(400).json({ error: "Invalid product ID" });
+  }
+
+  const {
+    name,
+    description,
+    price,
+    category,
+    stock,
+    discount,
+    brand,
+    variants,
+    tags,
+    images,
+    unit,
+    unitValue,
+    unitCategory,
+    customUnit,
+    bulkPricing,
+  } = req.body;
+
+  try {
+    let updateData = {
+      name,
+      description,
+      price,
+      category,
+      stock,
+      discount,
+      brand,
+      variants: typeof variants === "string" ? JSON.parse(variants) : variants,
+      tags: typeof tags === "string" ? JSON.parse(tags) : tags,
+      images,
+      // unit: {
+      //   base: unit,
+      //   value: unitValue,
+      //   display: customUnit || `${unitValue} ${unit}`,
+      // },
+      unitCategory,
+      bulkPricing:
+        typeof bulkPricing === "string" ? JSON.parse(bulkPricing) : bulkPricing,
+    };
+
+    // Handle the unit field
+    if (unit) {
+      updateData.unit = {
+        base: typeof unit.base === "object" ? unit.base.base : unit.base,
+        value: unit.value,
+        display: unit.display,
+      };
+    }
+
+    const updatedProduct = await Product.findOneAndUpdate(
+      { _id: productId, user: userId },
+      updateData,
+      { new: true }
+    );
+
+    if (!updatedProduct)
+      return res
+        .status(403)
+        .json({ error: "Unauthorized or product not found" });
+
+    res.json(updatedProduct);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.uploadProduct = async (req, res) => {
+  const { userId } = req.params;
+  const {
+    name,
+    description,
+    price,
+    category,
+    stock,
+    discount,
+    variants,
+    tags,
+    images,
+    unit,
+    unitValue,
+    unitCategory,
+    customUnit,
+    bulkPricing,
+  } = req.body;
+
+  try {
+    console.log("Received category:", category);
+    console.log("Category type:", typeof category);
+
+    // Create slug from product name
+    const slug = `${name.toLowerCase().replace(/ /g, "-")}-${Date.now()}`;
+
+    // Validate if the category is a valid ObjectId
+    let categoryId;
+    if (mongoose.Types.ObjectId.isValid(category)) {
+      categoryId = new mongoose.Types.ObjectId(category);
+    } else {
+      let existingCategory = await Category.findOne({ name: category });
+      if (!existingCategory) {
+        const newCategory = new Category({
+          name: category,
+          slug: category.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        });
+        existingCategory = await newCategory.save();
+      }
+      categoryId = existingCategory._id;
+    }
+
+    const newProduct = new Product({
+      name,
+      slug,
+      description,
+      user: userId,
+      price,
+      images: images || [],
+      unit,
+      category: categoryId,
+      stock,
+      discount,
+      variants: typeof variants === "string" ? JSON.parse(variants) : variants,
+      tags: typeof tags === "string" ? JSON.parse(tags) : tags,
+      unit: unit,
+      // unit: {
+      //   base: unit,
+      //   value: unitValue,
+      //   display: unit.display,
+
+      //   // display: customUnit || `${unitValue} ${unit}`,
+      // },
+      unitCategory,
+      bulkPricing:
+        typeof bulkPricing === "string" ? JSON.parse(bulkPricing) : bulkPricing,
+    });
+
+    await newProduct.save();
+
+    // Update user's products array
+    await User.findByIdAndUpdate(userId, {
+      $push: { products: newProduct._id },
+    });
+
+    // Update seller's products array
+    const user = await User.findById(userId);
+    if (user.isSeller && user.sellerProfile) {
+      await Seller.findByIdAndUpdate(user.sellerProfile, {
+        $push: { products: newProduct._id },
+      });
+    }
+
+    res.status(201).json(newProduct);
+  } catch (error) {
+    console.error("Error uploading product:", error);
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// Delete a product by ID
+exports.deleteProduct = async (req, res) => {
+  const { userId, productId } = req.params;
+  try {
+    const deletedProduct = await Product.findOneAndDelete({
+      _id: productId,
+      user: userId,
+    });
+    if (!deletedProduct)
+      return res
+        .status(403)
+        .json({ error: "Unauthorized or product not found" });
+
+    // Remove product from user's products array
+    await User.findByIdAndUpdate(userId, {
+      $pull: { products: productId },
+    });
+
+    // Remove product from seller's products array
+    const user = await User.findById(userId);
+    if (user.isSeller && user.sellerProfile) {
+      await Seller.findByIdAndUpdate(user.sellerProfile, {
+        $pull: { products: productId },
+      });
+    }
+
+    res.json({ message: "Product deleted" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get user's products
+exports.getUserProducts = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const products = await Product.find({ user: userId });
+    res.status(200).json(products);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get related products
+exports.getRelatedProducts = async (req, res) => {
+  const { productId } = req.params;
+  const { page = 1, limit = 10 } = req.query;
+
+  try {
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    const relatedProducts = await Product.find({
+      _id: { $ne: productId },
+      tags: { $in: product.tags },
+    })
+      .limit(parseInt(limit))
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .exec();
+
+    const count = await Product.countDocuments({
+      _id: { $ne: productId },
+      tags: { $in: product.tags },
+    });
+
+    res.json({
+      relatedProducts,
+      totalPages: Math.ceil(count / limit),
+      currentPage: parseInt(page),
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+====================================version-2======================================
+const Product = require("../models/productModels");
+const User = require("../models/userModels");
+const Review = require("../models/reviewRatingModels");
+const Seller = require("../models/sellerModels");
+const Order = require("../models/orderModels");
+const ProductRating = require("../models/productRatingModel");
+const Category = require("../models/categoryModels");
+const mongoose = require("mongoose");
+
+const { bucket } = require("../utils/firebaseConfig");
+const { v4: uuidv4 } = require("uuid");
+
+// Add multiple products
+exports.addProducts = async (req, res) => {
+  try {
+    const products = req.body;
+    const savedProducts = await Product.insertMany(products);
+    res.status(201).json(savedProducts);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+exports.getAllProducts = async (req, res) => {
+  try {
+    const {
+      random,
+      limit = 10,
+      excludeId,
+      unitCategory,
+      unitRange,
+      ...otherFilters
+    } = req.query;
+    let query = {};
+
+    if (unitCategory) {
+      query.unitCategory = unitCategory;
+    }
+
+    if (unitRange) {
+      const [min, max] = unitRange.split("-");
+      query["unit.value"] = { $gte: Number(min), $lte: Number(max) };
+    }
+
+    // Add other filters
+    Object.keys(otherFilters).forEach((key) => {
+      query[key] = otherFilters[key];
+    });
+
+    if (random === "true") {
+      const matchQuery = {
+        ...query,
+      };
+
+      if (excludeId) {
+        matchQuery._id = { $ne: new mongoose.Types.ObjectId(excludeId) };
+      }
+
+      const randomProducts = await Product.aggregate([
+        { $match: matchQuery },
+        { $sample: { size: parseInt(limit) } },
+      ]);
+
+      const productsWithRatings = await Promise.all(
+        randomProducts.map(async (product) => {
+          const reviews = await Review.find({ product: product._id });
+          const averageRating =
+            reviews.length > 0
+              ? reviews.reduce((acc, review) => acc + review.rating, 0) /
+                reviews.length
+              : 0;
+          const numberOfRatings = reviews.length;
+
+          return {
+            ...product,
+            averageRating,
+            numberOfRatings,
+          };
+        })
+      );
+
+      return res.status(200).json(productsWithRatings);
+    }
+
+    const products = await Product.find(query).populate("user");
+
+    const productsWithRatings = await Promise.all(
+      products.map(async (product) => {
+        const reviews = await Review.find({ product: product._id });
+        const averageRating =
+          reviews.length > 0
+            ? reviews.reduce((acc, review) => acc + review.rating, 0) /
+              reviews.length
+            : 0;
+        const numberOfRatings = reviews.length;
+
+        return {
+          ...product.toObject(),
+          averageRating,
+          numberOfRatings,
+        };
+      })
+    );
+
+    res.status(200).json(productsWithRatings);
+  } catch (error) {
+    console.error("Error in getAllProducts:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getAllProductsByCategory = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+
+    // Find the category and all its descendants
+    const category = await Category.findById(categoryId);
+    const descendantCategories = await Category.find({ ancestors: categoryId });
+    const allCategoryIds = [
+      category._id,
+      ...descendantCategories.map((c) => c._id),
+    ];
+
+    // Find products in the category and all its subcategories
+    const products = await Product.find({ category: { $in: allCategoryIds } });
+
+    res.status(200).json(products);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get a single product by ID
+exports.getProductById = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.productId)
+      .populate({
+        path: "user",
+        select: "username isSeller sellerProfile",
+        populate: {
+          path: "addresses",
+          model: "Address",
+          select: "city country",
+        },
+      })
+      .populate({
+        path: "user",
+        populate: {
+          path: "sellerProfile",
+          model: "Seller",
+        },
+      });
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Get reviews for the product
+    const reviews = await Review.find({ product: product._id });
+    const averageRating =
+      reviews.length > 0
+        ? reviews.reduce((acc, review) => acc + review.rating, 0) /
+          reviews.length
+        : 0;
+    const numberOfRatings = reviews.length;
+
+    // Prepare the response object
+    const productResponse = {
+      ...product.toObject(),
+      averageRating,
+      numberOfRatings,
+      seller: {
+        username: product.user.username,
+        isSeller: product.user.isSeller,
+        sellerProfile: product.user.sellerProfile,
+        address:
+          product.user.addresses.length > 0
+            ? {
+                city: product.user.addresses[0].city,
+                country: product.user.addresses[0].country,
+              }
+            : null,
+      },
+    };
+
+    res.status(200).json(productResponse);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.rateProduct = async (req, res) => {
+  const { productId } = req.params;
+  const { rating, review } = req.body;
+  const userId = req.user._id;
+
+  console.log(
+    `Attempting to rate product. User: ${userId}, Product: ${productId}`
+  );
+
+  try {
+    const order = await Order.findOne({
+      user: userId,
+      "products.product": productId,
+      status: "Delivered",
+    });
+
+    console.log(`Order found: ${order ? "Yes" : "No"}`);
+    if (order) {
+      console.log(`Order details: ${JSON.stringify(order)}`);
+    }
+
+    if (!order) {
+      console.log(
+        `No matching order found for user ${userId} and product ${productId}`
+      );
+      return res
+        .status(403)
+        .json({ message: "You can only rate products you have purchased" });
+    }
+
+    // Check if the product has already been rated by this user
+    const existingRating = await ProductRating.findOne({
+      user: userId,
+      product: productId,
+    });
+    if (existingRating) {
+      return res
+        .status(400)
+        .json({ message: "You have already rated this product" });
+    }
+
+    // Create new rating
+    const newRating = new ProductRating({
+      user: userId,
+      product: productId,
+      rating,
+      review,
+    });
+    await newRating.save();
+
+    // Update the product's average rating and number of ratings
+    const allRatings = await ProductRating.find({ product: productId });
+    const averageRating =
+      allRatings.reduce((acc, curr) => acc + curr.rating, 0) /
+      allRatings.length;
+
+    await Product.findByIdAndUpdate(
+      productId,
+      {
+        $set: {
+          averageRating: averageRating,
+          numberOfRatings: allRatings.length,
+        },
+      },
+      { new: true, runValidators: false }
+    );
+
+    // Mark the product as rated in the order and add to ratedProducts array
+    const updatedOrder = await Order.findOneAndUpdate(
+      { _id: order._id, "products.product": productId },
+      {
+        $set: { "products.$.rated": true },
+        $push: { ratedProducts: { product: productId, rated: true } },
+      },
+      { new: true }
+    );
+
+    console.log(`Updated order: ${JSON.stringify(updatedOrder)}`);
+
+    res
+      .status(201)
+      .json({ message: "Product rated successfully", rating: newRating });
+  } catch (error) {
+    console.error("Error rating product:", error);
+    res
+      .status(500)
+      .json({ message: "Error rating product", error: error.message });
+  }
+};
+
+exports.getProductRatings = async (req, res) => {
+  const { productId } = req.params;
+
+  try {
+    const ratings = await ProductRating.find({ product: productId })
+      .populate("user", "username")
+      .sort("-createdAt");
+
+    res.status(200).json(ratings);
+  } catch (error) {
+    console.error("Error fetching product ratings:", error);
+    res.status(500).json({
+      message: "Error fetching product ratings",
+      error: error.message,
+    });
+  }
+};
+
+// Update a product by ID
+
+exports.updateProduct = async (req, res) => {
+  const { userId, productId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(productId)) {
+    return res.status(400).json({ error: "Invalid product ID" });
+  }
+
+  const {
+    name,
+    description,
+    price,
+    category,
+    stock,
+    discount,
+    brand,
+    variants,
+    tags,
+    images,
+    unit,
+    unitValue,
+    unitCategory,
+    customUnit,
+    bulkPricing,
+  } = req.body;
+
+  try {
+    let updateData = {
+      name,
+      description,
+      price,
+      category,
+      stock,
+      discount,
+      brand,
+      variants: typeof variants === "string" ? JSON.parse(variants) : variants,
+      tags: typeof tags === "string" ? JSON.parse(tags) : tags,
+      images,
+      // unit: {
+      //   base: unit,
+      //   value: unitValue,
+      //   display: customUnit || `${unitValue} ${unit}`,
+      // },
+      unitCategory,
+      bulkPricing:
+        typeof bulkPricing === "string" ? JSON.parse(bulkPricing) : bulkPricing,
+    };
+
+    // Handle the unit field
+    if (unit) {
+      updateData.unit = {
+        base: typeof unit.base === "object" ? unit.base.base : unit.base,
+        value: unit.value,
+        display: unit.display,
+      };
+    }
+
+    const updatedProduct = await Product.findOneAndUpdate(
+      { _id: productId, user: userId },
+      updateData,
+      { new: true }
+    );
+
+    if (!updatedProduct)
+      return res
+        .status(403)
+        .json({ error: "Unauthorized or product not found" });
+
+    res.json(updatedProduct);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.uploadProduct = async (req, res) => {
+  const { userId } = req.params;
+  const {
+    name,
+    description,
+    price,
+    category,
+    stock,
+    discount,
+    variants,
+    tags,
+    images,
+    unit,
+    unitValue,
+    unitCategory,
+    customUnit,
+    bulkPricing,
+  } = req.body;
+
+  try {
+    console.log("Received category:", category);
+    console.log("Category type:", typeof category);
+
+    // Create slug from product name
+    const slug = `${name.toLowerCase().replace(/ /g, "-")}-${Date.now()}`;
+
+    // Validate if the category is a valid ObjectId
+    let categoryId;
+    if (mongoose.Types.ObjectId.isValid(category)) {
+      categoryId = new mongoose.Types.ObjectId(category);
+    } else {
+      let existingCategory = await Category.findOne({ name: category });
+      if (!existingCategory) {
+        const newCategory = new Category({
+          name: category,
+          slug: category.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        });
+        existingCategory = await newCategory.save();
+      }
+      categoryId = existingCategory._id;
+    }
+
+    const newProduct = new Product({
+      name,
+      slug,
+      description,
+      user: userId,
+      price,
+      images: images || [],
+      unit,
+      category: categoryId,
+      stock,
+      discount,
+      variants: typeof variants === "string" ? JSON.parse(variants) : variants,
+      tags: typeof tags === "string" ? JSON.parse(tags) : tags,
+      unit: unit,
+      // unit: {
+      //   base: unit,
+      //   value: unitValue,
+      //   display: unit.display,
+
+      //   // display: customUnit || `${unitValue} ${unit}`,
+      // },
+      unitCategory,
+      bulkPricing:
+        typeof bulkPricing === "string" ? JSON.parse(bulkPricing) : bulkPricing,
+    });
+
+    await newProduct.save();
+
+    // Update user's products array
+    await User.findByIdAndUpdate(userId, {
+      $push: { products: newProduct._id },
+    });
+
+    // Update seller's products array
+    const user = await User.findById(userId);
+    if (user.isSeller && user.sellerProfile) {
+      await Seller.findByIdAndUpdate(user.sellerProfile, {
+        $push: { products: newProduct._id },
+      });
+    }
+
+    res.status(201).json(newProduct);
+  } catch (error) {
+    console.error("Error uploading product:", error);
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// Delete a product by ID
+exports.deleteProduct = async (req, res) => {
+  const { userId, productId } = req.params;
+  try {
+    const deletedProduct = await Product.findOneAndDelete({
+      _id: productId,
+      user: userId,
+    });
+    if (!deletedProduct)
+      return res
+        .status(403)
+        .json({ error: "Unauthorized or product not found" });
+
+    // Remove product from user's products array
+    await User.findByIdAndUpdate(userId, {
+      $pull: { products: productId },
+    });
+
+    // Remove product from seller's products array
+    const user = await User.findById(userId);
+    if (user.isSeller && user.sellerProfile) {
+      await Seller.findByIdAndUpdate(user.sellerProfile, {
+        $pull: { products: productId },
+      });
+    }
+
+    res.json({ message: "Product deleted" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get user's products
+exports.getUserProducts = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const products = await Product.find({ user: userId });
+    res.status(200).json(products);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get related products
+exports.getRelatedProducts = async (req, res) => {
+  const { productId } = req.params;
+  const { page = 1, limit = 10 } = req.query;
+
+  try {
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    const relatedProducts = await Product.find({
+      _id: { $ne: productId },
+      tags: { $in: product.tags },
+    })
+      .limit(parseInt(limit))
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .exec();
+
+    const count = await Product.countDocuments({
+      _id: { $ne: productId },
+      tags: { $in: product.tags },
+    });
+
+    res.json({
+      relatedProducts,
+      totalPages: Math.ceil(count / limit),
+      currentPage: parseInt(page),
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+
+=========================================V-3=================================================
+const Product = require("../models/productModels");
+const User = require("../models/userModels");
+const Review = require("../models/reviewRatingModels");
+const Seller = require("../models/sellerModels");
+const ShippingRule = require("../models/shippingRulesModel");
+const Order = require("../models/orderModels");
+const ProductRating = require("../models/productRatingModel");
+const Category = require("../models/categoryModels");
+const mongoose = require("mongoose");
+
+const { bucket } = require("../utils/firebaseConfig");
+const { v4: uuidv4 } = require("uuid");
+
+// Add multiple products (bulk addition)
+exports.addProducts = async (req, res) => {
+  try {
+    const products = req.body;
+    const userId = req.user._id; // Assuming you have user authentication middleware
+
+    if (!Array.isArray(products) || products.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "Invalid input: expected an array of products" });
+    }
+    if (products.length > 100) {
+      return res
+        .status(400)
+        .json({ error: "Cannot add more than 100 products at once" });
+    }
+
+    const processedProducts = await Promise.all(
+      products.map(async (product) => {
+        // Find or create category
+        let category;
+        if (mongoose.Types.ObjectId.isValid(product.category)) {
+          category = await Category.findById(product.category);
+          if (!category) {
+            throw new Error(`Category with id ${product.category} not found`);
+          }
+        } else {
+          // If category is not an ObjectId, assume it's a name and create a new category
+          const categorySlug = product.category
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-");
+          category = await Category.findOne({ slug: categorySlug });
+          if (!category) {
+            category = new Category({
+              name: product.category,
+              slug: categorySlug,
+            });
+            await category.save();
+          }
+        }
+
+        // Generate slug for product
+        const productSlug = `${product.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
+
+        return {
+          ...product,
+          user: userId,
+          category: category._id,
+          slug: productSlug,
+        };
+      })
+    );
+
+    const savedProducts = await Product.insertMany(processedProducts);
+    res.status(201).json(savedProducts);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+exports.getAllProducts = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      sort = "-createdAt",
+      random,
+      excludeId,
+      unitCategory,
+      unitRange,
+      minPrice,
+      maxPrice,
+      ...otherFilters
+    } = req.query;
+
+    let query = {};
+
+    // Apply filters
+    if (unitCategory) {
+      query.unitCategory = unitCategory;
+    }
+
+    if (unitRange) {
+      const [min, max] = unitRange.split("-");
+      query["unit.value"] = { $gte: Number(min), $lte: Number(max) };
+    }
+
+    if (minPrice) {
+      query.price = { ...query.price, $gte: Number(minPrice) };
+    }
+
+    if (maxPrice) {
+      query.price = { ...query.price, $lte: Number(maxPrice) };
+    }
+
+    // Add other filters
+    Object.keys(otherFilters).forEach((key) => {
+      query[key] = otherFilters[key];
+    });
+
+    if (excludeId) {
+      query._id = { $ne: new mongoose.Types.ObjectId(excludeId) };
+    }
+
+    let products;
+    let totalProducts;
+
+    if (random === "true") {
+      products = await Product.aggregate([
+        { $match: query },
+        { $sample: { size: parseInt(limit) } },
+      ]);
+      totalProducts = await Product.countDocuments(query);
+    } else {
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+
+      products = await Product.find(query)
+        .sort(sort)
+        .skip(skip)
+        .limit(parseInt(limit))
+        .populate("user", "username");
+
+      totalProducts = await Product.countDocuments(query);
+    }
+
+    const productsWithRatings = await Promise.all(
+      products.map(async (product) => {
+        const reviews = await Review.find({ product: product._id });
+        const averageRating =
+          reviews.length > 0
+            ? reviews.reduce((acc, review) => acc + review.rating, 0) /
+              reviews.length
+            : 0;
+        const numberOfRatings = reviews.length;
+
+        return {
+          ...(product.toObject ? product.toObject() : product),
+          averageRating,
+          numberOfRatings,
+        };
+      })
+    );
+
+    const shippingRules = await ShippingRule.findOne({ isDefault: true });
+
+    // Define default shipping rules in case no default rule is found
+    const defaultShippingRules = {
+      baseShippingFee: 5.99,
+      freeShippingThreshold: 50,
+      categoryFees: new Map(),
+      perWeightUnitFee: 0.1,
+    };
+
+    const productsWithShipping = productsWithRatings.map((product) => {
+      let shippingFee = shippingRules
+        ? shippingRules.baseShippingFee
+        : defaultShippingRules.baseShippingFee;
+
+      if (
+        product.price >
+        (shippingRules
+          ? shippingRules.freeShippingThreshold
+          : defaultShippingRules.freeShippingThreshold)
+      ) {
+        shippingFee = 0;
+      } else {
+        const categoryFee = shippingRules
+          ? shippingRules.categoryFees.get(product.category.toString()) || 0
+          : defaultShippingRules.categoryFees.get(
+              product.category.toString()
+            ) || 0;
+        shippingFee += categoryFee;
+
+        const weightFee =
+          (product.unit.value || 0) *
+          (shippingRules
+            ? shippingRules.perWeightUnitFee
+            : defaultShippingRules.perWeightUnitFee);
+        shippingFee += weightFee;
+      }
+
+      return {
+        ...product,
+        estimatedShippingFee: Number(shippingFee.toFixed(2)),
+      };
+    });
+
+    res.status(200).json({
+      products: productsWithShipping,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(totalProducts / parseInt(limit)),
+      totalProducts: totalProducts,
+      shippingRules: shippingRules || defaultShippingRules,
+    });
+  } catch (error) {
+    console.error("Error in getAllProducts:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get all products by category
+exports.getAllProductsByCategory = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+
+    const category = await Category.findById(categoryId);
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    const descendantCategories = await Category.find({ ancestors: categoryId });
+    const allCategoryIds = [
+      category._id,
+      ...descendantCategories.map((c) => c._id),
+    ];
+
+    const products = await Product.find({ category: { $in: allCategoryIds } })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .populate("user", "username");
+
+    const count = await Product.countDocuments({
+      category: { $in: allCategoryIds },
+    });
+
+    res.status(200).json({
+      products,
+      totalPages: Math.ceil(count / limit),
+      currentPage: parseInt(page),
+      totalProducts: count,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get a single product by ID
+exports.getProductById = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.productId)
+      .populate({
+        path: "user",
+        select: "username isSeller sellerProfile",
+        populate: {
+          path: "addresses",
+          model: "Address",
+          select: "city country",
+        },
+      })
+      .populate({
+        path: "user",
+        populate: {
+          path: "sellerProfile",
+          model: "Seller",
+        },
+      });
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const reviews = await Review.find({ product: product._id });
+    const averageRating =
+      reviews.length > 0
+        ? reviews.reduce((acc, review) => acc + review.rating, 0) /
+          reviews.length
+        : 0;
+    const numberOfRatings = reviews.length;
+
+    const productResponse = {
+      ...product.toObject(),
+      averageRating,
+      numberOfRatings,
+      seller: {
+        username: product.user.username,
+        isSeller: product.user.isSeller,
+        sellerProfile: product.user.sellerProfile,
+        address:
+          product.user.addresses.length > 0
+            ? {
+                city: product.user.addresses[0].city,
+                country: product.user.addresses[0].country,
+              }
+            : null,
+      },
+    };
+
+    res.status(200).json(productResponse);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Rate a product
+exports.rateProduct = async (req, res) => {
+  const { productId } = req.params;
+  const { rating, review } = req.body;
+  const userId = req.user._id;
+
+  try {
+    const order = await Order.findOne({
+      user: userId,
+      "products.product": productId,
+      status: "Delivered",
+    });
+
+    if (!order) {
+      return res
+        .status(403)
+        .json({ message: "You can only rate products you have purchased" });
+    }
+
+    const existingRating = await ProductRating.findOne({
+      user: userId,
+      product: productId,
+    });
+    if (existingRating) {
+      return res
+        .status(400)
+        .json({ message: "You have already rated this product" });
+    }
+
+    const newRating = new ProductRating({
+      user: userId,
+      product: productId,
+      rating,
+      review,
+    });
+    await newRating.save();
+
+    const allRatings = await ProductRating.find({ product: productId });
+    const averageRating =
+      allRatings.reduce((acc, curr) => acc + curr.rating, 0) /
+      allRatings.length;
+
+    await Product.findByIdAndUpdate(
+      productId,
+      {
+        $set: {
+          averageRating: averageRating,
+          numberOfRatings: allRatings.length,
+        },
+      },
+      { new: true, runValidators: false }
+    );
+
+    await Order.findOneAndUpdate(
+      { _id: order._id, "products.product": productId },
+      {
+        $set: { "products.$.rated": true },
+        $push: { ratedProducts: { product: productId, rated: true } },
+      },
+      { new: true }
+    );
+
+    res
+      .status(201)
+      .json({ message: "Product rated successfully", rating: newRating });
+  } catch (error) {
+    console.error("Error rating product:", error);
+    res
+      .status(500)
+      .json({ message: "Error rating product", error: error.message });
+  }
+};
+
+// Get product ratings
+exports.getProductRatings = async (req, res) => {
+  const { productId } = req.params;
+
+  try {
+    const ratings = await ProductRating.find({ product: productId })
+      .populate("user", "username")
+      .sort("-createdAt");
+
+    res.status(200).json(ratings);
+  } catch (error) {
+    console.error("Error fetching product ratings:", error);
+    res.status(500).json({
+      message: "Error fetching product ratings",
+      error: error.message,
+    });
+  }
+};
+
+// Update a product
+exports.updateProduct = async (req, res) => {
+  const { userId, productId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(productId)) {
+    return res.status(400).json({ error: "Invalid product ID" });
+  }
+
+  try {
+    const updateData = { ...req.body };
+
+    // Handle nested objects and arrays
+    ["variants", "tags", "bulkPricing"].forEach((field) => {
+      if (typeof updateData[field] === "string") {
+        updateData[field] = JSON.parse(updateData[field]);
+      }
+    });
+
+    if (updateData.unit) {
+      updateData.unit = {
+        category: updateData.unit.category,
+        baseUnit: updateData.unit.baseUnit,
+        conversionFactor: updateData.unit.conversionFactor,
+        value: updateData.unit.value,
+        displayUnit: updateData.unit.displayUnit,
+        packagingUnit: updateData.unit.packagingUnit,
+        precision: updateData.unit.precision,
+        compoundUnit: updateData.unit.compoundUnit,
+        regionSpecificDisplay: updateData.unit.regionSpecificDisplay,
+      };
+    }
+
+    const updatedProduct = await Product.findOneAndUpdate(
+      { _id: productId, user: userId },
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedProduct) {
+      return res
+        .status(403)
+        .json({ error: "Unauthorized or product not found" });
+    }
+
+    res.json(updatedProduct);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Upload a new product
+exports.uploadProduct = async (req, res) => {
+  const { userId } = req.params;
+  const productData = req.body;
+
+  try {
+    const slug = `${productData.name
+      .toLowerCase()
+      .replace(/ /g, "-")}-${Date.now()}`;
+
+    let categoryId;
+    if (mongoose.Types.ObjectId.isValid(productData.category)) {
+      categoryId = new mongoose.Types.ObjectId(productData.category);
+    } else {
+      let existingCategory = await Category.findOne({
+        name: productData.category,
+      });
+      if (!existingCategory) {
+        const newCategory = new Category({
+          name: productData.category,
+          slug: productData.category.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        });
+        existingCategory = await newCategory.save();
+      }
+      categoryId = existingCategory._id;
+    }
+
+    const newProduct = new Product({
+      ...productData,
+      slug,
+      user: userId,
+      category: categoryId,
+      images: req.files ? req.files.map((file) => file.path) : [],
+    });
+
+    await newProduct.save();
+
+    await User.findByIdAndUpdate(userId, {
+      $push: { products: newProduct._id },
+    });
+
+    const user = await User.findById(userId);
+    if (user.isSeller && user.sellerProfile) {
+      await Seller.findByIdAndUpdate(user.sellerProfile, {
+        $push: { products: newProduct._id },
+      });
+    }
+
+    res.status(201).json(newProduct);
+  } catch (error) {
+    console.error("Error uploading product:", error);
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// Delete a product
+exports.deleteProduct = async (req, res) => {
+  const { userId, productId } = req.params;
+  try {
+    const deletedProduct = await Product.findOneAndDelete({
+      _id: productId,
+      user: userId,
+    });
+    if (!deletedProduct) {
+      return res
+        .status(403)
+        .json({ error: "Unauthorized or product not found" });
+    }
+
+    await User.findByIdAndUpdate(userId, {
+      $pull: { products: productId },
+    });
+
+    const user = await User.findById(userId);
+    if (user.isSeller && user.sellerProfile) {
+      await Seller.findByIdAndUpdate(user.sellerProfile, {
+        $pull: { products: productId },
+      });
+    }
+
+    res.json({ message: "Product deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get user's products
+exports.getUserProducts = async (req, res) => {
+  const { userId } = req.params;
+  const { page = 1, limit = 10 } = req.query;
+  try {
+    const products = await Product.find({ user: userId })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+    const count = await Product.countDocuments({ user: userId });
+    res.status(200).json({
+      products,
+      totalPages: Math.ceil(count / limit),
+      currentPage: parseInt(page),
+      totalProducts: count,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get related products
+exports.getRelatedProducts = async (req, res) => {
+  const { productId } = req.params;
+  const { page = 1, limit = 10 } = req.query;
+
+  try {
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    const relatedProducts = await Product.find({
+      _id: { $ne: productId },
+      tags: { $in: product.tags },
+    })
+      .limit(parseInt(limit))
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .exec();
+
+    const count = await Product.countDocuments({
+      _id: { $ne: productId },
+      tags: { $in: product.tags },
+    });
+
+    res.json({
+      relatedProducts,
+      totalPages: Math.ceil(count / limit),
+      currentPage: parseInt(page),
+      totalProducts: count,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

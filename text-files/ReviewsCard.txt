@@ -1,0 +1,225 @@
+<template>
+    <div class="bg-gray-50 min-h-screen">
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            <!-- Filters Section -->
+            <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+                <div class="flex flex-wrap gap-4 justify-between items-center">
+                    <div class="flex gap-4">
+                        <select v-model="sortBy"
+                            class="border rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#24a3b5]">
+                            <option value="recent">Most Recent</option>
+                            <option value="helpful">Most Helpful</option>
+                            <option value="rating">Highest Rating</option>
+                        </select>
+
+                        <select v-model="filterRating"
+                            class="border rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#24a3b5]">
+                            <option value="">All Ratings</option>
+                            <option v-for="n in 5" :key="n" :value="n">{{ n }} Stars</option>
+                        </select>
+                    </div>
+
+                    <div class="text-sm text-gray-600">
+                        {{ filteredReviews.length }} reviews
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reviews List -->
+            <div v-if="loading" class="text-center py-8">
+                <div class="animate-spin rounded-full h-12 w-12 border-4 border-[#24a3b5] border-t-transparent mx-auto">
+                </div>
+            </div>
+
+            <div v-else-if="error" class="bg-red-50 text-red-600 p-4 rounded-lg text-center">
+                {{ error }}
+            </div>
+
+            <div v-else class="space-y-4">
+                <div v-for="review in sortedReviews" :key="review._id"
+                    class="bg-white rounded-lg shadow-sm p-6 transition duration-200 hover:shadow-md">
+                    <!-- Review Header -->
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <!-- Star Rating -->
+                                <div class="flex">
+                                    <template v-for="n in 5" :key="n">
+                                        <svg :class="[n <= review.rating ? 'text-yellow-400' : 'text-gray-300']"
+                                            class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path
+                                                d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                        </svg>
+                                    </template>
+                                </div>
+
+                                <span class="text-sm text-gray-600">
+                                    {{ formatDate(review.createdAt) }}
+                                </span>
+                            </div>
+
+                            <h3 class="font-medium text-gray-900">
+                                {{ review.user?.username || 'Anonymous' }}
+                            </h3>
+
+                            <p class="mt-2 text-gray-700">{{ review.review }}</p>
+                        </div>
+
+                        <!-- Product Preview -->
+                        <div v-if="review.product" class="ml-6">
+                            <div class="w-24 h-24 relative">
+                                <img :src="review.product.images?.[0]" :alt="review.product.name"
+                                    class="w-full h-full object-cover rounded-lg" @error="handleImageError">
+                            </div>
+                            <p class="mt-1 text-sm text-gray-600 text-center truncate max-w-[96px]">
+                                {{ review.product.name }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Review Footer -->
+                    <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                        <button @click="markHelpful(review._id)" :disabled="isHelpfulLoading"
+                            class="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-gray-50 text-gray-600 hover:text-[#24a3b5] transition-colors"
+                            :class="{ 'opacity-50 cursor-not-allowed': isHelpfulLoading }">
+                            <span>👍</span>
+                            <span class="text-sm">Helpful ({{ review.helpfulCount || 0 }})</span>
+                        </button>
+
+                        <div v-if="review.images?.length" class="flex items-center gap-2 text-gray-600">
+                            <span>📷</span>
+                            <span class="text-sm">{{ review.images.length }} photos</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+import { ref, computed, onMounted } from 'vue';
+import { useProductStore } from '../store/productStore';
+import { toast } from 'vue-sonner';
+import RatePurchaseHeader from './RatePurchaseHeader.vue';
+
+export default {
+    name: 'ReviewsCard',
+
+    components: {
+        RatePurchaseHeader
+    },
+
+    setup() {
+        const productStore = useProductStore();
+        const reviews = ref([]);
+        const loading = ref(true);
+        const error = ref(null);
+        const sortBy = ref('recent');
+        const filterRating = ref('');
+        const isHelpfulLoading = ref(false);
+
+        // Fetch all reviews
+        const fetchReviews = async () => {
+            try {
+                loading.value = true;
+                // Change this line to use fetchAllReviews instead
+                const response = await productStore.fetchAllReviews();
+                reviews.value = response;
+            } catch (err) {
+                error.value = 'Failed to load reviews';
+                toast.error('Could not load reviews. Please try again.');
+            } finally {
+                loading.value = false;
+            }
+        };
+
+        // Filter reviews based on rating
+        const filteredReviews = computed(() => {
+            if (!filterRating.value) return reviews.value;
+            return reviews.value.filter(review => review.rating === parseInt(filterRating.value));
+        });
+
+        // Sort filtered reviews
+        const sortedReviews = computed(() => {
+            return [...filteredReviews.value].sort((a, b) => {
+                switch (sortBy.value) {
+                    case 'recent':
+                        return new Date(b.createdAt) - new Date(a.createdAt);
+                    case 'helpful':
+                        return (b.helpfulCount || 0) - (a.helpfulCount || 0);
+                    case 'rating':
+                        return b.rating - a.rating;
+                    default:
+                        return 0;
+                }
+            });
+        });
+
+        // Format date helper
+        const formatDate = (dateString) => {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        };
+
+        // Mark review as helpful
+        const markHelpful = async (reviewId) => {
+            if (isHelpfulLoading.value) return;
+
+            try {
+                isHelpfulLoading.value = true;
+                await productStore.markReviewHelpful(reviewId);
+                await fetchReviews(); // Refresh reviews
+                toast.success('Review marked as helpful');
+            } catch (err) {
+                toast.error('Failed to mark review as helpful');
+            } finally {
+                isHelpfulLoading.value = false;
+            }
+        };
+
+        // Handle image loading errors
+        const handleImageError = (event) => {
+            event.target.src = '/placeholder-image.jpg'; // Replace with your placeholder image
+        };
+
+        onMounted(() => {
+            fetchReviews();
+        });
+
+        return {
+            reviews,
+            loading,
+            error,
+            sortBy,
+            filterRating,
+            filteredReviews,
+            sortedReviews,
+            isHelpfulLoading,
+            formatDate,
+            markHelpful,
+            handleImageError
+        };
+    }
+};
+</script>
+
+<style scoped>
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+</style>

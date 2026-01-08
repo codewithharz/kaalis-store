@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    // ...
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+    // ...
+  }
+}
+
+// incase of an issue with path
+
+// vite.config.js
+// import path from 'path'
+
+// export default defineConfig({
+//   resolve: {
+//     alias: {
+//       '@': path.resolve(__dirname, './src')
+//     }
+//   }
+// })

@@ -1,0 +1,858 @@
+const mongoose = require("mongoose");
+const Payment = require("../models/paymentModels");
+const PaystackService = require("../services/paystackService");
+const Card = require("../models/cardModel");
+const { calculateFees } = require("../utils/paymentUtils");
+const logger = require("../utils/logger");
+
+const paystackService = new PaystackService(); // Create instance outside the class
+
+class PaymentController {
+  // Initialize payment with Paystack
+  async initializePayment(req, res) {
+    try {
+      const { orderId, email, amount, vendorAmount, platformFee, metadata } =
+        req.body;
+
+      // Validate amounts
+      const totalAmountKobo = Math.round(amount * 100);
+      const vendorAmountKobo = Math.round(vendorAmount * 100);
+      const platformFeeKobo = Math.round(platformFee * 100);
+
+      if (vendorAmountKobo + platformFeeKobo !== totalAmountKobo) {
+        return res.status(400).json({
+          status: false,
+          message:
+            "Amount mismatch: vendor amount + platform fee must equal total amount",
+        });
+      }
+
+      // Initialize payment with Paystack
+      const paystackResponse = await paystackService.initializeTransaction({
+        email,
+        amount: totalAmountKobo,
+        metadata: {
+          orderId,
+          userEmail: email,
+          ...metadata,
+        },
+      });
+
+      // Create payment record
+      const payment = new Payment({
+        orderId,
+        email,
+        amount,
+        vendorAmount,
+        platformFee,
+        paymentMethod: "paystack",
+        metadata: {
+          userId: req.user._id,
+          userEmail: email,
+          ...metadata,
+        },
+      });
+
+      await payment.save();
+
+      return res.status(200).json({
+        status: true,
+        data: {
+          authorization_url: paystackResponse.data.authorization_url,
+          reference: paystackResponse.data.reference,
+          payment: payment,
+        },
+      });
+    } catch (error) {
+      logger.error("Payment initialization error:", error);
+      return res.status(500).json({
+        status: false,
+        message: error.message || "Could not initialize payment",
+      });
+    }
+  }
+
+  // Verify payment with Paystack
+  async verifyPayment(req, res) {
+    try {
+      const { reference } = req.params;
+
+      // Verify with Paystack
+      const verification = await paystackService.verifyTransaction(reference);
+
+      if (!verification.success) {
+        return res.status(400).json({
+          status: false,
+          message: "Payment verification failed",
+        });
+      }
+
+      // Update payment record
+      const payment = await Payment.findOne({ reference });
+      if (!payment) {
+        return res.status(404).json({
+          status: false,
+          message: "Payment record not found",
+        });
+      }
+
+      payment.status = "success";
+      payment.verificationData = verification.data;
+      await payment.save();
+
+      return res.status(200).json({
+        status: true,
+        data: {
+          payment,
+          verification: verification.data,
+        },
+      });
+    } catch (error) {
+      logger.error("Payment verification error:", error);
+      return res.status(500).json({
+        status: false,
+        message: error.message || "Could not verify payment",
+      });
+    }
+  }
+
+  // Create a new payment
+  async createPayment(req, res) {
+    try {
+      const { orderId, amount, paymentMethod, vendorId } = req.body;
+
+      // Calculate fees
+      const { vendorAmount, platformFee } = calculateFees(amount);
+
+      const payment = new Payment({
+        user: req.user._id,
+        seller: vendorId,
+        order: orderId,
+        amount,
+        vendorAmount,
+        platformFee,
+        paymentMethod,
+        paymentReference: `PAY-${Date.now()}-${Math.random()
+          .toString(36)
+          .substr(2, 9)}`,
+      });
+
+      await payment.save();
+
+      // If payment method is Paystack, initialize transaction
+      if (paymentMethod === "paystack") {
+        const paystackResponse =
+          await this.paystackService.initializeTransaction({
+            email: req.user.email,
+            amount,
+            metadata: {
+              paymentId: payment._id,
+              orderId,
+              vendorId,
+            },
+          });
+
+        return res.status(200).json({
+          status: true,
+          data: {
+            payment,
+            authorization_url: paystackResponse.data.authorization_url,
+          },
+        });
+      }
+
+      return res.status(201).json({ status: true, data: payment });
+    } catch (error) {
+      logger.error("Payment creation error:", error);
+      return res.status(500).json({
+        status: false,
+        message: error.message || "Could not create payment",
+      });
+    }
+  }
+
+  // Get user payment history
+  async getUserPaymentHistory(req, res) {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      // Get total count for pagination
+      const total = await Payment.countDocuments({
+        "metadata.userId": req.user._id,
+      });
+
+      // Get paginated payments
+      const payments = await Payment.find({ "metadata.userId": req.user._id })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate({
+          path: "orderId",
+          select: "orderId totalAmount status products",
+        })
+        .populate({
+          path: "metadata.items.productId",
+          select: "name price",
+        });
+
+      const formattedPayments = payments.map((payment) => ({
+        id: payment._id,
+        reference: payment.reference,
+        amount: payment.amount,
+        status: payment.status,
+        paymentMethod: payment.paymentMethod,
+        createdAt: payment.createdAt.toISOString(),
+        orderId: payment.orderId?._id,
+        orderNumber: payment.orderId?.orderId,
+        items: payment.metadata.items?.map((item) => ({
+          product: item.productId,
+          quantity: item.quantity,
+          price: item.price,
+          subtotal: item.price * item.quantity,
+        })),
+        shipping: payment.metadata.shipping,
+        customerName: payment.metadata.customerName,
+      }));
+
+      return res.status(200).json({
+        status: true,
+        data: formattedPayments,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching user payment history:", error);
+      return res.status(500).json({
+        status: false,
+        message: "Could not fetch payment history",
+      });
+    }
+  }
+
+  // Get payment details
+  async getPaymentDetails(req, res) {
+    try {
+      const payment = await Payment.findOne({
+        _id: req.params.paymentId,
+        user: req.user._id,
+      })
+        .populate("order")
+        .populate("seller", "storeName email");
+
+      if (!payment) {
+        return res.status(404).json({
+          status: false,
+          message: "Payment not found",
+        });
+      }
+
+      return res.status(200).json({
+        status: true,
+        data: payment,
+      });
+    } catch (error) {
+      logger.error("Error fetching payment details:", error);
+      return res.status(500).json({
+        status: false,
+        message: "Could not fetch payment details",
+      });
+    }
+  }
+
+  // Get seller transactions
+  async getSellerTransactions(req, res) {
+    try {
+      const payments = await Payment.find({ seller: req.user._id })
+        .sort({ createdAt: -1 })
+        .populate("order")
+        .populate("user", "username email");
+
+      return res.status(200).json({
+        status: true,
+        data: payments,
+      });
+    } catch (error) {
+      logger.error("Error fetching seller transactions:", error);
+      return res.status(500).json({
+        status: false,
+        message: "Could not fetch transactions",
+      });
+    }
+  }
+
+  // Get seller payment analytics
+  async getSellerPaymentAnalytics(req, res) {
+    try {
+      const stats = await Payment.getPaymentStats({ seller: req.user._id });
+
+      const totalEarnings = await Payment.aggregate([
+        { $match: { seller: req.user._id, status: "completed" } },
+        { $group: { _id: null, total: { $sum: "$vendorAmount" } } },
+      ]);
+
+      return res.status(200).json({
+        status: true,
+        data: {
+          stats,
+          totalEarnings: totalEarnings[0]?.total || 0,
+        },
+      });
+    } catch (error) {
+      logger.error("Error fetching seller analytics:", error);
+      return res.status(500).json({
+        status: false,
+        message: "Could not fetch analytics",
+      });
+    }
+  }
+
+  // Update seller bank details
+  async updateBankDetails(req, res) {
+    try {
+      const { accountNumber, bankCode, accountName, bankName } = req.body;
+
+      // Create recipient in Paystack using the instance
+      const paystackResponse = await paystackService.createTransferRecipient({
+        accountNumber,
+        bankCode,
+        name: accountName,
+        sellerId: req.user._id,
+      });
+
+      // Update user's bank details
+      const payment = await Payment.findOneAndUpdate(
+        { user: req.user._id },
+        {
+          bankDetails: {
+            accountNumber,
+            bankCode,
+            accountName,
+            bankName,
+            recipientCode: paystackResponse.data.recipient_code,
+            lastVerified: new Date(),
+          },
+        },
+        { new: true }
+      );
+
+      return res.status(200).json({
+        status: true,
+        data: payment,
+      });
+    } catch (error) {
+      logger.error("Error updating bank details:", error);
+      return res.status(500).json({
+        status: false,
+        message: error.message || "Could not update bank details",
+      });
+    }
+  }
+
+  // Get vendor payouts
+  async getVendorPayouts(req, res) {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      const payouts = await VendorPayout.find({ vendorId: req.user._id })
+        .sort({ scheduledDate: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("orderId", "orderId totalAmount");
+
+      const total = await VendorPayout.countDocuments({
+        vendorId: req.user._id,
+      });
+
+      return res.status(200).json({
+        status: true,
+        data: payouts,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+        },
+      });
+    } catch (error) {
+      logger.error("Error fetching vendor payouts:", error);
+      return res.status(500).json({
+        status: false,
+        message: "Could not fetch payouts",
+      });
+    }
+  }
+
+  // Get vendor payout statistics
+  async getPayoutStatistics(req, res) {
+    try {
+      // Get total payouts
+      const totalPayouts = await VendorPayout.aggregate([
+        { $match: { vendorId: req.user._id } },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: "$amount" },
+            count: { $sum: 1 },
+          },
+        },
+      ]);
+
+      // Get pending payouts
+      const pendingPayouts = await VendorPayout.aggregate([
+        {
+          $match: {
+            vendorId: req.user._id,
+            status: "pending",
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: "$amount" },
+            count: { $sum: 1 },
+          },
+        },
+      ]);
+
+      return res.status(200).json({
+        status: true,
+        data: {
+          total: totalPayouts[0]?.total || 0,
+          totalCount: totalPayouts[0]?.count || 0,
+          pending: pendingPayouts[0]?.total || 0,
+          pendingCount: pendingPayouts[0]?.count || 0,
+        },
+      });
+    } catch (error) {
+      logger.error("Error fetching payout statistics:", error);
+      return res.status(500).json({
+        status: false,
+        message: "Could not fetch payout statistics",
+      });
+    }
+  }
+
+  // Get all payments
+  async getAllPayments(req, res) {
+    try {
+      const payments = await Payment.find()
+        .sort({ createdAt: -1 })
+        .populate("order")
+        .populate("user", "username email")
+        .populate("seller", "storeName email");
+
+      return res.status(200).json({
+        status: true,
+        data: payments,
+      });
+    } catch (error) {
+      logger.error("Error fetching all payments:", error);
+      return res.status(500).json({
+        status: false,
+        message: "Could not fetch payments",
+      });
+    }
+  }
+
+  // Get admin payment analytics
+  async getAdminPaymentAnalytics(req, res) {
+    try {
+      const stats = await Payment.getPaymentStats();
+
+      const platformEarnings = await Payment.aggregate([
+        { $match: { status: "completed" } },
+        { $group: { _id: null, total: { $sum: "$platformFee" } } },
+      ]);
+
+      return res.status(200).json({
+        status: true,
+        data: {
+          stats,
+          platformEarnings: platformEarnings[0]?.total || 0,
+        },
+      });
+    } catch (error) {
+      logger.error("Error fetching admin analytics:", error);
+      return res.status(500).json({
+        status: false,
+        message: "Could not fetch analytics",
+      });
+    }
+  }
+
+  // ================== Bank Account Management ==================
+  async verifyAccountDetails(req, res) {
+    try {
+      const { accountNumber, bankCode } = req.body;
+
+      // Validate inputs
+      if (!accountNumber || !bankCode) {
+        return res.status(400).json({
+          status: false,
+          message: "Account number and bank code are required",
+        });
+      }
+
+      // Use the PaystackService to verify the account
+      const response = await paystackService.verifyBankAccount({
+        accountNumber,
+        bankCode,
+      });
+
+      return res.status(200).json({
+        status: true,
+        data: response.data,
+      });
+    } catch (error) {
+      logger.error("Error verifying account details:", error);
+      return res.status(500).json({
+        status: false,
+        message: error.message || "Could not verify account details",
+      });
+    }
+  }
+
+  // ================== Card Management ==================
+
+  // Get user cards
+  async getUserCards(req, res) {
+    try {
+      const cards = await Card.find({ userId: req.user._id })
+        .select("-token") // Don't send sensitive token data
+        .sort({ isDefault: -1, createdAt: -1 });
+
+      return res.status(200).json({
+        status: true,
+        data: cards.map((card) => ({
+          id: card._id,
+          last4: card.last4,
+          cardType: card.cardType,
+          expiryMonth: card.expiryMonth,
+          expiryYear: card.expiryYear,
+          holderName: card.holderName,
+          isDefault: card.isDefault,
+          createdAt: card.createdAt,
+        })),
+      });
+    } catch (error) {
+      logger.error("Error fetching user cards:", error);
+      return res.status(500).json({
+        status: false,
+        message: "Could not fetch cards",
+      });
+    }
+  }
+
+  // Add a new card
+  async addCard(req, res) {
+    try {
+      const { number, holderName, expiryMonth, expiryYear, cvv, setAsDefault } =
+        req.body;
+
+      // Log the received data
+      logger.info("Received card data:", {
+        holderName,
+        expiryMonth,
+        expiryYear,
+        last4: number.slice(-4),
+        setAsDefault,
+      });
+
+      // First check if user already has 5 cards
+      const existingCardsCount = await Card.countDocuments({
+        userId: req.user._id,
+      });
+
+      if (existingCardsCount >= 5) {
+        return res.status(400).json({
+          status: false,
+          message:
+            "Maximum limit of 5 cards reached. Please delete an existing card to add a new one.",
+        });
+      }
+
+      // Basic validation
+      if (!number || !holderName || !expiryMonth || !expiryYear || !cvv) {
+        logger.warn("Missing required fields:", {
+          hasNumber: !!number,
+          hasHolderName: !!holderName,
+          hasExpiryMonth: !!expiryMonth,
+          hasExpiryYear: !!expiryYear,
+          hasCvv: !!cvv,
+        });
+        return res.status(400).json({
+          status: false,
+          message: "All card fields are required",
+        });
+      }
+
+      // Remove spaces from card number
+      const cleanNumber = number.replace(/\s/g, "");
+      const last4 = cleanNumber.slice(-4);
+
+      try {
+        // Tokenize card with Paystack
+        const tokenizationResult = await paystackService.tokenizeCard({
+          number: cleanNumber,
+          cvv,
+          expiryMonth,
+          expiryYear,
+          email: req.user.email,
+        });
+
+        // If this is the first card or setAsDefault is true, set isDefault
+        const existingCards = await Card.countDocuments({
+          userId: req.user._id,
+        });
+        const isDefault = setAsDefault || existingCards === 0;
+
+        // Create card record
+        const card = new Card({
+          userId: req.user._id,
+          token: tokenizationResult.token,
+          last4,
+          cardType: tokenizationResult.card_type,
+          expiryMonth,
+          expiryYear,
+          holderName,
+          isDefault: setAsDefault || existingCardsCount === 0,
+        });
+
+        // If this is set as default, update other cards
+        if (isDefault) {
+          await Card.updateMany(
+            { userId: req.user._id, _id: { $ne: card._id } },
+            { $set: { isDefault: false } }
+          );
+        }
+
+        await card.save();
+
+        // Log successful card addition
+        logger.info("Card added successfully:", {
+          userId: req.user._id,
+          cardId: card._id,
+          isDefault: card.isDefault,
+        });
+
+        return res.status(201).json({
+          status: true,
+          message: "Card added successfully",
+          data: {
+            id: card._id,
+            last4: card.last4,
+            cardType: card.cardType,
+            expiryMonth: card.expiryMonth,
+            expiryYear: card.expiryYear,
+            holderName: card.holderName,
+            isDefault: card.isDefault,
+          },
+        });
+      } catch (error) {
+        if (error.message === "Maximum number of cards (5) reached") {
+          return res.status(400).json({
+            status: false,
+            message:
+              "Maximum limit of 5 cards reached. Please delete an existing card to add a new one.",
+          });
+        }
+
+        logger.error("Card tokenization error:", {
+          error: error.message,
+          response: error.response?.data, // Log Paystack error response
+        });
+        return res.status(400).json({
+          status: false,
+          message: "Invalid card details",
+        });
+      }
+    } catch (error) {
+      logger.error("Error adding card:", error);
+      return res.status(500).json({
+        status: false,
+        message:
+          error.message === "Maximum number of cards (5) reached"
+            ? "Maximum limit of 5 cards reached. Please delete an existing card to add a new one."
+            : "Could not add card",
+      });
+    }
+  }
+
+  // Delete a card
+  // async deleteCard(req, res) {
+  //   try {
+  //     const { cardId } = req.params;
+
+  //     // Find card and verify ownership
+  //     const card = await Card.findOne({
+  //       _id: cardId,
+  //       userId: req.user._id,
+  //     });
+
+  //     if (!card) {
+  //       return res.status(404).json({
+  //         status: false,
+  //         message: "Card not found",
+  //       });
+  //     }
+
+  //     // If this is the default card and there are other cards,
+  //     // set another card as default
+  //     if (card.isDefault) {
+  //       const otherCard = await Card.findOne({
+  //         userId: req.user._id,
+  //         _id: { $ne: cardId },
+  //       }).sort({ createdAt: -1 });
+
+  //       if (otherCard) {
+  //         otherCard.isDefault = true;
+  //         await otherCard.save();
+  //       }
+  //     }
+
+  //     // Delete card from Paystack if needed
+  //     try {
+  //       await paystackService.deleteCardToken(card.token);
+  //     } catch (error) {
+  //       logger.warn("Error deleting card token from Paystack:", error);
+  //       // Continue with deletion even if Paystack fails
+  //     }
+
+  //     await card.remove();
+
+  //     logger.info("Card deleted successfully:", {
+  //       userId: req.user._id,
+  //       cardId,
+  //     });
+
+  //     return res.status(200).json({
+  //       status: true,
+  //       message: "Card deleted successfully",
+  //     });
+  //   } catch (error) {
+  //     logger.error("Error deleting card:", error);
+  //     return res.status(500).json({
+  //       status: false,
+  //       message: "Could not delete card",
+  //     });
+  //   }
+  // }
+
+  // Delete a card
+  async deleteCard(req, res) {
+    try {
+      const { cardId } = req.params;
+
+      // Validate cardId
+      if (!cardId || !mongoose.Types.ObjectId.isValid(cardId)) {
+        return res.status(400).json({
+          status: false,
+          message: "Invalid card ID",
+        });
+      }
+
+      // Find card and verify ownership
+      const card = await Card.findOne({
+        _id: cardId,
+        userId: req.user._id,
+      });
+
+      if (!card) {
+        return res.status(404).json({
+          status: false,
+          message: "Card not found",
+        });
+      }
+
+      // If this is the default card and there are other cards,
+      // set another card as default
+      if (card.isDefault) {
+        const otherCard = await Card.findOne({
+          userId: req.user._id,
+          _id: { $ne: cardId },
+        }).sort({ createdAt: -1 });
+
+        if (otherCard) {
+          otherCard.isDefault = true;
+          await otherCard.save();
+        }
+      }
+
+      // Use deleteOne instead of remove (which is deprecated)
+      await Card.deleteOne({ _id: cardId });
+
+      logger.info("Card deleted successfully:", {
+        userId: req.user._id,
+        cardId,
+      });
+
+      return res.status(200).json({
+        status: true,
+        message: "Card deleted successfully",
+      });
+    } catch (error) {
+      logger.error("Error deleting card:", error);
+      return res.status(500).json({
+        status: false,
+        message: "Could not delete card",
+        error: error.message,
+      });
+    }
+  }
+
+  // Set a card as default
+  async setDefaultCard(req, res) {
+    try {
+      const { cardId } = req.params;
+
+      // Find card and verify ownership
+      const card = await Card.findOne({
+        _id: cardId,
+        userId: req.user._id,
+      });
+
+      if (!card) {
+        return res.status(404).json({
+          status: false,
+          message: "Card not found",
+        });
+      }
+
+      // Update all cards to non-default
+      await Card.updateMany(
+        { userId: req.user._id },
+        { $set: { isDefault: false } }
+      );
+
+      // Set selected card as default
+      card.isDefault = true;
+      await card.save();
+
+      logger.info("Default card updated:", {
+        userId: req.user._id,
+        cardId,
+      });
+
+      return res.status(200).json({
+        status: true,
+        message: "Default card updated successfully",
+      });
+    } catch (error) {
+      logger.error("Error setting default card:", error);
+      return res.status(500).json({
+        status: false,
+        message: "Could not update default card",
+      });
+    }
+  }
+}
+
+module.exports = new PaymentController();

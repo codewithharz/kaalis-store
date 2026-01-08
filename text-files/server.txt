@@ -1,0 +1,241 @@
+require("dotenv").config();
+const express = require("express");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const connectDB = require("./utils/db");
+const userRoutes = require("./routes/userRoutes");
+const productRoutes = require("./routes/productRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
+const activityLogRoutes = require("./routes/activityLogRoutes");
+const addressRoutes = require("./routes/addressRoutes");
+const adminUserRoutes = require("./routes/adminUserRoutes");
+const adminNotificationRoutes = require("./routes/adminNotificationRoutes");
+const auditLogRoutes = require("./routes/auditLogRoutes");
+const cartRoutes = require("./routes/cartRoutes");
+const userAuthMiddleware = require("./middleware/userAuthMiddleware");
+const couponRoutes = require("./routes/couponRoutes");
+const interactionRoutes = require("./routes/interactionRoutes");
+const reviewRatingRoutes = require("./routes/reviewRatingRoutes");
+const feedbackRoutes = require("./routes/feedbackRoutes");
+const inventoryRoutes = require("./routes/inventoryRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
+const orderRoutes = require("./routes/orderRoutes");
+const reportRoutes = require("./routes/reportRoutes");
+const roleRoutes = require("./routes/roleRoutes");
+const shipmentRoutes = require("./routes/shipmentRoutes");
+const wishlistRoutes = require("./routes/wishlistRoutes");
+const sellerRoutes = require("./routes/sellerRoutes");
+const shippingRulesRoutes = require("./routes/shippingRules");
+
+const paystackRoutes = require("./routes/paystackRoutes");
+const { initPayoutCron } = require("./config/cronJobs");
+
+const logger = require("./utils/logger");
+const loggerMiddleware = require("./middleware/loggerMiddleware");
+
+const app = express();
+
+// Connect to the database
+connectDB();
+
+//production
+// Enable CORS for all routes
+// app.use(
+//   cors({
+//     origin: process.env.FRONTEND_URL,
+//     credentials: true,
+//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//     allowedHeaders: ["Content-Type", "Authorization"],
+//   })
+// );
+
+// app.use(cors()); //LOCAL
+
+// CORS Configuration
+const corsOptions = {
+  origin: [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:7787",
+    "https://checkout.paystack.com",
+    "https://standard.paystack.co",
+    process.env.FRONTEND_URL,
+  ].filter(Boolean),
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "x-paystack-signature",
+    "Access-Control-Allow-Origin",
+    "Access-Control-Allow-Headers",
+  ],
+  exposedHeaders: ["set-cookie"],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+
+// Additional security headers
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", req.headers.origin);
+  res.header("Access-Control-Allow-Credentials", true);
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization, x-paystack-signature"
+  );
+  next();
+});
+
+// Middleware
+// Body parser configuration
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(bodyParser.json());
+
+// Use logger middleware early in the middleware chain
+app.use(loggerMiddleware);
+
+// Special handling for Paystack webhook
+app.post(
+  "/api/payment/webhook",
+  express.raw({ type: "application/json" }),
+  require("./middleware/paystackWebhook"),
+  paystackRoutes
+);
+
+// Middleware
+// app.use(express.json());
+// app.use(bodyParser.json());
+
+// Routes
+app.use("/api/users", userRoutes); // User routes
+app.use("/api/products", userAuthMiddleware, productRoutes); // Protected product routes
+app.use("/api/categories", categoryRoutes); // Category routes
+app.use("/api/activity-logs", userAuthMiddleware, activityLogRoutes); // Activity log routes
+app.use("/api/addresses", userAuthMiddleware, addressRoutes); // Address routes
+app.use("/api/admin-user", adminUserRoutes); // Admin user routes
+app.use("/api/admin-notifications", adminNotificationRoutes); // Admin notification routes
+app.use("/api/audit-logs", auditLogRoutes); // Audit log routes
+app.use("/api/cart", userAuthMiddleware, cartRoutes); // Cart routes
+app.use("/api/coupons", couponRoutes); // Coupon routes
+app.use("/api/interactions", interactionRoutes); // interaction routes
+app.use("/api/review-ratings", reviewRatingRoutes); // Review Rating routes
+app.use("/api/feedbacks", feedbackRoutes); // Feedback routes
+app.use("/api/inventories", inventoryRoutes); // Inventory inventory routes
+app.use("/api/notifications", notificationRoutes); // Notification inventory routes
+app.use("/api/orders", orderRoutes); // Order inventory routes
+app.use("/api/reports", reportRoutes); // Reports inventory routes roleRoutes
+app.use("/api/roles", roleRoutes); // Roles inventory routes
+app.use("/api/shipments", shipmentRoutes); // Shipment inventory routes
+app.use("/api/wishlists", wishlistRoutes); // wishlist inventory routes
+app.use("/api/seller", sellerRoutes); // seller inventory routes
+app.use("/api/shipping-rules", shippingRulesRoutes);
+
+app.use("/api/payment", paystackRoutes);
+
+// Initialize cron jobs
+try {
+  initPayoutCron();
+  logger.info("Payout cron jobs initialized successfully");
+} catch (error) {
+  logger.error("Failed to initialize payout cron:", error);
+}
+
+// Global error handler
+app.use((err, req, res, next) => {
+  logger.error("Unhandled error:", {
+    error: err.message,
+    stack: err.stack,
+    path: req.path,
+    method: req.method,
+  });
+
+  // Handle CORS errors specifically
+  if (err.name === "CORSError") {
+    return res.status(403).json({
+      status: "error",
+      message: "CORS error",
+      details: err.message,
+    });
+  }
+
+  // Handle other errors
+  res.status(err.status || 500).json({
+    status: "error",
+    message: err.message || "Internal server error",
+    code: err.code,
+  });
+});
+
+// Use logger middleware
+app.use(loggerMiddleware);
+
+// // Example error handling
+// app.use((err, req, res, next) => {
+//   logger.error("Unhandled error:", err);
+//   res.status(500).json({ message: "Internal server error" });
+// });
+
+// // Error handling middleware
+// app.use((err, req, res, next) => {
+//   console.error(err.stack);
+//   // The error logger middleware will log the error
+//   res.status(500).json({
+//     status: "error",
+//     message: "Internal server error",
+//   });
+// });
+
+const PORT = process.env.PORT || 7787;
+
+// app.listen(PORT, () => {
+//   console.log(`Server running on port ${PORT}`);
+// });
+
+const server = app.listen(PORT, () => {
+  logger.info(`Server running on port ${PORT}`);
+  if (process.env.NODE_ENV === "development") {
+    logger.info(`Frontend URL: ${process.env.FRONTEND_URL}`);
+  }
+});
+
+// Handle unhandled rejections
+process.on("unhandledRejection", (err) => {
+  logger.error("Unhandled Rejection:", err);
+  // Don't crash the server, but log the error
+});
+
+// Handle uncaught exceptions
+process.on("uncaughtException", (err) => {
+  logger.error("Uncaught Exception:", err);
+  // Give the server time to finish current requests before exiting
+  server.close(() => process.exit(1));
+});
+
+// Export the app for serverless deployment
+module.exports = app;
+
+// Key changes made:
+
+// Added comprehensive CORS configuration with all required domains
+// Added specific headers for Paystack
+// Added proper error handling for CORS issues
+// Added raw body parsing for Paystack webhooks
+// Added process error handlers
+// Improved logging
+// Added security headers
+
+// You should now be able to:
+
+// Make requests from your frontend
+// Handle Paystack redirects properly
+// Receive Paystack webhooks
+// Handle cross-origin requests correctly
+
+// For local development, use these URLs:
+
+// Frontend: http://localhost:5173 or http://127.0.0.1:5173
+// Backend: http://localhost:7787
+// Paystack will redirect to your frontend callback URL after payment

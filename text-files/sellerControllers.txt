@@ -1,0 +1,470 @@
+// backend/controllers/sellerController.js
+const Seller = require("../models/sellerModels");
+const Product = require("../models/productModels");
+const User = require("../models/userModels");
+const Order = require("../models/orderModels");
+const mongoose = require("mongoose");
+
+// Register a new seller
+const registerSeller = async (req, res) => {
+  try {
+    const { userId, storeName, storeDescription } = req.body;
+
+    // Log incoming data for debugging
+    console.log("Request Body:", req.body);
+
+    // Check if the store name already exists
+    const existingStore = await Seller.findOne({ storeName: storeName });
+    if (existingStore) {
+      return res.status(400).json({
+        error: "Store name already exists. Please choose a different name.",
+      });
+    }
+
+    // Check if the user exists and is not already a seller
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    if (user.isSeller) {
+      return res.status(400).json({ error: "User is already a seller" });
+    }
+
+    // Create new seller profile
+    const newSeller = new Seller({
+      user: userId,
+      storeName,
+      storeDescription,
+    });
+
+    await newSeller.save();
+
+    // Update user to reflect seller status
+    user.isSeller = true;
+    user.sellerProfile = newSeller._id;
+    await user.save();
+
+    // res.status(201).json(newSeller);
+    res.status(201).json({ user, sellerProfile: newSeller });
+  } catch (error) {
+    console.error("Error in registerSeller:", error);
+    if (error.code === 11000) {
+      return res.status(400).json({
+        error: "Store name already exists. Please choose a different name.",
+      });
+    }
+    res.status(500).json({
+      error:
+        "An error occurred while registering the seller. Please try again.",
+    });
+  }
+};
+
+const getSellerProfile = async (req, res) => {
+  try {
+    const sellerId = req.params.sellerId;
+    console.log("Fetching seller profile for ID:", sellerId);
+
+    const seller = await Seller.findById(sellerId)
+      .populate("user")
+      .populate({
+        path: "reviews",
+        populate: { path: "user", select: "username" },
+      });
+
+    if (!seller) {
+      return res.status(404).json({ error: "Seller not found" });
+    }
+
+    // Calculate average rating
+    if (seller.reviews && seller.reviews.length > 0) {
+      const totalRating = seller.reviews.reduce(
+        (sum, review) => sum + review.rating,
+        0
+      );
+      seller.averageRating = totalRating / seller.reviews.length;
+      await seller.save();
+    }
+
+    res.json(seller);
+  } catch (error) {
+    console.error("Error in getSellerProfile:", error);
+    res.status(400).json({ error: error.message });
+  }
+};
+
+const addSellerReview = async (req, res) => {
+  try {
+    const { sellerId } = req.params;
+    const { rating, comment } = req.body;
+    const userId = req.user._id;
+
+    const seller = await Seller.findById(sellerId);
+    if (!seller) {
+      return res.status(404).json({ error: "Seller not found" });
+    }
+
+    const newReview = {
+      user: userId,
+      rating,
+      comment,
+    };
+
+    seller.reviews.push(newReview);
+
+    // Recalculate average rating
+    const totalRating = seller.reviews.reduce(
+      (sum, review) => sum + review.rating,
+      0
+    );
+    seller.averageRating = totalRating / seller.reviews.length;
+
+    await seller.save();
+
+    res.status(201).json(newReview);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+const toggleVacationMode = async (req, res) => {
+  try {
+    const { sellerId } = req.params;
+    const seller = await Seller.findById(sellerId);
+
+    if (!seller) {
+      return res.status(404).json({ error: "Seller not found" });
+    }
+
+    seller.isVacationMode = !seller.isVacationMode;
+    await seller.save();
+
+    res.json({ isVacationMode: seller.isVacationMode });
+  } catch (error) {
+    console.error("Error toggling vacation mode:", error);
+    res.status(500).json({ error: "Failed to toggle vacation mode" });
+  }
+};
+
+const getAllSellerOrders = async (req, res) => {
+  try {
+    const sellerId = req.params.sellerId;
+    const sellerProfile = await Seller.findById(sellerId);
+    if (!sellerProfile) {
+      return res.status(404).json({ error: "Seller not found" });
+    }
+
+    const orders = await Order.find({ seller: sellerProfile.user })
+      .sort({ createdAt: -1 })
+      .populate("user", "username email phone")
+      .populate("products.product", "name price")
+      .lean();
+
+    const formattedOrders = orders.map((order) => ({
+      _id: order._id,
+      orderNumber: order._id.toString().slice(-6).toUpperCase(),
+      date: order.createdAt.toISOString().split("T")[0],
+      status: order.status,
+      total: order.totalAmount,
+      customerName: order.user?.username || "Unknown",
+      customerEmail: order.user?.email || "N/A",
+      customerPhone: order.user?.phone || "N/A",
+      paymentMethod: order.paymentMethod,
+      address: order.address,
+      products: order.products.map((item) => ({
+        name: item.product.name,
+        price: item.product.price,
+        quantity: item.quantity,
+        subtotal: item.product.price * item.quantity,
+      })),
+    }));
+
+    res.json(formattedOrders);
+  } catch (error) {
+    console.error("Error in getAllSellerOrders:", error);
+    res.status(500).json({ error: "Failed to fetch all seller orders" });
+  }
+};
+
+const getSellerOrders = async (req, res) => {
+  try {
+    const sellerId = req.params.sellerId;
+    const sellerProfile = await Seller.findById(sellerId);
+    if (!sellerProfile) {
+      return res.status(404).json({ error: "Seller not found" });
+    }
+
+    const orders = await Order.find({ seller: sellerProfile.user })
+      .sort({ createdAt: -1 })
+      .populate("user", "username email phone")
+      .populate("products.product", "name price")
+      .lean();
+
+    const formattedOrders = orders.map((order) => ({
+      _id: order._id,
+      orderNumber: order._id.toString().slice(-6).toUpperCase(),
+      date: order.createdAt.toISOString().split("T")[0],
+      status: order.status,
+      total: order.totalAmount,
+      customerName: order.user?.username || "Unknown",
+      customerEmail: order.user?.email || "N/A",
+      customerPhone: order.user?.phone || "N/A",
+      paymentMethod: order.paymentMethod,
+      address: order.address,
+      products: order.products.map((item) => ({
+        name: item.product.name,
+        price: item.product.price,
+        quantity: item.quantity,
+        subtotal: item.product.price * item.quantity,
+      })),
+    }));
+
+    res.json(formattedOrders);
+  } catch (error) {
+    console.error("Error in getSellerOrders:", error);
+    res.status(500).json({ error: "Failed to fetch seller orders" });
+  }
+};
+
+const updateSellerProfile = async (req, res) => {
+  try {
+    const { sellerId } = req.params;
+    const updateData = req.body;
+
+    const seller = await Seller.findByIdAndUpdate(sellerId, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!seller) {
+      return res.status(404).json({ error: "Seller not found" });
+    }
+
+    res.json(seller);
+  } catch (error) {
+    console.error("Error updating seller profile:", error);
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// Get seller's products with additional seller details
+const getSellerProducts = async (req, res) => {
+  try {
+    // Find the seller by ID and populate the products field
+    const seller = await Seller.findById(req.params.sellerId).populate(
+      "products"
+    );
+    if (!seller) {
+      return res.status(404).json({ error: "Seller not found" });
+    }
+    // Respond with the seller's products
+    res.json(seller.products);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// Get seller by ID
+const getSellerById = async (req, res) => {
+  try {
+    const seller = await Seller.findById(req.params.sellerId).populate("user");
+    if (!seller) {
+      return res.status(404).json({ error: "Seller not found" });
+    }
+    res.json(seller);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// Delete seller account
+const deleteSellerAccount = async (req, res) => {
+  try {
+    const seller = await Seller.findByIdAndDelete(req.params.sellerId);
+    if (!seller) {
+      return res.status(404).json({ error: "Seller not found" });
+    }
+
+    // Update user to reflect seller status
+    const user = await User.findById(seller.user);
+    user.isSeller = false;
+    user.sellerProfile = null;
+    await user.save();
+
+    res.json({ message: "Seller account deleted successfully" });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+const getDashboardData = async (req, res) => {
+  try {
+    const sellerId = req.params.sellerId;
+    let sellerObjectId = new mongoose.Types.ObjectId(sellerId);
+
+    console.log("Seller ObjectId:", sellerObjectId);
+
+    // Fetch the seller document
+    const seller = await Seller.findById(sellerObjectId).populate("products"); //original
+    // const seller = await Seller.findById(sellerObjectId).populate("user");
+    console.log("Seller:", seller);
+
+    if (!seller) {
+      return res.status(404).json({ error: "Seller not found" });
+    }
+
+    // Use the seller's user ID for querying orders
+    const sellerUserId = seller.user; //original
+    // const sellerUserId = seller.user._id;
+
+    // Fetch total sales
+    const totalSales = await Order.aggregate([
+      { $match: { seller: sellerUserId } },
+      { $group: { _id: null, total: { $sum: "$totalAmount" } } },
+    ]);
+    console.log("Total Sales:", totalSales);
+
+    // Fetch total orders
+    const totalOrders = await Order.countDocuments({ seller: sellerUserId });
+    console.log("Total Orders:", totalOrders);
+
+    // Get total products from the seller document
+    const totalProducts = seller.products.length;
+    console.log("Total Products:", totalProducts);
+
+    // Fetch total customers (unique customers who have placed orders)
+    const totalCustomers = await Order.distinct("user", {
+      seller: sellerUserId,
+    });
+    console.log("Total Customers:", totalCustomers.length);
+
+    // Fetch recent orders with product details
+    const recentOrders = await Order.find({ seller: sellerUserId })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate("user", "username")
+      .populate("products.product", "name price")
+      .lean();
+    console.log("Recent Orders:", recentOrders);
+
+    // Calculate revenue growth
+    const currentDate = new Date();
+    const lastMonthDate = new Date(
+      currentDate.setMonth(currentDate.getMonth() - 1)
+    );
+
+    const currentMonthSales = await Order.aggregate([
+      { $match: { seller: sellerUserId, createdAt: { $gte: lastMonthDate } } },
+      { $group: { _id: null, total: { $sum: "$totalAmount" } } },
+    ]);
+
+    const previousMonthSales = await Order.aggregate([
+      {
+        $match: {
+          seller: sellerUserId,
+          createdAt: {
+            $lt: lastMonthDate,
+            $gte: new Date(
+              lastMonthDate.setMonth(lastMonthDate.getMonth() - 1)
+            ),
+          },
+        },
+      },
+      { $group: { _id: null, total: { $sum: "$totalAmount" } } },
+    ]);
+
+    const currentMonthTotal = currentMonthSales[0]?.total || 0;
+    const previousMonthTotal = previousMonthSales[0]?.total || 0;
+
+    const revenueGrowth =
+      previousMonthTotal !== 0
+        ? ((currentMonthTotal - previousMonthTotal) / previousMonthTotal) * 100
+        : 100;
+
+    // Find top selling product
+    const topSellingProduct = await Order.aggregate([
+      { $match: { seller: sellerUserId } },
+      { $unwind: "$products" },
+      {
+        $group: {
+          _id: "$products.product",
+          totalQuantity: { $sum: "$products.quantity" },
+        },
+      },
+      { $sort: { totalQuantity: -1 } },
+      { $limit: 1 },
+      {
+        $lookup: {
+          from: "products",
+          localField: "_id",
+          foreignField: "_id",
+          as: "productDetails",
+        },
+      },
+      { $unwind: "$productDetails" },
+      {
+        $project: {
+          name: "$productDetails.name",
+          quantity: "$totalQuantity",
+          truncatedName: { $substr: ["$productDetails.name", 0, 20] }, // Add truncated name
+        },
+      },
+    ]);
+
+    const formattedRecentOrders = recentOrders.map((order) => ({
+      id: order._id,
+      orderNumber: order._id.toString().slice(-6).toUpperCase(),
+      date: order.createdAt.toISOString().split("T")[0],
+      status: order.status,
+      total: order.totalAmount,
+      customerName: order.user?.username || "Unknown",
+      products: order.products.map((item) => ({
+        name: item.product.name,
+        quantity: item.quantity,
+        subtotal: item.product.price * item.quantity,
+      })),
+    }));
+
+    const dashboardData = {
+      totalSales: totalSales[0]?.total || 0,
+      totalOrders,
+      totalProducts,
+      totalCustomers: totalCustomers.length,
+      recentOrders: formattedRecentOrders,
+      revenueGrowth: revenueGrowth.toFixed(2),
+      topSellingProduct: topSellingProduct[0] || {
+        name: "No data available",
+        quantity: 0,
+      },
+    };
+
+    console.log("Dashboard Data:", dashboardData);
+
+    const pendingOrders = await Order.countDocuments({
+      seller: sellerUserId,
+      status: "Pending",
+    });
+
+    // Add this to the dashboardData object
+    dashboardData.pendingOrders = pendingOrders;
+
+    res.json(dashboardData);
+  } catch (error) {
+    console.error("Error fetching dashboard data:", error);
+    res.status(500).json({ error: "Failed to fetch dashboard data" });
+  }
+};
+
+module.exports = {
+  registerSeller,
+  getSellerProfile,
+  addSellerReview,
+  toggleVacationMode,
+  getAllSellerOrders,
+  getSellerOrders,
+  updateSellerProfile,
+  getSellerProducts,
+  getSellerById,
+  deleteSellerAccount,
+  getDashboardData,
+};

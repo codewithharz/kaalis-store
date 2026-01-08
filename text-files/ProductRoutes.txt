@@ -1,0 +1,121 @@
+// Express Router
+const express = require("express");
+const multer = require("multer");
+const {
+  uploadProduct,
+  getAllProducts,
+  getProductById,
+  updateProduct,
+  deleteProduct,
+  getUserProducts,
+  getRelatedProducts,
+  rateProduct,
+  getProductRatings,
+  getAllProductsByCategory,
+} = require("../controllers/productController");
+const userAuthMiddleware = require("../middleware/userAuthMiddleware");
+
+const router = express.Router();
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // limit file size to 5MB
+  },
+});
+
+// Update this route to handle file uploads
+router.post(
+  "/:userId/products",
+  userAuthMiddleware,
+  upload.array("images", 5),
+  uploadProduct
+); // Add product for a specific user
+
+router.post("/:userId/products", userAuthMiddleware, uploadProduct); // Add product for a specific user
+router.get("/", getAllProducts); // Get all products
+router.get("/:productId", getProductById); // Get product by ID
+router.put("/:userId/products/:productId", userAuthMiddleware, updateProduct); // Update product by ID
+router.delete(
+  "/:userId/products/:productId",
+  userAuthMiddleware,
+  deleteProduct
+); // Delete product by ID
+router.get("/:userId/products", userAuthMiddleware, getUserProducts); // Get user's products
+router.get("/:productId/related", getRelatedProducts); // Get related products
+
+// Add these new routes
+router.post("/:productId/rate", userAuthMiddleware, rateProduct);
+router.get("/:productId/ratings", getProductRatings);
+
+router.get("/category/:categoryId", getAllProductsByCategory);
+
+module.exports = router;
+
+
+
+=========================================V-2=================================================
+const express = require("express");
+const multer = require("multer");
+const {
+  addProducts,
+  getAllProducts,
+  getAllProductsByCategory,
+  getProductById,
+  rateProduct,
+  getProductRatings,
+  updateProduct,
+  uploadProduct,
+  deleteProduct,
+  getUserProducts,
+  getRelatedProducts
+} = require("../controllers/productController");
+const userAuthMiddleware = require("../middleware/userAuthMiddleware");
+
+const router = express.Router();
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // limit file size to 5MB
+  },
+});
+
+// Add multiple products (consider adding admin middleware)
+router.post("/bulk", userAuthMiddleware, addProducts);
+
+// Get all products with filters
+router.get("/", getAllProducts);
+
+// Get all products by category
+router.get("/category/:categoryId", getAllProductsByCategory);
+
+// Get a single product by ID
+router.get("/:productId", getProductById);
+
+// Rate a product
+router.post("/:productId/rate", userAuthMiddleware, rateProduct);
+
+// Get product ratings
+router.get("/:productId/ratings", getProductRatings);
+
+// Update a product
+router.put("/:userId/products/:productId", userAuthMiddleware, updateProduct);
+
+// Upload a new product
+router.post("/:userId/products", userAuthMiddleware, upload.array("images", 5), uploadProduct);
+
+// Delete a product
+router.delete("/:userId/products/:productId", userAuthMiddleware, deleteProduct);
+
+// Get user's products
+router.get("/:userId/products", userAuthMiddleware, getUserProducts);
+
+// Get related products
+router.get("/:productId/related", getRelatedProducts);
+
+module.exports = router;
+
+

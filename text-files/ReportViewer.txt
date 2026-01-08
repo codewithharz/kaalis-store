@@ -1,0 +1,262 @@
+<template>
+    <div class="p-6 space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Sales Report Section -->
+            <div v-if="reportType === 'sales'" class="bg-white p-6 rounded-lg shadow space-y-4 col-span-2">
+                <h3 class="text-lg font-semibold">Sales Overview</h3>
+                <div class="flex flex-wrap gap-4">
+                    <div class="flex-1 bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Total Revenue</p>
+                        <p class="text-2xl font-bold">{{ formatCurrency(reportData.summary.totalRevenue) }}</p>
+                    </div>
+                    <div class="flex-1 bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Total Orders</p>
+                        <p class="text-2xl font-bold">{{ reportData.summary.totalOrders }}</p>
+                    </div>
+                </div>
+                <div class="h-80">
+                    <canvas ref="salesChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Inventory Report Section -->
+            <div v-if="reportType === 'inventory'" class="bg-white p-6 rounded-lg shadow space-y-4 col-span-2">
+                <h3 class="text-lg font-semibold">Inventory Overview</h3>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Total Products</p>
+                        <p class="text-2xl font-bold">{{ reportData.summary.totalProducts }}</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Low Stock Items</p>
+                        <p class="text-2xl font-bold">{{ reportData.summary.lowStockItems }}</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Out of Stock</p>
+                        <p class="text-2xl font-bold">{{ reportData.summary.outOfStockItems }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Report Section -->
+            <div v-if="reportType === 'customers'" class="bg-white p-6 rounded-lg shadow space-y-4 col-span-2">
+                <h3 class="text-lg font-semibold">Customer Overview</h3>
+                <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                    <p class="text-sm text-gray-600">Total Customers</p>
+                    <p class="text-2xl font-bold">{{ reportData.summary.totalCustomers }}</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-4 py-2 text-left">Customer</th>
+                                <th class="px-4 py-2 text-right">Orders</th>
+                                <th class="px-4 py-2 text-right">Total Spent</th>
+                                <th class="px-4 py-2 text-left">Last Purchase</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="customer in reportData.data" :key="customer._id" class="border-t">
+                                <td class="px-4 py-2">{{ customer.userDetails.username }}</td>
+                                <td class="px-4 py-2 text-right">{{ customer.orderCount }}</td>
+                                <td class="px-4 py-2 text-right">{{ formatCurrency(customer.totalSpent) }}</td>
+                                <td class="px-4 py-2">{{ formatDate(customer.lastPurchase) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Financial Report Section -->
+            <div v-if="reportType === 'financial'" class="bg-white p-6 rounded-lg shadow space-y-4 col-span-2">
+                <h3 class="text-lg font-semibold">Financial Overview</h3>
+                <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                    <p class="text-sm text-gray-600">Total Revenue</p>
+                    <p class="text-2xl font-bold">{{ formatCurrency(reportData.summary.totalRevenue) }}</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-4 py-2 text-left">Period</th>
+                                <th class="px-4 py-2 text-right">Revenue</th>
+                                <th class="px-4 py-2 text-right">Orders</th>
+                                <th class="px-4 py-2 text-right">Avg. Order Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="period in reportData.data" :key="period._id" class="border-t">
+                                <td class="px-4 py-2">{{ formatPeriod(period._id) }}</td>
+                                <td class="px-4 py-2 text-right">{{ formatCurrency(period.revenue) }}</td>
+                                <td class="px-4 py-2 text-right">{{ period.orderCount }}</td>
+                                <td class="px-4 py-2 text-right">{{ formatCurrency(period.averageOrderValue) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Metadata -->
+        <div class="bg-gray-50 p-4 rounded-lg text-sm text-gray-600">
+            <p>Generated: {{ formatDate(reportData.generatedAt) }}</p>
+            <p>Generation Time: {{ reportData.generationTimeMs }}ms</p>
+            <p>Store: {{ reportData.seller.storeName }}</p>
+            <p>Date Range: {{ formatDateRange(reportData.dateRange) }}</p>
+        </div>
+    </div>
+</template>
+
+<script>
+import { ref, onMounted, watch } from 'vue';
+import Chart from 'chart.js/auto';
+
+export default {
+    name: 'ReportViewer',
+    props: {
+        reportData: {
+            type: Object,
+            required: true
+        },
+        reportType: {
+            type: String,
+            required: true
+        }
+    },
+    setup(props) {
+        const salesChart = ref(null);
+        let chartInstance = null;
+
+        const formatCurrency = (value) => {
+            return `₦${new Intl.NumberFormat('en-NG', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value)}`;
+        };
+
+        const formatDate = (date) => {
+            return new Date(date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        };
+
+        const formatPeriod = (period) => {
+            const [year, month] = period.split('-');
+            return new Date(year, month - 1).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long'
+            });
+        };
+
+        const formatDateRange = (range) => {
+            if (typeof range === 'string') {
+                return range;
+            }
+            return `${formatDate(range.startDate)} - ${formatDate(range.endDate)}`;
+        };
+
+        const initSalesChart = () => {
+            if (props.reportType !== 'sales' || !props.reportData?.data) return;
+
+            const ctx = salesChart.value?.getContext('2d');
+            if (!ctx) return;
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const data = props.reportData.data;
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(item => item._id),
+                    datasets: [
+                        {
+                            label: 'Sales Revenue',
+                            data: data.map(item => item.totalSales),
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            tension: 0.1,
+                            yAxisID: 'revenue'
+                        },
+                        {
+                            label: 'Orders',
+                            data: data.map(item => item.ordersCount),
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.1,
+                            yAxisID: 'orders'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.parsed.y;
+                                    if (context.dataset.yAxisID === 'revenue') {
+                                        return `${label}: ${formatCurrency(value)}`;
+                                    }
+                                    return `${label}: ${value}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        revenue: {
+                            type: 'linear',
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Revenue'
+                            },
+                            ticks: {
+                                callback: value => formatCurrency(value)
+                            }
+                        },
+                        orders: {
+                            type: 'linear',
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Number of Orders'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    }
+                }
+            });
+        };
+
+        onMounted(() => {
+            initSalesChart();
+        });
+
+        watch(() => props.reportData, () => {
+            initSalesChart();
+        }, { deep: true });
+
+        return {
+            salesChart,
+            formatCurrency,
+            formatDate,
+            formatPeriod,
+            formatDateRange
+        };
+    }
+};
+</script>

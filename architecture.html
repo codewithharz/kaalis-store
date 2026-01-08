@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+
+<body>
+    <div class="mermaid">
+        ```mermaid
+        architecture-beta
+        group Frontend(vue)[Frontend]
+        service checkout(page)[CheckoutPage.vue]
+        service success(payment)[PaymentSuccess.vue]
+        service callback(payment)[PaymentCallback.vue]
+        service store(payment)[PaymentStore]
+
+        group Backend(express)[Backend Express]
+        group Controllers(api)[Controllers]
+        service controller(paystack)[PaystackController]
+
+        group Services(business)[Services]
+        service paystack(service)[PaystackService]
+        service payout(service)[PayoutService]
+        service notification(service)[NotificationService]
+
+        group Models(data)[Models]
+        service payment(model)[PaymentModel]
+        service vendor(model)[VendorPayoutModel]
+        service user(model)[UserModel]
+
+        group Config(settings)[Config]
+        service config(payout)[PayoutConfig]
+        service cron(jobs)[CronJobs]
+
+        group Middleware(handlers)[Middleware]
+        service webhook(paystack)[PaystackWebhook]
+        service logger(middleware)[LoggerMiddleware]
+
+        group External(apis)[External]
+        service paystack(api)[Paystack API]
+
+        checkout:Payment --> success:Init
+        success:API --> controller:Call
+        controller:Process --> paystack:Payment
+        paystack:API --> paystack_api:Interact
+        paystack:Create --> vendor:Model
+        cron:Schedule --> payout:Job
+        payout:Process --> vendor:Update
+        payout:Send --> notification:Alert
+        webhook:Validate --> controller:Check
+        controller:Log --> logger:Use
+        ```
+    </div>
+</body>
+
+</html>

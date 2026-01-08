@@ -1,0 +1,544 @@
+<!-- frontend/src/views/admin/AdminUsers.vue -->
+<template>
+    <div>
+        <div class="px-8 py-4 bg-white flex justify-between items-center">
+            <h3 class="text-2xl font-semibold text-gray-800">User Management</h3>
+            <button @click="showCreateModal = true"
+                class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                Add New User
+            </button>
+        </div>
+
+        <!-- User Type Toggle -->
+        <div class="mb-3 bg-white rounded-b-lg">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex" aria-label="Tabs">
+                    <button @click="activeTab = 'admins'" :class="[
+                        activeTab === 'admins'
+                            ? 'border-blue-500 text-blue-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                        'w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm'
+                    ]">
+                        Admin Users
+                    </button>
+                    <button @click="activeTab = 'users'" :class="[
+                        activeTab === 'users'
+                            ? 'border-blue-500 text-blue-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                        'w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm'
+                    ]">
+                        Regular Users
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <!-- Admin Table Head -->
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
+                            User</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
+                            Email</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                            Role</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
+                            Last Login</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                            2FA</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                            Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                            Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <tr v-for="user in displayedUsers" :key="user._id">
+                        <!-- Keep existing columns up to status -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">
+                                {{ user.username }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-500">{{ user.email }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ user.role }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                :class="user.twoFactorEnabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'">
+                                {{ user.twoFactorEnabled ? 'Enabled' : 'Disabled' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                :class="getStatusClass(user)">
+                                {{ getStatusText(user) }}
+                            </span>
+                        </td>
+                        <!-- Update actions column -->
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex items-center justify-end space-x-3">
+                                <button @click="editUser(user)" class="text-indigo-600 hover:text-indigo-900">
+                                    Edit
+                                </button>
+                                <div class="relative">
+                                    <button @click="toggleDropdown(user._id)" type="button"
+                                        class="flex items-center text-gray-400 hover:text-gray-600"
+                                        title="More options">
+                                        <DotsVerticalIcon class="h-5 w-5" aria-hidden="true" />
+                                    </button>
+
+                                    <div v-if="activeDropdown === user._id"
+                                        class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                        <button @click="resetPassword(user._id)"
+                                            class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
+                                            Reset Password
+                                        </button>
+                                        <button @click="toggle2FA(user._id)"
+                                            class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
+                                            {{ user.twoFactorEnabled ? 'Disable' : 'Enable' }} 2FA
+                                        </button>
+                                        <button @click="toggleBlockStatus(user._id)"
+                                            class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
+                                            {{ user.isBlocked ? 'Unblock' : 'Block' }} User
+                                        </button>
+                                        <button @click="viewActivityLog(user._id)"
+                                            class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
+                                            View Activity Log
+                                        </button>
+                                        <button @click="managePermissions(user._id)"
+                                            class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
+                                            Manage Permissions
+                                        </button>
+                                        <button @click="forceLogout(user._id)"
+                                            class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
+                                            Force Logout
+                                        </button>
+                                        <button @click="deleteUser(user._id)"
+                                            class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Create/Edit User Modal -->
+        <div v-if="showCreateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div class="bg-white p-6 rounded-lg w-full max-w-md">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">
+                    {{ selectedUser ? 'Edit User' : 'Create New User' }}
+                </h3>
+                <form @submit.prevent="handleSubmit">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Username</label>
+                            <input v-model="formData.username" type="text"
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Email</label>
+                            <input v-model="formData.email" type="email"
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required />
+                        </div>
+                        <div v-if="activeTab === 'admins'">
+                            <label class="block text-sm font-medium text-gray-700">Role</label>
+                            <div class="relative">
+                                <select v-model="formData.role"
+                                    class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent">
+                                    <option value="User">User</option>
+                                    <option value="Admin">Admin</option>
+                                    <option value="Moderator">Moderator</option>
+                                </select>
+                                <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                    <ChevronDown class="w-5 h-5 text-gray-400" />
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else>
+                            <label class="block text-sm font-medium text-gray-700">User Type</label>
+                            <div class="relative">
+                                <select v-model="formData.isSeller"
+                                    class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent">
+                                    <option :value="false">Customer</option>
+                                    <option :value="true">Seller</option>
+                                </select>
+                                <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                    <ChevronDown class="w-5 h-5 text-gray-400" />
+                                </div>
+                            </div>
+                        </div>
+                        <div v-if="!selectedUser">
+                            <label class="block text-sm font-medium text-gray-700">Password</label>
+                            <input v-model="formData.password" type="password"
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                :required="!selectedUser" />
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button type="button" @click="showCreateModal = false"
+                            class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md">
+                            Cancel
+                        </button>
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md">
+                            {{ selectedUser ? 'Update' : 'Create' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Activity Log Modal -->
+        <div v-if="showActivityModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div class="bg-white p-6 rounded-lg w-full max-w-4xl max-h-[80vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">User Activity Log</h3>
+                    <button @click="showActivityModal = false" class="text-gray-400 hover:text-gray-500">
+                        <span class="sr-only">Close</span>
+                        <XIcon class="h-6 w-6" />
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <div v-for="activity in activityLog" :key="activity.id" class="border-b pb-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">
+                                    {{ activity.action.replace('_', ' ').toUpperCase() }}
+                                </p>
+                                <p class="text-sm text-gray-500">{{ activity.formattedDate }}</p>
+                            </div>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100">
+                                {{ activity.ip || 'N/A' }}
+                            </span>
+                        </div>
+                        <div v-if="activity.details" class="mt-2">
+                            <pre
+                                class="text-sm text-gray-600 whitespace-pre-wrap">{{ JSON.stringify(activity.details, null, 2) }}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button type="button" @click="showActivityModal = false"
+                        class="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+import { ref, onMounted, computed, watch } from 'vue'
+import { MoreVertical as DotsVerticalIcon, X as XIcon, ChevronDown } from 'lucide-vue-next'
+import { useAdminStore } from '../../store/admin.js'
+import apiClient from '@/api/axios'
+import { toast } from 'vue-sonner'
+
+export default {
+    name: 'AdminUsers',
+    components: {
+        DotsVerticalIcon,
+        XIcon,
+        ChevronDown
+    },
+    setup() {
+        const adminStore = useAdminStore();
+        const adminUsers = ref([])
+        const regularUsers = ref([])
+        const activeTab = ref('admins')
+        const showCreateModal = ref(false)
+        const selectedUser = ref(null)
+        const activeDropdown = ref(null)
+
+        const showActivityModal = ref(false);
+        const activityLog = ref([]);
+
+        const formData = ref({
+            username: '',
+            email: '',
+            password: '',
+            role: 'User',
+            isSeller: false
+        })
+
+        const displayedUsers = computed(() => {
+            return activeTab.value === 'admins' ? adminUsers.value : regularUsers.value
+        })
+
+        const closeDropdown = () => {
+            activeDropdown.value = null
+        }
+        const toggleDropdown = (userId) => {
+            activeDropdown.value = activeDropdown.value === userId ? null : userId
+        }
+
+
+        const fetchAdminUsers = async () => {
+            try {
+                const response = await apiClient.get('/admin/users')
+                adminUsers.value = response.data
+            } catch (error) {
+                console.error('Error fetching admin users:', error)
+                toast.error('Failed to fetch admin users')
+            }
+        }
+
+        const fetchRegularUsers = async () => {
+            try {
+                const response = await apiClient.get('/admin/regular-users')
+                regularUsers.value = response.data
+            } catch (error) {
+                console.error('Error fetching regular users:', error)
+                toast.error('Failed to fetch regular users')
+            }
+        }
+
+        const handleSubmit = async () => {
+            try {
+                if (selectedUser.value) {
+                    if (activeTab.value === 'admins') {
+                        await apiClient.put(`/admin/users/${selectedUser.value._id}`, formData.value)
+                    } else {
+                        await apiClient.put(`/admin/regular-users/${selectedUser.value._id}`, formData.value)
+                    }
+                    toast.success('User updated successfully')
+                } else {
+                    if (activeTab.value === 'admins') {
+                        await apiClient.post('/admin/register', formData.value)
+                    } else {
+                        await apiClient.post('/admin/regular-users', formData.value)
+                    }
+                    toast.success('User created successfully')
+                }
+
+                if (activeTab.value === 'admins') {
+                    await fetchAdminUsers()
+                } else {
+                    await fetchRegularUsers()
+                }
+
+                showCreateModal.value = false
+                resetForm()
+            } catch (error) {
+                console.error('Error submitting form:', error)
+                toast.error(error.response?.data?.message || 'Operation failed')
+            }
+        }
+
+        const editUser = (user) => {
+            selectedUser.value = user
+            formData.value = {
+                username: user.username,
+                email: user.email,
+                role: activeTab.value === 'admins' ? user.role : 'User',
+                isSeller: user.isSeller || false
+            }
+            showCreateModal.value = true
+        }
+
+        const deleteUser = async (userId) => {
+            if (!confirm('Are you sure you want to delete this user?')) return;
+
+            try {
+                const endpoint = getEndpoint(userId, '');
+                await apiClient.delete(endpoint);
+                toast.success('User deleted successfully');
+
+                if (activeTab.value === 'admins') {
+                    await fetchAdminUsers();
+                } else {
+                    await fetchRegularUsers();
+                }
+            } catch (error) {
+                console.error('Delete user error:', error);
+                toast.error(error.response?.data?.message || 'Failed to delete user');
+            }
+        };
+
+        const resetForm = () => {
+            selectedUser.value = null
+            formData.value = {
+                username: '',
+                email: '',
+                password: '',
+                role: 'User',
+                isSeller: false
+            }
+        }
+
+        const getStatusClass = (user) => {
+            if (activeTab.value === 'admins') {
+                if (!user.lastLogin) return 'bg-yellow-100 text-yellow-800'
+                return Date.now() - new Date(user.lastLogin) < 3600000
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-gray-100 text-gray-800'
+            }
+            if (user.isBlocked) return 'bg-red-100 text-red-800'
+            return user.isSeller
+                ? 'bg-green-100 text-green-800'
+                : 'bg-blue-100 text-blue-800'
+        }
+
+        const getStatusText = (user) => {
+            if (activeTab.value === 'admins') {
+                if (user.isBlocked) return 'Blocked'
+                if (!user.lastLogin) return 'Never Logged In'
+                return Date.now() - new Date(user.lastLogin) < 3600000
+                    ? 'Online'
+                    : 'Offline'
+            }
+            if (user.isBlocked) return 'Blocked'
+            return user.isSeller ? 'Seller' : 'Customer'
+        }
+
+        const getEndpoint = (userId, action) => {
+            const base = activeTab.value === 'admins' ? '/admin/users' : '/admin/regular-users';
+            return `${base}/${userId}/${action}`;
+        };
+
+        const resetPassword = async (userId) => {
+            try {
+                const response = await adminStore.resetUserPassword(userId, activeTab.value === 'admins');
+                if (response.success) {
+                    toast.success(response.message);
+                }
+            } catch (error) {
+                toast.error(error.response?.data?.message || 'Failed to reset password');
+            }
+        };
+
+        const toggle2FA = async (userId) => {
+            try {
+                const response = await adminStore.toggle2FA(userId, activeTab.value === 'admins');
+                if (response.success) {
+                    toast.success(response.message);
+                    // Refresh the user list after action
+                    if (activeTab.value === 'admins') {
+                        await fetchAdminUsers();
+                    } else {
+                        await fetchRegularUsers();
+                    }
+                }
+            } catch (error) {
+                toast.error(error.response?.data?.message || 'Failed to toggle 2FA');
+            }
+        };
+
+        const toggleBlockStatus = async (userId) => {
+            try {
+                const response = await adminStore.toggleBlockStatus(userId, activeTab.value === 'admins');
+                if (response.success) {
+                    toast.success(response.message);
+                    // Refresh the user list after action
+                    if (activeTab.value === 'admins') {
+                        await fetchAdminUsers();
+                    } else {
+                        await fetchRegularUsers();
+                    }
+                }
+            } catch (error) {
+                toast.error(error.response?.data?.message || 'Failed to toggle block status');
+            }
+        };
+
+        const viewActivityLog = async (userId) => {
+            try {
+                const response = await adminStore.getUserActivity(userId, activeTab.value === 'admins');
+                if (response.success) {
+                    // Set activities array (empty array if no activities)
+                    activityLog.value = response.activities || [];
+                    showActivityModal.value = true;
+                    closeDropdown();
+
+                    // Show a message if no activities found
+                    if (activityLog.value.length === 0) {
+                        toast.info('No activity records found for this user');
+                    }
+                }
+            } catch (error) {
+                console.error('Activity log error:', error);
+                toast.error(error.response?.data?.message || 'Failed to fetch activity log');
+            }
+        };
+
+        const managePermissions = (userId) => {
+            // Open permissions management modal
+            // Implementation depends on your permissions system
+        }
+
+        const forceLogout = async (userId) => {
+            try {
+                const response = await adminStore.forceLogout(userId, activeTab.value === 'admins');
+                if (response.success) {
+                    toast.success(response.message);
+                    // Refresh the user list after action
+                    if (activeTab.value === 'admins') {
+                        await fetchAdminUsers();
+                    } else {
+                        await fetchRegularUsers();
+                    }
+                }
+            } catch (error) {
+                toast.error(error.response?.data?.message || 'Failed to force logout');
+            }
+        };
+
+
+        watch(activeTab, () => {
+            if (activeTab.value === 'admins') {
+                fetchAdminUsers()
+            } else {
+                fetchRegularUsers()
+            }
+        })
+
+        onMounted(() => {
+            fetchAdminUsers()
+            fetchRegularUsers()
+        })
+
+        return {
+            adminUsers,
+            regularUsers,
+            activeTab,
+            showCreateModal,
+            selectedUser,
+            formData,
+            displayedUsers,
+            handleSubmit,
+            editUser,
+            deleteUser,
+            getStatusClass,
+            getStatusText,
+            resetPassword,
+            toggle2FA,
+            toggleBlockStatus,
+            viewActivityLog,
+            managePermissions,
+            forceLogout,
+
+            activeDropdown,
+            toggleDropdown,
+            closeDropdown,
+            showActivityModal,
+            activityLog
+        }
+    }
+}
+</script>
