@@ -11,7 +11,7 @@
     "dev:backend": "cd backend && npm run dev",
     "dev:proxy": "node vercel-dev.js",
     "dev": "concurrently -n \"FE,BE,PROXY\" -c \"blue,green,yellow\" \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run dev:proxy\"",
-    "build": "cd frontend && npm install && npm run build",
+    "build": "cd frontend && npm install && npm run build && cd .. && rm -rf dist && cp -r frontend/dist ./dist",
     "start": "node vercel-dev.js",
     "clean": "killall node || true"
   },
