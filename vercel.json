@@ -42,7 +42,7 @@
         "Content-Type": "text/css",
         "Cache-Control": "public, max-age=31536000, immutable"
       },
-      "dest": "/frontend/dist/assets/$1"
+      "dest": "/frontend/assets/$1"
     },
     {
       "src": "/assets/(.*\\.js)",
@@ -50,21 +50,21 @@
         "Content-Type": "application/javascript",
         "Cache-Control": "public, max-age=31536000, immutable"
       },
-      "dest": "/frontend/dist/assets/$1"
+      "dest": "/frontend/assets/$1"
     },
     {
       "src": "/assets/(.*\\.(png|jpg|jpeg|gif|ico|svg|webp))",
       "headers": {
         "Cache-Control": "public, max-age=31536000, immutable"
       },
-      "dest": "/frontend/dist/assets/$1"
+      "dest": "/frontend/assets/$1"
     },
     {
       "handle": "filesystem"
     },
     {
       "src": "/(.*)",
-      "dest": "frontend/dist/index.html",
+      "dest": "frontend/index.html",
       "headers": {
         "Cache-Control": "no-cache, no-store, must-revalidate"
       }
