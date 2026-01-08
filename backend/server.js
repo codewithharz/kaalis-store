@@ -458,30 +458,34 @@ app.use((req, res) => {
   });
 });
 
-const server = app.listen(PORT, () => {
-  console.log("🚀=========================🚀");
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🚀 Environment: ${process.env.NODE_ENV}`);
-  console.log(`🚀 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`🚀 CORS test: http://localhost:${PORT}/api/cors-test`);
-  console.log("🚀=========================🚀");
-});
-
-// Graceful shutdown
-process.on("SIGTERM", () => {
-  console.log("SIGTERM received, shutting down gracefully");
-  server.close(() => {
-    console.log("Process terminated");
-    process.exit(0);
+// Start server if run directly (local development)
+if (require.main === module) {
+  const PORT = process.env.PORT || 7788;
+  const server = app.listen(PORT, () => {
+    console.log("🚀=========================🚀");
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🚀 Environment: ${process.env.NODE_ENV}`);
+    console.log(`🚀 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`🚀 CORS test: http://localhost:${PORT}/api/cors-test`);
+    console.log("🚀=========================🚀");
   });
-});
 
-process.on("SIGINT", () => {
-  console.log("SIGINT received, shutting down gracefully");
-  server.close(() => {
-    console.log("Process terminated");
-    process.exit(0);
+  // Graceful shutdown
+  process.on("SIGTERM", () => {
+    console.log("SIGTERM received, shutting down gracefully");
+    server.close(() => {
+      console.log("Process terminated");
+      process.exit(0);
+    });
   });
-});
+
+  process.on("SIGINT", () => {
+    console.log("SIGINT received, shutting down gracefully");
+    server.close(() => {
+      console.log("Process terminated");
+      process.exit(0);
+    });
+  });
+}
 
 module.exports = app;
