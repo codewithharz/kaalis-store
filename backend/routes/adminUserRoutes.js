@@ -94,32 +94,7 @@ router.delete("/categories/:id", adminAuthMiddleware, adminDashboardController.d
 router.put("/orders/:id/status", adminAuthMiddleware, adminDashboardController.updateOrderStatus);
 
 // Manual Payout Processing (replaces automatic cron job)
-router.post("/process-payouts", adminAuthMiddleware, isSuperAdmin, async (req, res) => {
-  try {
-    const payoutService = require("../services/payoutService");
-    const logger = require("../utils/logger");
-
-    logger.info(`Manual payout processing initiated by admin: ${req.adminUser.email}`);
-
-    // Process all pending payouts
-    const results = await payoutService.processVendorPayouts();
-
-    logger.info("Manual payout processing completed", { results });
-
-    res.json({
-      success: true,
-      message: "Payout processing completed successfully",
-      results: results
-    });
-  } catch (error) {
-    console.error("Error in manual payout processing:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to process payouts",
-      error: error.message
-    });
-  }
-});
+router.post("/process-payouts", adminAuthMiddleware, isSuperAdmin, adminDashboardController.processPayouts);
 
 // Seller Management Routes
 router.post("/sellers/:id/reset-password", adminAuthMiddleware, isSuperAdmin, adminDashboardController.resetSellerPassword);
