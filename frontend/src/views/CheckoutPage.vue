@@ -479,7 +479,7 @@ const loadCheckoutData = async () => {
         await Promise.all([
             addressStore.fetchUserAddresses(),
             cartStore.fetchCart(),
-            // productStore.fetchProducts(),
+            productStore.fetchProducts(),
             cluesBucksStore.initialize()
         ]);
         if (addressStore.addresses.length > 0) {

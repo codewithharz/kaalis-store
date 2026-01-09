@@ -47,7 +47,7 @@ export const usePaymentStore = defineStore("payment", {
                 ? "/payment/initialize"
                 : "/payment/initialize";
         // Send request
-        const response = await apiClient.post(endpoint, requestBody, {
+        const response = await apiClient.post(endpoint, paymentData, {
           headers: { Authorization: `Bearer ${userStore.token}` },
         });
 
