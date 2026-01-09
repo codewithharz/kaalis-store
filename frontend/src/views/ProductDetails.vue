@@ -5,7 +5,7 @@
             <!-- Mobile Product Images Section -->
             <div class="bg-white shadow-sm">
                 <AlertDialog>
-                    <AlertDialogTrigger>
+                    <AlertDialogTrigger class="w-full flex justify-center">
                         <div class="relative group">
                             <img :src="hoveredImage || mainImage" alt="Product Image"
                                 class="w-full h-64 sm:h-80 object-cover cursor-pointer"
@@ -518,7 +518,7 @@
                     <div class="p-6 space-y-6 bg-white shadow-sm rounded-lg mx-4 mt-4"
                         style="scroll-snap-align: start;">
                         <AlertDialog>
-                            <AlertDialogTrigger>
+                            <AlertDialogTrigger class="w-full flex justify-center">
                                 <div class="relative group">
                                     <img :src="hoveredImage || mainImage" alt="Product Image"
                                         class="w-full h-auto rounded-lg shadow-md cursor-pointer"
