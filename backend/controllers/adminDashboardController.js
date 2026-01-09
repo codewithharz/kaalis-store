@@ -761,9 +761,8 @@ exports.toggle2FAUser = async (req, res) => {
 
     res.json({
       success: true,
-      message: `2FA ${
-        user.twoFactorEnabled ? "enabled" : "disabled"
-      } successfully`,
+      message: `2FA ${user.twoFactorEnabled ? "enabled" : "disabled"
+        } successfully`,
       twoFactorEnabled: user.twoFactorEnabled,
     });
   } catch (error) {
@@ -1079,9 +1078,8 @@ exports.toggleSeller2FA = async (req, res) => {
 
     res.json({
       success: true,
-      message: `2FA ${
-        seller.user.twoFactorEnabled ? "enabled" : "disabled"
-      } successfully`,
+      message: `2FA ${seller.user.twoFactorEnabled ? "enabled" : "disabled"
+        } successfully`,
       twoFactorEnabled: seller.user.twoFactorEnabled,
     });
   } catch (error) {
@@ -1127,9 +1125,8 @@ exports.toggleSellerBlockStatus = async (req, res) => {
 
     res.json({
       success: true,
-      message: `Seller ${
-        seller.user.isBlocked ? "blocked" : "unblocked"
-      } successfully`,
+      message: `Seller ${seller.user.isBlocked ? "blocked" : "unblocked"
+        } successfully`,
       isBlocked: seller.user.isBlocked,
     });
   } catch (error) {
@@ -1300,9 +1297,8 @@ exports.updateSellerStatus = async (req, res) => {
     await createSystemNotification({
       userId: seller.user, // user ID of the seller
       title: "Seller Status Update",
-      message: `Your seller account status has been updated to ${verificationStatus}${
-        note ? `: ${note}` : ""
-      }`,
+      message: `Your seller account status has been updated to ${verificationStatus}${note ? `: ${note}` : ""
+        }`,
       type: "System",
       priority: "high",
       actionUrl: "/seller/dashboard", // They can check their dashboard for more details
@@ -1342,5 +1338,33 @@ exports.getSellerReviews = async (req, res) => {
     res
       .status(500)
       .json({ message: "Error fetching seller reviews", error: error.message });
+  }
+};
+
+// Manual Payout Processing (replaces automatic cron job)
+exports.processPayouts = async (req, res) => {
+  try {
+    const payoutService = require("../services/payoutService");
+    const logger = require("../utils/logger");
+
+    logger.info(`Manual payout processing initiated by admin: ${req.adminUser.email}`);
+
+    // Process all pending payouts
+    const results = await payoutService.processVendorPayouts();
+
+    logger.info("Manual payout processing completed", { results });
+
+    res.json({
+      success: true,
+      message: "Payout processing completed successfully",
+      results: results
+    });
+  } catch (error) {
+    console.error("Error in manual payout processing:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to process payouts",
+      error: error.message
+    });
   }
 };
