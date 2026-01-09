@@ -1,10 +1,11 @@
 // backend/services/payoutService.js
 const logger = require("../utils/logger");
-const PaystackService = require("./paystackService");
-const OpayService = require("./opayService");
-const PayDunyaPayoutService = require("./payDunyaPayoutService");
-const OrangeMoneyPayoutService = require("./orangeMoneyPayoutService");
-const MockPayoutServices = require("./mockPayoutServices");
+// Lazy load services to save resources
+// const PaystackService = require("./paystackService");
+// const OpayService = require("./opayService");
+// const PayDunyaPayoutService = require("./payDunyaPayoutService");
+// const OrangeMoneyPayoutService = require("./orangeMoneyPayoutService");
+// const MockPayoutServices = require("./mockPayoutServices");
 const CurrencyService = require("./currencyService");
 
 const VendorPayout = require("../models/vendorPayoutModels");
@@ -15,12 +16,13 @@ const NotificationService = require("../services/notificationService");
 
 class PayoutService {
   constructor() {
-    // Initialize all payment gateway services
-    this.paystackService = new PaystackService();
-    this.opayService = new OpayService();
-    this.payDunyaService = PayDunyaPayoutService;
-    this.orangeMoneyService = OrangeMoneyPayoutService;
-    this.mockService = MockPayoutServices;
+    // Services are now lazy-loaded on demand
+    this._paystackService = null;
+    this._opayService = null;
+    this._payDunyaService = null;
+    this._orangeMoneyService = null;
+    this._mockService = null;
+
     this.currencyService = CurrencyService;
     this.notificationService = new NotificationService();
 
@@ -32,6 +34,44 @@ class PayoutService {
     logger.info(
       `PayoutService initialized. Using mock services: ${this.useMockServices}`
     );
+  }
+
+  // Lazy getters for services
+  get paystackService() {
+    if (!this._paystackService) {
+      const PaystackService = require("./paystackService");
+      this._paystackService = new PaystackService();
+    }
+    return this._paystackService;
+  }
+
+  get opayService() {
+    if (!this._opayService) {
+      const OpayService = require("./opayService");
+      this._opayService = new OpayService();
+    }
+    return this._opayService;
+  }
+
+  get payDunyaService() {
+    if (!this._payDunyaService) {
+      this._payDunyaService = require("./payDunyaPayoutService");
+    }
+    return this._payDunyaService;
+  }
+
+  get orangeMoneyService() {
+    if (!this._orangeMoneyService) {
+      this._orangeMoneyService = require("./orangeMoneyPayoutService");
+    }
+    return this._orangeMoneyService;
+  }
+
+  get mockService() {
+    if (!this._mockService) {
+      this._mockService = require("./mockPayoutServices");
+    }
+    return this._mockService;
   }
 
   /**
