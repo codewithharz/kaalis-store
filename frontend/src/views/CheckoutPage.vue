@@ -47,152 +47,7 @@
                 </div>
 
                 <!-- Payment Methods -->
-                <div class="bg-white shadow-md rounded-lg p-4 sm:p-6 mb-6">
-                    <h2 class="text-xl font-semibold mb-4">Payment Methods</h2>
-
-                    <div class="flex items-start mb-4">
-                        <input type="radio" id="paystack" name="paymentMethod" value="Paystack" v-model="paymentMethod"
-                            class="mr-2 custom-checkbox">
-                        <label for="paystack" class="-mt-[5px]">
-                            <div class="flex items-center space-x-2">
-                                <img :src="paymentImages.paystackLogo" alt="Paystack" class="h-5">
-                                <span class="mr-2 text-sm font-medium">Pay with Paystack</span>
-                            </div>
-                        </label>
-                    </div>
-
-                    <div class="flex items-start mb-4">
-                        <input type="radio" id="opay" name="paymentMethod" value="OPay" v-model="paymentMethod"
-                            class="mr-2 custom-checkbox">
-                        <label for="opay" class="-mt-[5px]">
-                            <div class="flex items-center space-x-2">
-                                <img :src="paymentImages.opayLogo" alt="OPay" class="h-5">
-                                <span class="mr-2 text-sm font-medium">Pay with OPay</span>
-                            </div>
-                        </label>
-                    </div>
-
-
-                    <div class="flex items-start mb-4 opacity-60">
-                        <input type="radio" id="orangeMoney" name="paymentMethod" value="OrangeMoney" disabled
-                            class="mr-2 custom-checkbox cursor-not-allowed">
-                        <label for="orangeMoney" class="-mt-[5px] cursor-not-allowed">
-                            <div class="flex items-center space-x-2">
-                                <img :src="paymentImages.orangeMoney" alt="Orange Money" class="h-5 grayscale">
-                                <span class="mr-2 text-sm font-medium text-gray-500">Pay with Orange Money <span class="text-xs bg-gray-200 px-2 py-0.5 rounded-full ml-2">Coming Soon</span></span>
-                            </div>
-                        </label>
-                    </div>
-
-                    <div class="flex items-start mb-4 opacity-60">
-                        <input type="radio" id="payDunya" name="paymentMethod" value="PayDunya" disabled
-                            class="mr-2 custom-checkbox cursor-not-allowed">
-                        <label for="payDunya" class="-mt-[5px] cursor-not-allowed">
-                            <div class="flex items-center space-x-2">
-                                <img :src="paymentImages.payDunyaLogo" alt="PayDunya" class="h-5 grayscale">
-                                <span class="mr-2 text-sm font-medium text-gray-500">Pay with PayDunya <span class="text-xs bg-gray-200 px-2 py-0.5 rounded-full ml-2">Coming Soon</span></span>
-                            </div>
-                        </label>
-                    </div>
-
-                    <!-- CluesBucks -->
-                    <div class="flex justify-between mb-4">
-                        <span>CluesBucks Available</span>
-                        <span>{{ availableCluesBucks }} points</span>
-                    </div>
-                    <div class="flex items-center justify-between mb-4">
-                        <span>Use CluesBucks</span>
-                        <div class="flex items-center">
-                            <input v-model="cluesBucksToUse" type="number" :max="cluesBucksBalance"
-                                class="w-20 px-2 py-1 border rounded mr-2" :disabled="!cluesBucksBalance" />
-                            <button @click="applyCluesBucks"
-                                :disabled="!cluesBucksToUse || cluesBucksToUse > cluesBucksBalance"
-                                class="bg-amber-500 text-white px-3 py-1 rounded">
-                                Apply
-                            </button>
-                        </div>
-                    </div>
-                    <div v-if="cluesBucksDiscount > 0" class="flex justify-between mb-4 text-green-600">
-                        <span>CluesBucks Discount</span>
-                        <span>-₦{{ cluesBucksDiscount }}</span>
-                    </div>
-
-                    <!-- Special Offers & Coupons Status -->
-                    <div class="border-t mt-4 pt-4">
-                        <div class="mb-4">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="font-medium">Special Offers Access</span>
-                                <span v-if="hasValidOfferAccess"
-                                    class="px-2 py-1 bg-amber-100 text-amber-800 text-sm rounded-full">
-                                    Active
-                                </span>
-                                <span v-else class="px-2 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">
-                                    Inactive
-                                </span>
-                            </div>
-                            <div v-if="hasValidOfferAccess && availableOffers.length" class="text-sm text-gray-600">
-                                <div v-for="offer in availableOffers" :key="offer._id"
-                                    class="border-b last:border-0 py-2">
-                                    <div class="flex justify-between items-center">
-                                        <span>{{ offer.title }}</span>
-                                        <span class="text-amber-600 font-medium">
-                                            {{ offer.discount }}% off
-                                        </span>
-                                    </div>
-                                    <div class="flex items-center gap-2 mt-1 text-xs text-gray-500">
-                                        <span>{{ getCategoryName(offer.category) }}</span>
-                                        <span v-if="offer.minimumPurchase">
-                                            (Min: ₦{{ offer.minimumPurchase }})
-                                        </span>
-                                    </div>
-                                </div>
-                                <div v-if="specialOfferDiscount > 0"
-                                    class="flex justify-between items-center mt-2 text-green-600 font-medium">
-                                    <span>Total Savings</span>
-                                    <span>-₦{{ specialOfferDiscount.toFixed(2) }}</span>
-                                </div>
-                            </div>
-                            <div v-else-if="hasValidOfferAccess" class="text-sm text-gray-600">
-                                No applicable offers for your cart items
-                            </div>
-                            <div v-else class="text-sm text-gray-600">
-                                <p>Redeem 500 pts to unlock exclusive deals</p>
-                                <div v-if="cluesBucksBalance >= 500" class="mt-2">
-                                    <button @click="handleSpecialOfferRedeem"
-                                        class="w-full text-center px-3 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 transition">
-                                        Unlock Special Offers
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="font-medium">Discount Coupon</span>
-                                <span v-if="cartStore.coupon"
-                                    class="px-2 py-1 bg-green-100 text-green-800 text-sm rounded-full">
-                                    Applied
-                                </span>
-                                <span v-else class="px-2 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">
-                                    None
-                                </span>
-                            </div>
-                            <div v-if="cartStore.coupon" class="text-sm text-gray-600">
-                                <div class="flex justify-between items-center">
-                                    <span>Code</span>
-                                    <span>{{ cartStore.coupon.code }}</span>
-                                </div>
-                                <div class="flex justify-between items-center mt-1">
-                                    <span>Discount</span>
-                                    <span class="text-green-600">₦{{ cartStore.discount.toFixed(2) }}</span>
-                                </div>
-                            </div>
-                            <div v-else class="text-sm text-gray-600">
-                                Redeem 1000 points for ₦1000 off
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <!-- Payment Methods moved to Summary -->
 
                 <!-- Order Items -->
                 <div class="bg-white shadow-md rounded-lg p-4 sm:p-6">
@@ -257,33 +112,112 @@
                         <span>Shipping fee</span>
                         <span>{{ shippingFee === 0 ? 'Free' : ` ₦ ${shippingFee.toFixed(2)}` }}</span>
                     </div>
-                    <div class="flex justify-between mb-4">
-                        <span>Promo codes</span>
-                        <div v-if="cartStore.coupon">
-                            <span>{{ cartStore.coupon.code }} applied</span>
-                            <button @click="removeCoupon" class="text-red-500 ml-2">Remove</button>
+
+                    <!-- Coupons -->
+                    <div class="border-t my-4 pt-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-medium">Coupon</span>
+                            <span v-if="cartStore.coupon" class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Applied</span>
                         </div>
-                        <div v-else class="flex items-center justify-end">
-                            <input v-model="promoCode" type="text" placeholder="Enter code"
-                                class="w-1/2 rounded-l px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <button @click="applyPromoCode(promoCode)"
-                                class="bg-blue-500 text-white px-4 py-[0.35em] rounded-r hover:bg-blue-600 transition duration-300 border border-blue-500">
-                                Apply
-                            </button>
+                         <div v-if="cartStore.coupon" class="bg-green-50 p-2 rounded text-sm">
+                             <div class="flex justify-between items-center">
+                                 <span class="font-medium text-green-700">{{ cartStore.coupon.code }}</span>
+                                 <button @click="removeCoupon" class="text-red-500 text-xs hover:underline">Remove</button>
+                             </div>
+                             <div v-if="discount > 0" class="flex justify-between mt-1 text-green-600">
+                                 <span>Savings</span>
+                                 <span>-₦{{ discount.toFixed(2) }}</span>
+                             </div>
+                         </div>
+                         <div v-else>
+                             <div class="flex items-center gap-2">
+                                 <input v-model="promoCode" type="text" placeholder="Code"
+                                     class="w-full rounded border px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-[#24a6bb]">
+                                 <button @click="applyPromoCode(promoCode)"
+                                     class="bg-[#24a6bb] text-white px-3 py-1 rounded text-sm hover:bg-[#1c8a9e]">
+                                     Apply
+                                 </button>
+                             </div>
+                             <p class="text-xs text-gray-500 mt-1">Redeem 1000 points for ₦1000 off</p>
+                         </div>
+                    </div>
+
+                    <!-- CluesBucks -->
+                    <div class="border-t my-4 pt-4">
+                        <div class="flex justify-between mb-2 items-center">
+                            <span class="font-medium">CluesBucks</span>
+                            <span class="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full">{{ availableCluesBucks }} pts</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-2">
+                             <input v-model="cluesBucksToUse" type="number" :max="cluesBucksBalance"
+                                 class="w-20 px-2 py-1 border rounded text-sm" :disabled="!cluesBucksBalance" placeholder="0" />
+                             <button @click="applyCluesBucks"
+                                 :disabled="!cluesBucksToUse || cluesBucksToUse > cluesBucksBalance"
+                                 class="bg-amber-500 text-white px-3 py-1 rounded text-sm hover:bg-amber-600 disabled:opacity-50">
+                                 Apply
+                             </button>
+                        </div>
+                        <div v-if="cluesBucksDiscount > 0" class="flex justify-between mt-2 text-green-600 text-sm">
+                            <span>Points Discount</span>
+                            <span>-₦{{ cluesBucksDiscount }}</span>
                         </div>
                     </div>
-                    <div v-if="hasValidOfferAccess" class="flex justify-between mb-4 text-green-600">
-                        <span>Special Offer Discount</span>
-                        <div class="flex items-center">
-                            <span class="mr-2">{{ bestSpecialOffer.discount }}% off</span>
-                            <span>-{{ specialOfferDiscount.toFixed(2) }} ₦</span>
+
+                    <!-- Special Offers -->
+                    <div class="border-t my-4 pt-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-medium">Special Offers</span>
+                            <span v-if="hasValidOfferAccess" class="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full">Active</span>
+                            <button v-else-if="cluesBucksBalance >= 500" @click="handleSpecialOfferRedeem" class="text-xs text-[#24a6bb] hover:underline">Unlock (500pts)</button>
                         </div>
+                        
+                        <div v-if="hasValidOfferAccess && availableOffers.length">
+                            <div v-for="offer in availableOffers" :key="offer._id" class="text-sm text-gray-600 flex justify-between py-1">
+                                <span>{{ offer.title }}</span>
+                                <span class="text-amber-600 font-medium">{{ offer.discount }}% off</span>
+                            </div>
+                            <div v-if="specialOfferDiscount > 0" class="flex justify-between mt-1 text-green-600 font-medium text-sm">
+                                <span>Offer Savings</span>
+                                <span>-₦{{ specialOfferDiscount.toFixed(2) }}</span>
+                            </div>
+                        </div>
+                        <p v-else-if="hasValidOfferAccess" class="text-xs text-gray-500">No offers for cart items</p>
+                        <p v-else class="text-xs text-gray-500">Unlock exclusive deals on tech & fashion</p>
                     </div>
-                    <div v-if="discount > 0" class="flex justify-between mb-4 text-green-600">
-                        <span>Discount</span>
-                        <span>-{{ discount.toFixed(2) }} ₦</span>
+
+                    <!-- Payment Methods -->
+                    <div class="border-t my-4 pt-4">
+                         <h3 class="font-semibold mb-3">Payment Method</h3>
+                         <div class="space-y-3">
+                             <label class="flex items-center cursor-pointer p-2 border rounded-lg hover:border-[#24a6bb] transition" :class="{'border-[#24a6bb] bg-cyan-50': paymentMethod === 'Paystack'}">
+                                 <input type="radio" value="Paystack" v-model="paymentMethod" class="w-4 h-4 text-[#24a6bb] focus:ring-[#24a6bb]">
+                                 <div class="ml-3 flex items-center gap-2">
+                                     <img :src="paymentImages.paystackLogo" alt="Paystack" class="h-4">
+                                     <span class="text-sm font-medium">Paystack</span>
+                                 </div>
+                             </label>
+
+                             <label class="flex items-center cursor-pointer p-2 border rounded-lg hover:border-[#24a6bb] transition" :class="{'border-[#24a6bb] bg-cyan-50': paymentMethod === 'OPay'}">
+                                 <input type="radio" value="OPay" v-model="paymentMethod" class="w-4 h-4 text-[#24a6bb] focus:ring-[#24a6bb]">
+                                 <div class="ml-3 flex items-center gap-2">
+                                     <img :src="paymentImages.opayLogo" alt="OPay" class="h-4">
+                                     <span class="text-sm font-medium">OPay</span>
+                                 </div>
+                             </label>
+                             
+                             <!-- Disabled options compacted -->
+                             <div class="flex gap-2 opacity-50 text-xs">
+                                 <div class="flex items-center gap-1 border px-2 py-1 rounded">
+                                     <img :src="paymentImages.orangeMoney" class="h-3 grayscale"> Orange Money
+                                 </div>
+                                 <div class="flex items-center gap-1 border px-2 py-1 rounded">
+                                      <img :src="paymentImages.payDunyaLogo" class="h-3 grayscale"> PayDunya
+                                 </div>
+                             </div>
+                         </div>
                     </div>
-                    <div class="flex justify-between font-bold text-lg mb-4">
+
+                    <div class="border-t pt-4 flex justify-between font-bold text-lg mb-4">
                         <span>Total</span>
                         <span>{{ total.toFixed(2) }} ₦</span>
                     </div>
@@ -292,21 +226,16 @@
                             exchangeRate % 1) * 100) / 100) * 1.01).toFixed(2) }}</span>
                     </div>
                     <button @click="placeOrder" :disabled="isProcessingPayment"
-                        class="w-full bg-[#24a6bb] text-white py-2 rounded-lg hover:bg-[#1c8a9e] transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed">
-                        {{ isProcessingPayment ? 'Processing...' : 'Place order' }}
+                        class="w-full bg-[#24a6bb] text-white py-3 rounded-lg hover:bg-[#1c8a9e] transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium shadow-md">
+                        {{ isProcessingPayment ? 'Processing...' : 'Place Order' }}
                     </button>
-                    <p class="text-sm text-gray-600 mt-4 text-center">
-                        Upon clicking 'Place Order', I confirm I have read and acknowledged all terms and policies.
+                    <p class="text-xs text-gray-500 mt-4 text-center">
+                        By placing order, you agree to our terms.
                     </p>
-                    <div class="mt-6">
-                        <!-- <h3 class="font-semibold mb-2">Bruthol</h3> -->
-                        <img src="../assets/images/logo.png" alt="logo" class=" h-10 pb-2 cursor-not-allowed">
-                        <p class="text-sm text-gray-600">Bruthol keeps your information and payment safe</p>
-                        <div class="flex flex-wrap justify-between mt-2">
-                            <div class="flex space-x-2">
-                                <img :src="paymentImages.paystackLogo" alt="Paystack" class="h-6">
-                                <img :src="paymentImages.opayLogo" alt="OPay" class="h-6">
-                            </div>
+                    <div class="mt-4 flex justify-center opacity-70">
+                        <div class="flex space-x-2">
+                            <img :src="paymentImages.paystackLogo" alt="Paystack" class="h-5">
+                            <img :src="paymentImages.opayLogo" alt="OPay" class="h-5">
                         </div>
                     </div>
                 </div>
@@ -1092,6 +1021,8 @@ const paymentImages = {
         position: sticky;
         top: 6rem;
         height: fit-content;
+        max-height: calc(100vh - 7rem);
+        overflow-y: auto;
     }
 }
 
