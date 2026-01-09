@@ -73,49 +73,24 @@
                     </div>
 
 
-                    <div class="flex items-start mb-4">
-                        <input type="radio" id="orangeMoney" name="paymentMethod" value="OrangeMoney"
-                            v-model="paymentMethod" class="mr-2 custom-checkbox">
-                        <label for="orangeMoney" class="-mt-[5px]">
+                    <div class="flex items-start mb-4 opacity-60">
+                        <input type="radio" id="orangeMoney" name="paymentMethod" value="OrangeMoney" disabled
+                            class="mr-2 custom-checkbox cursor-not-allowed">
+                        <label for="orangeMoney" class="-mt-[5px] cursor-not-allowed">
                             <div class="flex items-center space-x-2">
-                                <img :src="paymentImages.orangeMoney" alt="Orange Money" class="h-5">
-                                <span class="mr-2 text-sm font-medium">Pay with Orange Money</span>
+                                <img :src="paymentImages.orangeMoney" alt="Orange Money" class="h-5 grayscale">
+                                <span class="mr-2 text-sm font-medium text-gray-500">Pay with Orange Money <span class="text-xs bg-gray-200 px-2 py-0.5 rounded-full ml-2">Coming Soon</span></span>
                             </div>
                         </label>
                     </div>
 
-                    <div class="flex items-start mb-4">
-                        <input type="radio" id="payDunya" name="paymentMethod" value="PayDunya" v-model="paymentMethod"
-                            class="mr-2 custom-checkbox">
-                        <label for="payDunya" class="-mt-[5px]">
+                    <div class="flex items-start mb-4 opacity-60">
+                        <input type="radio" id="payDunya" name="paymentMethod" value="PayDunya" disabled
+                            class="mr-2 custom-checkbox cursor-not-allowed">
+                        <label for="payDunya" class="-mt-[5px] cursor-not-allowed">
                             <div class="flex items-center space-x-2">
-                                <img :src="paymentImages.payDunyaLogo" alt="PayDunya" class="h-5">
-                                <span class="mr-2 text-sm font-medium">Pay with PayDunya</span>
-                            </div>
-                        </label>
-                    </div>
-
-                    <div v-if="['OrangeMoney', 'PayDunya'].includes(paymentMethod)" class="mb-4">
-                        <label for="customerPhone" class="block text-sm font-medium text-gray-700">
-                            Phone Number (e.g., {{ paymentMethod === 'OrangeMoney' ? '+221xxxxxxxxx' : '+234xxxxxxxxx'
-                            }})
-                        </label>
-                        <input v-model="customerPhone" id="customerPhone" type="tel"
-                            placeholder="Enter your phone number" required class="input-field" />
-                    </div>
-
-                    <div class="flex items-start mb-4">
-                        <input type="radio" id="newCard" name="paymentMethod" value="newCard" v-model="paymentMethod"
-                            class="mr-2 custom-checkbox">
-                        <label for="newCard" class="-mt-[5px]">
-                            <div class="flex items-center space-x-2">
-                                <CreditCard class="w-5 h-5" />
-                                <span class="mr-2 text-sm font-medium">Add a new card</span>
-                            </div>
-                            <div class="flex flex-wrap items-center space-x-2 mt-2">
-                                <img :src="paymentImages.visaLogo" alt="Visa" class="h-5 mb-2">
-                                <img :src="paymentImages.mastercardLogo" alt="Mastercard" class="h-5 mb-2">
-                                <img :src="paymentImages.applePay" alt="Apple Pay" class="h-5 mb-2">
+                                <img :src="paymentImages.payDunyaLogo" alt="PayDunya" class="h-5 grayscale">
+                                <span class="mr-2 text-sm font-medium text-gray-500">Pay with PayDunya <span class="text-xs bg-gray-200 px-2 py-0.5 rounded-full ml-2">Coming Soon</span></span>
                             </div>
                         </label>
                     </div>
@@ -328,11 +303,10 @@
                         <img src="../assets/images/logo.png" alt="logo" class=" h-10 pb-2 cursor-not-allowed">
                         <p class="text-sm text-gray-600">Bruthol keeps your information and payment safe</p>
                         <div class="flex flex-wrap justify-between mt-2">
-                            <img :src="paymentImages.applePay" alt="Apple Pay" class="h-8 mb-2">
-                            <img :src="paymentImages.googlePay" alt="Google Pay" class="h-8 mb-2">
-                            <img :src="paymentImages.paypalLogo" alt="Paypal" class="h-8 mb-2">
-                            <img :src="paymentImages.orangeMoney" alt="Orange Money" class="h-8 mb-2">
-                            <img :src="paymentImages.payDunyaLogo" alt="PayDunya" class="h-8 mb-2">
+                            <div class="flex space-x-2">
+                                <img :src="paymentImages.paystackLogo" alt="Paystack" class="h-6">
+                                <img :src="paymentImages.opayLogo" alt="OPay" class="h-6">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -505,7 +479,7 @@ const loadCheckoutData = async () => {
         await Promise.all([
             addressStore.fetchUserAddresses(),
             cartStore.fetchCart(),
-            productStore.fetchProducts(),
+            // productStore.fetchProducts(),
             cluesBucksStore.initialize()
         ]);
         if (addressStore.addresses.length > 0) {
