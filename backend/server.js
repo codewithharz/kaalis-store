@@ -41,7 +41,7 @@ const orangeMoneyRoutes = require("./routes/orangeMoneyRoutes");
 const payoutTestRoutes = require("./routes/payoutTestRoutes");
 const opayRoutes = require("./routes/opayRoutes");
 const vendorPayoutRoutes = require("./routes/vendorPayoutRoutes");
-const { initPayoutCron } = require("./config/cronJobs");
+// const { initPayoutCron } = require("./config/cronJobs"); // REMOVED: Cron disabled, using manual processing
 const {
   loggerMiddleware,
   errorLogger,
