@@ -67,4 +67,4 @@ doc.md
 
 # Windows specific files
 Thumbs.db
-ehthumbs.db
+ehthumbs.db*.json

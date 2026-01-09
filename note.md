@@ -3046,3 +3046,67 @@ module.exports = {
 initPayoutCron,
 processPayouts: () => payoutService.processVendorPayouts(),
 };
+
+
+
+
+<!--  -->
+<!--  -->
+<!--  -->
+
+this is what I found out from our old vercel build (Framework Settings)
+
+Production Overrides
+
+Build Command: npm run build
+Output Directory: frontend/dist
+
+Project Settings
+
+Framework Preset: Vue.js
+Build Command: npm run build or vue-cli-service build
+Output Directory: dist
+install command: yarn install, npm install, pnpm install, burn install
+Development Command: vue-cli-service serve
+
+Root Directory
+The directory within your project, where your code is located. Leave this field empty if your code is not located in a subdirectory: empty field
+
+Node.js Version
+The version of Node.js that is used in the Build Step and for Serverless Functions. A new Deployment is required for your changes to take effect.
+
+20x
+
+
+while our failing deploy is using:
+
+Production Overrides
+
+Missing Build Command: npm run build
+Output Directory: dist
+
+Project Settings
+
+I update to Framework Preset: Vue.js
+Build Command: npm run build
+Output Directory: frontend/dist
+install command: npm install --prefix=..
+Development Command: vue-cli-service serve
+
+Root Directory
+The directory within your project, where your code is located. Leave this field empty if your code is not located in a subdirectory: frontend
+
+Node.js Version
+The version of Node.js that is used in the Build Step and for Serverless Functions. A new Deployment is required for your changes to take effect.
+
+20x
+
+
+so, I have delete the deployed project and try to deploy it again,
+
+but we cannot choose Vue.js as a framework preset,
+in the Root Directory, we cannot edit the Build Command and Output Directory
+
+sp, what do we do,
+
+check /Users/harz/Downloads/Bruthol/kaalis-store/kaalis-store-master very careful and see what we have modified in our /Users/harz/Downloads/Bruthol/kaalis-store codes 

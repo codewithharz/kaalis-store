@@ -15,7 +15,7 @@ This guide will help you transfer your custom domain from your old Vercel accoun
 
 Before starting, ensure you have:
 - [ ] Access to both Vercel accounts (old and new)
-- [ ] Your custom domain name (e.g., `kaalis-store.com`)
+- [ ] Your custom domain name (e.g., `bruthol.com`)
 - [ ] Access to your domain registrar (where you bought the domain)
 - [ ] The new deployment is working at `kaalis-store-frontend.vercel.app`
 
@@ -43,7 +43,7 @@ Before starting, ensure you have:
 2. Go to your new project: `kaalis-store-frontend`
 3. Navigate to **Settings → Domains**
 4. Click **Add Domain**
-5. Enter your custom domain (e.g., `kaalis-store.com`)
+5. Enter your custom domain (e.g., `bruthol.com`)
 6. Click **Add**
 
 Vercel will now show you DNS configuration instructions.
