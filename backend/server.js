@@ -390,12 +390,16 @@ if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
 app.use("/api/admin/login", adminLoginLimiter);
 
 // Initialize cron jobs
-try {
-  initPayoutCron();
-  console.log("✅ Payout cron job initialized successfully");
-} catch (error) {
-  console.error("❌ Failed to initialize payout cron:", error);
-}
+// DISABLED: Cron job removed to reduce server costs
+// Payouts are now processed manually via admin dashboard
+// See: /api/admin/process-payouts endpoint
+// try {
+//   initPayoutCron();
+//   console.log("✅ Payout cron job initialized successfully");
+// } catch (error) {
+//   console.error("❌ Failed to initialize payout cron:", error);
+// }
+console.log("ℹ️  Automatic payout cron is disabled. Use manual processing via admin API.");
 
 // Error handling middleware
 app.use(errorLogger);
