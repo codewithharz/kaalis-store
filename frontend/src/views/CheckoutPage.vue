@@ -1084,44 +1084,18 @@ const paymentImages = {
 }
 
 @media (min-width: 1024px) {
-    .checkout-container {
-        height: calc(100vh - 100px);
-        overflow: hidden;
-    }
-
-    .checkout-content {
-        height: 100%;
-        overflow: hidden;
-    }
-
-    .checkout-main-content {
-        overflow-y: auto;
-        max-height: 100%;
-        padding-right: 1rem;
-    }
-
     .checkout-summary {
         position: relative;
     }
 
     .sticky-summary {
         position: sticky;
-        top: 1rem;
-        max-height: calc(100vh - 120px);
-        overflow-y: auto;
+        top: 6rem;
+        height: fit-content;
     }
 }
 
-/* Hide scrollbar for Chrome, Safari and Opera */
-.checkout-main-content::-webkit-scrollbar {
-    display: none;
-}
 
-/* Hide scrollbar for IE, Edge and Firefox */
-.checkout-main-content {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
 
 .description-container {
     position: relative;
