@@ -43,64 +43,152 @@
 
             <!-- Sidebar Filter -->
             <div :class="[
-                'lg:w-1/5 xl:w-1/6 bg-gray-50 rounded-lg p-3 sm:p-4 transition-all duration-300',
+                'lg:w-1/5 xl:w-64 flex-shrink-0 bg-white border border-gray-100 rounded-xl shadow-sm h-fit p-5 transition-all duration-300',
                 { 'hidden lg:block': !showFilters },
                 { 'block': showFilters }
             ]">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="font-bold text-sm sm:text-base text-gray-800">Filters</h2>
-                    <button @click="clearFilters"
-                        class="text-blue-500 hover:text-blue-700 text-xs sm:text-sm transition duration-300 font-medium">
+                <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
+                    <h2 class="font-bold text-gray-900">Filters</h2>
+                    <button @click="clearFilters" v-if="selectedPriceRanges.length || selectedDiscountRanges.length || selectedCategories.length || selectedBrands.length || selectedRatings.length"
+                        class="text-blue-600 hover:text-blue-800 text-xs font-semibold transition-colors">
                         Clear All
                     </button>
                 </div>
 
                 <!-- Price Filter -->
-                <div class="mb-6">
-                    <h3 class="font-semibold mb-3 text-sm text-gray-700 flex items-center">
-                        <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1">
-                            </path>
-                        </svg>
-                        Price Range
-                    </h3>
-                    <div class="space-y-2">
-                        <div v-for="(range, index) in priceCounts" :key="index"
-                            class="flex items-center text-xs sm:text-sm hover:bg-white p-2 rounded transition-colors">
-                            <input type="checkbox" :id="'price-' + index" v-model="selectedPriceRanges"
-                                :value="range.value"
-                                class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                            <label :for="'price-' + index" class="flex-1 cursor-pointer text-gray-700">
-                                {{ range.label }}
-                                <span class="text-gray-500 font-medium">({{ range.count }})</span>
-                            </label>
+                <div class="mb-5 pb-5 border-b border-gray-50 last:border-0 last:pb-0">
+                    <details open class="group">
+                        <summary class="flex justify-between items-center font-semibold text-sm text-gray-800 cursor-pointer list-none mb-3">
+                            <span>Price Range</span>
+                            <ChevronDown class="w-4 h-4 text-gray-400 transition-transform duration-200 group-open:rotate-180" />
+                        </summary>
+                        <div class="space-y-2.5 pt-1">
+                            <div v-for="(range, index) in priceCounts" :key="index"
+                                class="flex items-center text-sm group/item">
+                                <input type="checkbox" :id="'price-' + index" v-model="selectedPriceRanges"
+                                    :value="range.value"
+                                    class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer">
+                                <label :for="'price-' + index" class="flex-1 cursor-pointer text-gray-600 group-hover/item:text-gray-900 transition-colors">
+                                    {{ range.label }}
+                                    <span class="text-gray-400 text-xs ml-1">({{ range.count }})</span>
+                                </label>
+                            </div>
                         </div>
-                    </div>
+                    </details>
                 </div>
 
                 <!-- Discount Filter -->
-                <div class="mb-4">
-                    <h3 class="font-semibold mb-3 text-sm text-gray-700 flex items-center">
-                        <svg class="w-4 h-4 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
-                            </path>
-                        </svg>
-                        Discount
-                    </h3>
-                    <div class="space-y-2">
-                        <div v-for="(range, index) in discountCounts" :key="index"
-                            class="flex items-center text-xs sm:text-sm hover:bg-white p-2 rounded transition-colors">
-                            <input type="checkbox" :id="'discount-' + index" v-model="selectedDiscountRanges"
-                                :value="range.value"
-                                class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                            <label :for="'discount-' + index" class="flex-1 cursor-pointer text-gray-700">
-                                {{ range.label }}
-                                <span class="text-gray-500 font-medium">({{ range.count }})</span>
-                            </label>
+                <div class="mb-5 pb-5 border-b border-gray-50 last:border-0 last:pb-0">
+                    <details open class="group">
+                        <summary class="flex justify-between items-center font-semibold text-sm text-gray-800 cursor-pointer list-none mb-3">
+                             <span>Discount</span>
+                             <ChevronDown class="w-4 h-4 text-gray-400 transition-transform duration-200 group-open:rotate-180" />
+                        </summary>
+                        <div class="space-y-2.5 pt-1">
+                            <div v-for="(range, index) in discountCounts" :key="index"
+                                class="flex items-center text-sm group/item">
+                                <input type="checkbox" :id="'discount-' + index" v-model="selectedDiscountRanges"
+                                    :value="range.value"
+                                    class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer">
+                                <label :for="'discount-' + index" class="flex-1 cursor-pointer text-gray-600 group-hover/item:text-gray-900 transition-colors">
+                                    {{ range.label }}
+                                    <span class="text-gray-400 text-xs ml-1">({{ range.count }})</span>
+                                </label>
+                            </div>
                         </div>
-                    </div>
+                    </details>
+                </div>
+
+                <!-- Category Filter (Hierarchical) -->
+                <div v-if="relevantCategoryTree.length > 0" class="mb-5 pb-5 border-b border-gray-50 last:border-0 last:pb-0">
+                    <details open class="group">
+                        <summary class="flex justify-between items-center font-semibold text-sm text-gray-800 cursor-pointer list-none mb-3">
+                             <span>Categories</span>
+                             <ChevronDown class="w-4 h-4 text-gray-400 transition-transform duration-200 group-open:rotate-180" />
+                        </summary>
+                        <div class="space-y-3 pt-1">
+                             <div v-for="cat in relevantCategoryTree" :key="cat._id">
+                                 <!-- Level 1 -->
+                                 <div class="flex items-center text-sm group/item mb-1">
+                                     <input type="checkbox" :id="'cat-' + cat._id" :value="cat._id" v-model="selectedCategories"
+                                         class="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer">
+                                     <label :for="'cat-' + cat._id" class="flex-1 cursor-pointer text-gray-700 font-medium group-hover/item:text-gray-900">
+                                         {{ cat.name }} <span class="text-gray-400 text-xs">({{ cat.count }})</span>
+                                     </label>
+                                 </div>
+                                 
+                                 <!-- Level 2 -->
+                                 <div v-if="cat.children && cat.children.length" class="ml-5 border-l border-gray-200 pl-3 space-y-2 mt-1">
+                                     <div v-for="sub in cat.children" :key="sub._id">
+                                         <div class="flex items-center text-sm group/sub">
+                                             <input type="checkbox" :id="'cat-' + sub._id" :value="sub._id" v-model="selectedCategories"
+                                                  class="mr-2 h-3.5 w-3.5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer">
+                                             <label :for="'cat-' + sub._id" class="flex-1 cursor-pointer text-gray-600 group-hover/sub:text-gray-900">
+                                                 {{ sub.name }} <span class="text-gray-400 text-xs">({{ sub.count }})</span>
+                                             </label>
+                                         </div>
+
+                                         <!-- Level 3 -->
+                                         <div v-if="sub.children && sub.children.length" class="ml-5 border-l border-gray-200 pl-3 space-y-1 mt-1">
+                                              <div v-for="leaf in sub.children" :key="leaf._id" class="flex items-center text-xs text-gray-500 group/leaf py-0.5">
+                                                   <input type="checkbox" :id="'cat-' + leaf._id" :value="leaf._id" v-model="selectedCategories"
+                                                        class="mr-2 h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer">
+                                                   <label :for="'cat-' + leaf._id" class="flex-1 cursor-pointer group-hover/leaf:text-gray-800 transition-colors">
+                                                       {{ leaf.name }} <span class="text-gray-300 text-[10px]">({{ leaf.count }})</span>
+                                                   </label>
+                                              </div>
+                                         </div>
+                                     </div>
+                                 </div>
+                             </div>
+                        </div>
+                    </details>
+                </div>
+
+                <!-- Brand Filter -->
+                <div v-if="brandCounts.length > 0" class="mb-5 pb-5 border-b border-gray-50 last:border-0 last:pb-0">
+                     <details open class="group">
+                         <summary class="flex justify-between items-center font-semibold text-sm text-gray-800 cursor-pointer list-none mb-3">
+                              <span>Brand</span>
+                              <ChevronDown class="w-4 h-4 text-gray-400 transition-transform duration-200 group-open:rotate-180" />
+                         </summary>
+                         <div class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+                             <div v-for="(brand, index) in brandCounts" :key="index"
+                                 class="flex items-center text-sm group/item">
+                                 <input type="checkbox" :id="'brand-' + index" v-model="selectedBrands"
+                                     :value="brand.name"
+                                     class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer">
+                                 <label :for="'brand-' + index" class="flex-1 cursor-pointer text-gray-600 group-hover/item:text-gray-900 transition-colors">
+                                     {{ brand.name }}
+                                     <span class="text-gray-400 text-xs ml-1">({{ brand.count }})</span>
+                                 </label>
+                             </div>
+                         </div>
+                     </details>
+                </div>
+
+                <!-- Rating Filter -->
+                <div class="mb-5 pb-5 border-b border-gray-50 last:border-0 last:pb-0">
+                     <details open class="group">
+                         <summary class="flex justify-between items-center font-semibold text-sm text-gray-800 cursor-pointer list-none mb-3">
+                              <span>Rating</span>
+                              <ChevronDown class="w-4 h-4 text-gray-400 transition-transform duration-200 group-open:rotate-180" />
+                         </summary>
+                         <div class="space-y-2">
+                             <div v-for="rating in [4, 3, 2, 1]" :key="rating"
+                                 class="flex items-center text-sm group/item">
+                                 <input type="checkbox" :id="'rating-' + rating" v-model="selectedRatings"
+                                     :value="rating"
+                                     class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer">
+                                 <label :for="'rating-' + rating" class="flex-1 cursor-pointer text-gray-600 group-hover/item:text-gray-900 flex items-center">
+                                     <div class="flex text-yellow-400 mr-2">
+                                         <Star v-for="i in 5" :key="i" class="w-3.5 h-3.5" :class="i <= rating ? 'fill-current' : 'text-gray-300'" />
+                                     </div>
+                                     <span class="text-xs">& Up</span>
+                                 </label>
+                             </div>
+                         </div>
+                     </details>
                 </div>
             </div>
 
@@ -178,14 +266,15 @@ import { ref, onMounted, computed } from 'vue';
 // import { useRoute } from 'vue-router';
 import { useRoute, useRouter } from 'vue-router';
 import { useSellerStore } from '../store/sellerStore.js';
-import { Shirt, ShoppingCart, Heart, Star, Search, Camera } from 'lucide-vue-next';
+import { useProductStore } from '../store/productStore.js';
+import { Shirt, ShoppingCart, Heart, Star, Search, Camera, ChevronDown } from 'lucide-vue-next';
 import CustomImage from './CustomImage.vue';
 import ProductCard from './ProductCard.vue';
 
 export default {
     name: 'SellerProducts',
     components: {
-        Shirt, ShoppingCart, Heart, Star, Search, Camera,
+        Shirt, ShoppingCart, Heart, Star, Search, Camera, ChevronDown,
         CustomImage, ProductCard
     },
     props: ['sellerId'],
@@ -198,11 +287,15 @@ export default {
         const route = useRoute();
         const router = useRouter();
         const sellerStore = useSellerStore();
+        const productStore = useProductStore();
         const products = ref([]);
         const sortOption = ref('');
         const searchQuery = ref('');
         const selectedPriceRanges = ref([]);
         const selectedDiscountRanges = ref([]);
+        const selectedCategories = ref([]);
+        const selectedBrands = ref([]);
+        const selectedRatings = ref([]);
 
         const fetchProducts = async () => {
             try {
@@ -221,8 +314,11 @@ export default {
             return description.length > maxLength ? description.substring(0, maxLength) + '...' : description;
         };
 
-        onMounted(() => {
-            fetchProducts();
+        onMounted(async () => {
+            await Promise.all([
+                fetchProducts(),
+                productStore.fetchCategories()
+            ]);
         });
 
         const viewProduct = (productId) => {
@@ -231,6 +327,42 @@ export default {
 
         const filteredAndSortedProducts = computed(() => {
             if (!Array.isArray(products.value)) return [];
+
+            // Helper to get all descendant IDs for a given category ID from the store tree
+            const getDescendantIds = (rootId, nodes) => {
+                let ids = [];
+                for (const node of nodes) {
+                    if (node._id === rootId) {
+                         // Found the node, collect all its children recursively
+                         const collect = (n) => {
+                             let cIds = [];
+                             if (n.children) {
+                                 for (const child of n.children) {
+                                     cIds.push(child._id);
+                                     cIds = cIds.concat(collect(child));
+                                 }
+                             }
+                             return cIds;
+                         };
+                         return collect(node);
+                    }
+                    if (node.children) {
+                        const found = getDescendantIds(rootId, node.children);
+                        if (found.length) return found;
+                    }
+                }
+                return ids;
+            };
+            
+            // Pre-calculate valid IDs for selected categories (including their descendants)
+            let validCategoryIds = new Set();
+            if (selectedCategories.value.length > 0 && productStore.categories) {
+                selectedCategories.value.forEach(selId => {
+                    validCategoryIds.add(selId);
+                    const descendants = getDescendantIds(selId, productStore.categories);
+                    descendants.forEach(d => validCategoryIds.add(d));
+                });
+            }
 
             let filteredProducts = products.value.filter(product => {
                 if (!product) return false;
@@ -261,7 +393,27 @@ export default {
 
                 let searchMatch = product.name && product.name.toLowerCase().includes(searchQuery.value.toLowerCase());
 
-                return priceMatch && discountMatch && searchMatch;
+                // Category Filter (Recursive)
+                let categoryMatch = true;
+                if (selectedCategories.value.length > 0) {
+                     const productCatId = typeof product.category === 'object' ? product.category._id : product.category;
+                     categoryMatch = validCategoryIds.has(productCatId);
+                }
+
+                // Brand Filter
+                let brandMatch = true;
+                if (selectedBrands.value.length > 0) {
+                    brandMatch = selectedBrands.value.includes(product.brand);
+                }
+
+                // Rating Filter
+                let ratingMatch = true;
+                if (selectedRatings.value.length > 0) {
+                    const rating = product.averageRating || 0;
+                    ratingMatch = selectedRatings.value.some(r => rating >= r);
+                }
+
+                return priceMatch && discountMatch && searchMatch && categoryMatch && brandMatch && ratingMatch;
 
             }).map(product => ({
                 ...product,
@@ -292,6 +444,9 @@ export default {
         const clearFilters = () => {
             selectedPriceRanges.value = [];
             selectedDiscountRanges.value = [];
+            selectedCategories.value = [];
+            selectedBrands.value = [];
+            selectedRatings.value = [];
             searchQuery.value = '';
             sortOption.value = '';
         };
@@ -351,6 +506,63 @@ export default {
             });
         });
 
+        const brandCounts = computed(() => {
+            const counts = {};
+            products.value.forEach(p => {
+                if (p.brand) {
+                    counts[p.brand] = (counts[p.brand] || 0) + 1;
+                }
+            });
+            return Object.keys(counts).map(brand => ({
+                name: brand,
+                count: counts[brand]
+            })).sort((a, b) => b.count - a.count);
+        });
+
+        // Build Relevant Category Tree
+        // Filter global tree to only include nodes that have products (or children with products)
+        const relevantCategoryTree = computed(() => {
+            if (!productStore.categories || productStore.categories.length === 0) return [];
+            
+            // Map product counts by category ID
+            const counts = {};
+            products.value.forEach(p => {
+                const catId = typeof p.category === 'object' ? p.category._id : p.category;
+                if (catId) counts[catId] = (counts[catId] || 0) + 1;
+            });
+
+            // Recursive function to filter tree and attach counts
+            const filterTree = (nodes) => {
+                return nodes.map(node => {
+                     const children = node.children ? filterTree(node.children) : [];
+                     const selfCount = counts[node._id] || 0;
+                     const childrenCount = children.reduce((sum, c) => sum + c.totalCount, 0);
+                     const totalCount = selfCount + childrenCount; // Cumulative count? Or just self?
+                     // Usually filters show count of items in that specific category, OR items in that branch.
+                     // Let's use selfCount for checkbox.
+                     
+                     // Actually, if I select a parent, I expect to see its children.
+                     // The checkbox logic in `filteredAndSortedProducts` expects `includes(productCatId)`.
+                     // If I select a parent, I should probably select all children? Or the filter logic should handle "descendants".
+                     // For 3-level deep, let's keep it simple: Exact match for now.
+                     // But we only show the node if it (or children) has products.
+                     
+                     if (totalCount === 0) return null;
+
+                     return {
+                         ...node,
+                         children,
+                         count: selfCount, // displayed count
+                         totalCount // used for pruning
+                     };
+                }).filter(n => n !== null);
+            };
+
+            return filterTree(productStore.categories);
+        });
+        
+        const isCategorySelected = (id) => selectedCategories.value.includes(id);
+
         const showFilters = ref(false);
 
         const toggleFilters = () => {
@@ -369,6 +581,12 @@ export default {
             clearFilters,
             priceCounts,
             discountCounts,
+            brandCounts,
+            relevantCategoryTree,
+            selectedCategories,
+            selectedBrands,
+            selectedRatings,
+            isCategorySelected,
             sellerStore,
             viewProduct,
             showFilters,
@@ -413,19 +631,38 @@ export default {
 /* Enhanced mobile interactions */
 @media (max-width: 640px) {
 
-    /* Custom scrollbar for mobile */
+/* Custom scrollbar for mobile */
+    .custom-scrollbar::-webkit-scrollbar,
     ::-webkit-scrollbar {
         width: 3px;
     }
 
+    .custom-scrollbar::-webkit-scrollbar-track,
     ::-webkit-scrollbar-track {
         background: #f1f1f1;
     }
 
+    .custom-scrollbar::-webkit-scrollbar-thumb,
     ::-webkit-scrollbar-thumb {
         background: #c1c1c1;
         border-radius: 10px;
     }
+}
+
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 4px;
 }
 
 /* Smooth transitions */

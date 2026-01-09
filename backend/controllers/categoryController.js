@@ -149,11 +149,29 @@ exports.getProductsByCategory = async (req, res) => {
       return res.status(404).json({ message: "Category not found" });
     }
 
-    // Find products with this category and populate seller information
-    const products = await Product.find({ category: category._id })
+    // Helper to recursively get all descendant IDs
+    const getDescendantIds = async (parentId) => {
+      const children = await Category.find({ parent: parentId }).select("_id");
+      let ids = children.map((c) => c._id);
+      for (const child of children) {
+        ids = ids.concat(await getDescendantIds(child._id));
+      }
+      return ids;
+    };
+
+    // Get all category IDs (current + descendants)
+    const descendantIds = await getDescendantIds(category._id);
+    const allCategoryIds = [category._id, ...descendantIds];
+
+    console.log(
+      `Fetching products for category: ${category.name} (${allCategoryIds.length} categories included)`
+    );
+
+    // Find products with this category OR any subcategory
+    const products = await Product.find({ category: { $in: allCategoryIds } })
       .populate("seller", "name")
       .select(
-        "name description price images discount averageRating numberOfRatings"
+        "name description price images discount averageRating numberOfRatings brand"
       );
 
     // Get the full category path
