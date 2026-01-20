@@ -8,8 +8,8 @@ const ProductRating = require("../models/productRatingModel");
 const Category = require("../models/categoryModels");
 const mongoose = require("mongoose");
 
-const { bucket } = require("../utils/firebaseConfig");
-const { v4: uuidv4 } = require("uuid");
+
+// Removed Firebase and UUID imports as they are no longer used for product uploads
 
 // Add multiple products (bulk addition)
 exports.addProducts = async (req, res) => {

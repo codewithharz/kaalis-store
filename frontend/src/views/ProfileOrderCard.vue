@@ -128,6 +128,21 @@
               <h3 class="font-semibold text-gray-900 text-sm sm:text-lg leading-tight">
                 {{ product.product?.name || 'Product Name Not Available' }}
               </h3>
+              <!-- Add variant details -->
+              <div v-if="product.variant" class="text-xs sm:text-sm text-gray-500 mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                <span v-if="product.variant.color">
+                  Color: {{ typeof product.variant.color === 'object' ? product.variant.color.name :
+                    product.variant.color }}
+                </span>
+                <span v-for="(attr, attrIdx) in product.variant.attributes" :key="attrIdx">
+                  {{ attr.name }}: {{ attr.value }}
+                </span>
+                <!-- Fallback for legacy size field if not in attributes -->
+                <span
+                  v-if="product.variant.size && (!product.variant.attributes || !product.variant.attributes.some(a => a.name.toLowerCase() === 'size'))">
+                  Size: {{ product.variant.size }}
+                </span>
+              </div>
               <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                 <div class="flex items-center gap-2">
                   <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
@@ -312,6 +327,12 @@
               </div>
               <div class="flex-1">
                 <p class="font-semibold text-gray-900 text-sm sm:text-base">{{ product.product?.name }}</p>
+                <!-- Add variant details -->
+                <div v-if="product.variant" class="text-xs sm:text-sm text-gray-500 mt-1">
+                  <span v-if="product.variant.size">Size: {{ product.variant.size }}</span>
+                  <span v-if="product.variant.color" class="ml-2">Color: {{ typeof product.variant.color === 'object' ?
+                    product.variant.color.name : product.variant.color }}</span>
+                </div>
                 <div class="mt-2 space-y-1">
                   <div class="flex items-center gap-2 text-xs sm:text-sm">
                     <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
@@ -618,7 +639,7 @@
             <div class="text-xs sm:text-sm text-gray-600">
               <p class="font-semibold">Bruthol Marketplace</p>
               <p>Professional E-commerce Platform</p>
-              <p>support@bruthol.com | www.bruthol.com</p>
+              <p>brutholdigital@gmail.com | www.bruthol.com</p>
             </div>
           </div>
           <div class="text-center sm:text-right">
@@ -752,7 +773,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600">
             <div class="bg-white p-3 sm:p-4 rounded-lg border">
               <p class="font-semibold text-gray-800 mb-1">Customer Support</p>
-              <p>support@bruthol.com</p>
+              <p>brutholdigital@gmail.com</p>
               <p>+234 (0) 800-BRUTHOL</p>
             </div>
             <div class="bg-white p-3 sm:p-4 rounded-lg border">

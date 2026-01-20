@@ -40,8 +40,7 @@
 import { ref, onMounted } from 'vue';
 import { useProductStore } from '../store/productStore';
 import { useRoute, useRouter } from 'vue-router';
-import { storage } from '../utils/firebase';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import uploadService from '../services/uploadService';
 import { toast } from 'vue-sonner';
 
 export default {
@@ -82,27 +81,28 @@ export default {
             files.value = Array.from(event.target.files);
         };
 
-        const handleSubmit = async () => {
-            const tagsArray = form.value.tags.split(',').map(tag => tag.trim());
-            const productData = new FormData();
-
-            // Append all form fields to FormData
-            for (const [key, value] of Object.entries(form.value)) {
-                if (key !== 'tags' && key !== 'images') {
-                    productData.append(key, value);
-                }
-            }
-
-            productData.append('tags', JSON.stringify(tagsArray));
-
-            // Append new images
-            if (files.value.length) {
-                for (let i = 0; i < files.value.length; i++) {
-                    productData.append('images', files.value[i]);
-                }
-            }
-
+        const handleSubmit = async (event) => {
             try {
+                toast.loading('Saving product...');
+                
+                let imageUrls = form.value.images || [];
+
+                // Upload new files if any
+                if (files.value.length > 0) {
+                    const newUrls = await uploadService.uploadImages(files.value);
+                    imageUrls = [...imageUrls, ...newUrls];
+                }
+
+                const tagsArray = typeof form.value.tags === 'string' 
+                    ? form.value.tags.split(',').map(tag => tag.trim())
+                    : form.value.tags;
+
+                const productData = {
+                    ...form.value,
+                    images: imageUrls,
+                    tags: tagsArray
+                };
+
                 let result;
                 if (isEditing.value) {
                     result = await productStore.updateProduct(route.params.id, productData);
@@ -112,7 +112,6 @@ export default {
                     toast.success('Product created successfully');
                 }
 
-                // Wait for the store to update before navigating
                 await productStore.fetchProducts();
                 router.push('/account/my-products');
             } catch (error) {
@@ -122,19 +121,6 @@ export default {
         };
 
 
-        const uploadFiles = async () => {
-            const uploadedImageUrls = [];
-
-            for (const file of files.value) {
-                const fileName = `${Date.now()}_${file.name}`;
-                const fileRef = storageRef(storage, `products/${fileName}`);
-                await uploadBytes(fileRef, file);
-                const downloadURL = await getDownloadURL(fileRef);
-                uploadedImageUrls.push(downloadURL);
-            }
-
-            return uploadedImageUrls;
-        };
 
         return {
             form,

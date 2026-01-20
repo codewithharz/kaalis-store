@@ -37,6 +37,8 @@
                         </th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                             Product</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                            Variants</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Price
                         </th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
@@ -50,42 +52,111 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    <tr v-for="product in filteredProducts" :key="product._id">
-                        <td class="px-4 py-4 whitespace-nowrap">
-                            <input type="checkbox" v-model="selectedProducts" :value="product._id"
-                                class="rounded text-blue-600 focus:ring-blue-500" />
-                        </td>
-                        <td class="px-4 py-4 whitespace-nowrap">
-                            <input v-model="product.name"
-                                class="p-1 border rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-                        </td>
-                        <td class="px-4 py-4 whitespace-nowrap">
-                            <input v-model.number="product.price" type="number"
-                                class="p-1 border rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-                        </td>
-                        <td class="px-4 py-4 whitespace-nowrap">
-                            <input v-model.number="product.originalPrice" type="number"
-                                class="p-1 border rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-                        </td>
-                        <td class="px-4 py-4 whitespace-nowrap">
-                            <input v-model.number="product.stock" type="number" min="0"
-                                class="p-1 border rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-                        </td>
-                        <td class="px-4 py-4 whitespace-nowrap">
-                            <input v-model.number="product.discount" type="number" min="0" max="100"
-                                class="p-1 border rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-                        </td>
-                        <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                            <button @click="updateProduct(product)"
-                                class="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600 mr-2 transition duration-300 ease-in-out">
-                                Update
-                            </button>
-                            <button @click="editProduct(product)"
-                                class="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition duration-300 ease-in-out">
-                                Edit
-                            </button>
-                        </td>
-                    </tr>
+                    <template v-for="product in filteredProducts" :key="product._id">
+                        <tr :class="{ 'bg-blue-50': expandedProducts.includes(product._id) }">
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <input type="checkbox" v-model="selectedProducts" :value="product._id"
+                                    class="rounded text-blue-600 focus:ring-blue-500" />
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <div class="flex items-center gap-2">
+                                    <button v-if="product.variants?.length > 0" @click="toggleExpand(product._id)"
+                                        class="p-1 hover:bg-gray-200 rounded transition">
+                                        <ChevronDown
+                                            :class="{ 'transform rotate-180': expandedProducts.includes(product._id) }"
+                                            class="w-4 h-4 text-gray-600" />
+                                    </button>
+                                    <input v-model="product.name"
+                                        class="p-1 border rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                                </div>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ product.variants?.length || 0 }} variants
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <input v-model.number="product.price" type="number"
+                                    class="p-1 border rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <input v-model.number="product.originalPrice" type="number"
+                                    class="p-1 border rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <input v-model.number="product.stock" type="number" min="0"
+                                    class="p-1 border rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    :disabled="product.variants?.length > 0"
+                                    :title="product.variants?.length > 0 ? 'Stock is managed per variant' : ''" />
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <input v-model.number="product.discount" type="number" min="0" max="100"
+                                    class="p-1 border rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                                <button @click="updateProduct(product)"
+                                    class="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600 mr-2 transition duration-300 ease-in-out">
+                                    Update
+                                </button>
+                                <button @click="editProduct(product)"
+                                    class="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition duration-300 ease-in-out">
+                                    Edit
+                                </button>
+                            </td>
+                        </tr>
+                        <!-- Variants Table -->
+                        <tr v-if="expandedProducts.includes(product._id)" class="bg-gray-50">
+                            <td colspan="8" class="px-8 py-4">
+                                <div class="border rounded-lg bg-white p-4 shadow-inner">
+                                    <h4 class="font-bold text-sm mb-3 flex items-center gap-2">
+                                        <Shirt class="w-4 h-4 text-blue-500" />
+                                        Variants for {{ product.name }}
+                                    </h4>
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead>
+                                            <tr>
+                                                <th
+                                                    class="px-2 py-2 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                    Attributes</th>
+                                                <th
+                                                    class="px-2 py-2 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                    Color</th>
+                                                <th
+                                                    class="px-2 py-2 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                    Price</th>
+                                                <th
+                                                    class="px-2 py-2 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                    Stock</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-100">
+                                            <tr v-for="variant in product.variants" :key="variant._id">
+                                                <td class="px-2 py-2 text-xs">
+                                                    <span v-for="attr in variant.attributes" :key="attr.name"
+                                                        class="mr-2 inline-block bg-gray-100 px-1 py-0.5 rounded">
+                                                        {{ attr.name }}: {{ attr.value }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-2 py-2 text-xs flex items-center gap-2">
+                                                    <div v-if="variant.color?.hexCode"
+                                                        class="w-4 h-4 rounded-full border border-gray-200"
+                                                        :style="{ backgroundColor: variant.color.hexCode }"></div>
+                                                    {{ variant.color?.name || 'N/A' }}
+                                                </td>
+                                                <td class="px-2 py-2">
+                                                    <input v-model.number="variant.price" type="number"
+                                                        class="p-1 border rounded text-xs w-24 focus:ring-1 focus:ring-blue-500" />
+                                                </td>
+                                                <td class="px-2 py-2">
+                                                    <input v-model.number="variant.stock" type="number" min="0"
+                                                        @input="syncProductStock(product)"
+                                                        class="p-1 border rounded text-xs w-24 focus:ring-1 focus:ring-blue-500" />
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
                 </tbody>
             </table>
         </div>
@@ -140,7 +211,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useProductStore } from '../store/productStore';
 import { storeToRefs } from 'pinia';
-import { ChevronDown } from 'lucide-vue-next';
+import { ChevronDown, Shirt } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 
 export default {
@@ -158,6 +229,22 @@ export default {
         const selectAll = ref(false);
         const bulkUpdateAction = ref('increase');
         const bulkUpdateValue = ref(0);
+        const expandedProducts = ref([]);
+
+        const toggleExpand = (productId) => {
+            const index = expandedProducts.value.indexOf(productId);
+            if (index === -1) {
+                expandedProducts.value.push(productId);
+            } else {
+                expandedProducts.value.splice(index, 1);
+            }
+        };
+
+        const syncProductStock = (product) => {
+            if (product.variants?.length > 0) {
+                product.stock = product.variants.reduce((total, v) => total + (v.stock || 0), 0);
+            }
+        };
 
         const loadProductsForCategory = async () => {
             if (selectedCategory.value) {
@@ -204,7 +291,8 @@ export default {
                     price: product.price,
                     originalPrice: product.originalPrice,
                     stock: product.stock,
-                    discount: product.discount
+                    discount: product.discount,
+                    variants: product.variants
                 });
                 toast.success('Product updated successfully');
             } catch (error) {
@@ -318,7 +406,11 @@ export default {
             applyBulkUpdate,
             exportCSV,
             importCSV,
-            updateProduct
+            updateProduct,
+            expandedProducts,
+            toggleExpand,
+            syncProductStock,
+            Shirt
         };
     }
 };

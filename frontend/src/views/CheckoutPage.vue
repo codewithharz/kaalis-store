@@ -55,7 +55,8 @@
                     <div v-if="cartStore.items.length === 0" class="text-center py-4">
                         <p class="text-gray-600">Your cart is empty.</p>
                     </div>
-                    <div v-else v-for="item in cartStore.items" :key="item.product?._id || index"
+                    <div v-else v-for="(item, index) in cartStore.items"
+                        :key="(item.product?._id || '') + (item.variant?._id || '') + index"
                         class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
                         <div class="flex items-center mb-2 sm:mb-0">
                             <img v-if="item.product?.images?.length > 0" :src="item.product.images[0]"
@@ -68,6 +69,21 @@
                                     :title="item.product ? item.product.name : 'Product name unavailable'">
                                     {{ formatTitle(item.product ? item.product.name : 'Product name unavailable') }}
                                 </h3>
+                                <!-- Add variant details -->
+                                <div v-if="item.variant" class="text-sm text-gray-600 mb-1 flex flex-wrap gap-x-2">
+                                    <span v-if="item.variant.color">
+                                        Color: {{ typeof item.variant.color === 'object' ? item.variant.color.name :
+                                        item.variant.color }}
+                                    </span>
+                                    <span v-for="(attr, attrIdx) in item.variant.attributes" :key="attrIdx">
+                                        {{ attr.name }}: {{ attr.value }}
+                                    </span>
+                                    <!-- Fallback for legacy size field if not in attributes -->
+                                    <span
+                                        v-if="item.variant.size && (!item.variant.attributes || !item.variant.attributes.some(a => a.name.toLowerCase() === 'size'))">
+                                        Size: {{ item.variant.size }}
+                                    </span>
+                                </div>
                                 <div class="description-container">
                                     <p class="text-gray-600 text-sm"
                                         :class="{ 'expanded': item.product?.showFullDescription }">
@@ -117,45 +133,49 @@
                     <div class="border-t my-4 pt-4">
                         <div class="flex justify-between items-center mb-2">
                             <span class="font-medium">Coupon</span>
-                            <span v-if="cartStore.coupon" class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Applied</span>
+                            <span v-if="cartStore.coupon"
+                                class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Applied</span>
                         </div>
-                         <div v-if="cartStore.coupon" class="bg-green-50 p-2 rounded text-sm">
-                             <div class="flex justify-between items-center">
-                                 <span class="font-medium text-green-700">{{ cartStore.coupon.code }}</span>
-                                 <button @click="removeCoupon" class="text-red-500 text-xs hover:underline">Remove</button>
-                             </div>
-                             <div v-if="discount > 0" class="flex justify-between mt-1 text-green-600">
-                                 <span>Savings</span>
-                                 <span>-₦{{ discount.toFixed(2) }}</span>
-                             </div>
-                         </div>
-                         <div v-else>
-                             <div class="flex items-center gap-2">
-                                 <input v-model="promoCode" type="text" placeholder="Code"
-                                     class="w-full rounded border px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-[#24a6bb]">
-                                 <button @click="applyPromoCode(promoCode)"
-                                     class="bg-[#24a6bb] text-white px-3 py-1 rounded text-sm hover:bg-[#1c8a9e]">
-                                     Apply
-                                 </button>
-                             </div>
-                             <p class="text-xs text-gray-500 mt-1">Redeem 1000 points for ₦1000 off</p>
-                         </div>
+                        <div v-if="cartStore.coupon" class="bg-green-50 p-2 rounded text-sm">
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium text-green-700">{{ cartStore.coupon.code }}</span>
+                                <button @click="removeCoupon"
+                                    class="text-red-500 text-xs hover:underline">Remove</button>
+                            </div>
+                            <div v-if="discount > 0" class="flex justify-between mt-1 text-green-600">
+                                <span>Savings</span>
+                                <span>-₦{{ discount.toFixed(2) }}</span>
+                            </div>
+                        </div>
+                        <div v-else>
+                            <div class="flex items-center gap-2">
+                                <input v-model="promoCode" type="text" placeholder="Code"
+                                    class="w-full rounded border px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-[#24a6bb]">
+                                <button @click="applyPromoCode(promoCode)"
+                                    class="bg-[#24a6bb] text-white px-3 py-1 rounded text-sm hover:bg-[#1c8a9e]">
+                                    Apply
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Redeem 1000 points for ₦1000 off</p>
+                        </div>
                     </div>
 
                     <!-- CluesBucks -->
                     <div class="border-t my-4 pt-4">
                         <div class="flex justify-between mb-2 items-center">
                             <span class="font-medium">CluesBucks</span>
-                            <span class="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full">{{ availableCluesBucks }} pts</span>
+                            <span class="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full">{{
+                                availableCluesBucks }} pts</span>
                         </div>
                         <div class="flex items-center justify-between gap-2">
-                             <input v-model="cluesBucksToUse" type="number" :max="cluesBucksBalance"
-                                 class="w-20 px-2 py-1 border rounded text-sm" :disabled="!cluesBucksBalance" placeholder="0" />
-                             <button @click="applyCluesBucks"
-                                 :disabled="!cluesBucksToUse || cluesBucksToUse > cluesBucksBalance"
-                                 class="bg-amber-500 text-white px-3 py-1 rounded text-sm hover:bg-amber-600 disabled:opacity-50">
-                                 Apply
-                             </button>
+                            <input v-model="cluesBucksToUse" type="number" :max="cluesBucksBalance"
+                                class="w-20 px-2 py-1 border rounded text-sm" :disabled="!cluesBucksBalance"
+                                placeholder="0" />
+                            <button @click="applyCluesBucks"
+                                :disabled="!cluesBucksToUse || cluesBucksToUse > cluesBucksBalance"
+                                class="bg-amber-500 text-white px-3 py-1 rounded text-sm hover:bg-amber-600 disabled:opacity-50">
+                                Apply
+                            </button>
                         </div>
                         <div v-if="cluesBucksDiscount > 0" class="flex justify-between mt-2 text-green-600 text-sm">
                             <span>Points Discount</span>
@@ -167,16 +187,20 @@
                     <div class="border-t my-4 pt-4">
                         <div class="flex justify-between items-center mb-2">
                             <span class="font-medium">Special Offers</span>
-                            <span v-if="hasValidOfferAccess" class="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full">Active</span>
-                            <button v-else-if="cluesBucksBalance >= 500" @click="handleSpecialOfferRedeem" class="text-xs text-[#24a6bb] hover:underline">Unlock (500pts)</button>
+                            <span v-if="hasValidOfferAccess"
+                                class="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full">Active</span>
+                            <button v-else-if="cluesBucksBalance >= 500" @click="handleSpecialOfferRedeem"
+                                class="text-xs text-[#24a6bb] hover:underline">Unlock (500pts)</button>
                         </div>
-                        
+
                         <div v-if="hasValidOfferAccess && availableOffers.length">
-                            <div v-for="offer in availableOffers" :key="offer._id" class="text-sm text-gray-600 flex justify-between py-1">
+                            <div v-for="offer in availableOffers" :key="offer._id"
+                                class="text-sm text-gray-600 flex justify-between py-1">
                                 <span>{{ offer.title }}</span>
                                 <span class="text-amber-600 font-medium">{{ offer.discount }}% off</span>
                             </div>
-                            <div v-if="specialOfferDiscount > 0" class="flex justify-between mt-1 text-green-600 font-medium text-sm">
+                            <div v-if="specialOfferDiscount > 0"
+                                class="flex justify-between mt-1 text-green-600 font-medium text-sm">
                                 <span>Offer Savings</span>
                                 <span>-₦{{ specialOfferDiscount.toFixed(2) }}</span>
                             </div>
@@ -187,34 +211,40 @@
 
                     <!-- Payment Methods -->
                     <div class="border-t my-4 pt-4">
-                         <h3 class="font-semibold mb-3">Payment Method</h3>
-                         <div class="space-y-3">
-                             <label class="flex items-center cursor-pointer p-2 border rounded-lg hover:border-[#24a6bb] transition" :class="{'border-[#24a6bb] bg-cyan-50': paymentMethod === 'Paystack'}">
-                                 <input type="radio" value="Paystack" v-model="paymentMethod" class="w-4 h-4 text-[#24a6bb] focus:ring-[#24a6bb]">
-                                 <div class="ml-3 flex items-center gap-2">
-                                     <img :src="paymentImages.paystackLogo" alt="Paystack" class="h-4">
-                                     <span class="text-sm font-medium">Paystack</span>
-                                 </div>
-                             </label>
+                        <h3 class="font-semibold mb-3">Payment Method</h3>
+                        <div class="space-y-3">
+                            <label
+                                class="flex items-center cursor-pointer p-2 border rounded-lg hover:border-[#24a6bb] transition"
+                                :class="{ 'border-[#24a6bb] bg-cyan-50': paymentMethod === 'Paystack' }">
+                                <input type="radio" value="Paystack" v-model="paymentMethod"
+                                    class="w-4 h-4 text-[#24a6bb] focus:ring-[#24a6bb]">
+                                <div class="ml-3 flex items-center gap-2">
+                                    <img :src="paymentImages.paystackLogo" alt="Paystack" class="h-4">
+                                    <span class="text-sm font-medium">Paystack</span>
+                                </div>
+                            </label>
 
-                             <label class="flex items-center cursor-pointer p-2 border rounded-lg hover:border-[#24a6bb] transition" :class="{'border-[#24a6bb] bg-cyan-50': paymentMethod === 'OPay'}">
-                                 <input type="radio" value="OPay" v-model="paymentMethod" class="w-4 h-4 text-[#24a6bb] focus:ring-[#24a6bb]">
-                                 <div class="ml-3 flex items-center gap-2">
-                                     <img :src="paymentImages.opayLogo" alt="OPay" class="h-4">
-                                     <span class="text-sm font-medium">OPay</span>
-                                 </div>
-                             </label>
-                             
-                             <!-- Disabled options compacted -->
-                             <div class="flex gap-2 opacity-50 text-xs">
-                                 <div class="flex items-center gap-1 border px-2 py-1 rounded">
-                                     <img :src="paymentImages.orangeMoney" class="h-3 grayscale"> Orange Money
-                                 </div>
-                                 <div class="flex items-center gap-1 border px-2 py-1 rounded">
-                                      <img :src="paymentImages.payDunyaLogo" class="h-3 grayscale"> PayDunya
-                                 </div>
-                             </div>
-                         </div>
+                            <label
+                                class="flex items-center cursor-pointer p-2 border rounded-lg hover:border-[#24a6bb] transition"
+                                :class="{ 'border-[#24a6bb] bg-cyan-50': paymentMethod === 'OPay' }">
+                                <input type="radio" value="OPay" v-model="paymentMethod"
+                                    class="w-4 h-4 text-[#24a6bb] focus:ring-[#24a6bb]">
+                                <div class="ml-3 flex items-center gap-2">
+                                    <img :src="paymentImages.opayLogo" alt="OPay" class="h-4">
+                                    <span class="text-sm font-medium">OPay</span>
+                                </div>
+                            </label>
+
+                            <!-- Disabled options compacted -->
+                            <div class="flex gap-2 opacity-50 text-xs">
+                                <div class="flex items-center gap-1 border px-2 py-1 rounded">
+                                    <img :src="paymentImages.orangeMoney" class="h-3 grayscale"> Orange Money
+                                </div>
+                                <div class="flex items-center gap-1 border px-2 py-1 rounded">
+                                    <img :src="paymentImages.payDunyaLogo" class="h-3 grayscale"> PayDunya
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="border-t pt-4 flex justify-between font-bold text-lg mb-4">
@@ -616,6 +646,7 @@ const prepareItemsForPayload = (items, totalDiscount, subtotalAmount) => {
             product: item.product._id,     // Keep both for compatibility
             quantity: item.quantity,
             price: item.product.price,
+            variant: item.variant,     // Include variant
             vendorAmount,
             platformFee,
             vendorId: item.product.user    // Add vendorId

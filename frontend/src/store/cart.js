@@ -184,7 +184,7 @@ export const useCartStore = defineStore("cart", {
       }
     },
 
-    async updateQuantity(productId, newQuantity) {
+    async updateQuantity(productId, newQuantity, variantId = null) {
       const userStore = useUserStore();
       this.isLoading = true;
       this.error = null;
@@ -194,6 +194,7 @@ export const useCartStore = defineStore("cart", {
           `/cart/${productId}`,
           {
             quantity: newQuantity,
+            variantId,
           },
           {
             headers: {
@@ -221,13 +222,14 @@ export const useCartStore = defineStore("cart", {
       }
     },
 
-    async removeFromCart(productId) {
+    async removeFromCart(productId, variantId = null) {
       const userStore = useUserStore();
       this.isLoading = true;
       this.error = null;
 
       try {
         const response = await apiClient.delete(`/cart/${productId}`, {
+          params: { variantId },
           headers: {
             Authorization: `Bearer ${userStore.token}`,
           },
@@ -442,6 +444,7 @@ export const useCartStore = defineStore("cart", {
         items: this.items.map((item) => ({
           product: item.product._id,
           quantity: item.quantity,
+          variant: item.variant,
         })),
         couponCode: this.appliedCouponCode,
         totalAmount: this.totalAfterDiscount,

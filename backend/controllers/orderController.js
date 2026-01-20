@@ -151,7 +151,14 @@ const createOrder = async (req, res) => {
     const newOrder = new Order({
       user: userId,
       seller,
-      products,
+      products: products.map((p) => ({
+        product: p.product,
+        quantity: p.quantity,
+        price: p.price,
+        vendorAmount: p.vendorAmount,
+        platformFee: p.platformFee,
+        variant: p.variant, // Ensure variant is saved
+      })),
       subtotal,
       totalAmount: total, // Use total here
       shippingFee,

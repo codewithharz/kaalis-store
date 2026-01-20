@@ -51,7 +51,7 @@
                                 <p class="text-sm text-gray-600 font-bold">
                                     To save <span class="text-red-500">US ₦{{ shippingCost.toFixed(2) }}</span> shipping
                                     fee shop <span class="text-red-500">US ₦{{ minimumForFreeShipping.toFixed(2)
-                                    }}</span> more
+                                        }}</span> more
                                 </p>
                                 <p class="text-sm text-gray-600">Lower carbon footprint with reduced packaging</p>
                             </div>
@@ -63,7 +63,7 @@
                     <div v-if="cartStore.items.length === 0" class="text-center py-4">
                         <p class="text-gray-600">Your cart is empty.</p>
                     </div>
-                    <div v-else v-for="item in cartStore.items" :key="item.product?._id"
+                    <div v-else v-for="item in cartStore.items" :key="item.product?._id + (item.variant?._id || '')"
                         class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
                         <div class="flex items-center mb-2 sm:mb-0">
                             <img v-if="item.product?.images?.length > 0" :src="item.product.images[0]"
@@ -77,10 +77,19 @@
                                 </h3>
 
                                 <!-- Add variant details -->
-                                <div v-if="item.variant" class="text-sm text-gray-600">
-                                    <span v-if="item.variant.size">Size: {{ item.variant.size }}</span>
-                                    <span v-if="item.variant.color" class="ml-2">Color: {{ item.variant.color
-                                    }}</span>jh
+                                <div v-if="item.variant" class="text-sm text-gray-600 flex flex-wrap gap-x-2">
+                                    <span v-if="item.variant.color">
+                                        Color: {{ typeof item.variant.color === 'object' ? item.variant.color.name :
+                                        item.variant.color }}
+                                    </span>
+                                    <span v-for="(attr, attrIdx) in item.variant.attributes" :key="attrIdx">
+                                        {{ attr.name }}: {{ attr.value }}
+                                    </span>
+                                    <!-- Fallback for legacy size field if not in attributes -->
+                                    <span
+                                        v-if="item.variant.size && (!item.variant.attributes || !item.variant.attributes.some(a => a.name.toLowerCase() === 'size'))">
+                                        Size: {{ item.variant.size }}
+                                    </span>
                                 </div>
 
                                 <div class="description-container">
@@ -244,7 +253,7 @@ const toggleSelectAll = () => {
 const deleteSelectedItems = async () => {
     for (const item of cartStore.items) {
         if (item.selected && item.product && item.product._id) {
-            await cartStore.removeFromCart(item.product._id);
+            await cartStore.removeFromCart(item.product._id, item.variant?._id);
         }
     }
     await refreshCart();
@@ -255,9 +264,9 @@ const decrementQuantity = async (item) => {
     loadingItems[item.product._id] = true;
     try {
         if (item.quantity > 1) {
-            await cartStore.updateQuantity(item.product._id, item.quantity - 1);
+            await cartStore.updateQuantity(item.product._id, item.quantity - 1, item.variant?._id);
         } else {
-            await cartStore.removeFromCart(item.product._id);
+            await cartStore.removeFromCart(item.product._id, item.variant?._id);
         }
         await refreshCart();
     } catch (error) {
@@ -272,7 +281,7 @@ const incrementQuantity = async (item) => {
     if (loadingItems[item.product._id]) return;
     loadingItems[item.product._id] = true;
     try {
-        await cartStore.updateQuantity(item.product._id, item.quantity + 1);
+        await cartStore.updateQuantity(item.product._id, item.quantity + 1, item.variant?._id);
         await refreshCart();
     } catch (error) {
         console.error('Error incrementing quantity:', error);

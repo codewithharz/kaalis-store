@@ -57,6 +57,7 @@ export const useOrderStore = defineStore("order", {
             product: item.product._id,
             quantity: item.quantity,
             price: item.product.price,
+            variant: item.variant, // Include variant data
             vendorAmount: Math.round(
               item.product.price * item.quantity * (1 - platformFeePercentage)
             ),
@@ -77,7 +78,7 @@ export const useOrderStore = defineStore("order", {
               (subtotal -
                 couponDiscount -
                 (orderData.cluesBucks?.discount || 0)) /
-                100
+              100
             ),
           },
         };

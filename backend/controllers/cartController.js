@@ -19,7 +19,7 @@ exports.getCart = async (req, res) => {
 
 // Add a product to the cart
 exports.addToCart = async (req, res) => {
-  const { productId, quantity } = req.body;
+  const { productId, quantity, variant } = req.body;
 
   try {
     const product = await Product.findById(productId);
@@ -33,12 +33,16 @@ exports.addToCart = async (req, res) => {
     }
 
     const existingProductIndex = cart.products.findIndex(
-      (p) => p.product.toString() === productId
+      (p) =>
+        p.product.toString() === productId &&
+        ((!p.variant && !variant) ||
+          (p.variant && variant && p.variant._id === variant._id))
     );
+
     if (existingProductIndex > -1) {
       cart.products[existingProductIndex].quantity += quantity;
     } else {
-      cart.products.push({ product: productId, quantity });
+      cart.products.push({ product: productId, quantity, variant });
     }
 
     await cart.save();
@@ -51,7 +55,7 @@ exports.addToCart = async (req, res) => {
 // Update a product's quantity in the cart
 exports.updateCart = async (req, res) => {
   const { productId } = req.params;
-  const { quantity } = req.body;
+  const { quantity, variantId } = req.body;
 
   try {
     const product = await Product.findById(productId);
@@ -65,7 +69,9 @@ exports.updateCart = async (req, res) => {
     }
 
     const productIndex = cart.products.findIndex(
-      (p) => p.product.toString() === productId
+      (p) =>
+        p.product.toString() === productId &&
+        ((!p.variant && !variantId) || (p.variant && p.variant._id === variantId))
     );
     if (productIndex === -1) {
       return res.status(404).json({ message: "Product not found in cart" });
@@ -82,6 +88,7 @@ exports.updateCart = async (req, res) => {
 // Remove a product from the cart
 exports.removeFromCart = async (req, res) => {
   const { productId } = req.params;
+  const { variantId } = req.query;
 
   try {
     const cart = await Cart.findOne({ user: req.user._id });
@@ -90,7 +97,12 @@ exports.removeFromCart = async (req, res) => {
     }
 
     cart.products = cart.products.filter(
-      (p) => p.product.toString() !== productId
+      (p) =>
+        !(
+          p.product.toString() === productId &&
+          ((!p.variant && !variantId) ||
+            (p.variant && p.variant._id === variantId))
+        )
     );
     await cart.save();
     res.json({ message: "Product removed from cart", cart });

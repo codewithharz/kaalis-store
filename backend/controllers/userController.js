@@ -490,7 +490,7 @@ const sendWelcomeEmail = async (user) => {
               Need help? We're here for you!
             </p>
             <p style="font-size: 13px; color: #6c757d; margin: 5px 0;">
-              📧 Email: support@bruthol.com<br/>
+              📧 Email: brutholdigital@gmail.com<br/>
               💬 Live Chat: Available 24/7 on our website<br/>
               📱 Help Center: <a href="${frontendUrl}/page/help/frequently-asked-questions" style="color: #ff5e62;">FAQ</a>
             </p>

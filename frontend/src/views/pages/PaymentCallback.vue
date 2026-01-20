@@ -222,6 +222,6 @@ const retryVerification = async () => {
 
 const contactSupport = () => {
     // Redirect to support page or open email client
-    window.location.href = 'mailto:support@bruthol.com?subject=Payment%20Verification%20Issue&body=Reference:%20' + reference.value;
+    window.location.href = 'mailto:brutholdigital@gmail.com?subject=Payment%20Verification%20Issue&body=Reference:%20' + reference.value;
 };
 </script>

@@ -69,7 +69,7 @@
 
                 <!-- Mobile Thumbnail Images -->
                 <div class="flex space-x-2 p-4 justify-start overflow-x-auto scrollbar-hide">
-                    <img v-for="image in product?.images" :src="image" :key="image" @click="mainImage = image"
+                    <img v-for="image in displayImages" :src="image" :key="image" @click="selectVariantByImage(image)"
                         @mouseover="hoveredImage = image" @mouseleave="hoveredImage = null"
                         class="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 rounded-lg cursor-pointer object-cover border-2 transition-all"
                         :class="{ 'border-blue-500 shadow-lg': mainImage === image || hoveredImage === image }" />
@@ -88,8 +88,8 @@
                     <div class="flex items-baseline space-x-2">
                         <div>
                             <span class="text-lg">₦</span>
-                            <span class="text-2xl sm:text-3xl font-bold text-gray-800">{{ product.price.toFixed(2)
-                            }}</span>
+                            <span class="text-2xl sm:text-3xl font-bold text-gray-800">{{ product.price.toFixed(2) }}</span>
+                            <span v-if="product.unit?.displayUnit" class="text-gray-500 text-sm ml-1">/ {{ product.unit.displayUnit }}</span>
                         </div>
                         <div class="space-x-1 text-sm text-gray-500">
                             <span class="line-through">₦{{ calculateOriginalPrice(product).toFixed(2) }}</span>
@@ -159,11 +159,12 @@
 
                 <!-- Mobile Color Selection -->
                 <div v-if="hasColors" class="space-y-3">
-                    <div class="flex items-center justify-between mb-2">
-                        <h2 class="font-medium text-gray-700">Color: {{ getSelectedColorName }}</h2>
+                    <div class="flex items-center gap-2 mb-2 p-2.5 bg-gray-50 rounded-xl border border-gray-100">
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-indigo-500">Selected Color</span>
+                        <h2 class="font-bold text-gray-900">{{ getSelectedColorName }}</h2>
                     </div>
                     <div class="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                        <div v-for="variant in product?.variants" :key="variant._id"
+                        <div v-for="variant in uniqueColorVariants" :key="variant._id"
                             class="relative group cursor-pointer" :title="variant.color?.name">
                             <div class="border rounded-lg p-1" :class="[
                                 'border-2',
@@ -194,6 +195,22 @@
                 <SizeSelector :product="product" v-model:selectedSize="selectedSize"
                     v-model:selectedColor="selectedColor" @update:availableColors="updateAvailableColors" />
 
+                <!-- Mobile Other Attributes Selection -->
+                <div v-for="(options, name) in otherVaryingAttributes" :key="name" class="space-y-3">
+                    <h2 class="font-medium text-gray-700 capitalize">{{ name }}:</h2>
+                    <div class="flex flex-wrap gap-2">
+                        <button v-for="option in options" :key="option"
+                            @click="selectAttribute(name, option)"
+                            class="min-w-[40px] px-3 py-1 rounded-full text-sm font-medium transition-all duration-200"
+                            :class="[
+                                selectedOtherAttributes[name] === option
+                                    ? 'border-2 border-gray-800 font-medium'
+                                    : 'border border-gray-300'
+                            ]">
+                            {{ option }}
+                        </button>
+                    </div>
+                </div>
                 <!-- Mobile Quantity and Add to Cart -->
                 <div class="space-y-4">
                     <div class="flex items-center gap-3">
@@ -461,13 +478,14 @@
 
                         <TabsContent value="specs" class="mt-4 p-4">
                             <div class="space-y-4">
-                                <!-- Add your specifications content here -->
-                                <div v-if="product?.specifications" class="grid grid-cols-1 gap-4">
-                                    <div v-for="(spec, key) in product.specifications" :key="key" class="border-b pb-2">
+                                <!-- Dynamic Specifications from Attributes and Unit Info -->
+                                <div v-if="Object.keys(displaySpecifications).length > 0" class="grid grid-cols-1 gap-4">
+                                    <div v-for="(value, key) in displaySpecifications" :key="key" class="border-b pb-2">
                                         <span class="font-medium text-sm">{{ key }}:</span>
-                                        <span class="text-gray-600 text-sm">{{ spec }}</span>
+                                        <span class="text-gray-600 text-sm ml-2">{{ value }}</span>
                                     </div>
                                 </div>
+                                <p v-else class="text-gray-500 text-sm italic">No detailed specifications available.</p>
                             </div>
                         </TabsContent>
 
@@ -517,77 +535,28 @@
                     <!-- Product Images Section -->
                     <div class="p-6 space-y-6 bg-white shadow-sm rounded-lg mx-4 mt-4"
                         style="scroll-snap-align: start;">
-                        <AlertDialog>
-                            <AlertDialogTrigger class="w-full flex justify-center">
-                                <div class="relative group">
-                                    <img :src="hoveredImage || mainImage" alt="Product Image"
-                                        class="w-full h-auto rounded-lg shadow-md cursor-pointer"
-                                        :class="{ 'scale-150': isZoomed }" @mousemove="handleImageMove" />
-                                    <div class="absolute top-2 right-2 flex space-x-2">
-                                        <button @click.stop="toggleZoom"
-                                            class="p-1 bg-white rounded-full shadow-md hover:bg-gray-100 focus:outline-none">
-                                            <component :is="isZoomed ? ZoomOut : ZoomIn"
-                                                class="w-6 h-6 text-gray-600" />
-                                        </button>
-                                    </div>
+                        <!-- Image Gallery -->
+                        <div class="space-y-4">
+                            <!-- Main Image Display -->
+                            <div
+                                class="relative group aspect-square bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 p-4 shadow-sm hover:shadow-md transition-shadow">
+                                <img v-if="mainImage" :src="mainImage" :alt="product?.name"
+                                    class="w-full h-full object-contain cursor-zoom-in transition-transform duration-500 group-hover:scale-110"
+                                    @click="openImageModal(mainImage)" />
+                                <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
+                                    <ImageIcon class="w-12 h-12" />
                                 </div>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent class="bg-gray-200 max-w-xl">
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>
-                                        <span class="text-[17px] font-medium">{{ product?.name }}</span>
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        <div class="relative group">
-                                            <div class="flex justify-center items-center">
-                                                <img :src="hoveredImage || mainImage" alt="Product Image"
-                                                    class="w-full h-auto rounded-lg shadow-md"
-                                                    :style="{ transform: `scale(${zoomLevel})` }"
-                                                    @mousemove="handleImageMove" />
-                                            </div>
-                                            <div class="absolute top-2 right-2 flex space-x-2">
-                                                <button v-if="!isZoomed" @click.stop="toggleZoom"
-                                                    class="p-1 bg-white rounded-full shadow-md hover:bg-gray-100 focus:outline-none">
-                                                    <ZoomIn class="w-6 h-6 text-gray-600" />
-                                                </button>
-                                                <button v-else @click.stop="toggleZoom"
-                                                    class="p-1 bg-white rounded-full shadow-md hover:bg-gray-100 focus:outline-none">
-                                                    <ZoomOut class="w-6 h-6 text-gray-600" />
-                                                </button>
-                                            </div>
-                                            <!-- Carousel Controls -->
-                                            <button v-if="!isZoomed" @click="prevImage"
-                                                class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md hover:bg-gray-200 focus:outline-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                                                </svg>
-                                            </button>
-                                            <button v-if="!isZoomed" @click="nextImage"
-                                                class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md hover:bg-gray-200 focus:outline-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel class="hover:bg-[#24a6bb] hover:text-white">Close
-                                    </AlertDialogCancel>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
+                            </div>
 
-                        <!-- Thumbnail Images -->
-                        <div class="flex space-x-2 mt-4 justify-center overflow-x-auto">
-                            <img v-for="image in product?.images" :src="image" :key="image" @click="mainImage = image"
-                                @mouseover="hoveredImage = image" @mouseleave="hoveredImage = null"
-                                class="w-16 h-16 rounded-lg cursor-pointer object-cover border-2 transition-all"
-                                :class="{ 'border-blue-500 shadow-lg': mainImage === image || hoveredImage === image }" />
+                            <!-- Thumbnails -->
+                            <div v-if="displayImages.length > 1" class="flex gap-4 mt-6 overflow-x-auto pb-2 scrollbar-hide">
+                                <div v-for="(image, index) in displayImages" :key="index"
+                                    class="flex-shrink-0 w-20 h-20 rounded-xl border-2 transition-all cursor-pointer overflow-hidden p-1 bg-white"
+                                    :class="[mainImage === image ? 'border-indigo-500 shadow-md transform scale-105' : 'border-transparent hover:border-gray-200']"
+                                    @click="selectVariantByImage(image)">
+                                    <img :src="image" :alt="`${product?.name} ${index + 1}`" class="w-full h-full object-cover rounded-lg" />
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -612,14 +581,15 @@
 
                             <TabsContent value="specs" class="mt-4">
                                 <div class="space-y-4">
-                                    <!-- Add your specifications content here -->
-                                    <div v-if="product?.specifications" class="grid grid-cols-2 gap-4">
-                                        <div v-for="(spec, key) in product.specifications" :key="key"
-                                            class="border-b pb-2">
-                                            <span class="font-medium">{{ key }}:</span>
-                                            <span class="text-gray-600">{{ spec }}</span>
-                                        </div>
+                                    <!-- Dynamic Specifications from Attributes and Unit Info -->
+                                <div v-if="Object.keys(displaySpecifications).length > 0" class="grid grid-cols-2 gap-4">
+                                    <div v-for="(value, key) in displaySpecifications" :key="key"
+                                        class="border-b pb-2">
+                                        <span class="font-medium">{{ key }}:</span>
+                                        <span class="text-gray-600 ml-2">{{ value }}</span>
                                     </div>
+                                </div>
+                                <p v-else class="text-gray-500 italic">No detailed specifications available.</p>
                                 </div>
                             </TabsContent>
 
@@ -731,6 +701,7 @@
                                 <div>
                                     <span class="text-lg">₦</span>
                                     <span class="text-2xl font-bold text-gray-800">{{ product.price.toFixed(2) }}</span>
+                                    <span v-if="product.unit?.displayUnit" class="text-gray-500 text-base ml-1">/ {{ product.unit.displayUnit }}</span>
                                 </div>
                                 <div class="space-x-1 text-sm text-gray-500">
                                     <span class="line-through">₦{{ calculateOriginalPrice(product).toFixed(2) }}</span>
@@ -744,11 +715,14 @@
 
                         <!-- Color Selection -->
                         <div v-if="hasColors" class="space-y-4 w-3/4">
-                            <div class="flex items-center justify-between mb-2">
-                                <h2 class="font-medium text-gray-700">Color: {{ getSelectedColorName }}</h2>
+                            <div class="flex items-center gap-3 mb-4 p-3 bg-gray-50/80 rounded-2xl border border-gray-100 backdrop-blur-sm">
+                                <div class="flex flex-col">
+                                    <span class="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-0.5">Primary Display Color</span>
+                                    <h2 class="text-xl font-black text-gray-900 leading-tight">{{ getSelectedColorName }}</h2>
+                                </div>
                             </div>
                             <div class="grid grid-cols-4 gap-2">
-                                <div v-for="variant in product?.variants" :key="variant._id"
+                                <div v-for="variant in uniqueColorVariants" :key="variant._id"
                                     class="relative group cursor-pointer" :title="variant.color?.name">
                                     <div class="border rounded-lg p-1" :class="[
                                         'border-2',
@@ -779,6 +753,22 @@
                         <SizeSelector :product="product" v-model:selectedSize="selectedSize"
                             v-model:selectedColor="selectedColor" @update:availableColors="updateAvailableColors" />
 
+                        <!-- Other Attributes Selection -->
+                        <div v-for="(options, name) in otherVaryingAttributes" :key="name" class="space-y-4">
+                            <h2 class="font-medium text-gray-700 capitalize">{{ name }}:</h2>
+                            <div class="flex flex-wrap gap-2">
+                                <button v-for="option in options" :key="option"
+                                    @click="selectAttribute(name, option)"
+                                    class="min-w-[40px] px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
+                                    :class="[
+                                        selectedOtherAttributes[name] === option
+                                            ? 'border-2 border-gray-800 font-medium'
+                                            : 'border border-gray-300'
+                                    ]">
+                                    {{ option }}
+                                </button>
+                            </div>
+                        </div>
                         <!-- Quantity -->
                         <div class="space-y-2 flex items-center gap-2">
                             <h2 class="font-medium text-gray-700">Quantity </h2>
@@ -1068,7 +1058,7 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch, reactive } from 'vue';
 import apiClient from '../api/axios';
 import { useUserStore } from '../store/user.js';
 import { useAddressStore } from '../store/addressStore.js';
@@ -1079,6 +1069,7 @@ import { useCartStore } from '../store/cart.js';
 import { useOrderStore } from '../store/orderStore';
 import { useRouter } from 'vue-router';
 import { toast } from "vue-sonner";
+import { getColorName } from '../utils/colorUtils.js';
 import CustomImage from './CustomImage.vue';
 import SizeSelector from './SizeSelector.vue';
 import RelatedProducts from './RelatedProducts.vue';
@@ -1088,7 +1079,7 @@ import ProductCard from './ProductCard.vue';
 
 import {
     Shirt, ShoppingCart, Eye, Heart, Package, Star, ZoomIn, ZoomOut, Plus, Minus,
-    Shield, RefreshCcw, ArrowRight, MapPin, Badge, Users, MessageCircle
+    Shield, RefreshCcw, ArrowRight, MapPin, Badge, Users, MessageCircle, ImageIcon
 } from 'lucide-vue-next';
 
 import {
@@ -1124,7 +1115,7 @@ export default {
         ZoomIn,
         ZoomOut,
         Minus,
-        Plus, Shield, RefreshCcw, ArrowRight, MapPin, Star, Badge, Users, MessageCircle,
+        Plus, Shield, RefreshCcw, ArrowRight, MapPin, Star, Badge, Users, MessageCircle, ImageIcon,
         CustomImage,
         AlertDialog,
         AlertDialogAction,
@@ -1194,6 +1185,8 @@ export default {
         const sellerId = ref(null);
         const isInWishlist = ref(false);
         const selectedColor = ref(null);
+        const selectedColorName = ref('');
+        const previewColorName = ref(''); // Track color name during hover
         const selectedSize = ref(null);
         const quantity = ref(1);
         const showStockAlert = ref(false);
@@ -1213,8 +1206,37 @@ export default {
 
         const hasSizes = computed(() => {
             return product.value?.variants?.some(variant =>
-                variant.attributes?.some(attr => attr.name.toLowerCase() === 'size')
+                variant.attributes?.some(attr =>
+                    ['size', 'measurement', 'length', 'width', 'height', 'shape', 'storage', 'capacity', 'volume']
+                        .includes(attr.name.toLowerCase())
+                )
             );
+        });
+
+        // Group variants by unique colors - show only one variant per color
+        const uniqueColorVariants = computed(() => {
+            if (!product.value?.variants) return [];
+            
+            const colorMap = new Map();
+            product.value.variants.forEach(variant => {
+                const hexCode = variant.color?.hexCode;
+                const name = variant.color?.name || getColorName(hexCode);
+                const uniqueKey = `${hexCode}-${name}`.toLowerCase();
+                
+                if (hexCode && !colorMap.has(uniqueKey)) {
+                    colorMap.set(uniqueKey, variant);
+                }
+            });
+            
+            const uniqueVariants = Array.from(colorMap.values());
+            console.log('=== UNIQUE COLOR VARIANTS ===');
+            console.log('Total unique colors:', uniqueVariants.length);
+            uniqueVariants.forEach((v, i) => {
+                console.log(`Color ${i}:`, v.color?.name, v.color?.hexCode);
+            });
+            console.log('=== END UNIQUE COLORS ===');
+            
+            return uniqueVariants;
         });
 
         const availableSizes = computed(() => {
@@ -1222,11 +1244,13 @@ export default {
 
             const sizeVariants = product.value.variants
                 .filter(variant => variant.attributes?.some(attr =>
-                    attr.name.toLowerCase() === 'size'
+                    ['size', 'measurement', 'length', 'width', 'height', 'shape', 'storage', 'capacity', 'volume']
+                        .includes(attr.name.toLowerCase())
                 ))
                 .map(variant => ({
                     size: variant.attributes.find(attr =>
-                        attr.name.toLowerCase() === 'size'
+                        ['size', 'measurement', 'length', 'width', 'height', 'shape', 'storage', 'capacity', 'volume']
+                            .includes(attr.name.toLowerCase())
                     ).value,
                     stock: variant.stock,
                     inStock: variant.stock > 0,
@@ -1251,18 +1275,154 @@ export default {
             }, {}));
         });
 
-        const getSelectedVariantStock = computed(() => {
-            if (!selectedSize.value || !selectedColor.value) return null;
+        const selectedOtherAttributes = reactive({});
 
-            const variant = product.value?.variants?.find(v =>
-                v.attributes?.some(attr =>
-                    attr.name.toLowerCase() === 'size' &&
+        const selectedVariant = computed(() => {
+            if (!product.value?.variants) return null;
+            return product.value.variants.find(v => {
+                // Check both hex code AND name for unique identification
+                const matchesColor = !selectedColor.value || 
+                    (v.color?.hexCode === selectedColor.value && (v.color?.name === selectedColorName.value || !selectedColorName.value));
+                const matchesSize = !selectedSize.value || v.attributes?.some(attr =>
+                    ['size', 'shape', 'measurement', 'length', 'width', 'height', 'storage', 'capacity', 'volume']
+                        .includes(attr.name.toLowerCase()) &&
                     attr.value === selectedSize.value
-                ) &&
-                v.color?.hexCode === selectedColor.value
-            );
+                );
+                // Check for other selected attributes
+                const matchesOtherAttributes = Object.keys(selectedOtherAttributes).every(attrName =>
+                    !selectedOtherAttributes[attrName] || v.attributes?.some(attr =>
+                        attr.name === attrName && attr.value === selectedOtherAttributes[attrName]
+                    )
+                );
+                return matchesColor && matchesSize && matchesOtherAttributes;
+            }) || product.value.variants[0];
+        });
 
-            return variant?.stock || null;
+        const displaySpecifications = computed(() => {
+            const specs = {};
+
+            // Add global specs if any
+            if (product.value?.specifications) {
+                Object.assign(specs, product.value.specifications);
+            }
+
+            // Add unit information
+            if (product.value?.unit) {
+                if (product.value.unit.baseUnit) specs['Base Unit'] = product.value.unit.baseUnit;
+                if (product.value.unit.displayUnit) specs['Standard Unit'] = product.value.unit.displayUnit;
+                if (product.value.unit.packagingUnit) specs['Packaging'] = product.value.unit.packagingUnit;
+                if (product.value.unit.conversionFactor && product.value.unit.conversionFactor !== 1) {
+                    specs['Package Contents'] = `${product.value.unit.conversionFactor} ${product.value.unit.baseUnit || 'items'}`;
+                }
+            }
+
+            // Add selected variant attributes
+            if (selectedVariant.value?.attributes) {
+                selectedVariant.value.attributes.forEach(attr => {
+                    // Don't repeat Color if it's already shown in title/selector
+                    if (attr.name.toLowerCase() !== 'color' && attr.value) {
+                        specs[attr.name] = attr.value;
+                    }
+                });
+            }
+
+            return specs;
+        });
+
+        const allImages = computed(() => {
+            const imgs = [...(product.value?.images || [])];
+            product.value?.variants?.forEach(v => {
+                if (v.images && v.images.length > 0) {
+                    imgs.push(...v.images);
+                }
+            });
+            // Filter out duplicates and invalid URLs
+            return [...new Set(imgs.filter(img => img && typeof img === 'string'))];
+        });
+
+        const displayImages = computed(() => {
+            // Priority: selected variant images first, then combine with product images
+            const variantImgs = selectedVariant.value?.images || [];
+            const productImgs = product.value?.images || [];
+            
+            // Combine both - product images always show, but variant images come first if a variant is selected
+            const combined = [...variantImgs, ...productImgs];
+            
+            // Filter out duplicates and invalid URLs
+            return [...new Set(combined.filter(img => img && typeof img === 'string'))];
+        });
+
+        const otherVaryingAttributes = computed(() => {
+            if (!product.value?.variants) return {};
+
+            const attrMap = {};
+            const standardAttrs = ['color', 'size', 'shape', 'measurement', 'length', 'width', 'height', 'storage', 'capacity', 'volume'];
+
+            product.value.variants.forEach(variant => {
+                variant.attributes?.forEach(attr => {
+                    const name = attr.name;
+                    if (!standardAttrs.includes(name.toLowerCase())) {
+                        if (!attrMap[name]) attrMap[name] = new Set();
+                        attrMap[name].add(attr.value);
+                    }
+                });
+            });
+
+            // Only return attributes that actually vary
+            const finalMap = {};
+            Object.keys(attrMap).forEach(key => {
+                if (attrMap[key].size > 1) {
+                    finalMap[key] = Array.from(attrMap[key]);
+                }
+            });
+
+            return finalMap;
+        });
+
+        const selectVariantByImage = (image) => {
+            mainImage.value = image;
+            if (!product.value?.variants) return;
+
+            // Find if any variant has this image
+            const variant = product.value.variants.find(v => v.images?.includes(image));
+            if (variant) {
+                if (variant.color?.hexCode) selectedColor.value = variant.color.hexCode;
+                
+                // Also update other attributes
+                variant.attributes?.forEach(attr => {
+                    const name = attr.name;
+                    const standardSizeAttrs = ['size', 'shape', 'measurement', 'length', 'width', 'height', 'storage', 'capacity', 'volume'];
+                    if (standardSizeAttrs.includes(name.toLowerCase())) {
+                        selectedSize.value = attr.value;
+                    } else if (name.toLowerCase() !== 'color') {
+                        selectedOtherAttributes[name] = attr.value;
+                    }
+                });
+            }
+        };
+
+        const selectAttribute = (name, value) => {
+            selectedOtherAttributes[name] = value;
+            // When an attribute is selected, we should try to find a variant that matches
+            // We'll update the selectedVariant computed logic to include these too
+        };
+
+        const previewVariantImage = (variant) => {
+            if (variant.images?.[0]) {
+                mainImage.value = variant.images[0];
+            }
+            if (variant.color) {
+                previewColorName.value = variant.color.name || getColorName(variant.color.hexCode);
+            }
+        };
+
+        const resetMainImage = () => {
+            mainImage.value = originalImage.value;
+            previewColorName.value = '';
+        };
+
+        const getSelectedVariantStock = computed(() => {
+            return selectedVariant.value?.stock ?? null;
         });
 
         const sizeGuideMetrics = computed(() => {
@@ -1280,6 +1440,11 @@ export default {
             const category = product.value?.category?.name?.toLowerCase() || '';
             return getSizeGuideForCategory(category, availableSizes.value);
         });
+
+        const openImageModal = (image) => {
+            mainImage.value = image;
+            toggleZoom();
+        };
 
         const followSeller = async () => {
             try {
@@ -1368,25 +1533,6 @@ export default {
 
             availableColors.value = colors;
             console.log('Updated available colors for size:', colors);
-        };
-
-        const previewVariantImage = (variant) => {
-            if (!variant) return;
-
-            if (variant?.images?.length) {
-                if (!originalImage.value) {
-                    originalImage.value = mainImage.value || variant.images[0];
-                }
-                mainImage.value = variant.images[0];
-                hoveredImage.value = variant.images[0];
-            }
-        };
-
-        const resetMainImage = () => {
-            if (originalImage.value) {
-                mainImage.value = originalImage.value;
-                hoveredImage.value = null;
-            }
         };
 
         const updateAvailableColorsForSize = (size) => {
@@ -1531,18 +1677,14 @@ export default {
         });
 
         const getSelectedColorName = computed(() => {
-            if (!selectedColor.value) return '';
-
-            const variant = product.value?.variants?.find(
-                v => v.color?.hexCode === selectedColor.value
-            );
-            return variant?.color?.name || 'Default';
+            return previewColorName.value || selectedColorName.value || 'Default';
         });
 
         const selectVariantColor = (variant) => {
             if (!variant?.color?.inStock) return;
 
             selectedColor.value = variant.color.hexCode;
+            selectedColorName.value = variant.color.name || getColorName(variant.color.hexCode);
 
             if (variant?.images?.length) {
                 mainImage.value = variant.images[0];
@@ -1581,6 +1723,20 @@ export default {
 
                 console.log('Product Color:', product.value.color);
                 console.log('Product Variants:', product.value.variants);
+                
+                // Enhanced debugging
+                console.log('=== VARIANT DEBUG INFO ===');
+                console.log('Total variants:', product.value.variants?.length);
+                product.value.variants?.forEach((v, index) => {
+                    console.log(`Variant ${index}:`, {
+                        color: v.color,
+                        attributes: v.attributes,
+                        images: v.images,
+                        stock: v.stock,
+                        price: v.price
+                    });
+                });
+                console.log('=== END VARIANT DEBUG ===');
 
                 if (product.value?.user?.sellerProfile?._id) {
                     try {
@@ -1607,6 +1763,7 @@ export default {
                     );
                     if (firstAvailableColor) {
                         selectedColor.value = firstAvailableColor.color.hexCode;
+                        selectedColorName.value = firstAvailableColor.color.name || getColorName(firstAvailableColor.color.hexCode);
                     }
                 }
 
@@ -1676,15 +1833,17 @@ export default {
         };
 
         const prevImage = () => {
-            const currentIndex = product.value.images.indexOf(mainImage.value);
-            const prevIndex = (currentIndex - 1 + product.value.images.length) % product.value.images.length;
-            mainImage.value = product.value.images[prevIndex];
+            const imgs = displayImages.value;
+            const currentIndex = imgs.indexOf(mainImage.value);
+            const prevIndex = (currentIndex - 1 + imgs.length) % imgs.length;
+            mainImage.value = imgs[prevIndex];
         };
 
         const nextImage = () => {
-            const currentIndex = product.value.images.indexOf(mainImage.value);
-            const nextIndex = (currentIndex + 1) % product.value.images.length;
-            mainImage.value = product.value.images[nextIndex];
+            const imgs = displayImages.value;
+            const currentIndex = imgs.indexOf(mainImage.value);
+            const nextIndex = (currentIndex + 1) % imgs.length;
+            mainImage.value = imgs[nextIndex];
         };
 
         const initWishlist = async () => {
@@ -2014,6 +2173,12 @@ export default {
             console.log('Display rating:', displayRating.value);
         });
 
+        watch(selectedVariant, (newVariant) => {
+            if (newVariant?.images?.length) {
+                mainImage.value = newVariant.images[0];
+                originalImage.value = newVariant.images[0];
+            }
+        });
         const navigateToProduct = (productId) => {
             if (props.id === productId) {
                 window.location.reload();
@@ -2033,6 +2198,9 @@ export default {
             sizes,
             socialProof,
             currentSocialProof,
+            allImages,
+            selectedVariant,
+            displaySpecifications,
             prevImage,
             nextImage,
             user,
@@ -2075,12 +2243,20 @@ export default {
             toggleDescription,
             formatDate,
             hasColors,
+            uniqueColorVariants,
             getSelectedColorName,
             previewVariantImage,
             selectVariantColor,
             resetMainImage,
             showSizeGuide,
             hasSizes,
+            openImageModal,
+            displayImages,
+            previewColorName,
+            otherVaryingAttributes,
+            selectedOtherAttributes,
+            selectAttribute,
+            selectVariantByImage,
             availableSizes,
             getSelectedVariantStock,
             sizeGuideMetrics,

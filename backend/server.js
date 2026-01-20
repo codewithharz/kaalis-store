@@ -41,6 +41,7 @@ const orangeMoneyRoutes = require("./routes/orangeMoneyRoutes");
 const payoutTestRoutes = require("./routes/payoutTestRoutes");
 const opayRoutes = require("./routes/opayRoutes");
 const vendorPayoutRoutes = require("./routes/vendorPayoutRoutes");
+const uploadRoutes = require("./routes/uploadRoutes");
 // const { initPayoutCron } = require("./config/cronJobs"); // REMOVED: Cron disabled, using manual processing
 const {
   loggerMiddleware,
@@ -378,6 +379,7 @@ app.use("/api/paystack", paystackRoutes); // Paystack routes
 app.use("/api/orange-money", orangeMoneyRoutes); // Orange Money routes
 app.use("/api/opay", opayRoutes);
 app.use("/api/vendor-payout", vendorPayoutRoutes); // Vendor payout routes
+app.use("/api/upload", uploadRoutes); // Cloudinary upload routes
 
 // Only enable test routes in development or test environment
 if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {

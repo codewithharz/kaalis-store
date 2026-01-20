@@ -36,7 +36,7 @@
                             </div>
                             <div class="min-w-0 flex-1">
                                 <p class="text-lg sm:text-xl font-bold text-white truncate">Order #{{ order.orderNumber
-                                }}</p>
+                                    }}</p>
                                 <p class="text-blue-100 text-xs sm:text-sm">{{ formatDate(order.date) }}</p>
                             </div>
                         </div>
@@ -170,6 +170,23 @@
                                         <div class="min-w-0 flex-1">
                                             <p class="font-semibold text-gray-900 text-sm sm:text-base break-words">{{
                                                 product.name }}</p>
+                                            <!-- Add variant details -->
+                                            <div v-if="product.variant"
+                                                class="text-xs sm:text-sm text-gray-500 mb-1 flex flex-wrap gap-x-2">
+                                                <span v-if="product.variant.color">
+                                                    Color: {{ typeof product.variant.color === 'object' ?
+                                                    product.variant.color.name : product.variant.color }}
+                                                </span>
+                                                <span v-for="(attr, attrIdx) in product.variant.attributes"
+                                                    :key="attrIdx">
+                                                    {{ attr.name }}: {{ attr.value }}
+                                                </span>
+                                                <!-- Fallback for legacy size field if not in attributes -->
+                                                <span
+                                                    v-if="product.variant.size && (!product.variant.attributes || !product.variant.attributes.some(a => a.name.toLowerCase() === 'size'))">
+                                                    Size: {{ product.variant.size }}
+                                                </span>
+                                            </div>
                                             <p class="text-xs sm:text-sm text-gray-600">Quantity: {{ product.quantity }}
                                             </p>
                                         </div>

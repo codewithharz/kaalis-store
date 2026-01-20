@@ -69,7 +69,25 @@
                             </thead>
                             <tbody class="divide-y divide-gray-200">
                                 <tr v-for="item in order?.products" :key="item.id">
-                                    <td class="px-4 py-4 text-sm text-gray-900">{{ item.name }}</td>
+                                    <td class="px-4 py-4 text-sm text-gray-900">
+                                        <div>{{ item.name }}</div>
+                                        <!-- Add variant details -->
+                                        <div v-if="item.variant"
+                                            class="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-2">
+                                            <span v-if="item.variant.color">
+                                                Color: {{ typeof item.variant.color === 'object' ?
+                                                item.variant.color.name : item.variant.color }}
+                                            </span>
+                                            <span v-for="(attr, attrIdx) in item.variant.attributes" :key="attrIdx">
+                                                {{ attr.name }}: {{ attr.value }}
+                                            </span>
+                                            <!-- Fallback for legacy size field if not in attributes -->
+                                            <span
+                                                v-if="item.variant.size && (!item.variant.attributes || !item.variant.attributes.some(a => a.name.toLowerCase() === 'size'))">
+                                                Size: {{ item.variant.size }}
+                                            </span>
+                                        </div>
+                                    </td>
                                     <td class="px-4 py-4 text-sm text-gray-900 text-right">{{ item.quantity }}</td>
                                     <td class="px-4 py-4 text-sm text-gray-900 text-right">₦{{ formatAmount(item.price)
                                         }}</td>

@@ -109,6 +109,7 @@ const productSchema = new mongoose.Schema(
           type: String,
           validate: {
             validator: function (v) {
+              if (!v) return true; // Allow empty string or null
               return /^[0-9]{12,14}$/.test(v);
             },
             message: (props) => `${props.value} is not a valid barcode!`,

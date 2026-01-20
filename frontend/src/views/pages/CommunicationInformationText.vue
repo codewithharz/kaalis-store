@@ -35,7 +35,7 @@
                             <h3 class="text-xl font-semibold text-[#2d3642] mb-2">Email Contacts</h3>
                             <ul class="space-y-2 text-gray-600">
                                 <li>General: info@bruthol.com</li>
-                                <li>Support: support@bruthol.com</li>
+                                <li>Support: brutholdigital@gmail.com</li>
                                 <li>Business: business@bruthol.com</li>
                                 <li>Press: press@bruthol.com</li>
                             </ul>

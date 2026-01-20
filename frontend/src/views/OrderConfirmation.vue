@@ -15,7 +15,8 @@
                 will send you a tracking number. You can check the status of your order by <a href="/account/orders"
                     class="text-blue-500 hover:underline">logging into your account</a>.</p>
             <p class="mb-6 text-gray-700">If you have questions about your order, you can email us at <a
-                    href="mailto:support@bruthol.com" class="text-blue-500 hover:underline">support@bruthol.com</a>.</p>
+                    href="mailto:brutholdigital@gmail.com"
+                    class="text-blue-500 hover:underline">brutholdigital@gmail.com</a>.</p>
 
             <div class="mb-6">
                 <h2 class="text-xl font-semibold mb-2">Seller Information</h2>
@@ -93,6 +94,22 @@
                                     <div className=" w-11/12">
                                         <p class="font-semibold">{{ item.productDetails ? item.productDetails.name :
                                             'Product not found' }}</p>
+                                        <!-- Add variant details -->
+                                        <div v-if="item.variant"
+                                            class="text-xs text-gray-500 mb-1 flex flex-wrap gap-x-2">
+                                            <span v-if="item.variant.color">
+                                                Color: {{ typeof item.variant.color === 'object' ?
+                                                item.variant.color.name : item.variant.color }}
+                                            </span>
+                                            <span v-for="(attr, attrIdx) in item.variant.attributes" :key="attrIdx">
+                                                {{ attr.name }}: {{ attr.value }}
+                                            </span>
+                                            <!-- Fallback for legacy size field if not in attributes -->
+                                            <span
+                                                v-if="item.variant.size && (!item.variant.attributes || !item.variant.attributes.some(a => a.name.toLowerCase() === 'size'))">
+                                                Size: {{ item.variant.size }}
+                                            </span>
+                                        </div>
                                         <p class="text-sm text-gray-600">{{ item.productDetails ?
                                             item.productDetails.description : 'N/A' }}</p>
                                     </div>

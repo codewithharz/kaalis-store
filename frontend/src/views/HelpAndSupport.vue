@@ -169,7 +169,7 @@
                             <Mail class="w-6 h-6 text-gray-700 mx-auto mb-4" />
                             <h3 class="font-semibold text-gray-900 mb-2">Email Support</h3>
                             <p class="text-gray-600 text-sm mb-4">Get help via email</p>
-                            <a href="mailto:support@bruthol.com"
+                            <a href="mailto:brutholdigital@gmail.com"
                                 class="text-[#ff934b] hover:text-[#ff8331] font-medium">
                                 Contact Us
                             </a>

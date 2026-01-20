@@ -52,9 +52,9 @@ Security<!-- src/views/pages/Communication.vue -->
                                             </p>
                                             <p class="text-gray-600">
                                                 Customer Support:
-                                                <a href="mailto:support@bruthol.com"
+                                                <a href="mailto:brutholdigital@gmail.com"
                                                     class="text-[#24a6bb] hover:text-[#1a7f8f]">
-                                                    support@bruthol.com
+                                                    brutholdigital@gmail.com
                                                 </a>
                                             </p>
                                         </div>

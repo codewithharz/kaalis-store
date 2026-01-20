@@ -1,23 +1,48 @@
 <template>
     <div class="mb-4" v-if="hasSizes">
         <!-- Header with Size Guide -->
-        <div class="flex justify-between items-center mb-2">
+        <div class="flex justify-start items-center mb-2">
             <h2 class="font-medium text-gray-700 capitalize">
                 {{ measurementType || 'Size' }}:
             </h2>
+
+            <!-- Size Buttons -->
+            <div class="flex flex-wrap gap-2 ml-2">
+                <button v-for="sizeOption in availableSizes" :key="sizeOption.size" @click="selectSize(sizeOption)"
+                    class="min-w-[40px] px-2 py-1 rounded-full text-sm font-medium transition-all duration-200" :class="[
+                        selectedSize === sizeOption.size
+                            ? 'border-2 border-gray-800 font-medium'
+                            : 'border border-gray-300',
+                        !sizeOption.inStock && 'opacity-50 cursor-not-allowed bg-gray-50',
+                        sizeOption.inStock && 'hover:border-gray-400 cursor-pointer'
+                    ]" :disabled="!sizeOption.inStock">
+                    {{ sizeOption.size }}
+
+                    <!-- Low Stock Indicator -->
+                    <span v-if="sizeOption.stock <= lowStockThreshold && sizeOption.stock > 0"
+                        class="absolute -top-2 -right-2 px-1.5 py-0.5 bg-red-500 text-white text-[10px] rounded-full whitespace-nowrap">
+                        {{ sizeOption.stock }} left
+                    </span>
+                </button>
+            </div>
+
+            <!-- Stock Info -->
+            <div v-if="selectedSize && getSelectedVariantStock !== null" class="mt-1 text-xs text-gray-500">
+                {{ getSelectedVariantStock }} in stock
+            </div>
             <!-- <button v-if="product?.category" @click="showSizeGuide = true"
                 class="text-blue-500 text-sm hover:text-blue-600">
                 Size Guide
             </button> -->
-            <button v-if="product?.category" @click="showSizeGuide = true"
-                class="text-blue-500 text-sm hover:text-blue-600">
-                {{ measurementType || 'Size' }} Guide
-            </button>
+
         </div>
+        <!-- <button v-if="product?.category" @click="showSizeGuide = true"
+            class="text-blue-500 text-sm hover:text-blue-600">
+            {{ measurementType || 'Size' }} Guide
+        </button> -->
 
         <!-- Fit Information -->
-        <div class="mt-2 relative group">
-            <!-- Info Icon and Text -->
+        <!-- <div class="mt-2 relative group">
             <div class="flex items-center text-sm text-gray-500 ">
                 <svg class="w-4 h-4 mr-1 cursor-help" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -26,10 +51,8 @@
                 95% of customers say these fit true to size
             </div>
 
-            <!-- Hover Tooltip - Now appears below -->
             <div
                 class="absolute top-full left-0 mt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <!-- Tooltip Arrow - Now at top -->
                 <div
                     class="absolute left-4 -top-1.5 w-3 h-3 bg-white border-l border-t border-gray-200 transform -translate-y-1/2 rotate-45">
                 </div>
@@ -38,7 +61,6 @@
                     <h3 class="font-medium mb-3">95% of customers say these fit true to size</h3>
 
                     <div class="space-y-3">
-                        <!-- Small fit -->
                         <div class="flex items-center justify-between">
                             <span class="text-sm w-20">Small</span>
                             <div class="flex-1 mx-3">
@@ -49,7 +71,6 @@
                             <span class="text-sm w-10 text-right">1%</span>
                         </div>
 
-                        <!-- True to size -->
                         <div class="flex items-center justify-between">
                             <span class="text-sm w-20">True to size</span>
                             <div class="flex-1 mx-3">
@@ -60,7 +81,6 @@
                             <span class="text-sm w-10 text-right">95%</span>
                         </div>
 
-                        <!-- Large fit -->
                         <div class="flex items-center justify-between">
                             <span class="text-sm w-20">Large</span>
                             <div class="flex-1 mx-3">
@@ -73,10 +93,10 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- Size Buttons -->
-        <div class="flex flex-wrap gap-2 mt-2">
+        <!-- <div class="flex flex-wrap gap-2 mt-2">
             <button v-for="sizeOption in availableSizes" :key="sizeOption.size" @click="selectSize(sizeOption)"
                 class="min-w-[40px] px-2 py-1 rounded-full text-sm font-medium transition-all duration-200" :class="[
                     selectedSize === sizeOption.size
@@ -87,13 +107,12 @@
                 ]" :disabled="!sizeOption.inStock">
                 {{ sizeOption.size }}
 
-                <!-- Low Stock Indicator -->
                 <span v-if="sizeOption.stock <= lowStockThreshold && sizeOption.stock > 0"
                     class="absolute -top-2 -right-2 px-1.5 py-0.5 bg-red-500 text-white text-[10px] rounded-full whitespace-nowrap">
                     {{ sizeOption.stock }} left
                 </span>
             </button>
-        </div>
+        </div> -->
 
         <!-- Stock Info -->
         <div v-if="selectedSize && getSelectedVariantStock !== null" class="mt-1 text-xs text-gray-500">
@@ -101,7 +120,7 @@
         </div>
 
         <!-- Size Guide Modal -->
-        <AlertDialog v-model:open="showSizeGuide">
+        <!-- <AlertDialog v-model:open="showSizeGuide">
             <AlertDialogContent class="max-w-md">
                 <AlertDialogHeader>
                     <AlertDialogTitle class="text-lg font-medium">Size Guide</AlertDialogTitle>
@@ -135,7 +154,7 @@
                     </AlertDialogCancel>
                 </AlertDialogFooter>
             </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog> -->
     </div>
 </template>
 

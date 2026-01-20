@@ -103,7 +103,7 @@
                         <div>
                             <h3 class="font-semibold text-[#2d3642]">Email Support</h3>
                             <p class="text-gray-600 text-sm">Response within 24h</p>
-                            <a href="mailto:support@bruthol.com" class="text-[#24a6bb] hover:underline text-sm">
+                            <a href="mailto:brutholdigital@gmail.com" class="text-[#24a6bb] hover:underline text-sm">
                                 Send Email →
                             </a>
                         </div>

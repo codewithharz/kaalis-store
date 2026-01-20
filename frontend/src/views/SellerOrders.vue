@@ -251,6 +251,23 @@
                                                 <span
                                                     class="font-medium text-gray-900 text-sm sm:text-base block truncate">{{
                                                         product.name }}</span>
+                                                <!-- Add variant details -->
+                                                <div v-if="product.variant"
+                                                    class="text-xs text-gray-500 mt-0.5 flex flex-wrap gap-x-2">
+                                                    <span v-if="product.variant.color">
+                                                        Color: {{ typeof product.variant.color === 'object' ?
+                                                        product.variant.color.name : product.variant.color }}
+                                                    </span>
+                                                    <span v-for="(attr, attrIdx) in product.variant.attributes"
+                                                        :key="attrIdx">
+                                                        {{ attr.name }}: {{ attr.value }}
+                                                    </span>
+                                                    <!-- Fallback for legacy size field if not in attributes -->
+                                                    <span
+                                                        v-if="product.variant.size && (!product.variant.attributes || !product.variant.attributes.some(a => a.name.toLowerCase() === 'size'))">
+                                                        Size: {{ product.variant.size }}
+                                                    </span>
+                                                </div>
                                                 <span class="text-xs sm:text-sm text-gray-600">Qty: {{ product.quantity
                                                 }}</span>
                                             </div>

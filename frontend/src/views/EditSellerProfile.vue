@@ -109,8 +109,7 @@
 import { ref } from 'vue';
 import { useSellerStore } from '../store/sellerStore';
 import { toast } from 'vue-sonner';
-import { storage } from '../utils/firebase';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import uploadService from '../services/uploadService';
 import { X, Store, FileText, UserCircle, Image, Loader2 } from 'lucide-vue-next';
 
 export default {
@@ -135,11 +134,6 @@ export default {
             backgroundImage: sellerStore.sellerProfile.backgroundImage || '',
         });
 
-        const uploadImage = async (file, path) => {
-            const imageRef = storageRef(storage, `${path}/${file.name}`);
-            await uploadBytes(imageRef, file);
-            return await getDownloadURL(imageRef);
-        };
 
         const handleProfileImageUpload = async (event) => {
             const file = event.target.files[0];
@@ -158,7 +152,7 @@ export default {
 
                 try {
                     toast.loading('Uploading profile image...');
-                    const url = await uploadImage(file, 'profile-images');
+                    const url = await uploadService.uploadImage(file);
                     formData.value.profileImage = url;
                     toast.success('Profile image uploaded successfully');
                 } catch (error) {
@@ -185,7 +179,7 @@ export default {
 
                 try {
                     toast.loading('Uploading background image...');
-                    const url = await uploadImage(file, 'background-images');
+                    const url = await uploadService.uploadImage(file);
                     formData.value.backgroundImage = url;
                     toast.success('Background image uploaded successfully');
                 } catch (error) {
