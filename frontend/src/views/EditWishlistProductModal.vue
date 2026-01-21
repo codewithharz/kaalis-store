@@ -55,10 +55,11 @@
                             <!-- Main Color Picker -->
                             <div class="space-y-4 lg:col-span-3">
                                 <label class="text-sm font-medium text-gray-700">Primary Display Color</label>
-                                
+
                                 <!-- Scrollable Color Selection Grid -->
                                 <div class="p-4 bg-gray-50/50 rounded-xl border border-gray-100">
-                                    <div class="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-12 gap-y-4 gap-x-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                                    <div
+                                        class="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-12 gap-y-4 gap-x-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
                                         <div v-for="color in allColors" :key="color.hexCode"
                                             class="flex flex-col items-center gap-1 group/color cursor-pointer"
                                             @click="selectColorPreset(color)">
@@ -68,19 +69,22 @@
                                                     ? 'border-indigo-500 scale-110 ring-2 ring-indigo-500/20'
                                                     : 'border-gray-200 hover:border-indigo-300'
                                             ]" :style="{ backgroundColor: color.hexCode }" :title="color.name">
-                                                <div v-if="editingProduct.color.toLowerCase() === color.hexCode.toLowerCase() && !isCustomColor" 
+                                                <div v-if="editingProduct.color.toLowerCase() === color.hexCode.toLowerCase() && !isCustomColor"
                                                     class="absolute inset-0 flex items-center justify-center">
-                                                    <div class="w-1.5 h-1.5 rounded-full bg-white shadow-sm ring-1 ring-black/10"></div>
+                                                    <div
+                                                        class="w-1.5 h-1.5 rounded-full bg-white shadow-sm ring-1 ring-black/10">
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        
+
                                         <!-- "Other" Option -->
-                                        <div class="flex flex-col items-center gap-1 cursor-pointer" @click="toggleCustomColor()">
+                                        <div class="flex flex-col items-center gap-1 cursor-pointer"
+                                            @click="toggleCustomColor()">
                                             <div :class="[
                                                 'w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-200 shadow-sm',
-                                                isCustomColor 
-                                                    ? 'border-indigo-500 scale-110 ring-2 ring-indigo-500/20' 
+                                                isCustomColor
+                                                    ? 'border-indigo-500 scale-110 ring-2 ring-indigo-500/20'
                                                     : 'border-gray-200 hover:border-indigo-300 bg-white'
                                             ]">
                                                 <Plus class="w-4 h-4 text-gray-400" />
@@ -90,20 +94,23 @@
                                 </div>
 
                                 <!-- Custom Color Inputs (Visible when "Other" is selected) -->
-                                <div v-if="isCustomColor" class="flex items-center gap-3 mt-4 p-4 bg-white rounded-xl border border-dashed border-gray-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+                                <div v-if="isCustomColor"
+                                    class="flex items-center gap-3 mt-4 p-4 bg-white rounded-xl border border-dashed border-gray-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
                                     <div class="relative group">
                                         <input type="color" v-model="editingProduct.color"
                                             class="h-11 w-11 rounded-lg border border-gray-200 cursor-pointer p-1 bg-white"
                                             @input="updateMainColor" />
                                     </div>
-                                    <div class="flex-1 relative rounded-lg border border-gray-200 focus-within:border-indigo-500 bg-white shadow-sm transition-all">
+                                    <div
+                                        class="flex-1 relative rounded-lg border border-gray-200 focus-within:border-indigo-500 bg-white shadow-sm transition-all">
                                         <input type="text" v-model="mainColorName" placeholder="e.g. Onyx Black"
                                             class="w-full px-4 py-2.5 text-sm text-gray-700 bg-transparent border-none focus:outline-none" />
                                     </div>
                                 </div>
                                 <!-- Suggestion hint -->
                                 <div v-else class="text-[10px] text-gray-400 font-medium px-1 flex items-center gap-1">
-                                    <Sparkles class="w-2.5 h-2.5" /> Selected: <span class="text-indigo-600">{{ mainColorName || 'None' }}</span>
+                                    <Sparkles class="w-2.5 h-2.5" /> Selected: <span class="text-indigo-600">{{
+                                        mainColorName || 'None' }}</span>
                                 </div>
                             </div>
 
@@ -189,8 +196,10 @@
                             </div>
 
                             <!-- Image Previews -->
-                            <div v-if="editingProduct.images && editingProduct.images.length" class="flex flex-wrap gap-4">
-                                <div v-for="(img, index) in editingProduct.images" :key="index" class="relative w-32 h-32">
+                            <div v-if="editingProduct.images && editingProduct.images.length"
+                                class="flex flex-wrap gap-4">
+                                <div v-for="(img, index) in editingProduct.images" :key="index"
+                                    class="relative w-32 h-32">
                                     <img :src="img" alt="Product image"
                                         class="w-full h-full object-cover rounded-lg shadow-sm" />
                                     <button @click="removeImage(index)" type="button"
@@ -387,8 +396,8 @@
                                         <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Specs &
                                             Attributes</h4>
                                         <div class="flex gap-2">
-                                            <button v-for="attr in ['Color', 'Size', 'Capacity', 'Material']" :key="attr"
-                                                @click="addVariantAttribute(index, attr)" type="button"
+                                            <button v-for="attr in ['Color', 'Size', 'Capacity', 'Material']"
+                                                :key="attr" @click="addVariantAttribute(index, attr)" type="button"
                                                 class="text-[10px] bg-white border border-gray-200 text-gray-500 px-2 py-1 rounded-md hover:border-indigo-300 hover:text-indigo-600 transition-all">
                                                 + {{ attr }}
                                             </button>
@@ -404,35 +413,38 @@
                                                     placeholder="Name (e.g. Size)" />
                                             </div>
                                             <div class="flex-1 flex items-center gap-3">
-                                            <div v-if="attribute.name.toLowerCase() === 'color'"
-                                                class="flex flex-col gap-3 flex-1">
-                                                <!-- Compact Color Picker for Variants -->
-                                                <div class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-2 bg-gray-50/50 rounded-lg border border-gray-100 custom-scrollbar">
-                                                    <div v-for="color in allColors" :key="color.hexCode"
-                                                        @click="selectColorPreset(color, index)"
-                                                        class="w-5 h-5 rounded-full border transition-all cursor-pointer relative"
-                                                        :style="{ backgroundColor: color.hexCode }"
-                                                        :title="color.name">
-                                                        <div v-if="attribute.value.toLowerCase() === color.hexCode.toLowerCase()" 
-                                                            class="absolute inset-0 flex items-center justify-center">
-                                                            <div class="w-1 h-1 rounded-full bg-white shadow-sm ring-1 ring-black/10"></div>
+                                                <div v-if="attribute.name.toLowerCase() === 'color'"
+                                                    class="flex flex-col gap-3 flex-1">
+                                                    <!-- Compact Color Picker for Variants -->
+                                                    <div
+                                                        class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-2 bg-gray-50/50 rounded-lg border border-gray-100 custom-scrollbar">
+                                                        <div v-for="color in allColors" :key="color.hexCode"
+                                                            @click="selectColorPreset(color, index)"
+                                                            class="w-5 h-5 rounded-full border transition-all cursor-pointer relative"
+                                                            :style="{ backgroundColor: color.hexCode }"
+                                                            :title="color.name">
+                                                            <div v-if="attribute.value.toLowerCase() === color.hexCode.toLowerCase()"
+                                                                class="absolute inset-0 flex items-center justify-center">
+                                                                <div
+                                                                    class="w-1 h-1 rounded-full bg-white shadow-sm ring-1 ring-black/10">
+                                                                </div>
+                                                            </div>
                                                         </div>
+                                                        <!-- Custom Picker Toggle -->
+                                                        <button @click="attribute.value = '#000000'" type="button"
+                                                            class="w-5 h-5 rounded-full border border-dashed border-gray-300 flex items-center justify-center bg-white hover:border-indigo-300">
+                                                            <Plus class="w-2.5 h-2.5 text-gray-400" />
+                                                        </button>
                                                     </div>
-                                                    <!-- Custom Picker Toggle -->
-                                                    <button @click="attribute.value = '#000000'" type="button" 
-                                                        class="w-5 h-5 rounded-full border border-dashed border-gray-300 flex items-center justify-center bg-white hover:border-indigo-300">
-                                                        <Plus class="w-2.5 h-2.5 text-gray-400" />
-                                                    </button>
+                                                    <!-- Hex/Name Input fallback -->
+                                                    <div class="flex items-center gap-2">
+                                                        <input type="color" v-model="attribute.value"
+                                                            class="h-6 w-6 rounded border border-gray-200 p-0 cursor-pointer" />
+                                                        <input v-model="attribute.value"
+                                                            class="flex-1 text-[10px] text-gray-600 border border-gray-100 px-2 py-1 rounded bg-gray-50 focus:bg-white focus:outline-none"
+                                                            placeholder="Hex or Color Name" />
+                                                    </div>
                                                 </div>
-                                                <!-- Hex/Name Input fallback -->
-                                                <div class="flex items-center gap-2">
-                                                    <input type="color" v-model="attribute.value"
-                                                        class="h-6 w-6 rounded border border-gray-200 p-0 cursor-pointer" />
-                                                    <input v-model="attribute.value"
-                                                        class="flex-1 text-[10px] text-gray-600 border border-gray-100 px-2 py-1 rounded bg-gray-50 focus:bg-white focus:outline-none"
-                                                        placeholder="Hex or Color Name" />
-                                                </div>
-                                            </div>
                                                 <input v-else v-model="attribute.value"
                                                     class="flex-1 text-xs text-gray-600 border-none bg-transparent focus:outline-none"
                                                     placeholder="Value (e.g. XL, 40cm, 512GB)" />
@@ -602,10 +614,12 @@
 
                         <div v-show="showSections.seo" class="space-y-4 pt-2">
                             <!-- Auto-gen Toggle -->
-                            <div class="flex items-center gap-2 mb-2 p-3 bg-indigo-50/50 rounded-lg border border-indigo-100/50">
+                            <div
+                                class="flex items-center gap-2 mb-2 p-3 bg-indigo-50/50 rounded-lg border border-indigo-100/50">
                                 <input type="checkbox" v-model="seoAutoMode" id="seoAutoEdit"
                                     class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500/20" />
-                                <label for="seoAutoEdit" class="text-xs font-medium text-indigo-700 flex items-center gap-1 cursor-pointer">
+                                <label for="seoAutoEdit"
+                                    class="text-xs font-medium text-indigo-700 flex items-center gap-1 cursor-pointer">
                                     <Sparkles class="w-3 h-3" /> Auto-generate SEO from modifications
                                 </label>
                             </div>
@@ -698,6 +712,51 @@ export default {
         const mainColorName = ref('');
         const allColors = getAllColors();
         const isCustomColor = ref(false);
+        const tagsInput = ref('');
+
+        // Initialize the editing product with default values
+        const editingProduct = reactive({
+            ...props.localEditingProduct,
+            // Provide default values and handle potentially undefined properties
+            // name: '', // use this when wishlist link not working
+            name: props.localEditingProduct.name || '',
+            description: props.localEditingProduct.description || '',
+            price: props.localEditingProduct.price || 0,
+            originalPrice: props.localEditingProduct.originalPrice || 0,
+            stock: props.localEditingProduct.stock || 0,
+            brand: props.localEditingProduct.brand || '',
+            discount: props.localEditingProduct.discount || 0,
+            color: props.localEditingProduct.color || '#000000',
+            availableColors: props.localEditingProduct.availableColors || [],
+            category: props.localEditingProduct.category || '',
+            variants: (props.localEditingProduct.variants || []).map(variant => ({
+                ...variant,
+                attributes: variant.attributes?.length ? variant.attributes : [
+                    { name: 'Color', value: variant.color?.hexCode || props.localEditingProduct.color || '#000000' }
+                ],
+                sku: variant.sku || '',
+                price: variant.price || 0,
+                stock: variant.stock || 0,
+                weight: variant.weight || 0,
+                images: variant.images || []
+            })),
+            unit: {
+                category: props.localEditingProduct.unit?.category || '',
+                baseUnit: props.localEditingProduct.unit?.baseUnit || '',
+                conversionFactor: props.localEditingProduct.unit?.conversionFactor || 1,
+                value: props.localEditingProduct.unit?.value || 1,
+                displayUnit: props.localEditingProduct.unit?.displayUnit || '',
+                packagingUnit: props.localEditingProduct.unit?.packagingUnit || '',
+                precision: props.localEditingProduct.unit?.precision || 2,
+                compoundUnit: props.localEditingProduct.unit?.compoundUnit || {},
+            },
+            bulkPricing: props.localEditingProduct.bulkPricing || [],
+            metaTitle: props.localEditingProduct.metaTitle || '',
+            metaDescription: props.localEditingProduct.metaDescription || '',
+            images: props.localEditingProduct.images || [],
+            isAvailable: props.localEditingProduct.isAvailable ?? true,
+            isNew: props.localEditingProduct.isNew ?? false,
+        });
 
         const selectColorPreset = (color, variantIndex = null) => {
             if (variantIndex !== null) {
@@ -751,12 +810,12 @@ export default {
             if (!variant) return;
 
             const namePart = editingProduct.name.substring(0, 3).toUpperCase();
-            
+
             // Try to get color from attributes first
             const colorAttr = variant.attributes?.find(a => a.name.toLowerCase() === 'color');
             const colorName = colorAttr?.value || variant.color?.name || 'VAR';
             const colorPart = colorName.substring(0, 3).trim().toUpperCase();
-            
+
             const randPart = Math.floor(1000 + Math.random() * 9000);
             variant.sku = `${namePart}-${colorPart}-${randPart}`;
         };
@@ -793,49 +852,6 @@ export default {
             }
         });
 
-        // Initialize the editing product with default values
-        const editingProduct = reactive({
-            ...props.localEditingProduct,
-            // Provide default values and handle potentially undefined properties
-            // name: '', // use this when wishlist link not working
-            name: props.localEditingProduct.name || '',
-            description: props.localEditingProduct.description || '',
-            price: props.localEditingProduct.price || 0,
-            originalPrice: props.localEditingProduct.originalPrice || 0,
-            stock: props.localEditingProduct.stock || 0,
-            brand: props.localEditingProduct.brand || '',
-            discount: props.localEditingProduct.discount || 0,
-            color: props.localEditingProduct.color || '#000000',
-            availableColors: props.localEditingProduct.availableColors || [],
-            category: props.localEditingProduct.category || '',
-            variants: (props.localEditingProduct.variants || []).map(variant => ({
-                ...variant,
-                attributes: variant.attributes?.length ? variant.attributes : [
-                    { name: 'Color', value: variant.color?.hexCode || props.localEditingProduct.color || '#000000' }
-                ],
-                sku: variant.sku || '',
-                price: variant.price || 0,
-                stock: variant.stock || 0,
-                weight: variant.weight || 0,
-                images: variant.images || []
-            })),
-            unit: {
-                category: props.localEditingProduct.unit?.category || '',
-                baseUnit: props.localEditingProduct.unit?.baseUnit || '',
-                conversionFactor: props.localEditingProduct.unit?.conversionFactor || 1,
-                value: props.localEditingProduct.unit?.value || 1,
-                displayUnit: props.localEditingProduct.unit?.displayUnit || '',
-                packagingUnit: props.localEditingProduct.unit?.packagingUnit || '',
-                precision: props.localEditingProduct.unit?.precision || 2,
-                compoundUnit: props.localEditingProduct.unit?.compoundUnit || {},
-            },
-            bulkPricing: props.localEditingProduct.bulkPricing || [],
-            metaTitle: props.localEditingProduct.metaTitle || '',
-            metaDescription: props.localEditingProduct.metaDescription || '',
-            images: props.localEditingProduct.images || [],
-            isAvailable: props.localEditingProduct.isAvailable ?? true,
-            reservedStock: props.localEditingProduct.reservedStock || 0,
-        });
 
 
         const handleImageUpload = async (event) => {
@@ -873,7 +889,7 @@ export default {
 
                 toast.loading(`Uploading ${validFiles.length} images...`);
                 const urls = await uploadService.uploadImages(validFiles);
-                
+
                 if (!editingProduct.images) {
                     editingProduct.images = [];
                 }
@@ -976,8 +992,18 @@ export default {
 
 
         // Update unit options based on selected category
-        const updateSelectedCategories = (categoryId) => {
-            if (categories.value && categories.value.length > 0) {
+        const updateSelectedCategories = (categoryInput) => {
+            let categoryId = categoryInput;
+            if (typeof categoryInput === 'object' && categoryInput !== null) {
+                if (Array.isArray(categoryInput)) {
+                    // If array, try to get ID from first item or use the item itself if string
+                    categoryId = categoryInput[0]?._id || categoryInput[0];
+                } else {
+                    categoryId = categoryInput._id || categoryInput;
+                }
+            }
+
+            if (categories.value && categories.value.length > 0 && categoryId) {
                 const findCategoryPath = (categories, targetId, path = []) => {
                     for (const category of categories) {
                         if (category._id === targetId) {
@@ -1013,10 +1039,10 @@ export default {
             try {
                 toast.loading(`Uploading ${files.length} variant images...`);
                 const urls = await uploadService.uploadImages(files);
-                
+
                 // Append instead of replace for consistency
                 editingProduct.variants[variantIndex].images.push(...urls);
-                
+
                 toast.success('Variant images uploaded');
             } catch (error) {
                 console.error('Error uploading variant images:', error);
@@ -1035,17 +1061,17 @@ export default {
 
             // Expand variants: create separate variant for each color+size combination
             const expandedVariants = [];
-            
+
             variants.forEach(variant => {
                 // Extract all colors and sizes from attributes
                 const colors = variant.attributes?.filter(a => a.name.toLowerCase() === 'color') || [];
                 const sizes = variant.attributes?.filter(a => a.name.toLowerCase() === 'size') || [];
-                const otherAttrs = variant.attributes?.filter(a => 
+                const otherAttrs = variant.attributes?.filter(a =>
                     a.name.toLowerCase() !== 'color' && a.name.toLowerCase() !== 'size'
                 ) || [];
-                
+
                 console.log('Edit modal - Variant expansion:', { colors, sizes, otherAttrs });
-                
+
                 // If no colors or sizes, keep the variant as-is
                 if (colors.length === 0 && sizes.length === 0) {
                     expandedVariants.push({
@@ -1061,7 +1087,7 @@ export default {
                     });
                     return;
                 }
-                
+
                 // If only colors (no sizes), create one variant per color
                 if (colors.length > 0 && sizes.length === 0) {
                     colors.forEach((colorAttr, colorIndex) => {
@@ -1094,7 +1120,7 @@ export default {
                     });
                     return;
                 }
-                
+
                 // If only sizes (no colors), create one variant per size
                 if (sizes.length > 0 && colors.length === 0) {
                     sizes.forEach(sizeAttr => {
@@ -1114,7 +1140,7 @@ export default {
                     });
                     return;
                 }
-                
+
                 // Create a variant for each color+size combination
                 colors.forEach((colorAttr, colorIndex) => {
                     sizes.forEach(sizeAttr => {
@@ -1147,7 +1173,7 @@ export default {
                     });
                 });
             });
-            
+
             console.log('Edit modal - Expanded variants:', expandedVariants.length, expandedVariants);
             return expandedVariants;
         };
@@ -1161,9 +1187,9 @@ export default {
         const saveProduct = async () => {
             try {
                 console.log('Starting saveProduct process...');
-                
+
                 const updatedProduct = JSON.parse(JSON.stringify(editingProduct));
-                
+
                 // Derive variants using expansion logic
                 updatedProduct.variants = validateVariants(updatedProduct.variants);
                 console.log('Processed variants:', updatedProduct.variants);
@@ -1272,12 +1298,12 @@ export default {
             if (newProduct) {
                 Object.assign(editingProduct, newProduct);
                 tagsInput.value = newProduct.tags?.join(', ') || '';
-                
+
                 // Initialize color selection state
                 const lowerColor = (newProduct.color || '#000000').toLowerCase();
                 const matchesPreset = allColors.some(c => c.hexCode.toLowerCase() === lowerColor);
                 isCustomColor.value = !matchesPreset && newProduct.color && newProduct.color !== '#000000';
-                
+
                 if (matchesPreset) {
                     const preset = allColors.find(c => c.hexCode.toLowerCase() === lowerColor);
                     mainColorName.value = preset.name;

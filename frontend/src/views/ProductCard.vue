@@ -1,194 +1,199 @@
 <template>
-    <div :class="[
-        'group bg-white rounded-lg overflow-hidden hover:shadow-md transition-all duration-300 transform',
-        viewMode === 'list' ? 'sm:flex sm:h-48' : '',
-        'border border-gray-100 hover:border-gray-200'
-    ]">
-        <!-- Image Container -->
-        <div class="relative transition-all duration-500 ease-in-out" :class="{
-            'aspect-[1/1]': viewMode !== 'list',
-            'w-full sm:w-60 md:w-72 h-48 sm:h-full': viewMode === 'list'
-        }">
-            <router-link :to="productLink" class="block w-full h-full">
-                <img :src="product.images[0]" :alt="product.name"
-                    class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-            </router-link>
-
-            <!-- actions slot here -->
-            <slot name="actions"></slot>
-
-            <!-- Edit/Delete Buttons - Mobile optimized -->
-            <div v-if="isUserProduct"
-                class="absolute top-1 sm:top-2 left-1 sm:left-2 flex space-x-1 sm:space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-                <button @click="handleEditProduct"
-                    class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 touch-manipulation">
-                    <Edit class="w-3 h-3 sm:w-4 sm:h-4" />
-                </button>
-                <button @click="handleDeleteProduct"
-                    class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 touch-manipulation">
-                    <Trash class="w-3 h-3 sm:w-4 sm:h-4" />
-                </button>
-            </div>
-
-            <!-- Favorite Button - Mobile optimized -->
-            <button v-if="showHeartButton" @click="toggleHeart"
-                class="absolute top-1 sm:top-2 right-1 sm:right-2 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/90 flex items-center justify-center hover:bg-white z-10 touch-manipulation">
-                <Heart :class="isHeartFilled ? 'text-red-500' : 'text-gray-300'" class="w-3 h-3 sm:w-4 sm:h-4" />
-            </button>
-
-            <!-- Discount Badge - Mobile positioned -->
-            <div v-if="product.discount"
-                class="absolute bottom-1 sm:bottom-2 left-1 sm:left-2 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-red-500 text-white text-xs font-medium rounded z-10">
-                -{{ product.discount }}%
-            </div>
-        </div>
-
-        <!-- Product Info -->
-        <div class="p-2 sm:p-3 md:p-4 flex-1 transition-all duration-500 ease-in-out" :class="{
-            'flex flex-col justify-between gap-2 sm:gap-4': viewMode === 'list'
-        }">
-            <!-- Title and Description Section -->
-            <div>
-                <h3 class="text-sm sm:text-[16px] font-medium text-gray-900 leading-[1.3] mb-1 sm:mb-2" :class="{
-                    'line-clamp-2': viewMode !== 'list',
-                    'line-clamp-1 sm:line-clamp-2': viewMode === 'list'
-                }">
-                    {{ product.name }}
-                </h3>
-
-                <!-- Description - Only show in list view -->
-                <p v-if="viewMode === 'list'"
-                    class="text-xs sm:text-sm text-gray-500 line-clamp-2 sm:line-clamp-3 mb-1 sm:mb-2">
-                    {{ product.description }}
-                </p>
-            </div>
-
-            <!-- Price and Info Section -->
-            <div :class="{
-                'flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2': viewMode === 'list',
-                'space-y-2': viewMode !== 'list'
+    <div>
+        <div :class="[
+            'group bg-white rounded-lg overflow-hidden hover:shadow-md transition-all duration-300 transform',
+            viewMode === 'list' ? 'sm:flex sm:h-48' : '',
+            'border border-gray-100 hover:border-gray-200'
+        ]">
+            <!-- Image Container -->
+            <div class="relative transition-all duration-500 ease-in-out" :class="{
+                'aspect-[1/1]': viewMode !== 'list',
+                'w-full sm:w-60 md:w-72 h-48 sm:h-full': viewMode === 'list'
             }">
-                <div class="flex-1">
-                    <!-- Price and Discount Row -->
-                    <div class="flex items-baseline gap-1 sm:gap-2 mb-1 sm:mb-2">
-                        <!-- Current Price -->
-                        <div class="flex items-baseline">
-                            <span class="text-[10px] sm:text-[12px] font-normal text-black">₦</span>
-                            <span class="text-sm sm:text-[18px] font-bold text-black">{{ formatPrice(product.price)
-                                }}</span>
-                        </div>
+                <router-link :to="productLink" class="block w-full h-full">
+                    <img :src="product.images[0]" :alt="product.name"
+                        class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                </router-link>
 
-                        <!-- Original Price -->
-                        <div v-if="product.originalPrice" class="flex items-baseline text-gray-400">
-                            <span class="text-[8px] sm:text-[10px] mr-0.5">₦</span>
-                            <span class="text-[10px] sm:text-xs line-through">{{ formatPrice(product.originalPrice)
-                                }}</span>
-                        </div>
+                <!-- actions slot here -->
+                <slot name="actions"></slot>
 
-                        <!-- Discount Tag - Hidden on mobile when in image badge -->
-                        <span v-if="product.discount && viewMode === 'list'"
-                            class="px-1 sm:px-1.5 py-0.5 rounded border border-red-500 text-[10px] sm:text-xs text-red-500 font-medium">
-                            -{{ product.discount }}%
-                        </span>
-                    </div>
-
-                    <!-- Additional Info for Grid View -->
-                    <div v-if="viewMode !== 'list'" class="space-y-1 sm:space-y-2">
-                        <!-- Ratings and Sold Count Row -->
-                        <div class="flex items-center justify-between text-xs">
-                            <span class="text-gray-500">{{ formatSoldCount(product.soldCount) }} sold</span>
-
-                            <!-- Ratings -->
-                            <div class="flex items-center gap-1">
-                                <div class="flex">
-                                    <Star v-for="i in 5" :key="i"
-                                        :class="[i <= displayRating ? 'text-yellow-400' : 'text-gray-200']"
-                                        class="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                                </div>
-                                <span class="text-[10px] sm:text-[11px] text-gray-500">{{ ratingCount }}</span>
-                            </div>
-                        </div>
-
-                        <!-- Stock and Cart Row -->
-                        <div class="flex items-center justify-between">
-                            <span v-if="product.isAvailable" class="text-[10px] sm:text-[11px] text-gray-600">
-                                <span class="hidden sm:inline">In stock: </span>{{ product.stock }}
-                            </span>
-
-                            <!-- Cart Button -->
-                            <button
-                                class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-gray-50 touch-manipulation"
-                                @click="addToCart">
-                                <ShoppingCart class="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" />
-                            </button>
-                        </div>
-
-                        <!-- Additional Product Info - Mobile condensed -->
-                        <div class="flex flex-wrap items-center gap-1 sm:gap-2">
-                            <span v-if="product.bulkPricing?.length"
-                                class="text-[10px] sm:text-[11px] text-gray-600 bg-gray-100 px-1 rounded">
-                                Bulk
-                            </span>
-                            <span v-if="product.variants?.length"
-                                class="text-[10px] sm:text-[11px] text-gray-600 bg-gray-100 px-1 rounded">
-                                {{ product.variants.length }} variants
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right side info for List View -->
-                <div v-if="viewMode === 'list'"
-                    class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-6 w-full sm:w-auto">
-                    <span class="text-xs sm:text-sm text-gray-500">{{ formatSoldCount(product.soldCount) }} sold</span>
-
-                    <!-- Ratings -->
-                    <div class="flex items-center gap-1 sm:gap-2">
-                        <div class="flex">
-                            <Star v-for="i in 5" :key="i"
-                                :class="[i <= displayRating ? 'text-yellow-400' : 'text-gray-200']"
-                                class="w-3 h-3 sm:w-4 sm:h-4" />
-                        </div>
-                        <span class="text-xs sm:text-sm text-gray-500">({{ ratingCount }})</span>
-                    </div>
-
-                    <!-- Stock -->
-                    <span v-if="product.isAvailable" class="text-xs sm:text-sm text-gray-600">
-                        <span class="hidden sm:inline">Stock: </span>{{ product.stock }}
-                    </span>
-
-                    <!-- Cart Button -->
-                    <button
-                        class="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-gray-50 touch-manipulation self-end sm:self-center"
-                        @click="addToCart">
-                        <ShoppingCart class="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+                <!-- Edit/Delete Buttons - Mobile optimized -->
+                <div v-if="isUserProduct"
+                    class="absolute top-1 sm:top-2 left-1 sm:left-2 flex space-x-1 sm:space-x-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 z-10">
+                    <button @click="handleEditProduct"
+                        class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 touch-manipulation">
+                        <Edit class="w-3 h-3 sm:w-4 sm:h-4" />
+                    </button>
+                    <button @click="handleDeleteProduct"
+                        class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 touch-manipulation">
+                        <Trash class="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
                 </div>
+
+                <!-- Favorite Button - Mobile optimized -->
+                <button v-if="showHeartButton" @click="toggleHeart"
+                    class="absolute top-1 sm:top-2 right-1 sm:right-2 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/90 flex items-center justify-center hover:bg-white z-10 touch-manipulation">
+                    <Heart :class="isHeartFilled ? 'text-red-500' : 'text-gray-300'" class="w-3 h-3 sm:w-4 sm:h-4" />
+                </button>
+
+                <!-- Discount Badge - Mobile positioned -->
+                <div v-if="product.discount"
+                    class="absolute bottom-1 sm:bottom-2 left-1 sm:left-2 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-red-500 text-white text-xs font-medium rounded z-10">
+                    -{{ product.discount }}%
+                </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="p-2 sm:p-3 md:p-4 flex-1 transition-all duration-500 ease-in-out" :class="{
+                'flex flex-col justify-between gap-2 sm:gap-4': viewMode === 'list'
+            }">
+                <!-- Title and Description Section -->
+                <div>
+                    <h3 class="text-sm sm:text-[16px] font-medium text-gray-900 leading-[1.3] mb-1 sm:mb-2" :class="{
+                        'line-clamp-2': viewMode !== 'list',
+                        'line-clamp-1 sm:line-clamp-2': viewMode === 'list'
+                    }">
+                        {{ product.name }}
+                    </h3>
+
+                    <!-- Description - Only show in list view -->
+                    <p v-if="viewMode === 'list'"
+                        class="text-xs sm:text-sm text-gray-500 line-clamp-2 sm:line-clamp-3 mb-1 sm:mb-2">
+                        {{ product.description }}
+                    </p>
+                </div>
+
+                <!-- Price and Info Section -->
+                <div :class="{
+                    'flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2': viewMode === 'list',
+                    'space-y-2': viewMode !== 'list'
+                }">
+                    <div class="flex-1">
+                        <!-- Price and Discount Row -->
+                        <div class="flex items-baseline gap-1 sm:gap-2 mb-1 sm:mb-2">
+                            <!-- Current Price -->
+                            <div class="flex items-baseline">
+                                <span class="text-[10px] sm:text-[12px] font-normal text-black">₦</span>
+                                <span class="text-sm sm:text-[18px] font-bold text-black">{{ formatPrice(product.price)
+                                    }}</span>
+                            </div>
+
+                            <!-- Original Price -->
+                            <div v-if="product.originalPrice" class="flex items-baseline text-gray-400">
+                                <span class="text-[8px] sm:text-[10px] mr-0.5">₦</span>
+                                <span class="text-[10px] sm:text-xs line-through">{{ formatPrice(product.originalPrice)
+                                    }}</span>
+                            </div>
+
+                            <!-- Discount Tag - Hidden on mobile when in image badge -->
+                            <span v-if="product.discount && viewMode === 'list'"
+                                class="px-1 sm:px-1.5 py-0.5 rounded border border-red-500 text-[10px] sm:text-xs text-red-500 font-medium">
+                                -{{ product.discount }}%
+                            </span>
+                        </div>
+
+                        <!-- Additional Info for Grid View -->
+                        <div v-if="viewMode !== 'list'" class="space-y-1 sm:space-y-2">
+                            <!-- Ratings and Sold Count Row -->
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-gray-500">{{ formatSoldCount(product.soldCount) }} sold</span>
+
+                                <!-- Ratings -->
+                                <div class="flex items-center gap-1">
+                                    <div class="flex">
+                                        <Star v-for="i in 5" :key="i"
+                                            :class="[i <= displayRating ? 'text-yellow-400' : 'text-gray-200']"
+                                            class="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                    </div>
+                                    <span class="text-[10px] sm:text-[11px] text-gray-500">{{ ratingCount }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Stock and Cart Row -->
+                            <div class="flex items-center justify-between">
+                                <span v-if="product.isAvailable" class="text-[10px] sm:text-[11px] text-gray-600">
+                                    <span class="hidden sm:inline">In stock: </span>{{ product.stock }}
+                                </span>
+
+                                <!-- Cart Button -->
+                                <button
+                                    class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-gray-50 touch-manipulation"
+                                    @click="addToCart">
+                                    <ShoppingCart class="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" />
+                                </button>
+                            </div>
+
+                            <!-- Additional Product Info - Mobile condensed -->
+                            <div class="flex flex-wrap items-center gap-1 sm:gap-2">
+                                <span v-if="product.bulkPricing?.length"
+                                    class="text-[10px] sm:text-[11px] text-gray-600 bg-gray-100 px-1 rounded">
+                                    Bulk
+                                </span>
+                                <span v-if="product.variants?.length"
+                                    class="text-[10px] sm:text-[11px] text-gray-600 bg-gray-100 px-1 rounded">
+                                    {{ product.variants.length }} variants
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right side info for List View -->
+                    <div v-if="viewMode === 'list'"
+                        class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-6 w-full sm:w-auto">
+                        <span class="text-xs sm:text-sm text-gray-500">{{ formatSoldCount(product.soldCount) }}
+                            sold</span>
+
+                        <!-- Ratings -->
+                        <div class="flex items-center gap-1 sm:gap-2">
+                            <div class="flex">
+                                <Star v-for="i in 5" :key="i"
+                                    :class="[i <= displayRating ? 'text-yellow-400' : 'text-gray-200']"
+                                    class="w-3 h-3 sm:w-4 sm:h-4" />
+                            </div>
+                            <span class="text-xs sm:text-sm text-gray-500">({{ ratingCount }})</span>
+                        </div>
+
+                        <!-- Stock -->
+                        <span v-if="product.isAvailable" class="text-xs sm:text-sm text-gray-600">
+                            <span class="hidden sm:inline">Stock: </span>{{ product.stock }}
+                        </span>
+
+                        <!-- Cart Button -->
+                        <button
+                            class="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-gray-50 touch-manipulation self-end sm:self-center"
+                            @click="addToCart">
+                            <ShoppingCart class="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Delete Confirmation Modal - Mobile optimized -->
-    <div v-if="showDeleteModal"
-        class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-3 sm:px-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md p-6 sm:p-8 transform transition-all">
-            <div class="text-center">
-                <AlertCircle class="w-10 h-10 sm:w-12 sm:h-12 text-red-500 mx-auto mb-3 sm:mb-4" />
-                <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">Delete Product</h3>
-                <p class="text-sm sm:text-base text-gray-500">Are you sure you want to delete this product? This action
-                    cannot be undone.</p>
-            </div>
+        <!-- Delete Confirmation Modal - Mobile optimized -->
+        <div v-if="showDeleteModal"
+            class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-3 sm:px-4">
+            <div
+                class="bg-white rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md p-6 sm:p-8 transform transition-all">
+                <div class="text-center">
+                    <AlertCircle class="w-10 h-10 sm:w-12 sm:h-12 text-red-500 mx-auto mb-3 sm:mb-4" />
+                    <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">Delete Product</h3>
+                    <p class="text-sm sm:text-base text-gray-500">Are you sure you want to delete this product? This
+                        action
+                        cannot be undone.</p>
+                </div>
 
-            <div class="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 mt-6 sm:mt-8">
-                <button @click="closeDeleteModal"
-                    class="px-4 sm:px-6 py-2.5 text-gray-700 font-medium hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors order-2 sm:order-1">
-                    Cancel
-                </button>
-                <button @click="confirmDelete" :disabled="isDeleting"
-                    class="px-4 sm:px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium shadow-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 order-1 sm:order-2">
-                    <Loader2 v-if="isDeleting" class="w-4 h-4 animate-spin" />
-                    <span class="text-sm sm:text-base">{{ isDeleting ? 'Deleting...' : 'Delete Product' }}</span>
-                </button>
+                <div class="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 mt-6 sm:mt-8">
+                    <button @click="closeDeleteModal"
+                        class="px-4 sm:px-6 py-2.5 text-gray-700 font-medium hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors order-2 sm:order-1">
+                        Cancel
+                    </button>
+                    <button @click="confirmDelete" :disabled="isDeleting"
+                        class="px-4 sm:px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium shadow-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 order-1 sm:order-2">
+                        <Loader2 v-if="isDeleting" class="w-4 h-4 animate-spin" />
+                        <span class="text-sm sm:text-base">{{ isDeleting ? 'Deleting...' : 'Delete Product' }}</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -255,6 +260,8 @@ export default {
             default: true
         }
     },
+
+    emits: ['edit', 'delete'],
     mounted() {
         console.log('Product in ProductCard:', this.product);
     },
@@ -466,12 +473,6 @@ export default {
             }
         }
 
-        const editProduct = () => {
-            // Implement edit functionality
-            console.log('Edit product:', this.product._id);
-            // You might want to emit an event to the parent component
-            this.$emit('edit', this.product._id);
-        }
 
         const formatRating = (rating) => {
             return rating % 1 === 0 ? rating.toFixed(0) : rating.toFixed(1);
@@ -552,7 +553,6 @@ export default {
             formatSoldCount,
             formatNumberToK,
             addToCart,
-            editProduct,
             formatRating,
             formatUnitDisplay
         };

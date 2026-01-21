@@ -82,18 +82,17 @@
                         </div>
 
                         <!-- Products Grid/List -->
-                        <transition-group :name="viewMode" tag="div"
-                            class="grid gap-3 sm:gap-4 lg:gap-6 transition-all duration-500 ease-in-out" :class="{
-                                'grid-cols-1': viewMode === 'list',
-                                'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5': viewMode === 'grid'
-                            }">
+                        <div :class="[ // Changed from transition-group to div
+                            'grid gap-3 sm:gap-4 lg:gap-6', // Removed transition classes
+                            viewMode === 'list' ? 'grid-cols-1' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+                        ]">
                             <ProductCard v-for="(product, index) in filteredProducts" :key="product._id"
                                 :product="product" :isUserProduct="true" @edit="handleEditProduct"
                                 @delete="handleDeleteProduct" :custom-class="[
                                     'product-card bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-lg sm:rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-300',
                                     viewMode === 'list' ? 'sm:flex sm:h-40 lg:h-48' : ''
-                                ]" :view-mode="viewMode" :style="{ '--i': index }" />
-                        </transition-group>
+                                ].join(' ')" :view-mode="viewMode" :style="{ '--i': index }" />
+                        </div>
 
                         <!-- Pagination controls -->
                         <div v-if="!loading && filteredProducts.length > 0" class="mt-4 sm:mt-6 flex justify-center">
@@ -149,16 +148,18 @@
         </div>
 
         <!-- Edit Modal -->
-        <EditWishlistProductModal v-if="isEditModalOpen && localEditingProduct" :isEditModalOpen="isEditModalOpen"
-            :localEditingProduct="localEditingProduct" :userId="userStore.user._id"
-            @update:isEditModalOpen="isEditModalOpen = $event" @product-updated="handleProductUpdated" />
+        <Teleport to="body">
+            <EditWishlistProductModal v-if="isEditModalOpen && localEditingProduct" :isEditModalOpen="isEditModalOpen"
+                :localEditingProduct="localEditingProduct" :userId="userStore.user._id"
+                @update:isEditModalOpen="isEditModalOpen = $event" @product-updated="handleProductUpdated" />
+        </Teleport>
     </div>
 </template>
 
 <script>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { Search, PlusCircle } from 'lucide-vue-next';
+import { Search, PlusCircle, AlertCircle, Package } from 'lucide-vue-next';
 import { useProductStore } from '../store/productStore';
 import { useUserStore } from '../store/user';
 import { toast } from 'vue-sonner';
@@ -172,7 +173,9 @@ export default {
         ProductCard,
         EditWishlistProductModal,
         Search,
-        PlusCircle
+        PlusCircle,
+        AlertCircle,
+        Package
     },
     setup() {
         const router = useRouter();
