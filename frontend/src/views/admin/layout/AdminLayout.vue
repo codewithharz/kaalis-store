@@ -6,7 +6,7 @@
             <div class="px-8 py-4">
                 <div class="flex justify-between items-center">
                     <p class="py- text-gray-600 text-sm ml-4">
-                        Admin > {{ currentSection }}
+                        {{ t('adminLayout.breadcrumbPrefix') }} > {{ currentSection }}
                     </p>
                     <!-- Admin Header Actions -->
                     <div class="flex items-center space-x-6">
@@ -33,7 +33,7 @@
                         <button @click="handleLogout"
                             class="text-red-600 hover:text-red-800 flex items-center space-x-1">
                             <LogOut class="w-5 h-5" />
-                            <span>Logout</span>
+                            <span>{{ t('adminLayout.logout') }}</span>
                         </button>
                     </div>
                 </div>
@@ -45,7 +45,7 @@
             <!-- Sidebar Navigation -->
             <nav class="w-full lg:w-64 bg-white shadow-sm">
                 <div class="px-5 pt-5 pb-0 mb-2 border-b-0 border-gray-100">
-                    <h1 class="text-2xl font-semibold">Admin Panel</h1>
+                    <h1 class="text-2xl font-semibold">{{ t('adminLayout.panelTitle') }}</h1>
                 </div>
                 <div class="p-4">
                     <ul class="flex flex-col space-y-4">
@@ -55,7 +55,7 @@
                                 class="flex items-center space-x-2 px-2 py-1.5 rounded-md text-gray-500 hover:text-white hover:bg-[#24a3b5] transition-all duration-300 ease-in-out"
                                 :class="{ 'bg-[#24a3b5] text-white': isCurrentRoute('AdminDashboard') }">
                                 <LayoutDashboard class="w-5 h-5" />
-                                <span class="font-medium text-sm">Dashboard</span>
+                                <span class="font-medium text-sm">{{ t('adminLayout.dashboard') }}</span>
                             </router-link>
                         </li>
 
@@ -64,7 +64,7 @@
                             <div class="relative">
                                 <div class="flex items-center space-x-2 px-2 py-1.5">
                                     <Users class="w-5 h-5 text-gray-500" />
-                                    <span class="font-medium text-sm text-gray-500">User Management</span>
+                                    <span class="font-medium text-sm text-gray-500">{{ t('adminLayout.userManagement') }}</span>
                                 </div>
                                 <div class="absolute left-4 h-full w-px bg-[#24a3b5]"></div>
                             </div>
@@ -77,7 +77,7 @@
                                             class="flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-500 hover:text-[#24a3b5] transition-colors duration-300 rounded-md hover:bg-gray-50"
                                             :class="{ 'text-[#24a3b5] bg-gray-50': isCurrentRoute('AdminUsers') }">
                                             <UserCircle class="w-4 h-4" />
-                                            <span>All Users</span>
+                                            <span>{{ t('adminLayout.allUsers') }}</span>
                                         </router-link>
                                     </li>
                                     <li class="relative pl-1">
@@ -86,7 +86,7 @@
                                             class="flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-500 hover:text-[#24a3b5] transition-colors duration-300 rounded-md hover:bg-gray-50"
                                             :class="{ 'text-[#24a3b5] bg-gray-50': isCurrentRoute('AdminSellers') }">
                                             <Store class="w-4 h-4" />
-                                            <span>Sellers</span>
+                                            <span>{{ t('adminLayout.sellers') }}</span>
                                         </router-link>
                                     </li>
                                 </ul>
@@ -98,7 +98,7 @@
                             <div class="relative">
                                 <div class="flex items-center space-x-2 px-2 py-1.5">
                                     <Package class="w-5 h-5 text-gray-500" />
-                                    <span class="font-medium text-sm text-gray-500">Products</span>
+                                    <span class="font-medium text-sm text-gray-500">{{ t('adminLayout.products') }}</span>
                                 </div>
                                 <div class="absolute left-4 h-full w-px bg-[#24a3b5]"></div>
                             </div>
@@ -111,7 +111,7 @@
                                             class="flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-500 hover:text-[#24a3b5] transition-colors duration-300 rounded-md hover:bg-gray-50"
                                             :class="{ 'text-[#24a3b5] bg-gray-50': isCurrentRoute('AdminProducts') }">
                                             <Boxes class="w-4 h-4" />
-                                            <span>All Products</span>
+                                            <span>{{ t('adminLayout.allProducts') }}</span>
                                         </router-link>
                                     </li>
                                     <li class="relative pl-1">
@@ -120,7 +120,7 @@
                                             class="flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-500 hover:text-[#24a3b5] transition-colors duration-300 rounded-md hover:bg-gray-50"
                                             :class="{ 'text-[#24a3b5] bg-gray-50': isCurrentRoute('AdminCategories') }">
                                             <FolderTree class="w-4 h-4" />
-                                            <span>Categories</span>
+                                            <span>{{ t('adminLayout.categories') }}</span>
                                         </router-link>
                                     </li>
                                 </ul>
@@ -132,7 +132,7 @@
                             <div class="relative">
                                 <div class="flex items-center space-x-2 px-2 py-1.5">
                                     <ShoppingCart class="w-5 h-5 text-gray-500" />
-                                    <span class="font-medium text-sm text-gray-500">Orders</span>
+                                    <span class="font-medium text-sm text-gray-500">{{ t('adminLayout.orders') }}</span>
                                 </div>
                                 <div class="absolute left-4 h-full w-px bg-[#24a3b5]"></div>
                             </div>
@@ -145,7 +145,7 @@
                                             class="flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-500 hover:text-[#24a3b5] transition-colors duration-300 rounded-md hover:bg-gray-50"
                                             :class="{ 'text-[#24a3b5] bg-gray-50': isCurrentRoute('AdminOrders') }">
                                             <ScrollText class="w-4 h-4" />
-                                            <span>All Orders</span>
+                                            <span>{{ t('adminLayout.allOrders') }}</span>
                                         </router-link>
                                     </li>
                                     <li class="relative pl-1">
@@ -154,7 +154,7 @@
                                             class="flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-500 hover:text-[#24a3b5] transition-colors duration-300 rounded-md hover:bg-gray-50"
                                             :class="{ 'text-[#24a3b5] bg-gray-50': isCurrentRoute('AdminPayments') }">
                                             <CreditCard class="w-4 h-4" />
-                                            <span>Payments</span>
+                                            <span>{{ t('adminLayout.payments') }}</span>
                                         </router-link>
                                     </li>
                                 </ul>
@@ -166,7 +166,7 @@
                             <div class="relative">
                                 <div class="flex items-center space-x-2 px-2 py-1.5">
                                     <Settings class="w-5 h-5 text-gray-500" />
-                                    <span class="font-medium text-sm text-gray-500">Settings</span>
+                                    <span class="font-medium text-sm text-gray-500">{{ t('adminLayout.settings') }}</span>
                                 </div>
                                 <div class="absolute left-4 h-full w-px bg-[#24a3b5]"></div>
                             </div>
@@ -179,7 +179,7 @@
                                             class="flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-500 hover:text-[#24a3b5] transition-colors duration-300 rounded-md hover:bg-gray-50"
                                             :class="{ 'text-[#24a3b5] bg-gray-50': isCurrentRoute('AdminSettings') }">
                                             <Sliders class="w-4 h-4" />
-                                            <span>Platform Settings</span>
+                                            <span>{{ t('adminLayout.platformSettings') }}</span>
                                         </router-link>
                                     </li>
 
@@ -189,7 +189,7 @@
                                             class="flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-500 hover:text-[#24a3b5] transition-colors duration-300 rounded-md hover:bg-gray-50"
                                             :class="{ 'text-[#24a3b5] bg-gray-50': isCurrentRoute('AdminPayments') }">
                                             <CreditCard class="w-4 h-4" />
-                                            <span>Change Password</span>
+                                            <span>{{ t('adminLayout.changePassword') }}</span>
                                         </router-link>
                                     </li>
                                 </ul>
@@ -212,6 +212,7 @@
 <script>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAdminStore } from '../../../store/admin'
 import {
     LayoutDashboard,
@@ -251,6 +252,7 @@ export default {
     setup() {
         const router = useRouter()
         const route = useRoute()
+        const { t } = useI18n()
         const adminStore = useAdminStore()
         const unreadNotifications = ref(0)
 
@@ -312,7 +314,8 @@ export default {
             adminInitials,
             handleLogout,
             toggleNotifications,
-            isCurrentRoute
+            isCurrentRoute,
+            t
         }
     }
 }

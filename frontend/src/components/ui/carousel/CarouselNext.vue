@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ArrowRight } from 'lucide-vue-next'
+import { useI18n } from 'vue-i18n'
 import { useCarousel } from './useCarousel'
 import type { WithClassAsProps } from './interface'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
 const props = defineProps<WithClassAsProps>()
+const { t } = useI18n()
 
 const { orientation, canScrollNext, scrollNext } = useCarousel()
 </script>
@@ -25,7 +27,7 @@ const { orientation, canScrollNext, scrollNext } = useCarousel()
   >
     <slot>
       <ArrowRight class="h-4 w-4 text-current" />
-      <span class="sr-only">Next Slide</span>
+      <span class="sr-only">{{ t('sharedUi.nextSlide') }}</span>
     </slot>
   </Button>
 </template>

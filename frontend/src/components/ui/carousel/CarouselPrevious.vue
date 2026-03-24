@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ArrowLeft } from 'lucide-vue-next'
+import { useI18n } from 'vue-i18n'
 import { useCarousel } from './useCarousel'
 import type { WithClassAsProps } from './interface'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
 const props = defineProps<WithClassAsProps>()
+const { t } = useI18n()
 
 const { orientation, canScrollPrev, scrollPrev } = useCarousel()
 </script>
@@ -25,7 +27,7 @@ const { orientation, canScrollPrev, scrollPrev } = useCarousel()
   >
     <slot>
       <ArrowLeft class="h-4 w-4 text-current" />
-      <span class="sr-only">Previous Slide</span>
+      <span class="sr-only">{{ t('sharedUi.previousSlide') }}</span>
     </slot>
   </Button>
 </template>

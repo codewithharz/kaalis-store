@@ -1,48 +1,50 @@
 <template>
     <div class="container mx-auto p-4 max-w-3xl">
         <div v-if="isLoading" class="text-center py-8">
-            <p class="text-xl text-gray-600">Loading order details...</p>
+            <p class="text-xl text-gray-600">{{ t('orderConfirmationPage.loading') }}</p>
         </div>
         <div v-else-if="error" class="text-center py-8">
             <p class="text-xl text-red-600">{{ error }}</p>
         </div>
         <div v-else class="bg-white shadow-md rounded-lg p-4 sm:p-8">
             <div class="flex justify-between">
-                <h1 class="text-2xl font-bold mb-6">Order Confirmation</h1>
+                <h1 class="text-2xl font-bold mb-6">{{ t('orderConfirmationPage.title') }}</h1>
                 <img src="../assets/images/logo.png" alt="logo" class=" h-14 pb-2 cursor-not-allowed">
             </div>
-            <p class="mb-4 text-gray-700">Thank you for your order from Bruthol Store. Once your package ships we
-                will send you a tracking number. You can check the status of your order by <a href="/account/orders"
-                    class="text-blue-500 hover:underline">logging into your account</a>.</p>
-            <p class="mb-6 text-gray-700">If you have questions about your order, you can email us at <a
+            <p class="mb-4 text-gray-700">
+                {{ t('orderConfirmationPage.thankYou') }}
+                <a href="/account/orders"
+                    class="text-blue-500 hover:underline">{{ t('orderConfirmationPage.loginToAccount') }}</a>.
+            </p>
+            <p class="mb-6 text-gray-700">{{ t('orderConfirmationPage.questions') }} <a
                     href="mailto:brutholdigital@gmail.com"
                     class="text-blue-500 hover:underline">brutholdigital@gmail.com</a>.</p>
 
             <div class="mb-6">
-                <h2 class="text-xl font-semibold mb-2">Seller Information</h2>
+                <h2 class="text-xl font-semibold mb-2">{{ t('orderConfirmationPage.sellerInformation') }}</h2>
                 <div v-if="sellerInfo">
-                    <p><strong>Store Name:</strong> {{ sellerInfo.storeName }}</p>
-                    <p><strong>Store Description:</strong> {{ sellerInfo.storeDescription }}</p>
+                    <p><strong>{{ t('orderConfirmationPage.storeName') }}</strong> {{ sellerInfo.storeName }}</p>
+                    <p><strong>{{ t('orderConfirmationPage.storeDescription') }}</strong> {{ sellerInfo.storeDescription }}</p>
                     <!-- Add more seller details as needed -->
                 </div>
-                <p v-else class="text-gray-600">Seller information not available</p>
+                <p v-else class="text-gray-600">{{ t('orderConfirmationPage.sellerUnavailable') }}</p>
             </div>
 
             <div class="border-t border-b border-gray-200 py-4 mb-6">
-                <h2 class="text-xl font-semibold mb-2">Order #{{ order.orderId || order._id.slice(-8).toUpperCase() }}
+                <h2 class="text-xl font-semibold mb-2">{{ t('orderConfirmationPage.orderNumber', { id: order.orderId || order._id.slice(-8).toUpperCase() }) }}
                 </h2>
-                <p class="text-gray-600">Placed on {{ formatDate(order.createdAt) }}</p>
+                <p class="text-gray-600">{{ t('orderConfirmationPage.placedOn', { date: formatDate(order.createdAt) }) }}</p>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-6">
                 <div>
-                    <h3 class="font-semibold mb-2">Billing Info</h3>
+                    <h3 class="font-semibold mb-2">{{ t('orderConfirmationPage.billingInfo') }}</h3>
                     <p>{{ order.address.street }}</p>
                     <p>{{ order.address.city }}, {{ order.address.state }} {{ order.address.postalCode }}</p>
                     <p>{{ order.address.country }}</p>
                 </div>
                 <div>
-                    <h3 class="font-semibold mb-2">Shipping Info</h3>
+                    <h3 class="font-semibold mb-2">{{ t('orderConfirmationPage.shippingInfo') }}</h3>
                     <p>{{ order.address.street }}</p>
                     <p>{{ order.address.city }}, {{ order.address.state }} {{ order.address.postalCode }}</p>
                     <p>{{ order.address.country }}</p>
@@ -51,13 +53,13 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-6">
                 <div>
-                    <h3 class="font-semibold mb-2">Payment Method</h3>
+                    <h3 class="font-semibold mb-2">{{ t('orderConfirmationPage.paymentMethod') }}</h3>
                     <p>{{ order.paymentMethod }}</p>
-                    <p v-if="order.transactionId">Ref: {{ order.transactionId }}</p>
+                    <p v-if="order.transactionId">{{ t('orderConfirmationPage.reference', { reference: order.transactionId }) }}</p>
                 </div>
                 <div>
-                    <h3 class="font-semibold mb-2">Shipping Method</h3>
-                    <p>Standard Shipping</p>
+                    <h3 class="font-semibold mb-2">{{ t('orderConfirmationPage.shippingMethod') }}</h3>
+                    <p>{{ t('orderConfirmationPage.standardShipping') }}</p>
                 </div>
             </div>
 
@@ -66,10 +68,10 @@
             <div v-if="earnedPoints" class="bg-green-50 border border-green-200 rounded-lg p-4 mt-6">
                 <div class="flex items-center gap-2">
                     <Coins class="w-5 h-5 text-green-500" />
-                    <h3 class="text-lg font-semibold text-green-700">CluesBucks Earned</h3>
+                    <h3 class="text-lg font-semibold text-green-700">{{ t('orderConfirmationPage.cluesBucksEarned') }}</h3>
                 </div>
                 <p class="mt-2 text-green-600">
-                    You earned {{ earnedPoints }} CluesBucks from this purchase!
+                    {{ t('orderConfirmationPage.cluesBucksMessage', { points: earnedPoints }) }}
                 </p>
             </div>
 
@@ -79,9 +81,9 @@
                 <table class="w-full">
                     <thead>
                         <tr class="border-b border-gray-200">
-                            <th class="text-left py-2">Items</th>
-                            <th class="text-center py-2">Qty</th>
-                            <th class="text-right py-2">Price</th>
+                            <th class="text-left py-2">{{ t('orderConfirmationPage.items') }}</th>
+                            <th class="text-center py-2">{{ t('orderConfirmationPage.quantity') }}</th>
+                            <th class="text-right py-2">{{ t('orderConfirmationPage.price') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -93,12 +95,12 @@
                                         class="w-16 h-16 object-cover mr-4">
                                     <div className=" w-11/12">
                                         <p class="font-semibold">{{ item.productDetails ? item.productDetails.name :
-                                            'Product not found' }}</p>
+                                            t('orderConfirmationPage.productNotFound') }}</p>
                                         <!-- Add variant details -->
                                         <div v-if="item.variant"
                                             class="text-xs text-gray-500 mb-1 flex flex-wrap gap-x-2">
                                             <span v-if="item.variant.color">
-                                                Color: {{ typeof item.variant.color === 'object' ?
+                                                {{ t('cart.color') }}: {{ typeof item.variant.color === 'object' ?
                                                 item.variant.color.name : item.variant.color }}
                                             </span>
                                             <span v-for="(attr, attrIdx) in item.variant.attributes" :key="attrIdx">
@@ -107,11 +109,11 @@
                                             <!-- Fallback for legacy size field if not in attributes -->
                                             <span
                                                 v-if="item.variant.size && (!item.variant.attributes || !item.variant.attributes.some(a => a.name.toLowerCase() === 'size'))">
-                                                Size: {{ item.variant.size }}
+                                                {{ t('cart.size') }}: {{ item.variant.size }}
                                             </span>
                                         </div>
                                         <p class="text-sm text-gray-600">{{ item.productDetails ?
-                                            item.productDetails.description : 'N/A' }}</p>
+                                            item.productDetails.description : t('orderConfirmationPage.notAvailable') }}</p>
                                     </div>
                                 </div>
                             </td>
@@ -144,36 +146,36 @@
             <div class="flex justify-end">
                 <div class="w-full sm:w-1/2">
                     <div class="flex justify-between mb-2">
-                        <span>Subtotal</span>
+                        <span>{{ t('cart.subtotal') }}</span>
                         <span>{{ formatPrice(order.subtotal) }}</span>
                     </div>
 
                     <!-- Show coupon discount if exists -->
                     <div v-if="order.discount > 0" class="flex justify-between mb-2 text-green-600">
-                        <span>Coupon Discount (₦{{ order.discount }})</span>
+                        <span>{{ t('orderConfirmationPage.couponDiscount', { amount: order.discount }) }}</span>
                         <span>-{{ formatPrice(order.discount) }}</span>
                     </div>
 
                     <!-- Show CluesBucks discount if used -->
                     <div v-if="order.cluesBucks?.pointsUsed" class="flex justify-between mb-2 text-green-600">
-                        <span>CluesBucks Discount ({{ order.cluesBucks.pointsUsed }} points)</span>
+                        <span>{{ t('orderConfirmationPage.cluesBucksDiscount', { points: order.cluesBucks.pointsUsed }) }}</span>
                         <span>-{{ formatPrice(order.cluesBucks.discount) }}</span>
                     </div>
 
                     <!-- Show consolidated discount if no specific discounts -->
                     <div v-if="order.discount > 0 && !order.couponDiscount && !order.cluesBucks?.discount"
                         class="flex justify-between mb-2 text-green-600">
-                        <span>Discount</span>
+                        <span>{{ t('cart.discount') }}</span>
                         <span>-{{ formatPrice(order.discount) }}</span>
                     </div>
 
                     <div class="flex justify-between mb-2">
-                        <span>Shipping & Handling</span>
+                        <span>{{ t('orderConfirmationPage.shippingHandling') }}</span>
                         <span>{{ formatPrice(order.shippingFee) }}</span>
                     </div>
 
                     <div class="flex justify-between font-semibold">
-                        <span>Grand Total</span>
+                        <span>{{ t('orderConfirmationPage.grandTotal') }}</span>
                         <span>{{ formatPrice(order.total) }}</span>
                     </div>
                 </div>
@@ -183,7 +185,7 @@
                 <!-- <RouterLink to="/account/orders/profile-order" -->
                 <RouterLink to="/"
                     class="block w-full sm:inline-block sm:w-auto bg-blue-500 text-white hover:text-gray-50 px-4 py-2 rounded hover:bg-blue-600 transition duration-300">
-                    Continue Shopping
+                    {{ t('searchPage.returnToShopping') }}
                 </RouterLink>
             </div>
         </div>
@@ -198,6 +200,7 @@ import { useOrderStore } from '../store/orderStore';
 import { useProductStore } from '../store/productStore';
 import { useSellerStore } from '../store/sellerStore.js';
 import { toast } from 'vue-sonner';
+import { useI18n } from 'vue-i18n';
 
 const route = useRoute();
 const orderStore = useOrderStore();
@@ -209,6 +212,7 @@ const sellerInfo = ref(null);
 const isLoading = ref(true);
 const error = ref(null);
 const cluesBucksStore = useCluesBucksStore();
+const { t, locale } = useI18n();
 
 console.log('orderStore:', orderStore);
 console.log('productStore:', productStore);
@@ -220,7 +224,8 @@ const earnedPoints = computed(() => {
 });
 
 const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString('en-US', {
+    const activeLocale = locale.value === 'fr' ? 'fr-FR' : 'en-US';
+    return new Date(dateString).toLocaleString(activeLocale, {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -231,15 +236,16 @@ const formatDate = (dateString) => {
 };
 
 const formatPrice = (price) => {
+    const activeLocale = locale.value === 'fr' ? 'fr-FR' : 'en-NG';
     if (typeof price !== 'number' || isNaN(price)) {
-        return new Intl.NumberFormat('en-NG', {
+        return new Intl.NumberFormat(activeLocale, {
             style: 'currency',
             currency: 'NGN',
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         }).format(0);
     }
-    return new Intl.NumberFormat('en-NG', {
+    return new Intl.NumberFormat(activeLocale, {
         style: 'currency',
         currency: 'NGN',
         minimumFractionDigits: 2,
@@ -260,7 +266,7 @@ const fetchProductDetails = async (productId) => {
         return product;
     } catch (error) {
         console.error(`Error fetching product ${productId}:`, error);
-        toast.error(`Failed to load details for product ${productId}`);
+        toast.error(t('orderConfirmationPage.failedProductDetails', { productId }));
         return null;
     }
 };
@@ -295,7 +301,7 @@ const fetchSellerInfo = async (sellerId) => {
         sellerInfo.value = seller;
     } catch (error) {
         console.error('Error fetching seller info:', error);
-        toast.error('Failed to load seller information');
+        toast.error(t('orderConfirmationPage.failedSellerInfo'));
         sellerInfo.value = null;
     }
 };
@@ -309,9 +315,9 @@ const loadProductDetails = async () => {
                 return {
                     ...item,
                     productDetails: product || {
-                        name: 'Product not found',
+                        name: t('orderConfirmationPage.productNotFound'),
                         price: 0,
-                        description: 'N/A',
+                        description: t('orderConfirmationPage.notAvailable'),
                         images: []
                     }
                 };
@@ -332,7 +338,7 @@ onMounted(async () => {
         console.log('Fetching order:', orderId);
 
         if (!orderData) {
-            throw new Error('Order not found');
+            throw new Error(t('orderConfirmationPage.orderNotFound'));
         }
 
         // Set the order data
@@ -359,7 +365,7 @@ onMounted(async () => {
 
     } catch (err) {
         console.error('Error fetching order:', err);
-        error.value = 'Failed to load order details. Please try again.';
+        error.value = t('orderConfirmationPage.failedLoad');
         isLoading.value = false;
     }
 });

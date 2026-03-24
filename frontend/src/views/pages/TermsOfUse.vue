@@ -1,16 +1,15 @@
 <!-- src/views/pages/TermsOfUse.vue -->
 <template>
-    <CommunityLayout title="Terms of Use">
+    <CommunityLayout :title="t('termsPage.pageTitle')">
         <div class="space-y-8">
             <!-- Introduction -->
             <section>
-                <h2 class="text-2xl font-semibold text-[#2d3642] mb-4">Terms and Conditions</h2>
+                <h2 class="text-2xl font-semibold text-[#2d3642] mb-4">{{ t('termsPage.title') }}</h2>
                 <p class="text-gray-600">
-                    By accessing and using Bruthol's platform, you agree to comply with and be bound by these
-                    terms and conditions. Please read them carefully.
+                    {{ t('termsPage.intro') }}
                 </p>
                 <div class="mt-4 p-4 bg-[#e6f4f7] rounded-lg text-gray-600">
-                    <strong>Last Updated:</strong> January 14, 2025
+                    <strong>{{ t('termsPage.lastUpdated') }}</strong> January 14, 2025
                 </div>
             </section>
 
@@ -18,68 +17,68 @@
             <div class="space-y-6">
                 <!-- Usage Terms -->
                 <section class="bg-gray-50 p-6 rounded-lg">
-                    <h3 class="text-xl font-semibold text-[#2d3642] mb-4">1. Platform Usage</h3>
+                    <h3 class="text-xl font-semibold text-[#2d3642] mb-4">{{ t('termsPage.section1Title') }}</h3>
                     <div class="space-y-4 text-gray-600">
-                        <p>Users must:</p>
+                        <p>{{ t('termsPage.section1Intro') }}</p>
                         <ul class="list-disc list-inside space-y-2 ml-4">
-                            <li>Be at least 18 years old</li>
-                            <li>Provide accurate registration information</li>
-                            <li>Maintain account security</li>
-                            <li>Use the platform legally and responsibly</li>
+                            <li>{{ t('termsPage.section1Item1') }}</li>
+                            <li>{{ t('termsPage.section1Item2') }}</li>
+                            <li>{{ t('termsPage.section1Item3') }}</li>
+                            <li>{{ t('termsPage.section1Item4') }}</li>
                         </ul>
                     </div>
                 </section>
 
                 <!-- User Conduct -->
                 <section class="bg-gray-50 p-6 rounded-lg">
-                    <h3 class="text-xl font-semibold text-[#2d3642] mb-4">2. User Conduct</h3>
+                    <h3 class="text-xl font-semibold text-[#2d3642] mb-4">{{ t('termsPage.section2Title') }}</h3>
                     <div class="space-y-4 text-gray-600">
-                        <p>Prohibited activities include:</p>
+                        <p>{{ t('termsPage.section2Intro') }}</p>
                         <ul class="list-disc list-inside space-y-2 ml-4">
-                            <li>Unauthorized access or use</li>
-                            <li>Fraudulent or deceptive practices</li>
-                            <li>Harassment or abuse</li>
-                            <li>Content violation</li>
+                            <li>{{ t('termsPage.section2Item1') }}</li>
+                            <li>{{ t('termsPage.section2Item2') }}</li>
+                            <li>{{ t('termsPage.section2Item3') }}</li>
+                            <li>{{ t('termsPage.section2Item4') }}</li>
                         </ul>
                     </div>
                 </section>
 
                 <!-- Intellectual Property -->
                 <section class="bg-gray-50 p-6 rounded-lg">
-                    <h3 class="text-xl font-semibold text-[#2d3642] mb-4">3. Intellectual Property</h3>
+                    <h3 class="text-xl font-semibold text-[#2d3642] mb-4">{{ t('termsPage.section3Title') }}</h3>
                     <div class="space-y-4 text-gray-600">
-                        <p>All content on the platform is protected by:</p>
+                        <p>{{ t('termsPage.section3Intro') }}</p>
                         <ul class="list-disc list-inside space-y-2 ml-4">
-                            <li>Copyright laws</li>
-                            <li>Trademark rights</li>
-                            <li>Intellectual property regulations</li>
+                            <li>{{ t('termsPage.section3Item1') }}</li>
+                            <li>{{ t('termsPage.section3Item2') }}</li>
+                            <li>{{ t('termsPage.section3Item3') }}</li>
                         </ul>
                     </div>
                 </section>
 
                 <!-- Privacy and Data -->
                 <section class="bg-gray-50 p-6 rounded-lg">
-                    <h3 class="text-xl font-semibold text-[#2d3642] mb-4">4. Privacy & Data Protection</h3>
+                    <h3 class="text-xl font-semibold text-[#2d3642] mb-4">{{ t('termsPage.section4Title') }}</h3>
                     <div class="space-y-4 text-gray-600">
-                        <p>We are committed to protecting your privacy:</p>
+                        <p>{{ t('termsPage.section4Intro') }}</p>
                         <ul class="list-disc list-inside space-y-2 ml-4">
-                            <li>Data collection and usage policies</li>
-                            <li>Information security measures</li>
-                            <li>User rights and controls</li>
+                            <li>{{ t('termsPage.section4Item1') }}</li>
+                            <li>{{ t('termsPage.section4Item2') }}</li>
+                            <li>{{ t('termsPage.section4Item3') }}</li>
                         </ul>
                     </div>
                 </section>
 
                 <!-- Content Guidelines -->
                 <section class="bg-gray-50 p-6 rounded-lg">
-                    <h3 class="text-xl font-semibold text-[#2d3642] mb-4">5. Content Guidelines</h3>
+                    <h3 class="text-xl font-semibold text-[#2d3642] mb-4">{{ t('termsPage.section5Title') }}</h3>
                     <div class="space-y-4 text-gray-600">
-                        <p>User-generated content must be:</p>
+                        <p>{{ t('termsPage.section5Intro') }}</p>
                         <ul class="list-disc list-inside space-y-2 ml-4">
-                            <li>Accurate and truthful</li>
-                            <li>Free from harmful material</li>
-                            <li>Respectful of others' rights</li>
-                            <li>Compliant with local laws</li>
+                            <li>{{ t('termsPage.section5Item1') }}</li>
+                            <li>{{ t('termsPage.section5Item2') }}</li>
+                            <li>{{ t('termsPage.section5Item3') }}</li>
+                            <li>{{ t('termsPage.section5Item4') }}</li>
                         </ul>
                     </div>
                 </section>
@@ -87,10 +86,9 @@
 
             <!-- Disclaimer -->
             <section class="bg-[#e6f4f7] p-6 rounded-lg">
-                <h3 class="text-xl font-semibold text-[#2d3642] mb-4">Disclaimer</h3>
+                <h3 class="text-xl font-semibold text-[#2d3642] mb-4">{{ t('termsPage.disclaimerTitle') }}</h3>
                 <p class="text-gray-600">
-                    Bruthol provides the platform "as is" and makes no warranties, express or implied.
-                    We reserve the right to modify these terms at any time.
+                    {{ t('termsPage.disclaimerBody') }}
                 </p>
             </section>
 
@@ -98,9 +96,9 @@
             <section class="flex justify-between items-center border-t pt-6">
                 <a href="#" class="text-[#24a6bb] hover:underline flex items-center">
                     <Download class="w-4 h-4 mr-2" />
-                    Download PDF version
+                    {{ t('termsPage.downloadPdf') }}
                 </a>
-                <Button class="bg-[#24a6bb] text-white">Accept Terms</Button>
+                <Button class="bg-[#24a6bb] text-white">{{ t('termsPage.acceptTerms') }}</Button>
             </section>
         </div>
     </CommunityLayout>
@@ -108,6 +106,9 @@
 
 <script setup>
 import { Download } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
 import CommunityLayout from './components/layouts/CommunityLayout.vue';
 import { Button } from '@/components/ui/button';
+
+const { t } = useI18n();
 </script>

@@ -4,29 +4,29 @@
             <div class="bg-white shadow-lg rounded-lg overflow-hidden">
                 <!-- Header -->
                 <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-6">
-                    <h1 class="text-3xl font-bold text-white">Reviews for {{ sellerName }}</h1>
+                    <h1 class="text-3xl font-bold text-white">{{ t('sellerReviewsPage.title', { seller: sellerName }) }}</h1>
                     <div class="flex items-center mt-4">
                         <div class="flex items-center">
                             <Star v-for="star in 5" :key="star"
                                 :class="star <= Math.round(averageRating) ? 'text-yellow-400' : 'text-gray-300'"
                                 class="w-6 h-6" />
                         </div>
-                        <p class="ml-2 text-xl font-semibold text-white">{{ averageRating.toFixed(1) }} out of 5</p>
+                        <p class="ml-2 text-xl font-semibold text-white">{{ t('sellerReviewsPage.outOfFive', { rating: averageRating.toFixed(1) }) }}</p>
                     </div>
-                    <p class="text-indigo-100 mt-1">Based on {{ totalReviews }} reviews</p>
+                    <p class="text-indigo-100 mt-1">{{ t('sellerReviewsPage.basedOnReviews', { count: totalReviews }) }}</p>
                 </div>
 
                 <!-- Review List -->
                 <div class="p-6">
                     <div v-if="reviews.length === 0" class="text-center py-8">
-                        <p class="text-gray-500 text-xl">No reviews yet.</p>
+                        <p class="text-gray-500 text-xl">{{ t('sellerReviewsPage.noReviewsYet') }}</p>
                     </div>
                     <div v-else class="space-y-6">
                         <div v-for="review in reviews" :key="review._id"
                             class="border-b border-gray-200 pb-6 last:border-b-0">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center">
-                                    <img :src="review.user.avatar || '/default-avatar.png'" alt="User Avatar"
+                                    <img :src="review.user.avatar || '/default-avatar.png'" :alt="t('sellerReviewsPage.userAvatar')"
                                         class="w-12 h-12 rounded-full mr-4">
                                     <div>
                                         <h3 class="font-semibold text-lg">{{ review.user.username }}</h3>
@@ -49,7 +49,7 @@
                         <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
                             <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1"
                                 class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                Previous
+                                {{ t('sellerReviewsPage.previous') }}
                             </button>
                             <button v-for="page in totalPages" :key="page" @click="changePage(page)"
                                 :class="['relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium', currentPage === page ? 'text-indigo-600 border-indigo-500' : 'text-gray-700 hover:bg-gray-50']">
@@ -57,7 +57,7 @@
                             </button>
                             <button @click="changePage(currentPage + 1)" :disabled="currentPage === totalPages"
                                 class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                Next
+                                {{ t('sellerReviewsPage.next') }}
                             </button>
                         </nav>
                     </div>
@@ -69,6 +69,7 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { useSellerStore } from '../store/sellerStore';
 import { Star } from 'lucide-vue-next';
@@ -77,6 +78,7 @@ export default {
     name: 'SellerReviews',
     components: { Star },
     setup() {
+        const { t } = useI18n();
         const route = useRoute();
         const sellerStore = useSellerStore();
         const sellerId = route.params.id;
@@ -123,6 +125,7 @@ export default {
         });
 
         return {
+            t,
             sellerName,
             reviews,
             averageRating,

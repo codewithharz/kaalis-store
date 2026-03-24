@@ -2,7 +2,7 @@
     <div class="flex flex-col min-h-screen bg-gray-300">
         <!-- Breadcrumb Navigation -->
         <div class="py-3 text-gray-600 text-sm ml-4">
-            <p>Home > {{ currentSection }}</p>
+            <p>{{ t('accountShell.home') }} > {{ currentSection }}</p>
         </div>
         <!-- Main Content -->
         <div class="flex flex-col lg:flex-row lg:flex-1 overflow-hidden">
@@ -20,6 +20,7 @@
 <script>
 import Sidebar from './Sidebar.vue';
 import { onMounted, computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useUserStore } from '../store/user';
 import { useRoute } from 'vue-router';
 
@@ -30,25 +31,25 @@ export default {
         Sidebar,
     },
     setup() {
+        const { t } = useI18n();
         const route = useRoute();
         const userStore = useUserStore();
         const user = computed(() => userStore.user);
         const errorMessage = computed(() => userStore.errorMessage);
         const sidebarOpen = ref(true);
 
-        const routeMap = {
-            '/account/orders': 'My Orders',
-            '/account/clues-bucks': 'My Clues Bucks',
-            '/account/profile': 'My Profile',
-            '/account/my-products': 'My Products',
-            '/account/rate-purchase': 'Rate Your Purchase',
-            '/account/wishlist': 'My Wishlist',
-            '/account/favorites': 'My Favorite Stores',
-            '/account/help-and-support': 'Help & Support'
-        };
-
         const currentSection = computed(() => {
-            return routeMap[route.path] || 'My Account';
+            const routeMap = {
+                '/account/orders': t('account.myOrders'),
+                '/account/clues-bucks': t('account.myCluesBucks'),
+                '/account/profile': t('account.myProfile'),
+                '/account/my-products': t('account.myProducts'),
+                '/account/rate-purchase': t('account.rateYourPurchase'),
+                '/account/wishlist': t('account.myWishlist'),
+                '/account/favorites': t('account.myFavoriteStores'),
+                '/account/help-and-support': t('account.helpSupport')
+            };
+            return routeMap[route.path] || t('accountShell.myAccount');
         });
 
 
@@ -66,7 +67,7 @@ export default {
 
                 await userStore.fetchUserProfile(storedUser.userId);
             } catch (error) {
-                userStore.errorMessage = 'Error fetching user profile: ' + error.message;
+                userStore.errorMessage = t('accountShell.profileFetchError', { message: error.message });
             }
         };
 
@@ -81,6 +82,7 @@ export default {
         });
 
         return {
+            t,
             user,
             errorMessage,
             sidebarOpen,

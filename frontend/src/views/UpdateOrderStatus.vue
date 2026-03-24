@@ -13,8 +13,8 @@
                             <RefreshCw class="w-5 h-5 sm:w-7 sm:h-7 text-white" />
                         </div>
                         <div class="min-w-0 flex-1">
-                            <h2 class="text-lg sm:text-2xl font-bold mb-0.5 sm:mb-1">Update Order Status</h2>
-                            <p class="text-purple-100 text-sm sm:text-base">Change the current status of this order</p>
+                            <h2 class="text-lg sm:text-2xl font-bold mb-0.5 sm:mb-1">{{ t('updateOrderStatusModal.title') }}</h2>
+                            <p class="text-purple-100 text-sm sm:text-base">{{ t('updateOrderStatusModal.subtitle') }}</p>
                         </div>
                     </div>
                     <button @click="$emit('close')"
@@ -36,7 +36,7 @@
                                 <Package class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                             </div>
                             <div class="min-w-0 flex-1">
-                                <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">Current Status</p>
+                                <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">{{ t('updateOrderStatusModal.currentStatus') }}</p>
                                 <p class="text-lg sm:text-xl font-bold text-gray-900">{{ order.status }}</p>
                             </div>
                         </div>
@@ -49,7 +49,7 @@
                         <div class="w-5 h-5 sm:w-6 sm:h-6 bg-purple-500 rounded-lg flex items-center justify-center">
                             <Edit class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
                         </div>
-                        Select New Status
+                        {{ t('updateOrderStatusModal.selectNewStatus') }}
                     </label>
 
                     <div class="relative">
@@ -76,7 +76,7 @@
                                 <ArrowRight class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                             </div>
                             <div class="min-w-0 flex-1">
-                                <p class="text-xs sm:text-sm font-medium text-green-700 mb-1">New Status Preview</p>
+                                <p class="text-xs sm:text-sm font-medium text-green-700 mb-1">{{ t('updateOrderStatusModal.newStatusPreview') }}</p>
                                 <div class="flex items-center gap-2">
                                     <span class="text-base sm:text-lg font-bold text-green-900">{{
                                         getStatusEmoji(newStatus) }} {{ newStatus }}</span>
@@ -92,15 +92,14 @@
                     <div class="bg-blue-50 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-blue-200">
                         <h4 class="font-semibold text-blue-900 mb-2 flex items-center gap-2 text-sm sm:text-base">
                             <Info class="w-3 h-3 sm:w-4 sm:h-4" />
-                            Status Change Summary
+                            {{ t('updateOrderStatusModal.statusChangeSummary') }}
                         </h4>
                         <div class="flex items-center justify-between text-xs sm:text-sm">
                             <span class="text-blue-700 truncate flex-1">{{ order.status }}</span>
                             <ArrowRight class="w-3 h-3 sm:w-4 sm:h-4 text-blue-500 mx-2 flex-shrink-0" />
                             <span class="text-blue-900 font-semibold truncate flex-1 text-right">{{ newStatus }}</span>
                         </div>
-                        <p class="text-xs text-blue-600 mt-2">This change will be immediately visible to the customer
-                        </p>
+                        <p class="text-xs text-blue-600 mt-2">{{ t('updateOrderStatusModal.changeVisibilityNotice') }}</p>
                     </div>
                 </div>
             </div>
@@ -111,13 +110,13 @@
                     <button @click="updateStatus" :disabled="newStatus === order.status"
                         class="w-full inline-flex items-center justify-center gap-2 py-3 sm:py-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg sm:rounded-xl font-semibold hover:from-purple-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg text-sm sm:text-base">
                         <RefreshCw class="w-4 h-4 sm:w-5 sm:h-5" />
-                        {{ newStatus === order.status ? 'No Changes to Update' : 'Update Order Status' }}
+                        {{ newStatus === order.status ? t('updateOrderStatusModal.noChangesToUpdate') : t('updateOrderStatusModal.updateOrderStatus') }}
                     </button>
 
                     <button @click="$emit('close')"
                         class="w-full inline-flex items-center justify-center gap-2 py-3 sm:py-4 bg-gradient-to-r from-gray-200 to-gray-300 text-gray-800 rounded-lg sm:rounded-xl font-semibold hover:from-gray-300 hover:to-gray-400 transition-all duration-200 transform hover:scale-105 shadow-lg text-sm sm:text-base">
                         <X class="w-4 h-4 sm:w-5 sm:h-5" />
-                        Cancel
+                        {{ t('updateOrderStatusModal.cancel') }}
                     </button>
                 </div>
             </div>
@@ -128,6 +127,7 @@
 
 <script>
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useOrderStore } from '../store/orderStore';
 import { useSellerStore } from '../store/sellerStore';
 import { useUserStore } from '../store/user';
@@ -149,6 +149,7 @@ export default {
     },
     emits: ['close', 'update'],
     setup(props, { emit }) {
+        const { t } = useI18n();
         const orderStore = useOrderStore();
         const sellerStore = useSellerStore();
         const userStore = useUserStore();
@@ -161,7 +162,7 @@ export default {
                 orderStatuses.value = await orderStore.fetchOrderStatuses();
             } catch (error) {
                 console.error('Failed to fetch order statuses:', error);
-                toast.error("Failed to load order statuses. Please try again.");
+                toast.error(t('updateOrderStatusModal.toasts.loadStatusesFailed'));
             }
         });
 
@@ -174,7 +175,7 @@ export default {
                 orderId = props.order._id;
             } else {
                 console.error('Invalid order data:', props.order);
-                toast.error("Unable to update order status. Invalid order data.");
+                toast.error(t('updateOrderStatusModal.toasts.invalidOrderData'));
                 return;
             }
 
@@ -183,7 +184,7 @@ export default {
                     await userStore.checkTokenExpiration();
                     console.log('Updating order status for ID:', orderId);
                     await sellerStore.updateOrderStatus(orderId, newStatus.value);
-                    toast.success("Order status updated successfully! 🎉");
+                    toast.success(t('updateOrderStatusModal.toasts.updated'));
                     emit('update', orderId, newStatus.value);
                     emit('close');
                 } catch (error) {
@@ -191,7 +192,7 @@ export default {
                     if (error.message === 'Session expired. Please log in again.') {
                         userStore.logoutUser();
                     } else {
-                        toast.error("Failed to update order status. Please try again.");
+                        toast.error(t('updateOrderStatusModal.toasts.updateFailed'));
                     }
                 }
             } else {
@@ -222,6 +223,7 @@ export default {
         };
 
         return {
+            t,
             newStatus,
             updateStatus,
             orderStatuses,

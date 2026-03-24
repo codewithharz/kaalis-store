@@ -3,7 +3,7 @@
         <!-- Loading State -->
         <div v-if="sellerStore.loading" class="text-center py-8">
             <div class="spinner mx-auto"></div>
-            <p class="mt-4 text-sm sm:text-base text-gray-600">Loading products...</p>
+            <p class="mt-4 text-sm sm:text-base text-gray-600">{{ t('sellerProductsPage.loading') }}</p>
         </div>
 
         <!-- Error State -->
@@ -32,7 +32,7 @@
                                 d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 2v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
                             </path>
                         </svg>
-                        {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
+                        {{ showFilters ? t('sellerProductsPage.hideFilters') : t('sellerProductsPage.showFilters') }}
                     </span>
                     <svg class="w-4 h-4 transform transition-transform" :class="{ 'rotate-180': showFilters }"
                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,10 +48,10 @@
                 { 'block': showFilters }
             ]">
                 <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
-                    <h2 class="font-bold text-gray-900">Filters</h2>
+                    <h2 class="font-bold text-gray-900">{{ t('sellerProductsPage.filters') }}</h2>
                     <button @click="clearFilters" v-if="selectedPriceRanges.length || selectedDiscountRanges.length || selectedCategories.length || selectedBrands.length || selectedRatings.length"
                         class="text-blue-600 hover:text-blue-800 text-xs font-semibold transition-colors">
-                        Clear All
+                        {{ t('sellerProductsPage.clearAll') }}
                     </button>
                 </div>
 
@@ -59,7 +59,7 @@
                 <div class="mb-5 pb-5 border-b border-gray-50 last:border-0 last:pb-0">
                     <details open class="group">
                         <summary class="flex justify-between items-center font-semibold text-sm text-gray-800 cursor-pointer list-none mb-3">
-                            <span>Price Range</span>
+                            <span>{{ t('sellerProductsPage.priceRange') }}</span>
                             <ChevronDown class="w-4 h-4 text-gray-400 transition-transform duration-200 group-open:rotate-180" />
                         </summary>
                         <div class="space-y-2.5 pt-1">
@@ -81,7 +81,7 @@
                 <div class="mb-5 pb-5 border-b border-gray-50 last:border-0 last:pb-0">
                     <details open class="group">
                         <summary class="flex justify-between items-center font-semibold text-sm text-gray-800 cursor-pointer list-none mb-3">
-                             <span>Discount</span>
+                             <span>{{ t('sellerProductsPage.discount') }}</span>
                              <ChevronDown class="w-4 h-4 text-gray-400 transition-transform duration-200 group-open:rotate-180" />
                         </summary>
                         <div class="space-y-2.5 pt-1">
@@ -103,7 +103,7 @@
                 <div v-if="relevantCategoryTree.length > 0" class="mb-5 pb-5 border-b border-gray-50 last:border-0 last:pb-0">
                     <details open class="group">
                         <summary class="flex justify-between items-center font-semibold text-sm text-gray-800 cursor-pointer list-none mb-3">
-                             <span>Categories</span>
+                             <span>{{ t('sellerProductsPage.categories') }}</span>
                              <ChevronDown class="w-4 h-4 text-gray-400 transition-transform duration-200 group-open:rotate-180" />
                         </summary>
                         <div class="space-y-3 pt-1">
@@ -149,7 +149,7 @@
                 <div v-if="brandCounts.length > 0" class="mb-5 pb-5 border-b border-gray-50 last:border-0 last:pb-0">
                      <details open class="group">
                          <summary class="flex justify-between items-center font-semibold text-sm text-gray-800 cursor-pointer list-none mb-3">
-                              <span>Brand</span>
+                              <span>{{ t('sellerProductsPage.brand') }}</span>
                               <ChevronDown class="w-4 h-4 text-gray-400 transition-transform duration-200 group-open:rotate-180" />
                          </summary>
                          <div class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
@@ -171,7 +171,7 @@
                 <div class="mb-5 pb-5 border-b border-gray-50 last:border-0 last:pb-0">
                      <details open class="group">
                          <summary class="flex justify-between items-center font-semibold text-sm text-gray-800 cursor-pointer list-none mb-3">
-                              <span>Rating</span>
+                              <span>{{ t('sellerProductsPage.rating') }}</span>
                               <ChevronDown class="w-4 h-4 text-gray-400 transition-transform duration-200 group-open:rotate-180" />
                          </summary>
                          <div class="space-y-2">
@@ -184,7 +184,7 @@
                                      <div class="flex text-yellow-400 mr-2">
                                          <Star v-for="i in 5" :key="i" class="w-3.5 h-3.5" :class="i <= rating ? 'fill-current' : 'text-gray-300'" />
                                      </div>
-                                     <span class="text-xs">& Up</span>
+                                     <span class="text-xs">{{ t('sellerProductsPage.andUp') }}</span>
                                  </label>
                              </div>
                          </div>
@@ -197,7 +197,7 @@
                 <!-- Results Header -->
                 <div class="mb-4 sm:mb-6">
                     <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-2">
-                        Products Found
+                        {{ t('sellerProductsPage.productsFound') }}
                         <span class="text-blue-600 bg-blue-100 px-2 py-1 rounded-full text-sm ml-2">
                             {{ filteredAndSortedProducts.length }}
                         </span>
@@ -208,7 +208,7 @@
                 <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6">
                     <!-- Search Field -->
                     <div class="flex-1 relative">
-                        <input v-model="searchQuery" type="text" placeholder="Search products..."
+                        <input v-model="searchQuery" type="text" :placeholder="t('sellerProductsPage.searchPlaceholder')"
                             class="w-full text-sm border border-gray-300 rounded-lg py-2.5 sm:py-3 px-4 pr-10 bg-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                         <Search
                             class="absolute size-4 sm:size-5 right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -218,12 +218,12 @@
                     <div class="sm:w-48">
                         <select v-model="sortOption"
                             class="w-full border border-gray-300 rounded-lg py-2.5 sm:py-3 px-4 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
-                            <option value="">Sort By</option>
-                            <option value="price-low-high">Price: Low to High</option>
-                            <option value="price-high-low">Price: High to Low</option>
-                            <option value="name-a-z">Name: A to Z</option>
-                            <option value="name-z-a">Name: Z to A</option>
-                            <option value="discount">Discount: High to Low</option>
+                            <option value="">{{ t('sellerProductsPage.sortBy') }}</option>
+                            <option value="price-low-high">{{ t('sellerProductsPage.sortOptions.priceLowHigh') }}</option>
+                            <option value="price-high-low">{{ t('sellerProductsPage.sortOptions.priceHighLow') }}</option>
+                            <option value="name-a-z">{{ t('sellerProductsPage.sortOptions.nameAZ') }}</option>
+                            <option value="name-z-a">{{ t('sellerProductsPage.sortOptions.nameZA') }}</option>
+                            <option value="discount">{{ t('sellerProductsPage.sortOptions.discountHighLow') }}</option>
                         </select>
                     </div>
                 </div>
@@ -245,15 +245,14 @@
                                 d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                         </svg>
                     </div>
-                    <h3 class="text-lg sm:text-xl font-semibold text-gray-600 mb-2">No Products Found</h3>
+                    <h3 class="text-lg sm:text-xl font-semibold text-gray-600 mb-2">{{ t('sellerProductsPage.noProductsFound') }}</h3>
                     <p class="text-sm sm:text-base text-gray-500 mb-6 max-w-md mx-auto">
-                        {{ searchQuery ? `Try adjusting your search terms or filters` : `This seller hasn\'t added any
-                        products yet.` }}
+                        {{ searchQuery ? t('sellerProductsPage.adjustSearch') : t('sellerProductsPage.noProductsDescription') }}
                     </p>
                     <button v-if="searchQuery || selectedPriceRanges.length || selectedDiscountRanges.length"
                         @click="clearFilters"
                         class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors">
-                        Clear All Filters
+                        {{ t('sellerProductsPage.clearAllFilters') }}
                     </button>
                 </div>
             </div>
@@ -263,6 +262,7 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 // import { useRoute } from 'vue-router';
 import { useRoute, useRouter } from 'vue-router';
 import { useSellerStore } from '../store/sellerStore.js';
@@ -284,6 +284,7 @@ export default {
         }
     },
     setup() {
+        const { t } = useI18n();
         const route = useRoute();
         const router = useRouter();
         const sellerStore = useSellerStore();
@@ -454,12 +455,12 @@ export default {
         // Count the number of products in each price range
         const priceCounts = computed(() => {
             const priceRanges = [
-                { label: '₦ 0 - ₦ 1,000', value: '0-1000' },
-                { label: '₦ 1,000 - ₦ 5,000', value: '1000-5000' },
-                { label: '₦ 5,000 - ₦ 10,000', value: '5000-10000' },
-                { label: '₦ 10,000 - ₦ 50,000', value: '10000-50000' },
-                { label: '₦ 50,000 - ₦ 100,000', value: '50000-100000' },
-                { label: 'Above ₦ 100,000', value: 'above-100000' },
+                { label: t('sellerProductsPage.priceRanges.range1'), value: '0-1000' },
+                { label: t('sellerProductsPage.priceRanges.range2'), value: '1000-5000' },
+                { label: t('sellerProductsPage.priceRanges.range3'), value: '5000-10000' },
+                { label: t('sellerProductsPage.priceRanges.range4'), value: '10000-50000' },
+                { label: t('sellerProductsPage.priceRanges.range5'), value: '50000-100000' },
+                { label: t('sellerProductsPage.priceRanges.range6'), value: 'above-100000' },
             ];
 
             return priceRanges.map(range => {
@@ -483,11 +484,11 @@ export default {
         // Count the number of products in each discount range
         const discountCounts = computed(() => {
             const discountRanges = [
-                { label: '10% and above', value: '10-above' },
-                { label: '20% and above', value: '20-above' },
-                { label: '30% and above', value: '30-above' },
-                { label: '40% and above', value: '40-above' },
-                { label: '50% and above', value: '50-above' },
+                { label: t('sellerProductsPage.discountRanges.range1'), value: '10-above' },
+                { label: t('sellerProductsPage.discountRanges.range2'), value: '20-above' },
+                { label: t('sellerProductsPage.discountRanges.range3'), value: '30-above' },
+                { label: t('sellerProductsPage.discountRanges.range4'), value: '40-above' },
+                { label: t('sellerProductsPage.discountRanges.range5'), value: '50-above' },
             ];
 
             return discountRanges.map(range => {
@@ -571,6 +572,7 @@ export default {
 
 
         return {
+            t,
             products,
             truncateDescription,
             filteredAndSortedProducts,

@@ -7,13 +7,13 @@
                 <button @click="router.back()"
                     class="flex items-center text-gray-600 hover:text-gray-800 transition duration-150">
                     <ArrowLeft class="w-5 h-5 mr-2" />
-                    <span class="text-sm sm:text-base">Back to Orders</span>
+                    <span class="text-sm sm:text-base">{{ t('manageOrderDetails.backToOrders') }}</span>
                 </button>
                 <div class="flex items-center gap-3">
                     <button @click="refreshOrder"
                         class="flex items-center justify-center px-4 py-2 bg-white border rounded-md text-gray-600 hover:bg-gray-50">
                         <RefreshCcw class="w-4 h-4 mr-2" />
-                        <span>Refresh</span>
+                        <span>{{ t('manageOrderDetails.refresh') }}</span>
                     </button>
                 </div>
             </div>
@@ -23,9 +23,7 @@
                 <div class="p-6 border-b border-gray-200">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
                         <div>
-                            <h1 class="text-2xl font-semibold text-gray-900">
-                                Order #{{ order?.id || orderId?.substring(orderId.length - 6).toUpperCase() }}
-                            </h1>
+                            <h1 class="text-2xl font-semibold text-gray-900">{{ t('manageOrderDetails.orderNumber', { id: order?.id || orderId?.substring(orderId.length - 6).toUpperCase() }) }}</h1>
                             <p class="text-sm text-gray-500 mt-1">{{ formatDate(order?.date) }}</p>
                         </div>
                         <div class="mt-4 sm:mt-0">
@@ -41,7 +39,7 @@
                     <!-- Customer Information -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
                         <div>
-                            <h3 class="text-sm font-medium text-gray-500">Customer Information</h3>
+                            <h3 class="text-sm font-medium text-gray-500">{{ t('manageOrderDetails.customerInformation') }}</h3>
                             <div class="mt-2">
                                 <p class="text-sm font-medium text-gray-900">{{ order?.customer?.name }}</p>
                                 <p class="text-sm text-gray-500">{{ order?.customer?.email }}</p>
@@ -52,19 +50,16 @@
 
                 <!-- Order Items -->
                 <div class="px-6 py-4">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Order Items</h3>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">{{ t('manageOrderDetails.orderItems') }}</h3>
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead>
                                 <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ t('manageOrderDetails.table.product') }}
                                     </th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                                        Quantity</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                                        Original Price</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                                        Subtotal</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ t('manageOrderDetails.table.quantity') }}</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ t('manageOrderDetails.table.originalPrice') }}</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ t('manageOrderDetails.table.subtotal') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200">
@@ -75,7 +70,7 @@
                                         <div v-if="item.variant"
                                             class="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-2">
                                             <span v-if="item.variant.color">
-                                                Color: {{ typeof item.variant.color === 'object' ?
+                                                {{ t('manageOrderDetails.color') }}: {{ typeof item.variant.color === 'object' ?
                                                 item.variant.color.name : item.variant.color }}
                                             </span>
                                             <span v-for="(attr, attrIdx) in item.variant.attributes" :key="attrIdx">
@@ -84,7 +79,7 @@
                                             <!-- Fallback for legacy size field if not in attributes -->
                                             <span
                                                 v-if="item.variant.size && (!item.variant.attributes || !item.variant.attributes.some(a => a.name.toLowerCase() === 'size'))">
-                                                Size: {{ item.variant.size }}
+                                                {{ t('manageOrderDetails.size') }}: {{ item.variant.size }}
                                             </span>
                                         </div>
                                     </td>
@@ -98,19 +93,18 @@
                             <tfoot>
                                 <tr>
                                     <td colspan="3" class="px-4 py-4 text-sm font-medium text-gray-900 text-right">
-                                        Subtotal</td>
+                                        {{ t('manageOrderDetails.subtotal') }}</td>
                                     <td class="px-4 py-4 text-sm font-medium text-gray-900 text-right">₦{{
                                         formatAmount(calculateSubtotal) }}</td>
                                 </tr>
                                 <tr v-if="hasDiscount">
                                     <td colspan="3" class="px-4 py-4 text-sm font-medium text-green-600 text-right">
-                                        Discount Applied</td>
+                                        {{ t('manageOrderDetails.discountApplied') }}</td>
                                     <td class="px-4 py-4 text-sm font-medium text-green-600 text-right">-₦{{
                                         formatAmount(discountAmount) }}</td>
                                 </tr>
                                 <tr>
-                                    <td colspan="3" class="px-4 py-4 text-base font-bold text-gray-900 text-right">Final
-                                        Total</td>
+                                    <td colspan="3" class="px-4 py-4 text-base font-bold text-gray-900 text-right">{{ t('manageOrderDetails.finalTotal') }}</td>
                                     <td class="px-4 py-4 text-base font-bold text-gray-900 text-right">₦{{
                                         formatAmount(order?.total || 0) }}</td>
                                 </tr>
@@ -121,7 +115,7 @@
 
                 <!-- Status Timeline -->
                 <div class="px-6 py-4 border-t border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Order Timeline</h3>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">{{ t('manageOrderDetails.orderTimeline') }}</h3>
                     <div class="flex items-center space-x-4">
                         <div v-for="(status, index) in availableStatuses" :key="status"
                             class="flex items-center relative flex-1">
@@ -148,7 +142,7 @@
                         <div class="flex items-center space-x-4">
                             <button @click="updateOrderStatus" :disabled="!canUpdateStatus"
                                 class="px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed">
-                                Update Status
+                                {{ t('manageOrderDetails.updateStatus') }}
                             </button>
                         </div>
                     </div>
@@ -166,7 +160,7 @@
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                     </path>
                 </svg>
-                <span class="text-gray-700">Loading...</span>
+                <span class="text-gray-700">{{ t('manageOrderDetails.loading') }}</span>
             </div>
         </div>
     </div>
@@ -174,6 +168,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter, useRoute } from 'vue-router';
 import { ArrowLeft, RefreshCcw, Check } from 'lucide-vue-next';
 import { useSellerStore } from '../store/sellerStore';
@@ -190,6 +185,7 @@ export default {
     },
 
     setup() {
+        const { t, locale } = useI18n();
         const router = useRouter();
         const route = useRoute();
         const sellerStore = useSellerStore();
@@ -216,7 +212,8 @@ export default {
         // Format date
         const formatDate = (date) => {
             if (!date) return '';
-            return new Date(date).toLocaleDateString('en-NG', {
+            const activeLocale = locale.value === 'fr' ? 'fr-FR' : 'en-NG';
+            return new Date(date).toLocaleDateString(activeLocale, {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -290,21 +287,21 @@ export default {
                         id: orderData.orderNumber || orderData._id?.substring(orderData._id.length - 6).toUpperCase(),
                         _id: orderData._id,
                         customer: {
-                            name: orderData.user?.username || orderData.user?.name || orderData.customerName || 'N/A',
-                            email: orderData.user?.email || orderData.customerEmail || 'N/A'
+                            name: orderData.user?.username || orderData.user?.name || orderData.customerName || t('manageOrderDetails.notAvailable'),
+                            email: orderData.user?.email || orderData.customerEmail || t('manageOrderDetails.notAvailable')
                         },
                         date: orderData.createdAt || orderData.date,
-                        status: orderData.status || 'Pending',
+                        status: orderData.status || t('manageOrderDetails.statuses.pending'),
                         total: orderData.totalAmount || orderData.total || 0,
                         products: mappedProducts
                     };
                 } else {
-                    toast.error('Order not found');
+                    toast.error(t('manageOrderDetails.toasts.orderNotFound'));
                     router.back();
                 }
             } catch (error) {
                 console.error('Error loading order:', error);
-                toast.error('Failed to load order details');
+                toast.error(t('manageOrderDetails.toasts.loadFailed'));
             } finally {
                 isLoading.value = false;
             }
@@ -315,9 +312,9 @@ export default {
         const refreshOrder = async () => {
             try {
                 await loadOrder();
-                toast.success('Order details refreshed');
+                toast.success(t('manageOrderDetails.toasts.refreshed'));
             } catch (error) {
-                toast.error('Failed to refresh order details');
+                toast.error(t('manageOrderDetails.toasts.refreshFailed'));
             }
         };
 
@@ -330,13 +327,13 @@ export default {
                 const nextStatus = availableStatuses[currentIndex + 1];
 
                 if (!nextStatus) {
-                    toast.info('No next status available');
+                    toast.info(t('manageOrderDetails.toasts.noNextStatus'));
                     return;
                 }
 
                 // If moving from cancelled to pending, show confirmation
                 if (order.value.status.toLowerCase() === 'cancelled') {
-                    if (!window.confirm('Are you sure you want to reactivate this cancelled order?')) {
+                    if (!window.confirm(t('manageOrderDetails.confirmReactivate'))) {
                         return;
                     }
                 }
@@ -346,13 +343,13 @@ export default {
                 await loadOrder();
 
                 const message = order.value.status.toLowerCase() === 'cancelled'
-                    ? `Order reactivated and set to ${nextStatus}`
-                    : `Order status updated to ${nextStatus}`;
+                    ? t('manageOrderDetails.toasts.reactivated', { status: nextStatus })
+                    : t('manageOrderDetails.toasts.statusUpdated', { status: nextStatus });
 
                 toast.success(message);
             } catch (error) {
                 console.error('Error updating order status:', error);
-                toast.error('Failed to update order status');
+                toast.error(t('manageOrderDetails.toasts.updateFailed'));
             } finally {
                 isLoading.value = false;
             }
@@ -362,6 +359,7 @@ export default {
         onMounted(loadOrder);
 
         return {
+            t,
             router,
             isLoading,
             order,

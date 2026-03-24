@@ -5,7 +5,7 @@
 // ];
 
 export const sellerItems = [
-  { label: "Home page", link: "home" },
-  { label: "ALL PRODUCTS", link: "products" },
-  { label: "SELLER PROFILE", link: "profile" },
+  { labelKey: "home", link: "home" },
+  { labelKey: "products", link: "products" },
+  { labelKey: "profile", link: "profile" },
 ];

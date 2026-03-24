@@ -1,11 +1,17 @@
 const mongoose = require("mongoose");
 const Category = require("../models/categoryModels");
 const Product = require("../models/productModels");
+const {
+  getCategoryRequestLocale,
+  localizeCategory,
+  localizeCategoryPath,
+} = require("../utils/categoryLocalization");
 
 // Get all categories
 exports.getAllCategories = async (req, res) => {
   try {
     console.log("Fetching categories...");
+    const locale = getCategoryRequestLocale(req);
 
     // Check database connection
     if (mongoose.connection.readyState !== 1) {
@@ -17,10 +23,13 @@ exports.getAllCategories = async (req, res) => {
     }
 
     const categories = await Category.find().lean();
+    const localizedCategories = categories.map((category) =>
+      localizeCategory(category, locale)
+    );
 
     console.log(`Successfully fetched ${categories?.length || 0} categories`);
 
-    res.json(categories);
+    res.json(localizedCategories);
   } catch (error) {
     console.error("Error in getAllCategories:", {
       message: error.message,
@@ -42,6 +51,7 @@ exports.getAllCategories = async (req, res) => {
 exports.getCategory = async (req, res) => {
   try {
     const { categoryId } = req.params;
+    const locale = getCategoryRequestLocale(req);
 
     if (!mongoose.Types.ObjectId.isValid(categoryId)) {
       return res.status(400).json({
@@ -63,7 +73,7 @@ exports.getCategory = async (req, res) => {
       });
     }
 
-    res.json(category);
+    res.json(localizeCategory(category, locale));
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
@@ -113,34 +123,7 @@ exports.testConnection = async (req, res) => {
 exports.getProductsByCategory = async (req, res) => {
   try {
     const { categorySlug } = req.params;
-
-    // Find the category by slug
-    const category = await Category.findOne({ slug: categorySlug });
-
-    if (!category) {
-      return res.status(404).json({ message: "Category not found" });
-    }
-
-    // Find products with this category and populate seller information
-    const products = await Product.find({ category: category._id })
-      .populate("seller", "name") // Assuming you want to include seller name
-      .select(
-        "name description price images discount averageRating numberOfRatings"
-      ); // Select the fields you want to return
-
-    res.json({
-      categoryName: category.name,
-      products: products,
-    });
-  } catch (error) {
-    console.error("Error in getProductsByCategory:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
-
-exports.getProductsByCategory = async (req, res) => {
-  try {
-    const { categorySlug } = req.params;
+    const locale = getCategoryRequestLocale(req);
 
     // Find the category by slug
     const category = await Category.findOne({ slug: categorySlug });
@@ -175,10 +158,11 @@ exports.getProductsByCategory = async (req, res) => {
       );
 
     // Get the full category path
-    const categoryPath = await getCategoryPath(category);
+    const categoryPath = await getCategoryPath(category, locale);
+    const localizedCategory = localizeCategory(category, locale);
 
     res.json({
-      categoryName: category.name,
+      categoryName: localizedCategory.displayName || localizedCategory.name,
       categoryPath: categoryPath,
       products: products,
     });
@@ -189,12 +173,12 @@ exports.getProductsByCategory = async (req, res) => {
 };
 
 // Helper function to get the full category path
-const getCategoryPath = async (category) => {
+const getCategoryPath = async (category, locale = "en") => {
   const path = [];
   let currentCategory = category;
 
   while (currentCategory) {
-    path.unshift({ name: currentCategory.name, slug: currentCategory.slug });
+    path.unshift(currentCategory);
     if (currentCategory.parent) {
       currentCategory = await Category.findById(currentCategory.parent);
     } else {
@@ -202,7 +186,7 @@ const getCategoryPath = async (category) => {
     }
   }
 
-  return path;
+  return localizeCategoryPath(path, locale);
 };
 
 exports.createCategory = async (req, res) => {

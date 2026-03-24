@@ -12,8 +12,8 @@
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                         </path>
                     </svg>
-                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Verifying Payment</h2>
-                    <p class="text-gray-600">Please wait while we verify your payment...</p>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ t('paymentCallbackPage.verifyingTitle') }}</h2>
+                    <p class="text-gray-600">{{ t('paymentCallbackPage.verifyingDescription') }}</p>
                 </div>
 
                 <!-- Success State -->
@@ -24,8 +24,8 @@
                             </path>
                         </svg>
                     </div>
-                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h2>
-                    <p class="text-gray-600 mb-4">Redirecting to order confirmation...</p>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ t('paymentCallbackPage.successTitle') }}</h2>
+                    <p class="text-gray-600 mb-4">{{ t('paymentCallbackPage.successDescription') }}</p>
                 </div>
 
                 <!-- Error State -->
@@ -36,17 +36,17 @@
                                 d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </div>
-                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Verification Failed</h2>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ t('paymentCallbackPage.failedTitle') }}</h2>
                     <p class="text-gray-600 mb-4">{{ errorMessage }}</p>
 
                     <div class="flex flex-col sm:flex-row gap-4">
                         <button @click="retryVerification"
                             class="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#24a6bb] hover:bg-[#1c8a9e]">
-                            Retry Verification
+                            {{ t('paymentCallbackPage.retryVerification') }}
                         </button>
                         <button @click="contactSupport"
                             class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                            Contact Support
+                            {{ t('paymentCallbackPage.contactSupport') }}
                         </button>
                     </div>
                 </div>
@@ -57,6 +57,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { usePaymentStore } from '../store/paymentStore';
 import { useOrderStore } from '../store/orderStore';
@@ -64,6 +65,7 @@ import { useCartStore } from '../store/cart';
 import { useCluesBucksStore } from '../store/cluesBucksStore';
 import { toast } from 'vue-sonner';
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const paymentStore = usePaymentStore();
@@ -84,7 +86,7 @@ onMounted(async () => {
         reference.value = route.query.reference || route.query.token;
 
         if (!reference.value) {
-            throw new Error('No payment reference found');
+            throw new Error(t('paymentCallbackPage.errors.noReference'));
         }
 
         console.log('Payment callback received:', {
@@ -117,7 +119,7 @@ onMounted(async () => {
                 verificationResult.data.payment?.orderId;
 
             if (!orderId.value) {
-                throw new Error('Order ID not found in verification response');
+                throw new Error(t('paymentCallbackPage.errors.orderIdMissingInResponse'));
             }
 
             // Update order status
@@ -147,7 +149,7 @@ onMounted(async () => {
 
             // Set success status
             verificationStatus.value = 'success';
-            toast.success('Payment verified successfully!');
+            toast.success(t('paymentCallbackPage.toasts.verified'));
 
             // Redirect to order confirmation after 2 seconds
             setTimeout(() => {
@@ -157,12 +159,12 @@ onMounted(async () => {
                 });
             }, 2000);
         } else {
-            throw new Error(verificationResult.message || 'Payment verification failed');
+            throw new Error(verificationResult.message || t('paymentCallbackPage.errors.verificationFailed'));
         }
     } catch (error) {
         console.error('Payment callback error:', error);
         verificationStatus.value = 'failed';
-        errorMessage.value = error.message || 'Payment verification failed. Please contact support.';
+        errorMessage.value = error.message || t('paymentCallbackPage.errors.verificationFailedSupport');
         toast.error(errorMessage.value);
     } finally {
         isVerifying.value = false;
@@ -171,7 +173,7 @@ onMounted(async () => {
 
 const retryVerification = async () => {
     if (!reference.value) {
-        toast.error('No payment reference found');
+        toast.error(t('paymentCallbackPage.errors.noReference'));
         return;
     }
 
@@ -196,7 +198,7 @@ const retryVerification = async () => {
                 });
 
                 verificationStatus.value = 'success';
-                toast.success('Payment verified successfully!');
+                toast.success(t('paymentCallbackPage.toasts.verified'));
 
                 setTimeout(() => {
                     router.push({
@@ -205,15 +207,15 @@ const retryVerification = async () => {
                     });
                 }, 2000);
             } else {
-                throw new Error('Order ID not found');
+                throw new Error(t('paymentCallbackPage.errors.orderIdNotFound'));
             }
         } else {
-            throw new Error('Verification failed');
+            throw new Error(t('paymentCallbackPage.errors.retryFailed'));
         }
     } catch (error) {
         console.error('Retry verification error:', error);
         verificationStatus.value = 'failed';
-        errorMessage.value = error.message || 'Verification failed again. Please contact support.';
+        errorMessage.value = error.message || t('paymentCallbackPage.errors.retryFailedSupport');
         toast.error(errorMessage.value);
     } finally {
         isVerifying.value = false;
@@ -222,6 +224,8 @@ const retryVerification = async () => {
 
 const contactSupport = () => {
     // Redirect to support page or open email client
-    window.location.href = 'mailto:brutholdigital@gmail.com?subject=Payment%20Verification%20Issue&body=Reference:%20' + reference.value;
+    const subject = encodeURIComponent(t('paymentCallbackPage.supportEmail.subject'));
+    const body = encodeURIComponent(`${t('paymentCallbackPage.supportEmail.referenceLabel')} ${reference.value}`);
+    window.location.href = `mailto:brutholdigital@gmail.com?subject=${subject}&body=${body}`;
 };
 </script>

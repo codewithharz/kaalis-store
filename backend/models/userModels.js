@@ -7,6 +7,11 @@ const userSchema = new mongoose.Schema(
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     email: { type: String, required: true, unique: true },
+    preferredLanguage: {
+      type: String,
+      enum: ["en", "fr"],
+      default: "en",
+    },
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
     products: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],

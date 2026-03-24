@@ -7,8 +7,8 @@
                 <div class="mb-4">
                     <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#24a6bb] mx-auto"></div>
                 </div>
-                <h2 class="text-xl font-semibold text-gray-700 mb-2">Verifying Payment</h2>
-                <p class="text-gray-500">Please wait while we confirm your transaction...</p>
+                <h2 class="text-xl font-semibold text-gray-700 mb-2">{{ t('paymentCallbackPage.verifyingTitle') }}</h2>
+                <p class="text-gray-500">{{ t('paymentCallbackLegacyPage.verifyingDescription') }}</p>
             </div>
 
             <!-- Error State -->
@@ -16,16 +16,16 @@
                 <div class="mb-4 text-red-500">
                     <XCircle class="h-12 w-12 mx-auto" />
                 </div>
-                <h2 class="text-xl font-semibold text-gray-700 mb-2">Verification Failed</h2>
+                <h2 class="text-xl font-semibold text-gray-700 mb-2">{{ t('paymentCallbackPage.failedTitle') }}</h2>
                 <p class="text-gray-500 mb-4">{{ error }}</p>
                 <div class="space-y-2">
                     <button @click="retryVerification"
                         class="w-full bg-[#24a6bb] text-white px-4 py-2 rounded hover:bg-[#1c8a9e] transition duration-300">
-                        Retry Verification
+                        {{ t('paymentCallbackPage.retryVerification') }}
                     </button>
                     <button @click="contactSupport"
                         class="w-full border border-gray-300 px-4 py-2 rounded hover:bg-gray-50 transition duration-300">
-                        Contact Support
+                        {{ t('paymentCallbackPage.contactSupport') }}
                     </button>
                 </div>
             </div>
@@ -36,6 +36,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { usePaymentStore } from '../store/paymentStore';
 import { useCartStore } from '../store/cart';
 import { useOrderStore } from '../store/orderStore';
@@ -44,6 +45,7 @@ import { XCircle } from 'lucide-vue-next';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 const paymentStore = usePaymentStore();
 const cartStore = useCartStore();
 const orderStore = useOrderStore();
@@ -68,7 +70,7 @@ onMounted(async () => {
             const verificationResult = await paymentStore.verifyPayment(reference);
 
             if (!verificationResult.status) {
-                throw new Error('Payment verification failed');
+                throw new Error(t('paymentCallbackPage.errors.verificationFailed'));
             }
 
             // 2. Get order details
@@ -98,7 +100,7 @@ onMounted(async () => {
 
         } catch (err) {
             console.error('Payment verification error:', err);
-            error.value = err.message || 'An error occurred while verifying your payment';
+            error.value = err.message || t('paymentCallbackLegacyPage.errors.verificationError');
             toast.error(error.value);
 
             // Log the error for debugging
@@ -108,7 +110,7 @@ onMounted(async () => {
         }
     } else {
         // If no reference or trxref, assume Orange Money handled the redirect
-        error.value = 'Payment verification is handled by the server. If you were not redirected, please contact support.';
+        error.value = t('paymentCallbackLegacyPage.errors.serverHandled');
         isProcessing.value = false;
     }
 });
@@ -121,7 +123,7 @@ const retryVerification = async () => {
         const reference = route.query.reference;
         await paymentStore.verifyPayment(reference);
     } catch (err) {
-        error.value = 'Verification failed again. Please contact support.';
+        error.value = t('paymentCallbackPage.errors.retryFailedSupport');
     } finally {
         isProcessing.value = false;
     }
@@ -129,6 +131,8 @@ const retryVerification = async () => {
 
 const contactSupport = () => {
     // Implement your support contact logic
-    window.location.href = `mailto:support@yoursite.com?subject=Payment%20Verification%20Issue&body=Reference:%20${route.query.reference}`;
+    const subject = encodeURIComponent(t('paymentCallbackPage.supportEmail.subject'));
+    const body = encodeURIComponent(`${t('paymentCallbackPage.supportEmail.referenceLabel')} ${route.query.reference}`);
+    window.location.href = `mailto:brutholdigital@gmail.com?subject=${subject}&body=${body}`;
 };
 </script>

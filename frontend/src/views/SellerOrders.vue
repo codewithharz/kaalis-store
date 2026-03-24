@@ -11,9 +11,8 @@
                                 <ShoppingBag class="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                             </div>
                             <div class="text-white min-w-0">
-                                <h1 class="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">All Orders</h1>
-                                <p class="text-blue-100 text-sm sm:text-base">Manage and track all your customer orders
-                                </p>
+                                <h1 class="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">{{ t('sellerOrdersPage.title') }}</h1>
+                                <p class="text-blue-100 text-sm sm:text-base">{{ t('sellerOrdersPage.subtitle') }}</p>
                             </div>
                         </div>
                     </div>
@@ -32,7 +31,7 @@
                             </div>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">{{ status }} Orders</p>
+                            <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">{{ t('sellerOrdersPage.statusOrders', { status: translateStatus(status) }) }}</p>
                             <p class="text-lg sm:text-2xl font-bold text-gray-900 break-words">{{
                                 getOrderCountByStatus(status) }}</p>
                             <p class="text-xs sm:text-sm font-medium text-green-600 mt-1 sm:mt-2">
@@ -56,8 +55,8 @@
                             <Filter class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
                         <div>
-                            <h2 class="text-lg sm:text-xl font-bold text-gray-900">Filter & Sort Orders</h2>
-                            <p class="text-xs sm:text-sm text-gray-600">Organize your orders efficiently</p>
+                            <h2 class="text-lg sm:text-xl font-bold text-gray-900">{{ t('sellerOrdersPage.filterTitle') }}</h2>
+                            <p class="text-xs sm:text-sm text-gray-600">{{ t('sellerOrdersPage.filterSubtitle') }}</p>
                         </div>
                     </div>
                 </div>
@@ -66,14 +65,13 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <!-- Status Filter -->
                         <div>
-                            <label for="status-filter" class="block text-sm font-semibold text-gray-700 mb-2">Filter by
-                                Status</label>
+                            <label for="status-filter" class="block text-sm font-semibold text-gray-700 mb-2">{{ t('sellerOrdersPage.filterByStatus') }}</label>
                             <div class="relative">
                                 <select id="status-filter" v-model="statusFilter" @change="resetPagination"
                                     class="w-full appearance-none bg-white border-2 border-gray-200 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 pr-8 sm:pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm sm:text-base">
-                                    <option value="">All Statuses</option>
+                                    <option value="">{{ t('sellerOrdersPage.allStatuses') }}</option>
                                     <option v-for="status in orderStatuses" :key="status" :value="status">
-                                        {{ status }}
+                                        {{ translateStatus(status) }}
                                     </option>
                                 </select>
                                 <div
@@ -85,13 +83,13 @@
 
                         <!-- Sort By -->
                         <div>
-                            <label for="sort-by" class="block text-sm font-semibold text-gray-700 mb-2">Sort by</label>
+                            <label for="sort-by" class="block text-sm font-semibold text-gray-700 mb-2">{{ t('sellerOrdersPage.sortBy') }}</label>
                             <div class="relative">
                                 <select id="sort-by" v-model="sortBy" @change="resetPagination"
                                     class="w-full appearance-none bg-white border-2 border-gray-200 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 pr-8 sm:pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm sm:text-base">
-                                    <option value="date">📅 Date</option>
-                                    <option value="total">💰 Total Amount</option>
-                                    <option value="status">🏷️ Status</option>
+                                    <option value="date">📅 {{ t('sellerOrdersPage.sortOptions.date') }}</option>
+                                    <option value="total">💰 {{ t('sellerOrdersPage.sortOptions.total') }}</option>
+                                    <option value="status">🏷️ {{ t('sellerOrdersPage.sortOptions.status') }}</option>
                                 </select>
                                 <div
                                     class="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
@@ -102,11 +100,11 @@
 
                         <!-- Results Summary -->
                         <div>
-                            <p class="text-sm font-medium text-gray-600 mb-2">Results</p>
+                            <p class="text-sm font-medium text-gray-600 mb-2">{{ t('sellerOrdersPage.results') }}</p>
                             <div
                                 class="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg sm:rounded-xl border border-blue-200">
                                 <p class="text-lg sm:text-xl font-bold text-blue-900">{{ filteredOrders.length }}</p>
-                                <p class="text-xs text-blue-600">orders found</p>
+                                <p class="text-xs text-blue-600">{{ t('sellerOrdersPage.ordersFound', { count: filteredOrders.length }) }}</p>
                             </div>
                         </div>
                     </div>
@@ -124,8 +122,8 @@
                             class="absolute inset-0 animate-ping h-12 w-12 sm:h-16 sm:w-16 border-2 border-blue-300 rounded-full opacity-75">
                         </div>
                     </div>
-                    <p class="text-lg sm:text-xl font-medium text-gray-700">Loading orders...</p>
-                    <p class="text-xs sm:text-sm text-gray-500 mt-2">Please wait while we fetch your orders</p>
+                    <p class="text-lg sm:text-xl font-medium text-gray-700">{{ t('sellerOrdersPage.loading') }}</p>
+                    <p class="text-xs sm:text-sm text-gray-500 mt-2">{{ t('sellerOrdersPage.loadingSubtitle') }}</p>
                 </div>
             </div>
 
@@ -143,8 +141,9 @@
                                     <Package class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                                 </div>
                                 <div class="min-w-0 flex-1">
-                                    <p class="text-lg sm:text-xl font-bold text-gray-900 truncate">Order #{{
-                                        order.orderNumber }}</p>
+                                    <p class="text-lg sm:text-xl font-bold text-gray-900 truncate">
+                                        {{ t('sellerOrdersPage.orderNumber', { number: order.orderNumber }) }}
+                                    </p>
                                     <p class="text-xs sm:text-sm text-gray-600 flex items-center gap-1">
                                         <Calendar class="w-3 h-3 sm:w-4 sm:h-4" />
                                         {{ formatDate(order.date) }}
@@ -153,7 +152,7 @@
                             </div>
                             <span
                                 :class="`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium bg-${getStatusColor(order.status)}-100 text-${getStatusColor(order.status)}-800 border border-${getStatusColor(order.status)}-200 flex-shrink-0`">
-                                {{ order.status }}
+                                {{ translateStatus(order.status) }}
                             </span>
                         </div>
                     </div>
@@ -169,18 +168,18 @@
                                         class="w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 rounded-lg flex items-center justify-center">
                                         <FileText class="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                                     </div>
-                                    Order Details
+                                    {{ t('sellerOrdersPage.orderDetails') }}
                                 </h3>
                                 <div class="space-y-2 sm:space-y-3">
                                     <div
                                         class="flex justify-between items-center p-2 sm:p-3 bg-white rounded-lg border border-gray-100">
-                                        <span class="text-sm sm:text-base text-gray-600">Total Amount:</span>
+                                        <span class="text-sm sm:text-base text-gray-600">{{ t('sellerOrdersPage.totalAmount') }}</span>
                                         <span class="text-lg sm:text-xl font-bold text-green-600">₦{{
                                             formatCurrency(order.total) }}</span>
                                     </div>
                                     <div
                                         class="flex justify-between items-center p-2 sm:p-3 bg-white rounded-lg border border-gray-100">
-                                        <span class="text-sm sm:text-base text-gray-600">Payment Method:</span>
+                                        <span class="text-sm sm:text-base text-gray-600">{{ t('sellerOrdersPage.paymentMethod') }}</span>
                                         <span class="font-medium text-gray-900 text-sm sm:text-base">{{
                                             order.paymentMethod }}</span>
                                     </div>
@@ -195,7 +194,7 @@
                                         class="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-lg flex items-center justify-center">
                                         <User class="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                                     </div>
-                                    Customer Information
+                                    {{ t('sellerOrdersPage.customerInformation') }}
                                 </h3>
                                 <div class="space-y-2 sm:space-y-3">
                                     <div class="p-2 sm:p-3 bg-white rounded-lg border border-gray-100">
@@ -222,7 +221,7 @@
                                         class="w-6 h-6 sm:w-8 sm:h-8 bg-purple-500 rounded-lg flex items-center justify-center">
                                         <MapPin class="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                                     </div>
-                                    Shipping Address
+                                    {{ t('sellerOrdersPage.shippingAddress') }}
                                 </h3>
                                 <div class="p-2 sm:p-3 bg-white rounded-lg border border-gray-100">
                                     <p class="font-medium text-gray-900 text-sm sm:text-base">{{ order.address.street }}
@@ -241,7 +240,7 @@
                                         class="w-6 h-6 sm:w-8 sm:h-8 bg-orange-500 rounded-lg flex items-center justify-center">
                                         <ShoppingBag class="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                                     </div>
-                                    Products ({{ order.products?.length || 0 }})
+                                    {{ t('sellerOrdersPage.productsCount', { count: order.products?.length || 0 }) }}
                                 </h3>
                                 <div class="space-y-2 max-h-40 sm:max-h-48 overflow-y-auto">
                                     <div v-if="order.products && order.products.length > 0">
@@ -255,7 +254,7 @@
                                                 <div v-if="product.variant"
                                                     class="text-xs text-gray-500 mt-0.5 flex flex-wrap gap-x-2">
                                                     <span v-if="product.variant.color">
-                                                        Color: {{ typeof product.variant.color === 'object' ?
+                                                        {{ t('sellerOrdersPage.color') }}: {{ typeof product.variant.color === 'object' ?
                                                         product.variant.color.name : product.variant.color }}
                                                     </span>
                                                     <span v-for="(attr, attrIdx) in product.variant.attributes"
@@ -265,10 +264,10 @@
                                                     <!-- Fallback for legacy size field if not in attributes -->
                                                     <span
                                                         v-if="product.variant.size && (!product.variant.attributes || !product.variant.attributes.some(a => a.name.toLowerCase() === 'size'))">
-                                                        Size: {{ product.variant.size }}
+                                                        {{ t('sellerOrdersPage.size') }}: {{ product.variant.size }}
                                                     </span>
                                                 </div>
-                                                <span class="text-xs sm:text-sm text-gray-600">Qty: {{ product.quantity
+                                                <span class="text-xs sm:text-sm text-gray-600">{{ t('sellerOrdersPage.quantity') }}: {{ product.quantity
                                                 }}</span>
                                             </div>
                                             <span
@@ -277,7 +276,7 @@
                                         </div>
                                     </div>
                                     <div v-else class="text-center py-4">
-                                        <p class="text-gray-500 text-sm">No product information available</p>
+                                        <p class="text-gray-500 text-sm">{{ t('sellerOrdersPage.noProductInformation') }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -288,12 +287,12 @@
                             <button @click="openUpdateStatusModal(order)"
                                 class="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg sm:rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg text-sm sm:text-base">
                                 <RefreshCw class="w-4 h-4" />
-                                Update Status
+                                {{ t('sellerOrdersPage.updateStatus') }}
                             </button>
                             <button @click="viewOrderDetails(order)"
                                 class="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg sm:rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105 shadow-lg text-sm sm:text-base">
                                 <Eye class="w-4 h-4" />
-                                View Details
+                                {{ t('sellerOrdersPage.viewDetails') }}
                             </button>
                         </div>
                     </div>
@@ -307,13 +306,12 @@
                         class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
                         <ShoppingBag class="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
                     </div>
-                    <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">No Orders Found</h3>
-                    <p class="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">{{ errorMessage || `No orders match your
-                        current filters.` }}</p>
+                    <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">{{ t('sellerOrdersPage.noOrdersFound') }}</h3>
+                    <p class="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">{{ errorMessage || t('sellerOrdersPage.noOrdersMatchFilters') }}</p>
                     <button @click="statusFilter = ''; sortBy = 'date'; resetPagination()"
                         class="inline-flex items-center gap-2 px-4 sm:px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg sm:rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg text-sm sm:text-base">
                         <RefreshCw class="w-4 h-4" />
-                        Reset Filters
+                        {{ t('sellerOrdersPage.resetFilters') }}
                     </button>
                 </div>
             </div>
@@ -327,12 +325,12 @@
                             <button @click="goToPage(1)" :disabled="currentPage === 1"
                                 class="px-2 sm:px-4 py-2 rounded-lg sm:rounded-xl border-2 font-medium transition-all text-xs sm:text-sm"
                                 :class="currentPage === 1 ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-gray-700 border-gray-200 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50'">
-                                First
+                                {{ t('sellerOrdersPage.first') }}
                             </button>
                             <button @click="prevPage" :disabled="currentPage === 1"
                                 class="px-2 sm:px-4 py-2 rounded-lg sm:rounded-xl border-2 font-medium transition-all text-xs sm:text-sm"
                                 :class="currentPage === 1 ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-gray-700 border-gray-200 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50'">
-                                Previous
+                                {{ t('sellerOrdersPage.previous') }}
                             </button>
 
                             <!-- Page Numbers -->
@@ -350,25 +348,24 @@
                             <button @click="nextPage" :disabled="currentPage === totalPages"
                                 class="px-2 sm:px-4 py-2 rounded-lg sm:rounded-xl border-2 font-medium transition-all text-xs sm:text-sm"
                                 :class="currentPage === totalPages ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-gray-700 border-gray-200 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50'">
-                                Next
+                                {{ t('sellerOrdersPage.next') }}
                             </button>
                             <button @click="goToPage(totalPages)" :disabled="currentPage === totalPages"
                                 class="px-2 sm:px-4 py-2 rounded-lg sm:rounded-xl border-2 font-medium transition-all text-xs sm:text-sm"
                                 :class="currentPage === totalPages ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-gray-700 border-gray-200 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50'">
-                                Last
+                                {{ t('sellerOrdersPage.last') }}
                             </button>
                         </div>
 
                         <!-- Page Info and Jump -->
                         <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
-                            <span class="text-xs sm:text-sm font-medium text-gray-600">Page {{ currentPage }} of {{
-                                totalPages }}</span>
+                            <span class="text-xs sm:text-sm font-medium text-gray-600">{{ t('sellerOrdersPage.pageOf', { page: currentPage, total: totalPages }) }}</span>
                             <div class="flex items-center gap-2">
                                 <input v-model.number="jumpToPage" type="number" min="1" :max="totalPages"
                                     class="w-16 sm:w-20 px-2 sm:px-3 py-2 border-2 border-gray-200 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
                                 <button @click="goToPage(jumpToPage)"
                                     class="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg sm:rounded-xl font-medium hover:from-blue-600 hover:to-indigo-700 transition-all text-xs sm:text-sm">
-                                    Go
+                                    {{ t('sellerOrdersPage.go') }}
                                 </button>
                             </div>
                         </div>
@@ -389,6 +386,7 @@
 
 <script>
 import { ref, computed, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useSellerStore } from '../store/sellerStore';
 import { useOrderStore } from '../store/orderStore.js'
 import OrderDetails from './OrderDetails.vue';
@@ -423,6 +421,7 @@ export default {
     },
 
     setup() {
+        const { t, locale } = useI18n();
         const sellerStore = useSellerStore();
         const orderStore = useOrderStore();
         const orders = ref([]);
@@ -501,7 +500,7 @@ export default {
                 console.log('Fetched Statuses:', orderStatuses.value);
             } catch (error) {
                 console.error('Failed to fetch orders:', error);
-                errorMessage.value = 'Failed to load orders. Please try again later.';
+                errorMessage.value = t('sellerOrdersPage.loadFailed');
             } finally {
                 loading.value = false;
             }
@@ -538,8 +537,28 @@ export default {
             return icons[status] || Clock;
         };
 
+        const translateStatus = (status) => {
+            const key = {
+                Pending: 'pending',
+                Shipped: 'shipped',
+                Delivered: 'delivered',
+                Cancelled: 'cancelled',
+                Processing: 'processing',
+            }[status];
+
+            return key ? t(`sellerOrdersPage.statuses.${key}`) : status;
+        };
+
         // Add this function to convert numbers to words
         function numberToWords(num) {
+            if (locale.value === 'fr') {
+                const formatted = new Intl.NumberFormat('fr-FR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(Math.round(num * 100) / 100);
+                return t('sellerOrdersPage.amountInNaira', { amount: formatted });
+            }
+
             if (num === 0) return "Zero Naira";
 
             // Round to the nearest whole number
@@ -586,7 +605,8 @@ export default {
         };
 
         const formatDate = (dateString) => {
-            return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            const activeLocale = locale.value === 'fr' ? 'fr-FR' : 'en-US';
+            return new Date(dateString).toLocaleDateString(activeLocale, { year: 'numeric', month: 'long', day: 'numeric' });
         };
 
         const formatCurrency = (amount) => {
@@ -648,6 +668,7 @@ export default {
         });
 
         return {
+            t,
             filteredOrders,
             paginatedOrders,
             loading,
@@ -676,6 +697,7 @@ export default {
             getOrderCountByStatus,
             getOrderTotalByStatus,
             getStatusIcon,
+            translateStatus,
             numberToWords,
         };
     }

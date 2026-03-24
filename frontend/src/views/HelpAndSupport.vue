@@ -5,12 +5,12 @@
         <div class="text-white" :style="{ background: getDefaultBackground() }">
             <div class="container mx-auto px-4 py-16">
                 <div class="max-w-3xl mx-auto text-center">
-                    <h1 class="text-4xl font-bold mb-4">How can we help you?</h1>
-                    <p class="text-lg mb-8 text-white/90">Find answers to your questions about Bruthol</p>
+                    <h1 class="text-4xl font-bold mb-4">{{ t('helpPage.title') }}</h1>
+                    <p class="text-lg mb-8 text-white/90">{{ t('helpPage.subtitle') }}</p>
 
                     <!-- Search Bar -->
                     <div class="relative max-w-2xl mx-auto">
-                        <input type="text" v-model="searchQuery" placeholder="Search for help..."
+                        <input type="text" v-model="searchQuery" :placeholder="t('helpPage.searchPlaceholder')"
                             class="w-full px-6 py-4 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 
                                    text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50" />
                         <Search class="absolute right-6 top-1/2 transform -translate-y-1/2 text-white/70" />
@@ -30,11 +30,11 @@
                             <Package class="w-6 h-6 text-blue-600" />
                         </div>
                         <div>
-                            <h3 class="font-semibold text-gray-900 mb-2">Orders & Shipping</h3>
-                            <p class="text-gray-600 text-sm mb-4">Track orders, shipping info, and returns</p>
+                            <h3 class="font-semibold text-gray-900 mb-2">{{ t('helpPage.ordersShipping') }}</h3>
+                            <p class="text-gray-600 text-sm mb-4">{{ t('helpPage.ordersShippingBody') }}</p>
                             <button @click="selectCategory('orders')"
                                 class="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                                Learn more →
+                                {{ t('helpPage.learnMore') }} →
                             </button>
                         </div>
                     </div>
@@ -48,11 +48,11 @@
                             <CreditCard class="w-6 h-6 text-green-600" />
                         </div>
                         <div>
-                            <h3 class="font-semibold text-gray-900 mb-2">Account & Payments</h3>
-                            <p class="text-gray-600 text-sm mb-4">Manage your account and payment methods</p>
+                            <h3 class="font-semibold text-gray-900 mb-2">{{ t('helpPage.accountPayments') }}</h3>
+                            <p class="text-gray-600 text-sm mb-4">{{ t('helpPage.accountPaymentsBody') }}</p>
                             <button @click="selectCategory('account')"
                                 class="text-green-600 hover:text-green-700 text-sm font-medium">
-                                Learn more →
+                                {{ t('helpPage.learnMore') }} →
                             </button>
                         </div>
                     </div>
@@ -66,11 +66,11 @@
                             <ShoppingBag class="w-6 h-6 text-purple-600" />
                         </div>
                         <div>
-                            <h3 class="font-semibold text-gray-900 mb-2">Shop & Products</h3>
-                            <p class="text-gray-600 text-sm mb-4">Information about products and shopping</p>
+                            <h3 class="font-semibold text-gray-900 mb-2">{{ t('helpPage.shopProducts') }}</h3>
+                            <p class="text-gray-600 text-sm mb-4">{{ t('helpPage.shopProductsBody') }}</p>
                             <button @click="selectCategory('products')"
                                 class="text-purple-600 hover:text-purple-700 text-sm font-medium">
-                                Learn more →
+                                {{ t('helpPage.learnMore') }} →
                             </button>
                         </div>
                     </div>
@@ -125,7 +125,7 @@
                                 <rect width="100%" height="32" fill="url(#greek-border)" />
                             </svg>
                         </div>
-                        <span class="mx-4">Frequently Asked Questions</span>
+                        <span class="mx-4">{{ t('helpPage.faqTitle') }}</span>
                         <div class="h-8 w-24 overflow-hidden transform rotate-180 opacity-55">
                             <svg width="100%" height="32" xmlns="http://www.w3.org/2000/svg">
                                 <rect width="100%" height="32" fill="url(#greek-border)" />
@@ -158,8 +158,8 @@
         <div class="bg-white border-t border-gray-200">
             <div class="container mx-auto px-4 py-12">
                 <div class="max-w-4xl mx-auto text-center">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-4">Still need help?</h2>
-                    <p class="text-gray-600 mb-8">Our support team is here to assist you</p>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ t('helpPage.stillNeedHelp') }}</h2>
+                    <p class="text-gray-600 mb-8">{{ t('helpPage.supportHere') }}</p>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <!-- Email Support -->
@@ -167,11 +167,11 @@
                         <div
                             class="bg-gray-50 hover:bg-gray-100 overflow-hidden rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-lg border border-white/20">
                             <Mail class="w-6 h-6 text-gray-700 mx-auto mb-4" />
-                            <h3 class="font-semibold text-gray-900 mb-2">Email Support</h3>
-                            <p class="text-gray-600 text-sm mb-4">Get help via email</p>
+                            <h3 class="font-semibold text-gray-900 mb-2">{{ t('helpPage.emailSupport') }}</h3>
+                            <p class="text-gray-600 text-sm mb-4">{{ t('helpPage.emailSupportBody') }}</p>
                             <a href="mailto:brutholdigital@gmail.com"
                                 class="text-[#ff934b] hover:text-[#ff8331] font-medium">
-                                Contact Us
+                                {{ t('helpPage.contactUs') }}
                             </a>
                         </div>
 
@@ -179,10 +179,10 @@
                         <div
                             class="bg-gray-50 hover:bg-gray-100 overflow-hidden rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-lg border border-white/20">
                             <MessageCircle class="w-6 h-6 text-gray-700 mx-auto mb-4" />
-                            <h3 class="font-semibold text-gray-900 mb-2">Live Chat</h3>
-                            <p class="text-gray-600 text-sm mb-4">Chat with our team</p>
+                            <h3 class="font-semibold text-gray-900 mb-2">{{ t('helpPage.liveChat') }}</h3>
+                            <p class="text-gray-600 text-sm mb-4">{{ t('helpPage.liveChatBody') }}</p>
                             <button @click="startChat" class="text-[#ff934b] hover:text-[#ff8331] font-medium">
-                                Start Chat
+                                {{ t('helpPage.startChat') }}
                             </button>
                         </div>
 
@@ -190,10 +190,10 @@
                         <div
                             class="bg-gray-50 hover:bg-gray-100 overflow-hidden rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-lg border border-white/20">
                             <Phone class="w-6 h-6 text-gray-700 mx-auto mb-4" />
-                            <h3 class="font-semibold text-gray-900 mb-2">Phone Support</h3>
-                            <p class="text-gray-600 text-sm mb-4">Call us directly</p>
+                            <h3 class="font-semibold text-gray-900 mb-2">{{ t('helpPage.phoneSupport') }}</h3>
+                            <p class="text-gray-600 text-sm mb-4">{{ t('helpPage.phoneSupportBody') }}</p>
                             <a href="tel:+1234567890" class="text-[#ff934b] hover:text-[#ff8331] font-medium">
-                                Call Now
+                                {{ t('helpPage.callNow') }}
                             </a>
                         </div>
                     </div>
@@ -205,40 +205,42 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Search, Package, CreditCard, ShoppingBag, ChevronDown, Mail, MessageCircle, Phone } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
 import { toast } from 'vue-sonner';
 
 const router = useRouter();
+const { t } = useI18n();
 const searchQuery = ref('');
 const faqs = ref([
     {
-        question: "How do I track my order?",
-        answer: "You can track your order by logging into your account and visiting the Orders section. There you will find real-time updates on your shipment.",
+        question: t('helpPage.faqTrackOrderQ'),
+        answer: t('helpPage.faqTrackOrderA'),
         category: "orders",
         isOpen: false
     },
     {
-        question: "What payment methods do you accept?",
-        answer: "We accept various payment methods including credit/debit cards, PayPal, and bank transfers. All payments are securely processed.",
+        question: t('helpPage.faqPaymentMethodsQ'),
+        answer: t('helpPage.faqPaymentMethodsA'),
         category: "account",
         isOpen: false
     },
     {
-        question: "How can I return a product?",
-        answer: "To return a product, go to your order history, select the item you want to return, and follow the return instructions. Returns must be initiated within 30 days of delivery.",
+        question: t('helpPage.faqReturnProductQ'),
+        answer: t('helpPage.faqReturnProductA'),
         category: "orders",
         isOpen: false
     },
     {
-        question: "How do I change my account password?",
-        answer: "You can change your password by going to Account Settings > Security > Change Password. Follow the prompts to set your new password.",
+        question: t('helpPage.faqChangePasswordQ'),
+        answer: t('helpPage.faqChangePasswordA'),
         category: "account",
         isOpen: false
     },
     {
-        question: "Do you offer international shipping?",
-        answer: "Yes, we offer international shipping to most countries. Shipping rates and delivery times vary by location.",
+        question: t('helpPage.faqInternationalShippingQ'),
+        answer: t('helpPage.faqInternationalShippingA'),
         category: "orders",
         isOpen: false
     }
@@ -269,7 +271,7 @@ const selectCategory = (category) => {
 };
 
 const startChat = () => {
-    toast.success("Live chat feature coming soon!");
+    toast.success(t('helpPage.liveChatSoon'));
 };
 </script>
 

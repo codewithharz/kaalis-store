@@ -14,10 +14,10 @@
             <div class="flex items-center justify-between mt-4">
                 <div class="flex items-center text-gray-600">
                     <Clock class="w-4 h-4 mr-2" />
-                    <span>Ends: {{ formatDate(endDate) }}</span>
+                    <span>{{ t('pageComponents.endsDate', { date: formatDate(endDate) }) }}</span>
                 </div>
                 <button class="text-[#24a6bb] hover:text-[#1a7f8f] font-medium">
-                    Shop Now
+                    {{ t('pageComponents.shopNow') }}
                 </button>
             </div>
         </div>
@@ -26,6 +26,9 @@
 
 <script setup>
 import { Clock } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
+
+const { t, locale } = useI18n();
 
 const props = defineProps({
     title: {
@@ -47,7 +50,8 @@ const props = defineProps({
 });
 
 const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
+    const dateLocale = locale.value.startsWith('fr') ? 'fr-FR' : 'en-US';
+    return new Date(date).toLocaleDateString(dateLocale, {
         year: 'numeric',
         month: 'long',
         day: 'numeric'

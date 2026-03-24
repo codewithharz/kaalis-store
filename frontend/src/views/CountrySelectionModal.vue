@@ -13,18 +13,23 @@
                 <div class="text-center">
                     <div>
                         <div class="flex flex-col items-center">
-                            <h2 class="text-3xl font-bold mb-0">Welcome to </h2>
+                            <h2 class="text-3xl font-bold mb-0">{{ t('countryModal.title') }}</h2>
                             <!-- <h2 class="text-3xl font-bold mb-2">Bruthol</h2> -->
                             <div>
                                 <img src="../assets/images/logo.png" alt="logo" class=" h-14 pb-2 cursor-not-allowed">
                             </div>
                         </div>
-                        <p class="text-gray-600 mb-6">Please select your country for shopping</p>
+                        <p class="text-gray-600 mb-6">{{ t('countryModal.subtitle') }}</p>
+                    </div>
+                    <div class="mb-3 text-left">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ t('countryModal.countryLabel') }}
+                        </label>
                     </div>
                     <div class="relative mb-6">
                         <select v-model="selectedCountry"
                             class="w-full p-3 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-gray-400">
-                            <option value="" disabled selected>Please select a country</option>
+                            <option value="" disabled>{{ t('countryModal.countryPlaceholder') }}</option>
                             <option v-for="country in countries" :key="country" :value="country">
                                 {{ country }}
                             </option>
@@ -37,8 +42,20 @@
                         </div>
                     </div>
 
+                    <div class="mb-3 text-left">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ t('countryModal.languageLabel') }}
+                        </label>
+                        <select v-model="selectedLanguage"
+                            class="w-full p-3 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-gray-400">
+                            <option v-for="locale in supportedLocales" :key="locale.code" :value="locale.code">
+                                {{ locale.label }}
+                            </option>
+                        </select>
+                    </div>
+
                     <div class="bg-gray-100 p-4 rounded-lg mb-6">
-                        <h3 class="font-bold mb-2">FREE SHIPPING & RETURNS</h3>
+                        <h3 class="font-bold mb-2">{{ t('countryModal.freeShipping') }}</h3>
                         <div class="flex items-center justify-center flex-wrap gap-2">
                             <img :src="paymentImages.mastercard" alt="MasterCard" class="h-8" />
                             <img :src="paymentImages.applePay" alt="Apple Pay" class="h-8" />
@@ -54,11 +71,11 @@
                 <div class="flex flex-col space-y-2">
                     <button @click="selectCountry"
                         class="w-full py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-600">
-                        SELECT
+                        {{ t('countryModal.saveSelection') }}
                     </button>
                     <button @click="close"
                         class="w-full py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400">
-                        Cancel
+                        {{ t('common.cancel') }}
                     </button>
                 </div>
             </div>
@@ -67,7 +84,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useLanguageStore } from '../store/languageStore';
+import { useCountryStore } from '../store/countryStore';
+import { supportedLocales } from '../i18n';
 
 // Import images
 import fashionImage from '../assets/images/Kyrian.png';
@@ -86,6 +107,10 @@ const props = defineProps({
 const emit = defineEmits(['country-selected', 'close']);
 
 const selectedCountry = ref('');
+const languageStore = useLanguageStore();
+const countryStore = useCountryStore();
+const { t, locale } = useI18n();
+const selectedLanguage = ref(languageStore.locale);
 
 const countries = [
     // West African Countries
@@ -115,8 +140,12 @@ const paymentImages = {
 };
 
 const selectCountry = () => {
+    locale.value = selectedLanguage.value;
+    languageStore.setLocale(selectedLanguage.value);
+
     if (selectedCountry.value) {
         emit('country-selected', selectedCountry.value);
+    } else {
         close();
     }
 };
@@ -124,13 +153,16 @@ const selectCountry = () => {
 const close = () => {
     emit('close');
     selectedCountry.value = ''; // Reset selection when closing
+    selectedLanguage.value = languageStore.locale;
 };
 
-// This function is not needed in <script setup>, but keeping it for clarity
-// const setup = () => {
-//     return {
-//         paymentImages,
-//         // ... other returned values ...
-//     };
-// };
+watch(
+    () => props.isOpen,
+    (isOpen) => {
+        if (isOpen) {
+            selectedCountry.value = countryStore.selectedCountry || '';
+            selectedLanguage.value = languageStore.locale;
+        }
+    }
+);
 </script>

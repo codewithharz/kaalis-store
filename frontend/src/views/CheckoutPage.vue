@@ -1,20 +1,20 @@
 <!-- frontend/src/views/CheckoutPage.vue -->
 <template>
     <div class="container mx-auto p-4 checkout-container">
-        <h1 class="text-2xl font-bold mb-6">Checkout</h1>
+        <h1 class="text-2xl font-bold mb-6">{{ t('checkout.title') }}</h1>
         <div v-if="isLoading" class="text-center py-8">
-            <p class="text-xl text-gray-600">Loading checkout information...</p>
+            <p class="text-xl text-gray-600">{{ t('checkout.loading') }}</p>
         </div>
         <div v-else-if="error" class="text-center py-8">
             <p class="text-xl text-red-600">{{ error }}</p>
-            <button @click="retryLoading" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">Retry</button>
+            <button @click="retryLoading" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">{{ t('checkout.retry') }}</button>
         </div>
         <div v-else class="flex flex-col lg:flex-row gap-8 checkout-content">
             <!-- Left Column (Scrollable Content) -->
             <div class="w-full lg:w-2/3 checkout-main-content">
                 <!-- Shipping Address -->
                 <div class="bg-white shadow-md rounded-lg p-4 sm:p-6 mb-6">
-                    <h2 class="text-xl font-semibold mb-4">Shipping address</h2>
+                    <h2 class="text-xl font-semibold mb-4">{{ t('checkout.shippingAddress') }}</h2>
                     <div v-if="selectedAddress">
                         <p>{{ selectedAddress.firstName }} {{ selectedAddress.lastName }}</p>
                         <p>{{ selectedAddress.phone }}</p>
@@ -22,26 +22,26 @@
                         <p>{{ selectedAddress.street }}, {{ selectedAddress.houseNo }}, {{ selectedAddress.postalCode }}
                         </p>
                         <p>{{ selectedAddress.city }}, {{ selectedAddress.state }}, {{ selectedAddress.country }}</p>
-                        <button @click="editAddress" class="text-blue-500 mt-2">Edit</button>
+                        <button @click="editAddress" class="text-blue-500 mt-2">{{ t('checkout.edit') }}</button>
                     </div>
                     <form v-else @submit.prevent="saveAddress" class="space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <input v-model="addressForm.firstName" placeholder="First Name" required
+                            <input v-model="addressForm.firstName" :placeholder="t('checkout.firstName')" required
                                 class="input-field">
-                            <input v-model="addressForm.lastName" placeholder="Last Name" required class="input-field">
-                            <input v-model="addressForm.phone" placeholder="Phone" required class="input-field">
-                            <input v-model="addressForm.email" placeholder="Email" type="email" class="input-field">
-                            <input v-model="addressForm.street" placeholder="Street" required class="input-field">
-                            <input v-model="addressForm.houseNo" placeholder="House Number" required
+                            <input v-model="addressForm.lastName" :placeholder="t('checkout.lastName')" required class="input-field">
+                            <input v-model="addressForm.phone" :placeholder="t('checkout.phone')" required class="input-field">
+                            <input v-model="addressForm.email" :placeholder="t('checkout.email')" type="email" class="input-field">
+                            <input v-model="addressForm.street" :placeholder="t('checkout.street')" required class="input-field">
+                            <input v-model="addressForm.houseNo" :placeholder="t('checkout.houseNumber')" required
                                 class="input-field">
-                            <input v-model="addressForm.city" placeholder="City" required class="input-field">
-                            <input v-model="addressForm.state" placeholder="State" required class="input-field">
-                            <input v-model="addressForm.country" placeholder="Country" required class="input-field">
-                            <input v-model="addressForm.postalCode" placeholder="Postal Code" required
+                            <input v-model="addressForm.city" :placeholder="t('checkout.city')" required class="input-field">
+                            <input v-model="addressForm.state" :placeholder="t('checkout.state')" required class="input-field">
+                            <input v-model="addressForm.country" :placeholder="t('checkout.country')" required class="input-field">
+                            <input v-model="addressForm.postalCode" :placeholder="t('checkout.postalCode')" required
                                 class="input-field">
                         </div>
                         <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">
-                            {{ addressForm._id ? 'Update Address' : 'Add New Address' }}
+                            {{ addressForm._id ? t('checkout.updateAddress') : t('checkout.addNewAddress') }}
                         </button>
                     </form>
                 </div>
@@ -51,9 +51,9 @@
 
                 <!-- Order Items -->
                 <div class="bg-white shadow-md rounded-lg p-4 sm:p-6">
-                    <h2 class="text-xl font-semibold mb-4">Order Items</h2>
+                    <h2 class="text-xl font-semibold mb-4">{{ t('checkout.orderItems') }}</h2>
                     <div v-if="cartStore.items.length === 0" class="text-center py-4">
-                        <p class="text-gray-600">Your cart is empty.</p>
+                        <p class="text-gray-600">{{ t('cart.empty') }}</p>
                     </div>
                     <div v-else v-for="(item, index) in cartStore.items"
                         :key="(item.product?._id || '') + (item.variant?._id || '') + index"
@@ -62,17 +62,17 @@
                             <img v-if="item.product?.images?.length > 0" :src="item.product.images[0]"
                                 :alt="item.product?.name || 'Product image'" class="w-16 h-16 object-cover mr-4">
                             <div v-else class="w-16 h-16 bg-gray-200 rounded mr-4 flex items-center justify-center">
-                                <span class="text-gray-400">Loading...</span>
+                                <span class="text-gray-400">{{ t('checkout.loadingItem') }}</span>
                             </div>
                             <div>
                                 <h3 class="font-semibold"
-                                    :title="item.product ? item.product.name : 'Product name unavailable'">
-                                    {{ formatTitle(item.product ? item.product.name : 'Product name unavailable') }}
+                                    :title="item.product ? item.product.name : t('cart.productUnavailable')">
+                                    {{ formatTitle(item.product ? item.product.name : t('cart.productUnavailable')) }}
                                 </h3>
                                 <!-- Add variant details -->
                                 <div v-if="item.variant" class="text-sm text-gray-600 mb-1 flex flex-wrap gap-x-2">
                                     <span v-if="item.variant.color">
-                                        Color: {{ typeof item.variant.color === 'object' ? item.variant.color.name :
+                                        {{ t('cart.color') }}: {{ typeof item.variant.color === 'object' ? item.variant.color.name :
                                         item.variant.color }}
                                     </span>
                                     <span v-for="(attr, attrIdx) in item.variant.attributes" :key="attrIdx">
@@ -81,7 +81,7 @@
                                     <!-- Fallback for legacy size field if not in attributes -->
                                     <span
                                         v-if="item.variant.size && (!item.variant.attributes || !item.variant.attributes.some(a => a.name.toLowerCase() === 'size'))">
-                                        Size: {{ item.variant.size }}
+                                        {{ t('cart.size') }}: {{ item.variant.size }}
                                     </span>
                                 </div>
                                 <div class="description-container">
@@ -92,7 +92,7 @@
                                     <span v-if="item.product?.description && item.product.description.length > 100"
                                         @click="toggleDescription(item.product)"
                                         class="text-blue-500 cursor-pointer text-sm">
-                                        {{ item.product?.showFullDescription ? 'Read less' : 'Read more' }}
+                                        {{ item.product?.showFullDescription ? t('cart.readLess') : t('cart.readMore') }}
                                     </span>
                                 </div>
                             </div>
@@ -119,51 +119,51 @@
             <!-- Right Column (Summary) -->
             <div class="w-full lg:w-1/3 checkout-summary mt-6 lg:mt-0">
                 <div class="bg-white shadow-md rounded-lg p-4 sm:p-6 sticky-summary">
-                    <h2 class="text-xl font-semibold mb-4">Summary</h2>
+                    <h2 class="text-xl font-semibold mb-4">{{ t('checkout.summary') }}</h2>
                     <div class="flex justify-between mb-2">
-                        <span>Subtotal</span>
+                        <span>{{ t('checkout.summary') === t('cart.summary') ? t('cart.subtotal') : t('cart.subtotal') }}</span>
                         <span>{{ subtotal.toFixed(2) }} ₦</span>
                     </div>
                     <div class="flex justify-between mb-2">
-                        <span>Shipping fee</span>
-                        <span>{{ shippingFee === 0 ? 'Free' : ` ₦ ${shippingFee.toFixed(2)}` }}</span>
+                        <span>{{ t('cart.shippingFee') }}</span>
+                        <span>{{ shippingFee === 0 ? t('checkout.free') : ` ₦ ${shippingFee.toFixed(2)}` }}</span>
                     </div>
 
                     <!-- Coupons -->
                     <div class="border-t my-4 pt-4">
                         <div class="flex justify-between items-center mb-2">
-                            <span class="font-medium">Coupon</span>
+                            <span class="font-medium">{{ t('checkout.coupon') }}</span>
                             <span v-if="cartStore.coupon"
-                                class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Applied</span>
+                                class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">{{ t('checkout.applied') }}</span>
                         </div>
                         <div v-if="cartStore.coupon" class="bg-green-50 p-2 rounded text-sm">
                             <div class="flex justify-between items-center">
                                 <span class="font-medium text-green-700">{{ cartStore.coupon.code }}</span>
                                 <button @click="removeCoupon"
-                                    class="text-red-500 text-xs hover:underline">Remove</button>
+                                    class="text-red-500 text-xs hover:underline">{{ t('checkout.remove') }}</button>
                             </div>
                             <div v-if="discount > 0" class="flex justify-between mt-1 text-green-600">
-                                <span>Savings</span>
+                                <span>{{ t('checkout.savings') }}</span>
                                 <span>-₦{{ discount.toFixed(2) }}</span>
                             </div>
                         </div>
                         <div v-else>
                             <div class="flex items-center gap-2">
-                                <input v-model="promoCode" type="text" placeholder="Code"
+                                <input v-model="promoCode" type="text" :placeholder="t('checkout.code')"
                                     class="w-full rounded border px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-[#24a6bb]">
                                 <button @click="applyPromoCode(promoCode)"
                                     class="bg-[#24a6bb] text-white px-3 py-1 rounded text-sm hover:bg-[#1c8a9e]">
-                                    Apply
+                                    {{ t('cart.apply') }}
                                 </button>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">Redeem 1000 points for ₦1000 off</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ t('checkout.redeemPoints') }}</p>
                         </div>
                     </div>
 
                     <!-- CluesBucks -->
                     <div class="border-t my-4 pt-4">
                         <div class="flex justify-between mb-2 items-center">
-                            <span class="font-medium">CluesBucks</span>
+                            <span class="font-medium">{{ t('checkout.cluesBucks') }}</span>
                             <span class="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full">{{
                                 availableCluesBucks }} pts</span>
                         </div>
@@ -174,11 +174,11 @@
                             <button @click="applyCluesBucks"
                                 :disabled="!cluesBucksToUse || cluesBucksToUse > cluesBucksBalance"
                                 class="bg-amber-500 text-white px-3 py-1 rounded text-sm hover:bg-amber-600 disabled:opacity-50">
-                                Apply
+                                {{ t('cart.apply') }}
                             </button>
                         </div>
                         <div v-if="cluesBucksDiscount > 0" class="flex justify-between mt-2 text-green-600 text-sm">
-                            <span>Points Discount</span>
+                            <span>{{ t('checkout.pointsDiscount') }}</span>
                             <span>-₦{{ cluesBucksDiscount }}</span>
                         </div>
                     </div>
@@ -186,11 +186,11 @@
                     <!-- Special Offers -->
                     <div class="border-t my-4 pt-4">
                         <div class="flex justify-between items-center mb-2">
-                            <span class="font-medium">Special Offers</span>
+                            <span class="font-medium">{{ t('checkout.specialOffers') }}</span>
                             <span v-if="hasValidOfferAccess"
-                                class="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full">Active</span>
+                                class="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full">{{ t('checkout.active') }}</span>
                             <button v-else-if="cluesBucksBalance >= 500" @click="handleSpecialOfferRedeem"
-                                class="text-xs text-[#24a6bb] hover:underline">Unlock (500pts)</button>
+                                class="text-xs text-[#24a6bb] hover:underline">{{ t('checkout.unlock') }}</button>
                         </div>
 
                         <div v-if="hasValidOfferAccess && availableOffers.length">
@@ -201,17 +201,17 @@
                             </div>
                             <div v-if="specialOfferDiscount > 0"
                                 class="flex justify-between mt-1 text-green-600 font-medium text-sm">
-                                <span>Offer Savings</span>
+                                <span>{{ t('checkout.offerSavings') }}</span>
                                 <span>-₦{{ specialOfferDiscount.toFixed(2) }}</span>
                             </div>
                         </div>
-                        <p v-else-if="hasValidOfferAccess" class="text-xs text-gray-500">No offers for cart items</p>
-                        <p v-else class="text-xs text-gray-500">Unlock exclusive deals on tech & fashion</p>
+                        <p v-else-if="hasValidOfferAccess" class="text-xs text-gray-500">{{ t('checkout.noOffersForCart') }}</p>
+                        <p v-else class="text-xs text-gray-500">{{ t('checkout.unlockExclusiveDeals') }}</p>
                     </div>
 
                     <!-- Payment Methods -->
                     <div class="border-t my-4 pt-4">
-                        <h3 class="font-semibold mb-3">Payment Method</h3>
+                        <h3 class="font-semibold mb-3">{{ t('checkout.paymentMethod') }}</h3>
                         <div class="space-y-3">
                             <label
                                 class="flex items-center cursor-pointer p-2 border rounded-lg hover:border-[#24a6bb] transition"
@@ -248,7 +248,7 @@
                     </div>
 
                     <div class="border-t pt-4 flex justify-between font-bold text-lg mb-4">
-                        <span>Total</span>
+                        <span>{{ t('cart.total') }}</span>
                         <span>{{ total.toFixed(2) }} ₦</span>
                     </div>
                     <div class="text-right mb-4">
@@ -257,10 +257,10 @@
                     </div>
                     <button @click="placeOrder" :disabled="isProcessingPayment"
                         class="w-full bg-[#24a6bb] text-white py-3 rounded-lg hover:bg-[#1c8a9e] transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium shadow-md">
-                        {{ isProcessingPayment ? 'Processing...' : 'Place Order' }}
+                        {{ isProcessingPayment ? t('checkout.processing') : t('checkout.placeOrder') }}
                     </button>
                     <p class="text-xs text-gray-500 mt-4 text-center">
-                        By placing order, you agree to our terms.
+                        {{ t('checkout.orderAgreement') }}
                     </p>
                     <div class="mt-4 flex justify-center opacity-70">
                         <div class="flex space-x-2">
@@ -276,6 +276,7 @@
 
 <script setup>
 import { ref, computed, onMounted, reactive, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useCluesBucksStore } from '../store/cluesBucksStore.js';
 import { useRouter } from 'vue-router';
 import { useAddressStore } from '../store/addressStore.js';
@@ -302,6 +303,7 @@ import orangeMoney from '../assets/images/orange-p.jpeg';
 import payDunyaLogo from '../assets/images/paydunya-logo.png'; // Add PayDunya logo (ensure this file exists)
 
 const router = useRouter();
+const { t } = useI18n();
 const addressStore = useAddressStore();
 const cartStore = useCartStore();
 const orderStore = useOrderStore();
@@ -399,14 +401,14 @@ const handleSpecialOfferRedeem = async () => {
             const success = await cluesBucksStore.redeemPoints(3);
             if (success) {
                 await cluesBucksStore.fetchSpecialOffers();
-                toast.success('Special Offer Access unlocked successfully!');
+                toast.success(t('checkout.specialOfferUnlocked'));
             }
         } catch (error) {
             console.error('Error redeeming points for Special Offer Access:', error);
-            toast.error('Failed to unlock Special Offer Access');
+            toast.error(t('checkout.failedUnlockOffer'));
         }
     } else {
-        toast.error('Insufficient points balance');
+        toast.error(t('checkout.insufficientPoints'));
     }
 };
 
@@ -447,7 +449,7 @@ const loadCheckoutData = async () => {
         updateShippingFee();
     } catch (err) {
         console.error('Error loading checkout data:', err);
-        error.value = 'Failed to load checkout information. Please try again.';
+        error.value = t('checkout.failedLoadCheckout');
     } finally {
         isLoading.value = false;
     }
@@ -455,13 +457,14 @@ const loadCheckoutData = async () => {
 
 const saveAddress = async () => {
     try {
+        const wasEditing = Boolean(addressForm._id);
         const savedAddress = await addressStore.addOrUpdateAddress(addressForm);
         selectedAddress.value = savedAddress;
         addressForm._id = savedAddress._id;
-        toast.success(addressForm._id ? 'Address updated successfully.' : 'Address added successfully.');
+        toast.success(wasEditing ? t('checkout.addressUpdated') : t('checkout.addressAdded'));
     } catch (error) {
         console.error('Error saving address:', error);
-        toast.error('Failed to save address. Please try again.');
+        toast.error(t('checkout.failedSaveAddress'));
     }
 };
 
@@ -497,7 +500,7 @@ watch(() => stats.value?.currentBalance, (newBalance) => {
     if (newBalance < appliedCluesBucks.value) {
         appliedCluesBucks.value = 0;
         cluesBucksToUse.value = 0;
-        toast.warning('Applied CluesBucks have been reset due to balance change');
+        toast.warning(t('checkout.cluesBucksReset'));
     }
 });
 
@@ -505,12 +508,12 @@ onMounted(async () => {
     try {
         if (!import.meta.env.VITE_PAYSTACK_PUBLIC_KEY) {
             console.error('Paystack public key not found in environment variables');
-            toast.error('Payment configuration error');
+            toast.error(t('checkout.paymentConfigError'));
             return;
         }
         if (typeof PaystackPop === 'undefined') {
             console.error('Paystack script not loaded');
-            toast.error('Payment system not initialized');
+            toast.error(t('checkout.paymentNotInitialized'));
             return;
         }
         await loadCheckoutData();
@@ -519,7 +522,7 @@ onMounted(async () => {
         }
     } catch (error) {
         console.error('Error initializing checkout:', error);
-        toast.error('Failed to initialize checkout. Please refresh the page.');
+        toast.error(t('checkout.failedInitializeCheckout'));
     }
 });
 
@@ -569,7 +572,7 @@ const incrementQuantity = async (item) => {
         await refreshCart();
     } catch (error) {
         console.error('Error incrementing quantity:', error);
-        toast.error('Failed to update quantity');
+        toast.error(t('cart.failedUpdateQuantity'));
     } finally {
         loadingItems[item.product._id] = false;
     }
@@ -587,7 +590,7 @@ const decrementQuantity = async (item) => {
         await refreshCart();
     } catch (error) {
         console.error('Error decrementing quantity:', error);
-        toast.error('Failed to update quantity');
+        toast.error(t('cart.failedUpdateQuantity'));
     } finally {
         loadingItems[item.product._id] = false;
     }
@@ -601,23 +604,23 @@ const refreshCart = async () => {
         total.value = cartStore.totalAfterDiscount + shippingFee.value;
     } catch (error) {
         console.error('Error refreshing cart:', error);
-        toast.error('Failed to refresh cart');
+        toast.error(t('checkout.failedRefreshCart'));
     }
 };
 
 const applyPromoCode = async () => {
     if (!promoCode.value) {
-        toast.error('Please enter a coupon code');
+        toast.error(t('checkout.enterCouponCode'));
         return;
     }
     const code = promoCode.value;
     promoCode.value = '';
     try {
         await cartStore.applyCoupon(code);
-        toast.success(`Coupon applied successfully! You saved $${cartStore.discount.toFixed(2)}`);
+        toast.success(t('checkout.couponApplied', { amount: cartStore.discount.toFixed(2) }));
     } catch (error) {
         console.error('Error applying coupon:', error);
-        toast.error(error.response?.data?.message || 'Failed to apply coupon');
+        toast.error(error.response?.data?.message || t('checkout.failedApplyCoupon'));
     }
 };
 
@@ -625,10 +628,10 @@ const removeCoupon = async () => {
     try {
         await cartStore.removeCoupon();
         await refreshCart();
-        toast.success('Coupon removed successfully');
+        toast.success(t('checkout.couponRemoved'));
     } catch (error) {
         console.error('Error removing coupon:', error);
-        toast.error('Failed to remove coupon');
+        toast.error(t('checkout.failedRemoveCoupon'));
     }
 };
 
@@ -658,15 +661,15 @@ const applyCluesBucks = () => {
     const points = Number(cluesBucksToUse.value);
     if (!points) return;
     if (points > cluesBucksBalance.value) {
-        toast.error('Not enough CluesBucks available');
+        toast.error(t('checkout.notEnoughCluesBucks'));
         return;
     }
     if (points > total.value) {
-        toast.error('Cannot apply more CluesBucks than order total');
+        toast.error(t('checkout.cannotExceedTotal'));
         return;
     }
     appliedCluesBucks.value = points;
-    toast.success(`Applied ${points} CluesBucks`);
+    toast.success(t('checkout.appliedCluesBucks', { points }));
     updateTotal();
 };
 
@@ -682,11 +685,11 @@ const placeOrder = async () => {
     // Initial validations
     if (!selectedAddress.value || !validateAddress(selectedAddress.value) || !cartStore.items?.length) {
         if (!selectedAddress.value) {
-            toast.error('Please select a shipping address');
+            toast.error(t('checkout.selectShippingAddress'));
         } else if (!validateAddress(selectedAddress.value)) {
             // validateAddress function already shows a toast
         } else if (!cartStore.items?.length) {
-            toast.error('Your cart is empty');
+            toast.error(t('checkout.cartEmpty'));
         }
         return;
     }
@@ -694,7 +697,10 @@ const placeOrder = async () => {
     // Validate phone number for Orange Money and PayDunya
     if (['OrangeMoney', 'PayDunya'].includes(paymentMethod.value)) {
         if (!customerPhone.value || !validatePhoneNumber(customerPhone.value)) {
-            toast.error(`Please enter a valid phone number for ${paymentMethod.value} (e.g., ${paymentMethod.value === 'OrangeMoney' ? '+221xxxxxxxxx' : '+234xxxxxxxxx'})`);
+            toast.error(t('checkout.validPhoneForPayment', {
+                method: paymentMethod.value,
+                example: paymentMethod.value === 'OrangeMoney' ? '+221xxxxxxxxx' : '+234xxxxxxxxx'
+            }));
             return;
         }
     }
@@ -747,7 +753,7 @@ const placeOrder = async () => {
         // Handle different payment methods
         if (paymentMethod.value === 'Paystack') {
             if (!validatePaystackScript()) {
-                toast.error('Payment system not initialized');
+                toast.error(t('checkout.paymentNotInitialized'));
                 throw new Error('Paystack script not loaded');
             }
 
@@ -855,17 +861,17 @@ const placeOrder = async () => {
             const redirectUrl = paymentResponse.payment_url || paymentResponse.authorization_url;
             window.location.href = redirectUrl;
         } else {
-            toast.error('Please select a valid payment method');
-            throw new Error('Invalid payment method');
+            toast.error(t('checkout.validPaymentMethod'));
+            throw new Error(t('checkout.validPaymentMethod'));
         }
     } catch (error) {
         console.error('Payment initialization error:', error);
-        toast.error(error.message || 'Payment initialization failed. Please try again.');
+        toast.error(error.message || t('checkout.paymentInitializationFailed'));
 
         if (createdOrder?._id) {
             try {
                 await orderStore.cancelOrder(createdOrder._id, { reason: "Payment cancelled by user" });
-                toast.info('Order cancelled due to payment failure');
+                toast.info(t('checkout.orderCancelledPaymentFailure'));
             } catch (cancelError) {
                 console.error('Error cancelling order:', cancelError);
             }
@@ -881,7 +887,7 @@ const handlePaymentSuccess = async (response, orderId, paymentMethod) => {
         isProcessingPayment.value = true;
         const verificationResult = await paymentStore.verifyPayment(response.reference, paymentMethod);
         if (!verificationResult.status) {
-            throw new Error('Payment verification failed');
+            throw new Error(t('checkout.paymentVerificationFailed'));
         }
         await orderStore.updateOrderStatus(orderId, {
             status: "Processing",
@@ -905,7 +911,7 @@ const handlePaymentSuccess = async (response, orderId, paymentMethod) => {
             cartStore.coupon ? cartStore.invalidateCoupon(cartStore.coupon.code) : Promise.resolve()
         ]);
 
-        toast.success('Payment successful!');
+        toast.success(t('checkout.paymentSuccessful'));
 
         await router.push({
             name: 'PaymentSuccess',
@@ -916,10 +922,10 @@ const handlePaymentSuccess = async (response, orderId, paymentMethod) => {
         });
     } catch (error) {
         console.error('Error processing successful payment:', error);
-        toast.error(error.response?.data?.message || 'Error completing payment');
+        toast.error(error.response?.data?.message || t('checkout.errorCompletingPayment'));
         try {
             await orderStore.cancelOrder(orderId, "Payment verification failed");
-            toast.error('Order cancelled due to payment verification failure');
+            toast.error(t('checkout.orderCancelledVerification'));
         } catch (cancelError) {
             console.error('Error cancelling order:', cancelError);
         }
@@ -935,11 +941,11 @@ const handlePaymentClose = async (orderId) => {
             await orderStore.cancelOrder(orderId, "Payment cancelled by user");
             localStorage.removeItem('currentTransaction');
             localStorage.removeItem(`payment_verification_${orderId}`);
-            toast.error('Payment cancelled. Please try again if you wish to complete your purchase.');
+            toast.error(t('checkout.paymentCancelled'));
         }
     } catch (error) {
         console.error('Error handling payment cancellation:', error);
-        toast.error('Error processing cancellation. Please contact support.');
+        toast.error(t('checkout.cancellationError'));
     }
 };
 
@@ -960,17 +966,17 @@ const validateAddress = (address) => {
         !address[field] || !address[field].toString().trim()
     );
     if (missingFields.length > 0) {
-        toast.error(`Please complete the following fields: ${missingFields.join(', ')}`);
+        toast.error(t('checkout.completeFields', { fields: missingFields.join(', ') }));
         return false;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(address.email)) {
-        toast.error('Please enter a valid email address');
+        toast.error(t('checkout.validEmailAddress'));
         return false;
     }
     const phoneRegex = /^\+?[\d\s-]{8,}$/;
     if (!phoneRegex.test(address.phone)) {
-        toast.error('Please enter a valid phone number');
+        toast.error(t('checkout.validPhoneNumber'));
         return false;
     }
     return true;

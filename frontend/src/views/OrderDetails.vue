@@ -13,10 +13,9 @@
                             <Package class="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
                         </div>
                         <div class="min-w-0 flex-1">
-                            <h2 class="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">Order Details</h2>
-                            <p class="text-blue-100 text-sm sm:text-base hidden sm:block">Complete order information and
-                                management</p>
-                            <p class="text-blue-100 text-xs sm:hidden">Order information</p>
+                            <h2 class="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">{{ t('orderDetailsModal.title') }}</h2>
+                            <p class="text-blue-100 text-sm sm:text-base hidden sm:block">{{ t('orderDetailsModal.subtitle') }}</p>
+                            <p class="text-blue-100 text-xs sm:hidden">{{ t('orderDetailsModal.mobileSubtitle') }}</p>
                         </div>
                     </div>
                     <button @click="$emit('close')"
@@ -35,8 +34,7 @@
                                 <Hash class="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                             </div>
                             <div class="min-w-0 flex-1">
-                                <p class="text-lg sm:text-xl font-bold text-white truncate">Order #{{ order.orderNumber
-                                    }}</p>
+                                <p class="text-lg sm:text-xl font-bold text-white truncate">{{ t('orderDetailsModal.orderNumber', { number: order.orderNumber }) }}</p>
                                 <p class="text-blue-100 text-xs sm:text-sm">{{ formatDate(order.date) }}</p>
                             </div>
                         </div>
@@ -60,19 +58,19 @@
                                 class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg sm:rounded-xl flex items-center justify-center">
                                 <FileText class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                             </div>
-                            <span class="text-sm sm:text-base">Order Information</span>
+                            <span class="text-sm sm:text-base">{{ t('orderDetailsModal.orderInformation') }}</span>
                         </h3>
 
                         <div class="space-y-3 sm:space-y-4">
                             <div class="p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border border-gray-100 shadow-sm">
                                 <div
                                     class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0 mb-2">
-                                    <span class="text-gray-600 font-medium text-sm sm:text-base">Total Amount:</span>
+                                    <span class="text-gray-600 font-medium text-sm sm:text-base">{{ t('orderDetailsModal.totalAmount') }}</span>
                                     <span class="text-xl sm:text-2xl font-bold text-green-600">₦{{
                                         formatCurrency(order.total) }}</span>
                                 </div>
                                 <p class="text-xs sm:text-sm text-gray-500 italic break-words">{{
-                                    numberToWords(order.total) }}</p>
+                                    amountInWords(order.total) }}</p>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -80,7 +78,7 @@
                                     class="p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border border-gray-100 shadow-sm">
                                     <div class="flex items-center gap-2 mb-2">
                                         <Calendar class="w-3 h-3 sm:w-4 sm:h-4 text-blue-500 flex-shrink-0" />
-                                        <span class="text-gray-600 font-medium text-sm sm:text-base">Order Date:</span>
+                                        <span class="text-gray-600 font-medium text-sm sm:text-base">{{ t('orderDetailsModal.orderDate') }}</span>
                                     </div>
                                     <p class="text-gray-900 font-semibold text-sm sm:text-base break-words">{{
                                         formatDate(order.date) }}</p>
@@ -90,7 +88,7 @@
                                     class="p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border border-gray-100 shadow-sm">
                                     <div class="flex items-center gap-2 mb-2">
                                         <CreditCard class="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
-                                        <span class="text-gray-600 font-medium text-sm sm:text-base">Payment:</span>
+                                        <span class="text-gray-600 font-medium text-sm sm:text-base">{{ t('orderDetailsModal.payment') }}</span>
                                     </div>
                                     <p class="text-gray-900 font-semibold text-sm sm:text-base break-words">{{
                                         order.paymentMethod }}</p>
@@ -107,7 +105,7 @@
                                 class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg sm:rounded-xl flex items-center justify-center">
                                 <User class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                             </div>
-                            <span class="text-sm sm:text-base">Customer Information</span>
+                            <span class="text-sm sm:text-base">{{ t('orderDetailsModal.customerInformation') }}</span>
                         </h3>
 
                         <div class="p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border border-gray-100 shadow-sm">
@@ -136,7 +134,7 @@
                                 class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg sm:rounded-xl flex items-center justify-center">
                                 <MapPin class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                             </div>
-                            <span class="text-sm sm:text-base">Shipping Address</span>
+                            <span class="text-sm sm:text-base">{{ t('orderDetailsModal.shippingAddress') }}</span>
                         </h3>
 
                         <div class="p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border border-gray-100 shadow-sm">
@@ -158,7 +156,7 @@
                                 class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg sm:rounded-xl flex items-center justify-center">
                                 <ShoppingBag class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                             </div>
-                            <span class="text-sm sm:text-base">Products ({{ order.products?.length || 0 }})</span>
+                            <span class="text-sm sm:text-base">{{ t('orderDetailsModal.productsCount', { count: order.products?.length || 0 }) }}</span>
                         </h3>
 
                         <div class="space-y-2 sm:space-y-3 max-h-48 sm:max-h-64 overflow-y-auto">
@@ -174,7 +172,7 @@
                                             <div v-if="product.variant"
                                                 class="text-xs sm:text-sm text-gray-500 mb-1 flex flex-wrap gap-x-2">
                                                 <span v-if="product.variant.color">
-                                                    Color: {{ typeof product.variant.color === 'object' ?
+                                                    {{ t('orderDetailsModal.color') }}: {{ typeof product.variant.color === 'object' ?
                                                     product.variant.color.name : product.variant.color }}
                                                 </span>
                                                 <span v-for="(attr, attrIdx) in product.variant.attributes"
@@ -184,16 +182,16 @@
                                                 <!-- Fallback for legacy size field if not in attributes -->
                                                 <span
                                                     v-if="product.variant.size && (!product.variant.attributes || !product.variant.attributes.some(a => a.name.toLowerCase() === 'size'))">
-                                                    Size: {{ product.variant.size }}
+                                                    {{ t('orderDetailsModal.size') }}: {{ product.variant.size }}
                                                 </span>
                                             </div>
-                                            <p class="text-xs sm:text-sm text-gray-600">Quantity: {{ product.quantity }}
+                                            <p class="text-xs sm:text-sm text-gray-600">{{ t('orderDetailsModal.quantity') }}: {{ product.quantity }}
                                             </p>
                                         </div>
                                         <div class="text-left sm:text-right flex-shrink-0">
                                             <p class="text-base sm:text-lg font-bold text-green-600">₦{{
                                                 formatCurrency(product.subtotal) }}</p>
-                                            <p class="text-xs text-gray-500">per item: ₦{{
+                                            <p class="text-xs text-gray-500">{{ t('orderDetailsModal.perItem') }}: ₦{{
                                                 formatCurrency(product.subtotal / product.quantity) }}</p>
                                         </div>
                                     </div>
@@ -204,7 +202,7 @@
                                     class="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
                                     <ShoppingBag class="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
                                 </div>
-                                <p class="text-gray-500 text-sm sm:text-base">No product information available</p>
+                                <p class="text-gray-500 text-sm sm:text-base">{{ t('orderDetailsModal.noProductInformation') }}</p>
                             </div>
                         </div>
                     </div>
@@ -219,7 +217,7 @@
                                 class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center">
                                 <Clock class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                             </div>
-                            <span class="text-sm sm:text-base">Order Timeline</span>
+                            <span class="text-sm sm:text-base">{{ t('orderDetailsModal.orderTimeline') }}</span>
                         </h3>
 
                         <div class="relative">
@@ -232,7 +230,7 @@
                                     </div>
                                     <div
                                         class="flex-1 p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200 min-w-0">
-                                        <p class="font-semibold text-blue-900 text-sm sm:text-base">Order Placed</p>
+                                        <p class="font-semibold text-blue-900 text-sm sm:text-base">{{ t('orderDetailsModal.orderPlaced') }}</p>
                                         <p class="text-xs sm:text-sm text-blue-700 break-words">{{
                                             formatDate(order.date) }}</p>
                                     </div>
@@ -248,11 +246,11 @@
                                         :class="order.status !== 'Pending' ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'">
                                         <p class="font-semibold text-sm sm:text-base"
                                             :class="order.status !== 'Pending' ? 'text-green-900' : 'text-gray-600'">
-                                            Processing
+                                            {{ t('orderDetailsModal.processing') }}
                                         </p>
                                         <p class="text-xs sm:text-sm"
                                             :class="order.status !== 'Pending' ? 'text-green-700' : 'text-gray-500'">
-                                            Order being prepared
+                                            {{ t('orderDetailsModal.orderBeingPrepared') }}
                                         </p>
                                     </div>
                                 </div>
@@ -269,20 +267,20 @@
                         <button @click="openUpdateStatusModal"
                             class="flex-1 inline-flex items-center justify-center gap-2 py-3 sm:py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg sm:rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg text-sm sm:text-base">
                             <RefreshCw class="w-4 h-4 sm:w-5 sm:h-5" />
-                            Update Status
+                            {{ t('orderDetailsModal.updateStatus') }}
                         </button>
 
                         <button @click="manageShipment"
                             class="flex-1 inline-flex items-center justify-center gap-2 py-3 sm:py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg sm:rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105 shadow-lg text-sm sm:text-base">
                             <Truck class="w-4 h-4 sm:w-5 sm:h-5" />
-                            Manage Shipment
+                            {{ t('orderDetailsModal.manageShipment') }}
                         </button>
                     </div>
 
                     <button @click="$emit('close')"
                         class="w-full inline-flex items-center justify-center gap-2 py-3 sm:py-4 bg-gradient-to-r from-gray-200 to-gray-300 text-gray-800 rounded-lg sm:rounded-xl font-semibold hover:from-gray-300 hover:to-gray-400 transition-all duration-200 transform hover:scale-105 shadow-lg text-sm sm:text-base">
                         <X class="w-4 h-4 sm:w-5 sm:h-5" />
-                        Close
+                        {{ t('orderDetailsModal.close') }}
                     </button>
                 </div>
             </div>
@@ -291,6 +289,7 @@
 </template>
 
 <script>
+import { useI18n } from 'vue-i18n';
 import { useSellerStore } from '../store/sellerStore';
 import {
     Package, X, Hash, FileText, Calendar, CreditCard, User, Mail, Phone,
@@ -306,6 +305,7 @@ export default {
     props: ['order'],
     emits: ['close', 'open-update-status-modal'],
     setup(props, { emit }) {
+        const { t, locale } = useI18n();
         const sellerStore = useSellerStore();
 
         const openUpdateStatusModal = () => {
@@ -324,7 +324,8 @@ export default {
         };
 
         const formatDate = (dateString) => {
-            return new Date(dateString).toLocaleDateString('en-US', {
+            const activeLocale = locale.value === 'fr' ? 'fr-FR' : 'en-US';
+            return new Date(dateString).toLocaleDateString(activeLocale, {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -391,13 +392,22 @@ export default {
             return result + ' Naira';
         }
 
+        const amountInWords = (num) => {
+            if (locale.value === 'fr') {
+                return t('orderDetailsModal.amountInWordsFallback', { amount: formatCurrency(num) });
+            }
+
+            return numberToWords(num);
+        };
+
         return {
+            t,
             openUpdateStatusModal,
             manageShipment,
             formatDate,
             formatCurrency,
             getStatusColor,
-            numberToWords
+            amountInWords
         };
     }
 };

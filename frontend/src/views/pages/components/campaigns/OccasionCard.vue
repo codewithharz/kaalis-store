@@ -13,13 +13,17 @@
             <!-- Hover Button -->
             <button
                 class="mt-4 bg-white text-[#24a6bb] px-4 py-2 rounded-lg opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                Shop Now
+                {{ t('sharedCardActions.shopNow') }}
             </button>
         </div>
     </div>
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+
 defineProps({
     title: {
         type: String,

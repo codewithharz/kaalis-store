@@ -11,9 +11,9 @@
                 <select :id="`category-level-${index}`" v-model="selectedCategories[index]"
                     @change="updateCategories(index)"
                     class="w-full px-4 py-3 text-gray-700 bg-transparent border-none focus:outline-none appearance-none">
-                    <option value="">Select {{ getCategoryLevelLabel(index) }}</option>
+                    <option value="">{{ t('hierarchicalCategorySelector.selectLabel', { label: getCategoryLevelLabel(index) }) }}</option>
                     <option v-for="category in availableCategories(index)" :key="category._id" :value="category">
-                        {{ category.name }}
+                        {{ category.displayName || category.name }}
                     </option>
                 </select>
                 <!-- Added ChevronDown icon for consistency -->
@@ -24,7 +24,7 @@
         </div>
         <!-- Updated selected category display styling -->
         <div v-if="selectedCategories.length > 0" class="mt-4">
-            <p class="text-sm font-medium text-gray-700">Selected Category:</p>
+            <p class="text-sm font-medium text-gray-700">{{ t('hierarchicalCategorySelector.selectedCategory') }}</p>
             <p class="text-sm text-gray-600 mt-1">{{ getFullCategoryPath() }}</p>
         </div>
     </div>
@@ -32,6 +32,7 @@
 
 <script>
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ChevronDown } from 'lucide-vue-next';
 
 export default {
@@ -52,6 +53,7 @@ export default {
     },
     emits: ['update:selectedCategories', 'update:modelValue'],
     setup(props, { emit }) {
+        const { t } = useI18n();
         const selectedCategories = ref([]);
 
         // computed property to get the number of category levels
@@ -83,13 +85,19 @@ export default {
 
         // function to get the category level label
         const getCategoryLevelLabel = (index) => {
-            const labels = ['Main Category', 'Subcategory', 'Product Category'];
+            const labels = [
+                t('hierarchicalCategorySelector.levels.mainCategory'),
+                t('hierarchicalCategorySelector.levels.subcategory'),
+                t('hierarchicalCategorySelector.levels.productCategory')
+            ];
             return labels[index] || `Category Level ${index + 1}`;
         };
 
         // function to get the full category path
         const getFullCategoryPath = () => {
-            return selectedCategories.value.map(cat => cat.name).join(' > ');
+            return selectedCategories.value
+                .map(cat => cat.displayName || cat.name)
+                .join(' > ');
         };
 
         // function to find the category path
@@ -136,7 +144,8 @@ export default {
             updateCategories,
             getCategoryLevelLabel,
             getFullCategoryPath,
-            initializeCategories
+            initializeCategories,
+            t
         };
     }
 };

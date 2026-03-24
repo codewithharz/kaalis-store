@@ -7,8 +7,8 @@
                 <div class="relative h-[200px] bg-[#24a6bb]">
                     <div class="absolute inset-0 flex items-center justify-between px-8">
                         <div class="text-white">
-                            <h1 class="text-3xl font-bold mb-2">Live Help & Support</h1>
-                            <p class="text-lg opacity-90">Get immediate assistance from our team</p>
+                            <h1 class="text-3xl font-bold mb-2">{{ t('liveHelpPage.title') }}</h1>
+                            <p class="text-lg opacity-90">{{ t('liveHelpPage.subtitle') }}</p>
                         </div>
                         <Headphones class="w-24 h-24 text-white opacity-20" />
                     </div>
@@ -24,23 +24,23 @@
                             <MessageSquare class="w-6 h-6 text-[#24a6bb]" />
                         </div>
                         <div>
-                            <h2 class="text-xl font-bold text-[#2d3642]">Live Chat</h2>
-                            <p class="text-gray-600">Chat with our support team</p>
+                            <h2 class="text-xl font-bold text-[#2d3642]">{{ t('liveHelpPage.liveChat') }}</h2>
+                            <p class="text-gray-600">{{ t('liveHelpPage.liveChatBody') }}</p>
                         </div>
                     </div>
                     <div class="mb-4">
                         <div class="flex items-center text-sm text-gray-600 mb-2">
                             <Clock class="w-4 h-4 mr-2" />
-                            <span>Available 24/7</span>
+                            <span>{{ t('liveHelpPage.available247') }}</span>
                         </div>
                         <div class="flex items-center text-sm text-gray-600">
                             <Clock class="w-4 h-4 mr-2" />
-                            <span>Average response time: 2 minutes</span>
+                            <span>{{ t('liveHelpPage.averageResponse') }}</span>
                         </div>
                     </div>
                     <button
                         class="w-full bg-[#24a6bb] text-white py-2 px-4 rounded-lg hover:bg-[#1a7f8f] transition-colors">
-                        Start Chat
+                        {{ t('liveHelpPage.startChat') }}
                     </button>
                 </section>
 
@@ -51,60 +51,60 @@
                             <Phone class="w-6 h-6 text-[#24a6bb]" />
                         </div>
                         <div>
-                            <h2 class="text-xl font-bold text-[#2d3642]">Phone Support</h2>
-                            <p class="text-gray-600">Talk to our representatives</p>
+                            <h2 class="text-xl font-bold text-[#2d3642]">{{ t('liveHelpPage.phoneSupport') }}</h2>
+                            <p class="text-gray-600">{{ t('liveHelpPage.phoneSupportBody') }}</p>
                         </div>
                     </div>
                     <div class="mb-4">
                         <div class="flex items-center text-sm text-gray-600 mb-2">
                             <Clock class="w-4 h-4 mr-2" />
-                            <span>Monday - Friday: 9AM - 6PM</span>
+                            <span>{{ t('liveHelpPage.phoneHours') }}</span>
                         </div>
                         <div class="flex items-center text-sm text-gray-600">
                             <Phone class="w-4 h-4 mr-2" />
-                            <span>Toll-free: 1-800-Bruthol</span>
+                            <span>{{ t('liveHelpPage.tollFree') }}</span>
                         </div>
                     </div>
                     <button
                         class="w-full border border-[#24a6bb] text-[#24a6bb] py-2 px-4 rounded-lg hover:bg-[#24a6bb] hover:text-white transition-colors">
-                        Call Now
+                        {{ t('faqPage.callNow') }}
                     </button>
                 </section>
             </div>
 
             <!-- Email Support -->
             <section class="bg-white rounded-lg shadow-lg p-8 mb-8">
-                <h2 class="text-2xl font-bold text-[#2d3642] mb-6">Email Support</h2>
+                <h2 class="text-2xl font-bold text-[#2d3642] mb-6">{{ t('liveHelpPage.emailSupport') }}</h2>
                 <form @submit.prevent="submitEmailSupport" class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-gray-700 mb-2">Name</label>
+                            <label class="block text-gray-700 mb-2">{{ t('liveHelpPage.name') }}</label>
                             <input v-model="form.name" type="text"
                                 class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#24a6bb] focus:border-transparent"
                                 required />
                         </div>
                         <div>
-                            <label class="block text-gray-700 mb-2">Email</label>
+                            <label class="block text-gray-700 mb-2">{{ t('auth.email') }}</label>
                             <input v-model="form.email" type="email"
                                 class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#24a6bb] focus:border-transparent"
                                 required />
                         </div>
                     </div>
                     <div>
-                        <label class="block text-gray-700 mb-2">Subject</label>
+                        <label class="block text-gray-700 mb-2">{{ t('liveHelpPage.subject') }}</label>
                         <select v-model="form.subject"
                             class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#24a6bb] focus:border-transparent"
                             required>
-                            <option value="">Select a subject</option>
-                            <option value="order">Order Issue</option>
-                            <option value="payment">Payment Problem</option>
-                            <option value="shipping">Shipping Question</option>
-                            <option value="return">Return Request</option>
-                            <option value="other">Other</option>
+                            <option value="">{{ t('liveHelpPage.selectSubject') }}</option>
+                            <option value="order">{{ t('liveHelpPage.subjectOrder') }}</option>
+                            <option value="payment">{{ t('liveHelpPage.subjectPayment') }}</option>
+                            <option value="shipping">{{ t('liveHelpPage.subjectShipping') }}</option>
+                            <option value="return">{{ t('liveHelpPage.subjectReturn') }}</option>
+                            <option value="other">{{ t('liveHelpPage.subjectOther') }}</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-gray-700 mb-2">Message</label>
+                        <label class="block text-gray-700 mb-2">{{ t('liveHelpPage.message') }}</label>
                         <textarea v-model="form.message" rows="4"
                             class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#24a6bb] focus:border-transparent"
                             required></textarea>
@@ -113,7 +113,7 @@
                         <button type="submit"
                             class="w-full bg-[#24a6bb] text-white py-3 px-4 rounded-lg hover:bg-[#1a7f8f] transition-colors"
                             :disabled="loading">
-                            {{ loading ? 'Sending...' : 'Send Message' }}
+                            {{ loading ? t('liveHelpPage.sending') : t('liveHelpPage.sendMessage') }}
                         </button>
                     </div>
                 </form>
@@ -121,13 +121,13 @@
 
             <!-- FAQ Section -->
             <section class="bg-white rounded-lg shadow-lg p-8">
-                <h2 class="text-2xl font-bold text-[#2d3642] mb-6">Quick Solutions</h2>
+                <h2 class="text-2xl font-bold text-[#2d3642] mb-6">{{ t('liveHelpPage.quickSolutions') }}</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div v-for="(solution, index) in quickSolutions" :key="index">
                         <h3 class="font-semibold text-[#24a6bb] mb-2">{{ solution.title }}</h3>
                         <p class="text-gray-600 mb-3">{{ solution.description }}</p>
                         <router-link :to="solution.link" class="text-[#24a6bb] hover:underline text-sm">
-                            Learn more →
+                            {{ t('liveHelpPage.learnMore') }} ->
                         </router-link>
                     </div>
                 </div>
@@ -137,7 +137,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
     Headphones,
     MessageSquare,
@@ -145,6 +146,7 @@ import {
     Clock,
 } from 'lucide-vue-next';
 
+const { t } = useI18n();
 const loading = ref(false);
 const form = ref({
     name: '',
@@ -153,28 +155,28 @@ const form = ref({
     message: ''
 });
 
-const quickSolutions = [
+const quickSolutions = computed(() => [
     {
-        title: 'Track Your Order',
-        description: 'Get real-time updates on your order status and tracking information.',
+        title: t('liveHelpPage.quick1Title'),
+        description: t('liveHelpPage.quick1Body'),
         link: '/account/orders'
     },
     {
-        title: 'Returns & Refunds',
-        description: 'Learn about our return policy and how to initiate a return.',
+        title: t('liveHelpPage.quick2Title'),
+        description: t('liveHelpPage.quick2Body'),
         link: '/help/how-to-return'
     },
     {
-        title: 'Payment Issues',
-        description: 'Find solutions to common payment problems and accepted methods.',
+        title: t('liveHelpPage.quick3Title'),
+        description: t('liveHelpPage.quick3Body'),
         link: '/help/payment-guide'
     },
     {
-        title: 'Shipping Information',
-        description: 'Get details about shipping methods, times, and costs.',
+        title: t('liveHelpPage.quick4Title'),
+        description: t('liveHelpPage.quick4Body'),
         link: '/help/shipping-info'
     }
-];
+]);
 
 const submitEmailSupport = async () => {
     loading.value = true;
@@ -189,10 +191,10 @@ const submitEmailSupport = async () => {
             message: ''
         };
         // Show success message (implement your preferred notification system)
-        alert('Your message has been sent successfully. We will get back to you soon.');
+        alert(t('liveHelpPage.success'));
     } catch (error) {
         // Handle error (implement your preferred error handling)
-        alert('Failed to send message. Please try again.');
+        alert(t('liveHelpPage.failed'));
     } finally {
         loading.value = false;
     }

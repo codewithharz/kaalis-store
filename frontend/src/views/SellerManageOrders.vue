@@ -7,16 +7,16 @@
                 <button @click="router.back()"
                     class="flex items-center text-gray-600 hover:text-gray-800 transition duration-150">
                     <ArrowLeft class="w-5 h-5 mr-2" />
-                    <span class="text-sm sm:text-base">Back to Dashboard</span>
+                    <span class="text-sm sm:text-base">{{ t('sellerManageOrdersPage.backToDashboard') }}</span>
                 </button>
                 <div class="flex flex-col sm:flex-row gap-3 sm:space-x-4">
                     <!-- Order Status Filter -->
                     <div class="relative">
                         <select v-model="statusFilter"
                             class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent">
-                            <option value="all">All Orders</option>
+                            <option value="all">{{ t('sellerManageOrdersPage.allOrders') }}</option>
                             <option v-for="status in availableStatuses" :key="status" :value="status.toLowerCase()">
-                                {{ status }}
+                                {{ translateStatus(status) }}
                             </option>
                         </select>
                         <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
@@ -28,10 +28,10 @@
                         <select v-model="dateRange"
                             class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent">
                             >
-                            <option value="today">Today</option>
-                            <option value="week">This Week</option>
-                            <option value="month">This Month</option>
-                            <option value="year">This Year</option>
+                            <option value="today">{{ t('sellerManageOrdersPage.dateRanges.today') }}</option>
+                            <option value="week">{{ t('sellerManageOrdersPage.dateRanges.thisWeek') }}</option>
+                            <option value="month">{{ t('sellerManageOrdersPage.dateRanges.thisMonth') }}</option>
+                            <option value="year">{{ t('sellerManageOrdersPage.dateRanges.thisYear') }}</option>
                         </select>
                         <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                             <ChevronDown class="w-5 h-5 text-gray-400" />
@@ -41,7 +41,7 @@
                     <button @click="refreshOrders"
                         class="flex items-center justify-center px-4 py-2 bg-white border rounded-md text-gray-600 hover:bg-gray-50">
                         <RefreshCcw class="w-4 h-4 mr-2" />
-                        <span class="text-sm sm:text-base">Refresh</span>
+                        <span class="text-sm sm:text-base">{{ t('sellerManageOrdersPage.refresh') }}</span>
                     </button>
                 </div>
             </div>
@@ -63,9 +63,9 @@
                 <!-- Table Header with Search -->
                 <div class="p-4 border-b border-gray-200">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <h2 class="text-lg font-semibold">Orders</h2>
+                        <h2 class="text-lg font-semibold">{{ t('sellerManageOrdersPage.orders') }}</h2>
                         <div class="relative">
-                            <input type="text" v-model="searchQuery" placeholder="Search orders..."
+                            <input type="text" v-model="searchQuery" :placeholder="t('sellerManageOrdersPage.searchOrders')"
                                 class="w-full sm:w-64 pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500" />
                             <Search class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
                         </div>
@@ -78,18 +78,18 @@
                     <!-- Loading State -->
                     <div v-if="isLoading" class="p-8 text-center">
                         <div class="animate-spin h-8 w-8 border-b-2 border-amber-500 rounded-full mx-auto"></div>
-                        <p class="mt-2 text-gray-600">Loading orders...</p>
+                        <p class="mt-2 text-gray-600">{{ t('sellerManageOrdersPage.loadingOrders') }}</p>
                     </div>
 
                     <!-- Error State -->
                     <div v-else-if="error" class="p-8 text-center text-red-600">
                         {{ error }}
-                        <button @click="refreshOrders" class="text-blue-600 underline ml-2">Try again</button>
+                        <button @click="refreshOrders" class="text-blue-600 underline ml-2">{{ t('sellerManageOrdersPage.tryAgain') }}</button>
                     </div>
 
                     <!-- Empty State -->
                     <div v-else-if="!filteredOrders.length" class="p-8 text-center text-gray-600">
-                        No orders found
+                        {{ t('sellerManageOrdersPage.noOrdersFound') }}
                     </div>
 
                     <table v-else class="min-w-full divide-y divide-gray-200">
@@ -98,47 +98,47 @@
                                 <th @click="toggleSort('rowNumber')"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
                                     <div class="flex items-center">
-                                        No.
+                                        {{ t('sellerManageOrdersPage.columns.number') }}
                                     </div>
                                 </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hover:bg-gray-100">
                                     <div class="flex items-center">
-                                        Order ID
+                                        {{ t('sellerManageOrdersPage.columns.orderId') }}
                                         <SortIcon :sort-key="sortKey" :sort-order="sortOrder" field="id" />
                                     </div>
                                 </th>
                                 <th @click="toggleSort('customer')"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
                                     <div class="flex items-center">
-                                        Customer
+                                        {{ t('sellerManageOrdersPage.columns.customer') }}
                                         <SortIcon :sort-key="sortKey" :sort-order="sortOrder" field="customer" />
                                     </div>
                                 </th>
                                 <th @click="toggleSort('date')"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
                                     <div class="flex items-center">
-                                        Date
+                                        {{ t('sellerManageOrdersPage.columns.date') }}
                                         <SortIcon :sort-key="sortKey" :sort-order="sortOrder" field="date" />
                                     </div>
                                 </th>
                                 <th @click="toggleSort('status')"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
                                     <div class="flex items-center">
-                                        Status
+                                        {{ t('sellerManageOrdersPage.columns.status') }}
                                         <SortIcon :sort-key="sortKey" :sort-order="sortOrder" field="status" />
                                     </div>
                                 </th>
                                 <th @click="toggleSort('total')"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
                                     <div class="flex items-center">
-                                        Total
+                                        {{ t('sellerManageOrdersPage.columns.total') }}
                                         <SortIcon :sort-key="sortKey" :sort-order="sortOrder" field="total" />
                                     </div>
                                 </th>
                                 <th
                                     class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Actions
+                                    {{ t('sellerManageOrdersPage.columns.actions') }}
                                 </th>
                             </tr>
                         </thead>
@@ -163,7 +163,7 @@
                                         'px-2 py-1 text-xs font-semibold rounded-full',
                                         getStatusClass(order.status.toLowerCase())
                                     ]">
-                                        {{ order.status }}
+                                        {{ translateStatus(order.status) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -171,9 +171,9 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                                     <button @click="viewOrder(order.id)"
-                                        class="text-amber-600 hover:text-amber-900">View</button>
+                                        class="text-amber-600 hover:text-amber-900">{{ t('sellerManageOrdersPage.view') }}</button>
                                     <button @click="updateStatus(order.id, order.status)"
-                                        class="text-blue-600 hover:text-blue-900">Update</button>
+                                        class="text-blue-600 hover:text-blue-900">{{ t('sellerManageOrdersPage.update') }}</button>
                                 </td>
                             </tr>
                         </tbody>
@@ -186,11 +186,11 @@
                     <div class="flex-1 flex justify-between sm:hidden">
                         <button @click="prevPage" :disabled="currentPage === 1"
                             class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                            Previous
+                            {{ t('sellerManageOrdersPage.previous') }}
                         </button>
                         <button @click="nextPage" :disabled="currentPage === totalPages"
                             class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                            Next
+                            {{ t('sellerManageOrdersPage.next') }}
                         </button>
                     </div>
 
@@ -198,7 +198,7 @@
                     <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                         <!-- Items per page selector -->
                         <div class="flex items-center gap-4">
-                            <span class="text-sm text-gray-700">Show</span>
+                            <span class="text-sm text-gray-700">{{ t('sellerManageOrdersPage.show') }}</span>
                             <select v-model="itemsPerPage"
                                 class="border-gray-300 rounded-md text-sm focus:ring-amber-500 focus:border-amber-500"
                                 @change="handleItemsPerPageChange">
@@ -206,19 +206,19 @@
                                     {{ size }}
                                 </option>
                             </select>
-                            <span class="text-sm text-gray-700">entries</span>
+                            <span class="text-sm text-gray-700">{{ t('sellerManageOrdersPage.entries') }}</span>
                         </div>
 
                         <!-- Pagination info -->
                         <div class="flex items-center gap-4">
                             <p class="text-sm text-gray-700">
-                                Showing
+                                {{ t('sellerManageOrdersPage.showing') }}
                                 <span class="font-medium">{{ paginationStart }}</span>
-                                to
+                                {{ t('sellerManageOrdersPage.to') }}
                                 <span class="font-medium">{{ paginationEnd }}</span>
-                                of
+                                {{ t('sellerManageOrdersPage.of') }}
                                 <span class="font-medium">{{ totalOrders }}</span>
-                                results
+                                {{ t('sellerManageOrdersPage.results') }}
                             </p>
 
                             <!-- Page navigation -->
@@ -226,14 +226,14 @@
                                 <!-- First page -->
                                 <button @click="goToPage(1)" :disabled="currentPage === 1"
                                     class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                    <span class="sr-only">First</span>
+                                    <span class="sr-only">{{ t('sellerManageOrdersPage.first') }}</span>
                                     <ChevronsLeft class="h-5 w-5" />
                                 </button>
 
                                 <!-- Previous page -->
                                 <button @click="prevPage" :disabled="currentPage === 1"
                                     class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                    <span class="sr-only">Previous</span>
+                                    <span class="sr-only">{{ t('sellerManageOrdersPage.previous') }}</span>
                                     <ChevronLeft class="h-5 w-5" />
                                 </button>
 
@@ -256,14 +256,14 @@
                                 <!-- Next page -->
                                 <button @click="nextPage" :disabled="currentPage === totalPages"
                                     class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                    <span class="sr-only">Next</span>
+                                    <span class="sr-only">{{ t('sellerManageOrdersPage.next') }}</span>
                                     <ChevronRight class="h-5 w-5" />
                                 </button>
 
                                 <!-- Last page -->
                                 <button @click="goToPage(totalPages)" :disabled="currentPage === totalPages"
                                     class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                    <span class="sr-only">Last</span>
+                                    <span class="sr-only">{{ t('sellerManageOrdersPage.last') }}</span>
                                     <ChevronsRight class="h-5 w-5" />
                                 </button>
                             </nav>
@@ -286,7 +286,7 @@
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                     </path>
                 </svg>
-                <span class="text-gray-700">Loading...</span>
+                <span class="text-gray-700">{{ t('sellerManageOrdersPage.loading') }}</span>
             </div>
         </div>
     </div>
@@ -294,6 +294,7 @@
 
 <script>
 import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import SortIcon from './SortIcon.vue';
 import {
@@ -333,6 +334,7 @@ export default {
     },
 
     setup() {
+        const { t, locale } = useI18n();
         const router = useRouter();
         const sellerStore = useSellerStore();
         const isLoading = ref(true);
@@ -363,10 +365,10 @@ export default {
         // Refs for storing API data
         const orders = ref([]);
         const orderStats = ref([
-            { title: 'Total Orders', value: '0', icon: 'ShoppingBag' },
-            { title: 'Pending', value: '0', icon: 'Clock' },
-            { title: 'Shipped', value: '0', icon: 'Truck' },
-            { title: 'Cancelled', value: '0', icon: 'Ban' }
+            { title: t('sellerManageOrdersPage.stats.totalOrders'), value: '0', icon: 'ShoppingBag' },
+            { title: t('sellerManageOrdersPage.statuses.pending'), value: '0', icon: 'Clock' },
+            { title: t('sellerManageOrdersPage.statuses.shipped'), value: '0', icon: 'Truck' },
+            { title: t('sellerManageOrdersPage.statuses.cancelled'), value: '0', icon: 'Ban' }
         ]);
 
         // Load orders data
@@ -381,7 +383,7 @@ export default {
                 // Better response validation
                 if (!response || (!Array.isArray(response) && !Array.isArray(response.data))) {
                     console.error('Invalid API response:', response);
-                    error.value = 'Invalid response from API';
+                    error.value = t('sellerManageOrdersPage.toasts.invalidApiResponse');
                     return;
                 }
 
@@ -394,15 +396,15 @@ export default {
                     _id: order._id,       // Keep the MongoDB ID for backend operations
                     orderId: order.orderId, // Store the generated orderId for reference if needed
                     customer: {
-                        name: order.user?.username || order.user?.name || order.customerName || 'N/A',
-                        email: order.user?.email || order.customerEmail || 'N/A'
+                        name: order.user?.username || order.user?.name || order.customerName || t('sellerManageOrdersPage.notAvailable'),
+                        email: order.user?.email || order.customerEmail || t('sellerManageOrdersPage.notAvailable')
                     },
                     date: order.createdAt || order.date,
                     status: order.status || 'Pending',
                     total: order.totalAmount || order.total || 0,
                     products: Array.isArray(order.products) ? order.products.map(prod => ({
                         id: prod.product?._id || prod.id,
-                        name: prod.product?.name || 'Product',
+                        name: prod.product?.name || t('sellerManageOrdersPage.product'),
                         quantity: prod.quantity || 0,
                         price: prod.price || 0
                     })) : []
@@ -430,22 +432,34 @@ export default {
                     };
 
                     orderStats.value = [
-                        { title: 'Total Orders', value: stats.total.toString(), icon: 'ShoppingBag' },
-                        { title: 'Pending', value: stats.pending.toString(), icon: 'Clock' },
-                        { title: 'Processing', value: stats.processing.toString(), icon: 'RefreshCcw' },
-                        { title: 'Shipped', value: stats.shipped.toString(), icon: 'Truck' },
-                        { title: 'Delivered', value: stats.delivered.toString(), icon: 'Package' },
-                        { title: 'Cancelled', value: stats.cancelled.toString(), icon: 'Ban' }
+                        { title: t('sellerManageOrdersPage.stats.totalOrders'), value: stats.total.toString(), icon: 'ShoppingBag' },
+                        { title: t('sellerManageOrdersPage.statuses.pending'), value: stats.pending.toString(), icon: 'Clock' },
+                        { title: t('sellerManageOrdersPage.statuses.processing'), value: stats.processing.toString(), icon: 'RefreshCcw' },
+                        { title: t('sellerManageOrdersPage.statuses.shipped'), value: stats.shipped.toString(), icon: 'Truck' },
+                        { title: t('sellerManageOrdersPage.statuses.delivered'), value: stats.delivered.toString(), icon: 'Package' },
+                        { title: t('sellerManageOrdersPage.statuses.cancelled'), value: stats.cancelled.toString(), icon: 'Ban' }
                     ];
                 }
 
             } catch (err) {
                 console.error('Error loading orders:', err);
-                error.value = err.message || 'Failed to load orders';
-                toast.error('Failed to load orders');
+                error.value = err.message || t('sellerManageOrdersPage.toasts.loadOrdersFailed');
+                toast.error(t('sellerManageOrdersPage.toasts.loadOrdersFailed'));
             } finally {
                 isLoading.value = false;
             }
+        };
+
+        const translateStatus = (status) => {
+            const key = {
+                Pending: 'pending',
+                Processing: 'processing',
+                Shipped: 'shipped',
+                Delivered: 'delivered',
+                Cancelled: 'cancelled'
+            }[status];
+
+            return key ? t(`sellerManageOrdersPage.statuses.${key}`) : status;
         };
 
         // Computed property for displayed page numbers
@@ -684,7 +698,8 @@ export default {
         };
 
         const formatDate = (date) => {
-            return new Date(date).toLocaleDateString('en-NG', {
+            const activeLocale = locale.value === 'fr' ? 'fr-FR' : 'en-NG';
+            return new Date(date).toLocaleDateString(activeLocale, {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
@@ -692,7 +707,8 @@ export default {
         };
 
         const formatAmount = (amount) => {
-            return amount.toLocaleString('en-NG', {
+            const activeLocale = locale.value === 'fr' ? 'fr-FR' : 'en-NG';
+            return amount.toLocaleString(activeLocale, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
@@ -705,10 +721,10 @@ export default {
                 error.value = null;
                 await loadOrdersData();
                 await nextTick(); // Wait for reactivity updates
-                toast.success('Orders refreshed successfully');
+                toast.success(t('sellerManageOrdersPage.toasts.ordersRefreshed'));
             } catch (error) {
                 console.error('Refresh error:', error);
-                toast.error('Failed to refresh orders');
+                toast.error(t('sellerManageOrdersPage.toasts.refreshFailed'));
             } finally {
                 isLoading.value = false;
             }
@@ -719,7 +735,7 @@ export default {
             const order = orders.value.find(o => o.id === orderId || o._id === orderId);
 
             if (!order) {
-                toast.error('Order not found');
+                toast.error(t('sellerManageOrdersPage.toasts.orderNotFound'));
                 return;
             }
 
@@ -734,7 +750,7 @@ export default {
         const updateStatus = async (orderId) => {
             try {
                 const order = orders.value.find(o => o.id === orderId || o._id === orderId);
-                if (!order) throw new Error('Order not found');
+                if (!order) throw new Error(t('sellerManageOrdersPage.toasts.orderNotFound'));
 
                 const currentStatus = order.status.toLowerCase();
 
@@ -750,13 +766,13 @@ export default {
                 const nextStatus = statusFlow[currentStatus];
 
                 if (!nextStatus) {
-                    toast.info('No status change available for this order');
+                    toast.info(t('sellerManageOrdersPage.toasts.noStatusChange'));
                     return;
                 }
 
                 // If moving from cancelled to pending, show confirmation
                 if (currentStatus === 'cancelled') {
-                    if (!window.confirm('Are you sure you want to reactivate this cancelled order?')) {
+                    if (!window.confirm(t('sellerManageOrdersPage.confirmReactivate'))) {
                         return;
                     }
                 }
@@ -766,13 +782,13 @@ export default {
                 await loadOrdersData();
 
                 const message = currentStatus === 'cancelled'
-                    ? `Order reactivated and set to ${nextStatus}`
-                    : `Order status updated to ${nextStatus}`;
+                    ? t('sellerManageOrdersPage.toasts.orderReactivated', { status: translateStatus(nextStatus) })
+                    : t('sellerManageOrdersPage.toasts.orderStatusUpdated', { status: translateStatus(nextStatus) });
 
                 toast.success(message);
             } catch (error) {
                 console.error('Error updating order status:', error);
-                toast.error('Failed to update order status');
+                toast.error(t('sellerManageOrdersPage.toasts.updateStatusFailed'));
             } finally {
                 isLoading.value = false;
             }
@@ -781,7 +797,7 @@ export default {
         // Add error boundary component
         const handleError = (error) => {
             console.error('Component Error:', error);
-            toast.error('Something went wrong. Please try again.');
+            toast.error(t('sellerManageOrdersPage.toasts.genericError'));
         };
 
         // Update pagination navigation methods
@@ -832,6 +848,7 @@ export default {
 
         return {
             router,
+            t,
 
             // State
             isLoading,
@@ -868,6 +885,7 @@ export default {
             handleItemsPerPageChange,
             getRowNumber,
             availableStatuses,
+            translateStatus,
             getStatusClass,
             formatDate,
             formatAmount,

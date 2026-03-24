@@ -5,7 +5,10 @@ const AdminUser = require("../models/adminUserModels");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
+const {
+  sendAdminPasswordResetEmail,
+  normalizeLocale,
+} = require("../services/emailService");
 
 exports.createAdminUser = async (req, res) => {
   const { username, password, email, role } = req.body;
@@ -380,52 +383,15 @@ exports.resetPassword = async (req, res) => {
 
     await admin.save();
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.EMAIL_PASSWORD,
-      },
-    });
+    admin.preferredLanguage = normalizeLocale(admin.preferredLanguage);
+    await admin.save();
 
-    const mailOptions = {
+    await sendAdminPasswordResetEmail({
       to: admin.email,
-      from: process.env.EMAIL,
-      subject: "Admin Password Reset",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(to right, #ff934b, #ff5e62); padding: 20px; border-radius: 8px;">
-            <h1 style="color: white; margin: 0;">Admin Password Reset</h1>
-          </div>
-          
-          <div style="padding: 20px; background: #f8f9fa; border-radius: 8px; margin-top: 20px;">
-            <p style="font-size: 16px;">Dear ${admin.username},</p>
-            
-            <p style="font-size: 16px;">Your admin account password has been reset.</p>
-            
-            <div style="background: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p style="margin: 0; font-size: 15px;">Your temporary password is:</p>
-              <p style="font-family: monospace; font-size: 20px; margin: 10px 0; color: #ff5e62;">${tempPassword}</p>
-            </div>
-            
-            <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p style="margin: 0; color: #856404;">⚠️ For security reasons, please change your password immediately after logging in.</p>
-            </div>
-    
-            <p style="font-size: 14px; color: #6c757d; margin-top: 30px;">
-              If you did not request this password reset, contact the super admin immediately.
-            </p>
-          </div>
-          
-          <div style="text-align: center; margin-top: 20px; padding: 20px; color: #6c757d;">
-            <p style="margin: 0;">Best regards,</p>
-            <p style="margin: 5px 0; font-weight: bold;">Bruthol Super Admin Team</p>
-          </div>
-        </div>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions);
+      username: admin.username,
+      tempPassword,
+      locale: admin.preferredLanguage,
+    });
 
     // Log activity
     await logAdminActivity(id, "password_reset", {

@@ -16,8 +16,8 @@
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-2xl font-bold text-gray-900">Your Reviews</h2>
-                            <p class="text-sm text-gray-600">Reviews you've written for purchased products</p>
+                            <h2 class="text-2xl font-bold text-gray-900">{{ t('reviewsPage.title') }}</h2>
+                            <p class="text-sm text-gray-600">{{ t('reviewsPage.subtitle') }}</p>
                         </div>
                     </div>
 
@@ -36,24 +36,25 @@
                                 </div>
                                 <div>
                                     <span class="text-4xl font-bold text-gray-900">{{ averageRating.toFixed(1) }}</span>
-                                    <span class="text-lg text-gray-600 ml-2">out of 5</span>
+                                    <span class="text-lg text-gray-600 ml-2">{{ t('reviewsPage.outOfFive') }}</span>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
                                 <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
-                                <p class="text-gray-600 font-medium">You've written {{ reviews.length }} review{{
-                                    reviews.length !== 1 ? 's' : '' }}
+                                <p class="text-gray-600 font-medium">{{ t('reviewsPage.reviewsWritten', {
+                                    count: reviews.length,
+                                    plural: reviews.length !== 1 ? 's' : ''
+                                }) }}
                                 </p>
                             </div>
                         </div>
 
                         <!-- Rating Distribution -->
                         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex-1 max-w-md">
-                            <h4 class="text-lg font-bold text-gray-900 mb-4">Rating Distribution</h4>
+                            <h4 class="text-lg font-bold text-gray-900 mb-4">{{ t('reviewsPage.ratingDistribution') }}</h4>
                             <div class="space-y-3">
                                 <div v-for="n in 5" :key="6 - n" class="flex items-center gap-3">
-                                    <span class="w-16 text-sm font-medium text-gray-700 text-right">{{ 6 - n }}
-                                        stars</span>
+                                    <span class="w-16 text-sm font-medium text-gray-700 text-right">{{ t('reviewsPage.starsLabel', { count: 6 - n, plural: (6 - n) > 1 ? 's' : '' }) }}</span>
                                     <div class="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
                                         <div class="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full transition-all duration-500"
                                             :style="`width: ${getRatingPercentage(6 - n)}%`"></div>
@@ -82,8 +83,8 @@
                             </svg>
                         </div>
                         <div>
-                            <h3 class="text-lg font-bold text-gray-900">Filter Your Reviews</h3>
-                            <p class="text-sm text-gray-600">Sort and organize your feedback</p>
+                            <h3 class="text-lg font-bold text-gray-900">{{ t('reviewsPage.filterTitle') }}</h3>
+                            <p class="text-sm text-gray-600">{{ t('reviewsPage.filterSubtitle') }}</p>
                         </div>
                     </div>
                 </div>
@@ -93,12 +94,12 @@
                         <div class="flex gap-4">
                             <!-- Sort Dropdown -->
                             <div class="relative">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Sort by</label>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">{{ t('reviewsPage.sortBy') }}</label>
                                 <select v-model="sortBy"
                                     class="appearance-none bg-gray-50 hover:bg-white border-2 border-gray-200 rounded-xl px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all font-medium">
-                                    <option value="recent">Most Recent</option>
-                                    <option value="helpful">Most Helpful</option>
-                                    <option value="rating">Highest Rating</option>
+                                    <option value="recent">{{ t('reviewsPage.mostRecent') }}</option>
+                                    <option value="helpful">{{ t('reviewsPage.mostHelpful') }}</option>
+                                    <option value="rating">{{ t('reviewsPage.highestRating') }}</option>
                                 </select>
                                 <div class="absolute right-3 top-1/2 transform translate-y-1 pointer-events-none">
                                     <ChevronDown class="w-5 h-5 text-gray-400" />
@@ -107,10 +108,10 @@
 
                             <!-- Rating Filter -->
                             <div class="relative">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Filter by Rating</label>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">{{ t('reviewsPage.filterByRating') }}</label>
                                 <select v-model="filterRating"
                                     class="appearance-none bg-gray-50 hover:bg-white border-2 border-gray-200 rounded-xl px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all font-medium">
-                                    <option value="">All Ratings</option>
+                                    <option value="">{{ t('reviewsPage.allRatings') }}</option>
                                     <option v-for="n in 5" :key="n" :value="n">{{ n }} Star{{ n > 1 ? 's' : '' }}
                                     </option>
                                 </select>
@@ -126,8 +127,7 @@
                             <div class="flex items-center gap-2">
                                 <div class="w-2 h-2 bg-purple-500 rounded-full"></div>
                                 <span class="text-sm font-medium text-purple-800">
-                                    {{ filteredReviews.length }} review{{ filteredReviews.length !== 1 ? 's' : '' }}
-                                    found
+                                    {{ t('reviewsPage.reviewsFound', { count: filteredReviews.length, plural: filteredReviews.length !== 1 ? 's' : '' }) }}
                                 </span>
                             </div>
                         </div>
@@ -145,8 +145,8 @@
                         class="absolute inset-0 animate-ping h-12 w-12 border-2 border-blue-300 rounded-full opacity-75">
                     </div>
                 </div>
-                <p class="mt-4 text-lg font-medium text-gray-700">Loading your reviews...</p>
-                <p class="text-sm text-gray-500">Please wait while we fetch your feedback history</p>
+                <p class="mt-4 text-lg font-medium text-gray-700">{{ t('reviewsPage.loadingTitle') }}</p>
+                <p class="text-sm text-gray-500">{{ t('reviewsPage.loadingBody') }}</p>
             </div>
 
             <!-- Enhanced Error State -->
@@ -159,7 +159,7 @@
                             d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
-                <h3 class="text-lg font-bold text-red-800 mb-2">Unable to load reviews</h3>
+                <h3 class="text-lg font-bold text-red-800 mb-2">{{ t('reviewsPage.errorTitle') }}</h3>
                 <p class="text-red-700">{{ error }}</p>
             </div>
 
@@ -181,7 +181,7 @@
                                     </div>
                                     <div>
                                         <h3 class="text-lg font-bold text-gray-900">
-                                            {{ review.user?.username || 'Anonymous Customer' }}
+                                            {{ review.user?.username || t('reviewsPage.anonymousCustomer') }}
                                         </h3>
                                         <div class="flex items-center gap-3">
                                             <span class="text-sm text-gray-600">
@@ -189,7 +189,7 @@
                                             </span>
                                             <span v-if="review.isVerifiedPurchase"
                                                 class="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 text-xs px-3 py-1 rounded-full border border-green-200 font-medium">
-                                                ✓ Verified Purchase
+                                                ✓ {{ t('reviewsPage.verifiedPurchase') }}
                                             </span>
                                         </div>
                                     </div>
@@ -207,7 +207,7 @@
                                         </template>
                                     </div>
                                     <span class="text-sm font-medium text-gray-600">
-                                        {{ review.rating }}/5 stars
+                                        {{ t('reviewsPage.starsOutOfFive', { rating: review.rating }) }}
                                     </span>
                                 </div>
                             </div>
@@ -244,11 +244,11 @@
                                         d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
                                     </path>
                                 </svg>
-                                Customer Photos ({{ review.images.length }})
+                                {{ t('reviewsPage.customerPhotos', { count: review.images.length }) }}
                             </h4>
                             <div class="flex gap-3 overflow-x-auto py-2">
                                 <div v-for="(image, idx) in review.images" :key="idx" class="flex-shrink-0 w-24 h-24">
-                                    <img :src="image" :alt="`Review photo ${idx + 1}`"
+                                    <img :src="image" :alt="t('reviewsPage.reviewPhotoAlt', { index: idx + 1 })"
                                         class="w-full h-full object-cover rounded-xl border-2 border-gray-200 cursor-pointer hover:opacity-75 transition-all duration-300 hover:scale-105 shadow-sm"
                                         @click="openImageGallery(review.images, idx)" @error="handleImageError">
                                 </div>
@@ -267,17 +267,17 @@
                                     <div
                                         class="bg-gray-900 text-white text-xs rounded-lg p-3 whitespace-nowrap shadow-lg">
                                         {{ review.helpfulBy?.length ?
-                                            `${review.helpfulBy.length} ${review.helpfulBy.length === 1 ? 'person' :
-                                                'people'} found
-                                        this helpful` :
-                                            'Be the first to mark as helpful' }}
+                                            (review.helpfulBy.length === 1
+                                                ? t('reviewsPage.helpfulTooltipOne', { count: review.helpfulBy.length })
+                                                : t('reviewsPage.helpfulTooltipMany', { count: review.helpfulBy.length }))
+                                            : t('reviewsPage.helpfulTooltipNone') }}
                                         <div
                                             class="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900">
                                         </div>
                                     </div>
                                 </div>
                                 <span class="text-lg">👍</span>
-                                <span class="text-sm font-medium">Helpful ({{ review.helpfulCount || 0 }})</span>
+                                <span class="text-sm font-medium">{{ t('reviewsPage.helpfulButton', { count: review.helpfulCount || 0 }) }}</span>
                             </button>
 
                             <div v-if="review.images?.length" class="flex items-center gap-2 text-gray-600">
@@ -286,9 +286,7 @@
                                         d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
                                     </path>
                                 </svg>
-                                <span class="text-sm font-medium">{{ review.images.length }} photo{{
-                                    review.images.length > 1 ? 's'
-                                        : '' }}</span>
+                                <span class="text-sm font-medium">{{ t('reviewsPage.photosCount', { count: review.images.length, plural: review.images.length > 1 ? 's' : '' }) }}</span>
                             </div>
                         </div>
                     </div>
@@ -305,17 +303,16 @@
                             </path>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">No Reviews Found</h3>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">{{ t('reviewsPage.noReviewsFound') }}</h3>
                     <p class="text-gray-600 mb-6 max-w-md mx-auto">
                         {{ filterRating || sortBy !== 'recent' ?
-                            'No reviews match your current filters. Try adjusting your search criteria.' :
-                            `You haven\'t written any product reviews yet. Share your experiences with products you\'ve
-                        purchased!` }}
+                            t('reviewsPage.noReviewsFiltered') :
+                            t('reviewsPage.noReviewsYet') }}
                     </p>
                     <div v-if="!filterRating && sortBy === 'recent'"
                         class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
                         <p class="text-blue-700 text-sm font-medium">
-                            💡 Check the "Pending Reviews" tab to review recently delivered products
+                            💡 {{ t('reviewsPage.pendingReviewsTip') }}
                         </p>
                     </div>
                 </div>
@@ -326,6 +323,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { ChevronDown } from 'lucide-vue-next';
 import { useProductStore } from '../store/productStore';
@@ -342,6 +340,7 @@ export default {
     },
 
     setup() {
+        const { t } = useI18n();
         const productStore = useProductStore();
         const userStore = useUserStore();
         const router = useRouter();
@@ -360,8 +359,8 @@ export default {
                 const response = await productStore.fetchUserReviews();
                 reviews.value = response;
             } catch (err) {
-                error.value = 'Failed to load reviews';
-                toast.error('Could not load reviews. Please try again.');
+                error.value = t('reviewsPage.failedLoad');
+                toast.error(t('reviewsPage.failedLoadToast'));
             } finally {
                 loading.value = false;
             }
@@ -406,9 +405,9 @@ export default {
                 isHelpfulLoading.value = true;
                 await productStore.markReviewHelpful(reviewId);
                 await fetchReviews(); // Refresh reviews
-                toast.success('Review marked as helpful');
+                toast.success(t('reviewsPage.markedHelpful'));
             } catch (err) {
-                toast.error('Failed to mark review as helpful');
+                toast.error(t('reviewsPage.failedHelpful'));
             } finally {
                 isHelpfulLoading.value = false;
             }
@@ -449,6 +448,7 @@ export default {
         });
 
         return {
+            t,
             reviews,
             loading,
             error,

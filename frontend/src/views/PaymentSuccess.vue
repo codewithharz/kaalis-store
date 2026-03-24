@@ -9,18 +9,18 @@
                     </svg>
                 </div>
 
-                <h2 class="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h2>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ t('paymentSuccessPage.title') }}</h2>
                 <p class="text-gray-600 mb-4">
-                    Thank you for your purchase. Your payment has been processed successfully.
+                    {{ t('paymentSuccessPage.description') }}
                 </p>
 
                 <!-- Transaction Details -->
                 <div class="text-left bg-gray-50 p-4 rounded-lg mb-6">
                     <p class="text-sm text-gray-600 mb-2">
-                        <span class="font-semibold">Transaction Reference:</span> {{ reference }}
+                        <span class="font-semibold">{{ t('paymentSuccessPage.transactionReference') }}</span> {{ reference }}
                     </p>
                     <p class="text-sm text-gray-600">
-                        <span class="font-semibold">Order ID:</span> #{{ order?.orderId || 'Loading...' }}
+                        <span class="font-semibold">{{ t('paymentSuccessPage.orderId') }}</span> #{{ order?.orderId || t('paymentSuccessPage.loadingOrder') }}
                     </p>
                 </div>
 
@@ -35,8 +35,7 @@
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                             </path>
                         </svg>
-                        <span class="text-gray-600">Redirecting to order confirmation in {{ countdown }}
-                            seconds...</span>
+                        <span class="text-gray-600">{{ t('paymentSuccessPage.redirectingCountdown', { count: countdown }) }}</span>
                     </div>
                     <div class="w-full max-w-xs bg-gray-200 rounded-full h-2">
                         <div class="bg-[#24a6bb] h-2 rounded-full transition-all duration-1000"
@@ -53,11 +52,11 @@
                 <div class="flex flex-col sm:flex-row justify-center gap-4">
                     <button @click="goToOrderConfirmation"
                         class="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#24a6bb] hover:bg-[#1c8a9e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        View Order Details
+                        {{ t('paymentSuccessPage.viewOrderDetails') }}
                     </button>
                     <button @click="continueShopping"
                         class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        Continue Shopping
+                        {{ t('paymentSuccessPage.continueShopping') }}
                     </button>
                 </div>
             </div>
@@ -67,9 +66,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useOrderStore } from '../store/orderStore';
 import { toast } from 'vue-sonner';
+
+const { t } = useI18n();
 
 const props = defineProps({
     reference: {
@@ -120,8 +122,8 @@ onMounted(async () => {
     } catch (err) {
         // Only show error if the status update actually failed
         if (!err.response?.data?.status) {
-            error.value = 'Error processing your request. Please try again.';
-            toast.error('Error processing payment confirmation');
+            error.value = t('paymentSuccessPage.errors.processingRequest');
+            toast.error(t('paymentSuccessPage.errors.processingConfirmation'));
         }
     } finally {
         isRedirecting.value = false;
@@ -135,7 +137,7 @@ const goToOrderConfirmation = async () => {
             params: { orderId: props.orderId }
         });
     } catch (err) {
-        error.value = 'Error navigating to order confirmation. Please try again.';
+        error.value = t('paymentSuccessPage.errors.navigation');
         console.error('Navigation error:', err);
     }
 };

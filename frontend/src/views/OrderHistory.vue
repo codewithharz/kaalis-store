@@ -1,14 +1,14 @@
 <!-- frontend/src/components/OrderHistory.vue -->
 <template>
     <div class="container mx-auto p-4">
-        <h1 class="text-2xl font-bold mb-4">Order History</h1>
+        <h1 class="text-2xl font-bold mb-4">{{ t('orderHistoryPage.title') }}</h1>
         <div v-if="orders.length === 0" class="text-center py-8">
-            <p class="text-gray-500 text-xl">No orders found.</p>
+            <p class="text-gray-500 text-xl">{{ t('orderHistoryPage.noOrders') }}</p>
         </div>
         <div v-else class="space-y-6">
             <div v-for="order in orders" :key="order._id" class="bg-white shadow rounded-lg p-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold">Order #{{ order._id }}</h2>
+                    <h2 class="text-lg font-semibold">{{ t('orderHistoryPage.orderNumber', { id: order._id }) }}</h2>
                     <span class="text-sm text-gray-500">{{ formatDate(order.createdAt) }}</span>
                 </div>
                 <div class="space-y-4">
@@ -16,20 +16,20 @@
                         class="flex justify-between items-center">
                         <div>
                             <p class="font-medium">{{ item.product.name }}</p>
-                            <p class="text-sm text-gray-500">Quantity: {{ item.quantity }}</p>
+                            <p class="text-sm text-gray-500">{{ t('orderHistoryPage.quantity', { count: item.quantity }) }}</p>
                         </div>
                         <div>
                             <p class="font-medium">₦{{ item.product?.price * item.quantity }}</p>
                             <button v-if="!item.rated" @click="openRatingModal(order._id, item.product)"
                                 class="text-sm text-blue-600 hover:text-blue-800">
-                                Rate this product
+                                {{ t('orderHistoryPage.rateProduct') }}
                             </button>
-                            <p v-else class="text-sm text-green-600">Rated</p>
+                            <p v-else class="text-sm text-green-600">{{ t('orderHistoryPage.rated') }}</p>
                         </div>
                     </div>
                 </div>
                 <div class="mt-4 text-right">
-                    <p class="font-semibold">Total: ₦{{ order.totalAmount }}</p>
+                    <p class="font-semibold">{{ t('orderHistoryPage.total', { amount: order.totalAmount }) }}</p>
                 </div>
             </div>
         </div>
@@ -37,9 +37,9 @@
         <!-- Rating Modal -->
         <div v-if="showRatingModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <div class="bg-white p-6 rounded-lg w-96">
-                <h2 class="text-xl font-bold mb-4">Rate {{ currentProduct.name }}</h2>
+                <h2 class="text-xl font-bold mb-4">{{ t('orderHistoryPage.rateTitle', { name: currentProduct.name }) }}</h2>
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Rating</label>
+                    <label class="block text-sm font-medium text-gray-700">{{ t('orderHistoryPage.ratingLabel') }}</label>
                     <div class="flex items-center">
                         <Star v-for="star in 5" :key="star" @click="setRating(star)"
                             :class="star <= rating ? 'text-yellow-400' : 'text-gray-300'"
@@ -47,15 +47,15 @@
                     </div>
                 </div>
                 <div class="mb-4">
-                    <label for="review" class="block text-sm font-medium text-gray-700">Review</label>
+                    <label for="review" class="block text-sm font-medium text-gray-700">{{ t('orderHistoryPage.reviewLabel') }}</label>
                     <textarea id="review" v-model="review" rows="3"
                         class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
                 </div>
                 <div class="flex justify-end space-x-2">
                     <button @click="closeRatingModal"
-                        class="px-4 py-2 border rounded-md text-gray-600 hover:bg-gray-100">Cancel</button>
+                        class="px-4 py-2 border rounded-md text-gray-600 hover:bg-gray-100">{{ t('orderHistoryPage.cancel') }}</button>
                     <button @click="submitRating"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Submit</button>
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">{{ t('orderHistoryPage.submit') }}</button>
                 </div>
             </div>
         </div>
@@ -64,14 +64,17 @@
 
 <script>
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useOrderStore } from '../store/orderStore';
 import { useProductStore } from '../store/productStore';
 import { Star } from 'lucide-vue-next';
+import { toast } from 'vue-sonner';
 
 export default {
     name: 'OrderHistory',
     components: { Star },
     setup() {
+        const { t, locale } = useI18n();
         const orderStore = useOrderStore();
         const productStore = useProductStore();
         const orders = ref([]);
@@ -86,7 +89,8 @@ export default {
         };
 
         const formatDate = (dateString) => {
-            return new Date(dateString).toLocaleDateString('en-US', {
+            const activeLocale = locale.value === 'fr' ? 'fr-FR' : 'en-US';
+            return new Date(dateString).toLocaleDateString(activeLocale, {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
@@ -118,10 +122,10 @@ export default {
                 closeRatingModal();
                 // Refresh orders to reflect the new rating status
                 await fetchOrders();
-                toast.success('Rating submitted successfully!');
+                toast.success(t('orderHistoryPage.toasts.ratingSubmitted'));
             } catch (error) {
                 console.error('Failed to submit rating:', error);
-                toast.error('Failed to submit rating. Please try again.');
+                toast.error(t('orderHistoryPage.toasts.ratingFailed'));
                 // Handle error (e.g., show error message to user)
             }
         };
@@ -129,6 +133,7 @@ export default {
         onMounted(fetchOrders);
 
         return {
+            t,
             orders,
             formatDate,
             showRatingModal,

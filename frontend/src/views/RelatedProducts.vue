@@ -3,7 +3,7 @@
     <div v-if="processedProducts.length > 0" class="w-full bg-white py-8 border-t">
         <div class="max-w-7xl px-4 sm:px-6 lg:px-8">
             <h2 class="text-xl font-semibold mb-6">
-                {{ processedProducts.length > 0 ? 'Related Products' : 'You May Also Like' }}
+                {{ processedProducts.length > 0 ? t('relatedProducts.title') : t('relatedProducts.fallbackTitle') }}
             </h2>
             <div class="flex justify-center">
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
@@ -17,6 +17,7 @@
 
 <script>
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import ProductCard from './ProductCard.vue';
 
@@ -32,6 +33,7 @@ export default {
         }
     },
     setup(props) {
+        const { t } = useI18n();
         const router = useRouter();
 
         const processedProducts = computed(() => {
@@ -57,7 +59,8 @@ export default {
 
         return {
             processedProducts,
-            navigateToProduct
+            navigateToProduct,
+            t
         };
     }
 };

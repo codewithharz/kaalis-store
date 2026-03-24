@@ -17,10 +17,9 @@
                             class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-lg sm:rounded-xl flex items-center justify-center">
                             <KeyRound class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                         </div>
-                        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold">Security Settings</h1>
+                        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold">{{ t('securityPage.heroTitle') }}</h1>
                     </div>
-                    <p class="text-sm sm:text-base lg:text-lg mb-6 sm:mb-8 text-white/90">Update your password to keep
-                        your account secure</p>
+                    <p class="text-sm sm:text-base lg:text-lg mb-6 sm:mb-8 text-white/90">{{ t('securityPage.heroSubtitle') }}</p>
                 </div>
             </div>
         </div>
@@ -46,9 +45,8 @@
                                 </div>
                             </div>
                             <div>
-                                <h2 class="text-lg sm:text-2xl font-bold text-gray-900">Change Password</h2>
-                                <p class="text-gray-600 text-sm sm:text-base">Ensure your account is secure with a
-                                    strong password</p>
+                                <h2 class="text-lg sm:text-2xl font-bold text-gray-900">{{ t('securityPage.cardTitle') }}</h2>
+                                <p class="text-gray-600 text-sm sm:text-base">{{ t('securityPage.cardSubtitle') }}</p>
                             </div>
                         </div>
 
@@ -69,7 +67,7 @@
                                 </div>
                             </div>
                             <div>
-                                <p class="font-medium text-sm sm:text-base">{{ !error ? 'Success!' : 'Error' }}</p>
+                                <p class="font-medium text-sm sm:text-base">{{ !error ? t('securityPage.successTitle') : t('securityPage.errorTitle') }}</p>
                                 <p class="text-xs sm:text-sm opacity-90 break-words">{{ message }}</p>
                             </div>
                         </div>
@@ -80,7 +78,7 @@
                             <div class="space-y-2 sm:space-y-3">
                                 <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
                                     <Lock class="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500" />
-                                    Current Password
+                                    {{ t('securityPage.currentPassword') }}
                                 </label>
                                 <div class="relative group">
                                     <div
@@ -90,7 +88,7 @@
                                     </div>
                                     <input type="password" v-model="form.currentPassword"
                                         class="w-full pl-9 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 text-gray-700 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/20 transition-all duration-200 text-sm sm:text-base"
-                                        placeholder="Enter your current password" />
+                                        :placeholder="t('securityPage.currentPasswordPlaceholder')" />
                                 </div>
                             </div>
 
@@ -98,7 +96,7 @@
                             <div class="space-y-2 sm:space-y-3">
                                 <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
                                     <Key class="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500" />
-                                    New Password
+                                    {{ t('securityPage.newPassword') }}
                                 </label>
                                 <div class="relative group">
                                     <div
@@ -108,7 +106,7 @@
                                     </div>
                                     <input type="password" v-model="form.newPassword"
                                         class="w-full pl-9 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 text-gray-700 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/20 transition-all duration-200 text-sm sm:text-base"
-                                        placeholder="Enter your new password" />
+                                        :placeholder="t('securityPage.newPasswordPlaceholder')" />
                                 </div>
                             </div>
 
@@ -116,7 +114,7 @@
                             <div class="space-y-2 sm:space-y-3">
                                 <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
                                     <KeyRound class="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500" />
-                                    Confirm New Password
+                                    {{ t('securityPage.confirmNewPassword') }}
                                 </label>
                                 <div class="relative group">
                                     <div
@@ -126,7 +124,7 @@
                                     </div>
                                     <input type="password" v-model="form.confirmPassword"
                                         class="w-full pl-9 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 text-gray-700 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/20 transition-all duration-200 text-sm sm:text-base"
-                                        placeholder="Confirm your new password" />
+                                        :placeholder="t('securityPage.confirmNewPasswordPlaceholder')" />
                                 </div>
                             </div>
 
@@ -135,7 +133,7 @@
                                 <button type="submit"
                                     class="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-lg sm:rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base">
                                     <KeyRound class="w-4 h-4 sm:w-5 sm:h-5" />
-                                    <span>Update Password</span>
+                                    <span>{{ t('securityPage.updatePassword') }}</span>
                                 </button>
                             </div>
                         </form>
@@ -163,11 +161,9 @@
                                         <Lock class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                                     </div>
                                     <div>
-                                        <h3 class="text-base sm:text-lg font-bold text-indigo-900">Password Requirements
-                                        </h3>
-                                        <p class="text-xs sm:text-sm text-indigo-700/80 hidden sm:block">Follow these
-                                            guidelines for a secure password</p>
-                                        <p class="text-xs text-indigo-700/80 sm:hidden">Security guidelines</p>
+                                        <h3 class="text-base sm:text-lg font-bold text-indigo-900">{{ t('securityPage.requirementsTitle') }}</h3>
+                                        <p class="text-xs sm:text-sm text-indigo-700/80 hidden sm:block">{{ t('securityPage.requirementsSubtitle') }}</p>
+                                        <p class="text-xs text-indigo-700/80 sm:hidden">{{ t('securityPage.requirementsSubtitleMobile') }}</p>
                                     </div>
                                 </div>
 
@@ -177,32 +173,28 @@
                                         <div
                                             class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex-shrink-0">
                                         </div>
-                                        <span class="text-xs sm:text-sm font-medium text-indigo-800">At least 8
-                                            characters long</span>
+                                        <span class="text-xs sm:text-sm font-medium text-indigo-800">{{ t('securityPage.reqLength') }}</span>
                                     </div>
                                     <div
                                         class="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-white/60 rounded-lg border border-indigo-100">
                                         <div
                                             class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex-shrink-0">
                                         </div>
-                                        <span class="text-xs sm:text-sm font-medium text-indigo-800">Contains uppercase
-                                            and lowercase letters</span>
+                                        <span class="text-xs sm:text-sm font-medium text-indigo-800">{{ t('securityPage.reqCase') }}</span>
                                     </div>
                                     <div
                                         class="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-white/60 rounded-lg border border-indigo-100">
                                         <div
                                             class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex-shrink-0">
                                         </div>
-                                        <span class="text-xs sm:text-sm font-medium text-indigo-800">Includes numbers
-                                            and special characters</span>
+                                        <span class="text-xs sm:text-sm font-medium text-indigo-800">{{ t('securityPage.reqNumbers') }}</span>
                                     </div>
                                     <div
                                         class="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-white/60 rounded-lg border border-indigo-100">
                                         <div
                                             class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex-shrink-0">
                                         </div>
-                                        <span class="text-xs sm:text-sm font-medium text-indigo-800">Different from your
-                                            current password</span>
+                                        <span class="text-xs sm:text-sm font-medium text-indigo-800">{{ t('securityPage.reqDifferent') }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -217,6 +209,7 @@
 
 <script>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useUserStore } from '../store/user';
 import apiClient from '../api/axios';
 import { KeyRound, Lock, Key, CheckCircle, AlertCircle } from 'lucide-vue-next';
@@ -231,6 +224,7 @@ export default {
         AlertCircle
     },
     setup() {
+        const { t } = useI18n();
         const userStore = useUserStore();
         const form = ref({
             currentPassword: '',
@@ -246,7 +240,7 @@ export default {
 
         const changePassword = async () => {
             if (form.value.newPassword !== form.value.confirmPassword) {
-                message.value = 'New passwords do not match.';
+                message.value = t('securityPage.passwordMismatch');
                 error.value = true;
                 return;
             }
@@ -259,16 +253,17 @@ export default {
                     headers: { Authorization: `Bearer ${userStore.token}` }
                 });
 
-                message.value = 'Password changed successfully.';
+                message.value = t('securityPage.passwordChanged');
                 error.value = false;
                 form.value = { currentPassword: '', newPassword: '', confirmPassword: '' };
             } catch (err) {
-                message.value = err.response?.data?.message || 'An error occurred while changing the password.';
+                message.value = err.response?.data?.message || t('securityPage.genericError');
                 error.value = true;
             }
         };
 
         return {
+            t,
             form,
             changePassword,
             message,

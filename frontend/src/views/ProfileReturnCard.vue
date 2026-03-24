@@ -10,17 +10,16 @@
                         <RotateCcw class="w-6 h-6 text-white" />
                     </div>
                     <div>
-                        <h2 class="text-xl font-bold text-gray-900">My Returns</h2>
+                        <h2 class="text-xl font-bold text-gray-900">{{ t('returnsPage.title') }}</h2>
                         <p class="text-sm text-gray-600">
-                            {{ returns.length ? `${returns.length} return request${returns.length > 1 ? 's' : ''} found`
-                                : 'No returns found' }}
+                            {{ returns.length ? t('returnsPage.requestCount', { count: returns.length, plural: returns.length > 1 ? 's' : '' }) : t('returnsPage.noReturnsFound') }}
                         </p>
                     </div>
                 </div>
                 <button @click="showReturnForm = true"
                     class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl hover:from-amber-600 hover:to-orange-700 font-medium transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
                     <Plus class="w-5 h-5" />
-                    Request Return
+                    {{ t('returnsPage.requestReturn') }}
                 </button>
             </div>
         </div>
@@ -37,8 +36,8 @@
                                 <RotateCcw class="w-5 h-5 text-white" />
                             </div>
                             <div>
-                                <h3 class="text-xl font-bold">Request a Return</h3>
-                                <p class="text-amber-100 text-sm mt-1">Submit your return request quickly and easily</p>
+                                <h3 class="text-xl font-bold">{{ t('returnsPage.requestTitle') }}</h3>
+                                <p class="text-amber-100 text-sm mt-1">{{ t('returnsPage.requestSubtitle') }}</p>
                             </div>
                         </div>
                         <button @click="showReturnForm = false"
@@ -56,7 +55,7 @@
                                 class="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
                                 <Package class="w-4 h-4 text-white" />
                             </div>
-                            <h4 class="text-lg font-semibold text-gray-900">Select Order to Return</h4>
+                            <h4 class="text-lg font-semibold text-gray-900">{{ t('returnsPage.selectOrderToReturn') }}</h4>
                         </div>
 
                         <!-- Orders List with Modern Cards -->
@@ -67,9 +66,8 @@
                                     class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <Package class="w-8 h-8 text-gray-400" />
                                 </div>
-                                <p class="text-lg font-medium text-gray-700 mb-2">No eligible orders found</p>
-                                <p class="text-sm text-gray-500">Only delivered orders within the last 30 days are
-                                    eligible for return</p>
+                                <p class="text-lg font-medium text-gray-700 mb-2">{{ t('returnsPage.noEligibleOrders') }}</p>
+                                <p class="text-sm text-gray-500">{{ t('returnsPage.eligibleOrdersHint') }}</p>
                             </div>
 
                             <div v-for="order in eligibleOrders" :key="order._id"
@@ -87,7 +85,7 @@
                                             <Hash class="w-5 h-5 text-white" />
                                         </div>
                                         <div>
-                                            <p class="text-lg font-bold text-gray-900">Order #{{ order.orderId }}</p>
+                                            <p class="text-lg font-bold text-gray-900">{{ t('returnsPage.orderNumber', { id: order.orderId }) }}</p>
                                             <p class="text-sm text-gray-500 flex items-center gap-1">
                                                 <Calendar class="w-4 h-4" />
                                                 {{ formatDate(order.createdAt) }}
@@ -96,7 +94,7 @@
                                     </div>
                                     <span :class="getStatusClass(order.status)"
                                         class="px-3 py-1 text-sm font-medium rounded-full shadow-sm">
-                                        {{ order.status }}
+                                        {{ translateStatus(order.status) }}
                                     </span>
                                 </div>
 
@@ -115,18 +113,18 @@
                                         <!-- Product Details with Enhanced Typography -->
                                         <div class="flex-1">
                                             <h5 class="text-base font-semibold text-gray-900 mb-2 leading-tight">
-                                                {{ product.product?.name || 'Unknown Product' }}
+                                                {{ product.product?.name || t('returnsPage.unknownProduct') }}
                                             </h5>
                                             <div class="grid grid-cols-2 gap-4 text-sm">
                                                 <div class="flex items-center gap-2">
                                                     <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                                    <span class="text-gray-600">Qty:</span>
+                                                    <span class="text-gray-600">{{ t('returnsPage.qtyShort') }}</span>
                                                     <span class="font-semibold text-gray-900">{{ product.quantity
                                                     }}</span>
                                                 </div>
                                                 <div class="flex items-center gap-2">
                                                     <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                                                    <span class="text-gray-600">Price:</span>
+                                                    <span class="text-gray-600">{{ t('returnsPage.price') }}</span>
                                                     <span class="font-semibold text-gray-900">₦{{
                                                         formatAmount(product.product?.price || 0) }}</span>
                                                 </div>
@@ -139,7 +137,7 @@
                                 <div class="mt-6 pt-4 border-t border-gray-200">
                                     <div
                                         class="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl">
-                                        <span class="text-lg font-medium text-gray-700">Total Amount:</span>
+                                        <span class="text-lg font-medium text-gray-700">{{ t('returnsPage.totalAmount') }}</span>
                                         <span class="text-xl font-bold text-gray-900">₦{{
                                             formatAmount(order.totalAmount) }}</span>
                                     </div>
@@ -149,7 +147,7 @@
                                 <div v-if="returnForm.orderId === order._id"
                                     class="mt-4 flex items-center justify-center gap-2 text-amber-600 font-medium">
                                     <CheckCircle class="w-5 h-5" />
-                                    <span>Selected for return</span>
+                                    <span>{{ t('returnsPage.selectedForReturn') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -164,24 +162,24 @@
                                 class="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
                                 <FileText class="w-4 h-4 text-white" />
                             </div>
-                            <h4 class="text-lg font-semibold text-gray-900">Return Details</h4>
+                            <h4 class="text-lg font-semibold text-gray-900">{{ t('returnsPage.returnDetails') }}</h4>
                         </div>
 
                         <!-- Reason Selection with Modern Design -->
                         <div class="space-y-3">
                             <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
                                 <AlertCircle class="w-4 h-4 text-amber-500" />
-                                Reason for Return
+                                {{ t('returnsPage.reasonForReturn') }}
                             </label>
                             <select v-model="returnForm.reason"
                                 class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all bg-white shadow-sm"
                                 required>
-                                <option value="">Select a reason for your return</option>
-                                <option value="defective">🔧 Product is defective/damaged</option>
-                                <option value="wrong_item">📦 Received wrong item</option>
-                                <option value="not_as_described">📝 Item not as described</option>
-                                <option value="size_issue">📏 Size/fit issue</option>
-                                <option value="changed_mind">💭 Changed my mind</option>
+                                <option value="">{{ t('returnsPage.selectReason') }}</option>
+                                <option value="defective">🔧 {{ t('returnsPage.reasonDefective') }}</option>
+                                <option value="wrong_item">📦 {{ t('returnsPage.reasonWrongItem') }}</option>
+                                <option value="not_as_described">📝 {{ t('returnsPage.reasonNotAsDescribed') }}</option>
+                                <option value="size_issue">📏 {{ t('returnsPage.reasonSizeIssue') }}</option>
+                                <option value="changed_mind">💭 {{ t('returnsPage.reasonChangedMind') }}</option>
                             </select>
                         </div>
 
@@ -189,14 +187,14 @@
                         <div class="space-y-3">
                             <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
                                 <MessageSquare class="w-4 h-4 text-blue-500" />
-                                Additional Comments
+                                {{ t('returnsPage.additionalComments') }}
                             </label>
                             <textarea v-model="returnForm.comments" rows="4"
                                 class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all bg-white shadow-sm resize-none"
-                                placeholder="Please provide any additional details about your return request (optional)"></textarea>
+                                :placeholder="t('returnsPage.commentsPlaceholder')"></textarea>
                             <p class="text-xs text-gray-500 flex items-center gap-1">
                                 <Info class="w-3 h-3" />
-                                Providing detailed information helps us process your return faster
+                                {{ t('returnsPage.commentsHint') }}
                             </p>
                         </div>
                     </div>
@@ -205,7 +203,7 @@
                     <div class="mt-8 flex flex-col sm:flex-row justify-end gap-3">
                         <button type="button" @click="showReturnForm = false"
                             class="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-medium transition-all duration-200 transform hover:scale-105">
-                            Cancel
+                            {{ t('returnsPage.cancel') }}
                         </button>
                         <button type="submit"
                             class="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all duration-200 transform hover:scale-105 shadow-lg"
@@ -214,11 +212,11 @@
                                 <div
                                     class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin">
                                 </div>
-                                Submitting...
+                                {{ t('returnsPage.submitting') }}
                             </span>
                             <span v-else class="flex items-center gap-2">
                                 <Send class="w-4 h-4" />
-                                Submit Return Request
+                                {{ t('returnsPage.submitReturnRequest') }}
                             </span>
                         </button>
                     </div>
@@ -243,13 +241,13 @@
                                 <p class="text-xl font-bold text-gray-900">Return #{{ returnRequest.returnId }}</p>
                                 <p class="text-sm text-gray-600 flex items-center gap-1">
                                     <Package class="w-4 h-4" />
-                                    Order #{{ returnRequest.orderId }}
+                                    {{ t('returnsPage.orderNumber', { id: returnRequest.orderId }) }}
                                 </p>
                             </div>
                         </div>
                         <span :class="getReturnStatusClass(returnRequest.status)"
                             class="px-4 py-2 rounded-full text-sm font-medium shadow-sm">
-                            {{ returnRequest.status }}
+                            {{ translateStatus(returnRequest.status) }}
                         </span>
                     </div>
                 </div>
@@ -261,7 +259,7 @@
                             class="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
                             <Clock class="w-4 h-4 text-white" />
                         </div>
-                        <h4 class="text-lg font-semibold text-gray-900">Return Timeline</h4>
+                        <h4 class="text-lg font-semibold text-gray-900">{{ t('returnsPage.returnTimeline') }}</h4>
                     </div>
 
                     <div class="space-y-4">
@@ -279,7 +277,7 @@
                             <div class="flex-1 pb-6">
                                 <div
                                     class="p-4 rounded-xl border border-gray-200 bg-gradient-to-r from-white to-gray-50">
-                                    <p class="text-lg font-semibold text-gray-900 mb-1">{{ status.status }}</p>
+                                    <p class="text-lg font-semibold text-gray-900 mb-1">{{ translateStatus(status.status) }}</p>
                                     <p class="text-sm text-gray-500 flex items-center gap-1 mb-2">
                                         <Calendar class="w-4 h-4" />
                                         {{ formatDate(status.timestamp) }}
@@ -303,14 +301,14 @@
                 class="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto mb-6">
                 <RotateCcw class="w-10 h-10 text-gray-400" />
             </div>
-            <h3 class="text-xl font-bold text-gray-900 mb-2">No Returns Yet</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">{{ t('returnsPage.emptyTitle') }}</h3>
             <p class="text-gray-600 mb-6 max-w-md mx-auto">
-                You haven't made any return requests. If you need to return an item, you can easily request one.
+                {{ t('returnsPage.emptyBody') }}
             </p>
             <button @click="showReturnForm = true"
                 class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl hover:from-amber-600 hover:to-orange-700 font-medium transition-all duration-200 transform hover:scale-105 shadow-lg">
                 <Plus class="w-5 h-5" />
-                Request Your First Return
+                {{ t('returnsPage.firstReturn') }}
             </button>
         </div>
     </div>
@@ -318,6 +316,7 @@
 
 <script>
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useUserStore } from '../store/user';
 import {
     X, RotateCcw, Plus, Package, Hash, Calendar, CheckCircle,
@@ -332,6 +331,7 @@ export default {
     },
 
     setup() {
+        const { t } = useI18n();
         const userStore = useUserStore();
         const user = computed(() => userStore.user);
 
@@ -355,6 +355,20 @@ export default {
                 return deliveryDate >= thirtyDaysAgo;
             }) || [];
         });
+
+        const translateStatus = (status) => {
+            const statusMap = {
+                Pending: 'returnsPage.statusPending',
+                Processing: 'returnsPage.statusProcessing',
+                Shipped: 'returnsPage.statusShipped',
+                Delivered: 'returnsPage.statusDelivered',
+                Cancelled: 'returnsPage.statusCancelled',
+                Approved: 'returnsPage.statusApproved',
+                Completed: 'returnsPage.statusCompleted',
+                Rejected: 'returnsPage.statusRejected'
+            };
+            return t(statusMap[status] || status);
+        };
 
         const formatDate = (date) => {
             return new Date(date).toLocaleDateString('en-US', {
@@ -419,6 +433,7 @@ export default {
         };
 
         return {
+            t,
             user,
             showReturnForm,
             returnForm,
@@ -429,6 +444,7 @@ export default {
             formatAmount,
             getStatusClass,
             getReturnStatusClass,
+            translateStatus,
             selectOrder,
             submitReturnRequest
         };

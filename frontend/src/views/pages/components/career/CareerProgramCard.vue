@@ -13,14 +13,17 @@
 
         <button
             class="w-full bg-[#e6f4f7] text-[#24a6bb] py-2 rounded-lg hover:bg-[#24a6bb] hover:text-white transition duration-300 font-medium mt-auto">
-            Learn More
+            {{ t('pageComponents.learnMore') }}
         </button>
     </div>
 </template>
 
 <script setup>
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { GraduationCap, Code, Trophy } from 'lucide-vue-next';
+
+const { t } = useI18n();
 
 const props = defineProps({
     icon: {

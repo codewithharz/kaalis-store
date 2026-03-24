@@ -6,8 +6,8 @@
             <div
                 class="flex items-start justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-xl sm:rounded-t-2xl">
                 <div class="flex-1 pr-4">
-                    <h3 class="text-xl sm:text-2xl font-bold text-gray-900">Edit Seller Profile</h3>
-                    <p class="text-xs sm:text-sm text-gray-500 mt-1">Update your store information below</p>
+                    <h3 class="text-xl sm:text-2xl font-bold text-gray-900">{{ t('editSellerProfileModal.title') }}</h3>
+                    <p class="text-xs sm:text-sm text-gray-500 mt-1">{{ t('editSellerProfileModal.subtitle') }}</p>
                 </div>
                 <button @click="$emit('close')"
                     class="flex-shrink-0 p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
@@ -20,33 +20,33 @@
                 <form @submit.prevent="updateProfile" class="space-y-4 sm:space-y-6">
                     <!-- Store Name -->
                     <div class="space-y-2">
-                        <label class="text-sm font-medium text-gray-700 block">Store Name</label>
+                        <label class="text-sm font-medium text-gray-700 block">{{ t('editSellerProfileModal.storeName') }}</label>
                         <div
                             class="relative rounded-lg border border-gray-200 focus-within:border-[#ff934b] focus-within:ring-2 focus-within:ring-[#ff934b]/20 transition-all">
                             <Store
                                 class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                             <input type="text" v-model="formData.storeName"
                                 class="w-full px-3 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-11 text-sm sm:text-base text-gray-700 bg-transparent border-none focus:outline-none"
-                                placeholder="Enter your store name">
+                                :placeholder="t('editSellerProfileModal.storeNamePlaceholder')">
                         </div>
                     </div>
 
                     <!-- Store Description -->
                     <div class="space-y-2">
-                        <label class="text-sm font-medium text-gray-700 block">Store Description</label>
+                        <label class="text-sm font-medium text-gray-700 block">{{ t('editSellerProfileModal.storeDescription') }}</label>
                         <div
                             class="relative rounded-lg border border-gray-200 focus-within:border-[#ff934b] focus-within:ring-2 focus-within:ring-[#ff934b]/20 transition-all">
                             <FileText class="absolute left-3 top-3 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                             <textarea v-model="formData.storeDescription" :rows="6"
                                 class="w-full px-3 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-11 text-sm sm:text-base text-gray-700 bg-transparent border-none focus:outline-none resize-none"
-                                placeholder="Describe your store">
+                                :placeholder="t('editSellerProfileModal.storeDescriptionPlaceholder')">
                             </textarea>
                         </div>
                     </div>
 
                     <!-- Profile Image -->
                     <div class="space-y-2">
-                        <label class="text-sm font-medium text-gray-700 block">Profile Image</label>
+                        <label class="text-sm font-medium text-gray-700 block">{{ t('editSellerProfileModal.profileImage') }}</label>
                         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
                             <div
                                 class="relative h-16 w-16 sm:h-20 sm:w-20 rounded-full overflow-hidden border-2 border-gray-200 flex-shrink-0">
@@ -57,7 +57,7 @@
                             <div class="flex-1 w-full sm:w-auto">
                                 <button type="button" @click="$refs.profileImageInput.click()"
                                     class="w-full sm:w-auto px-3 sm:px-4 py-2 sm:py-2 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white rounded-lg font-medium shadow-md transition-all duration-300 text-sm sm:text-base">
-                                    {{ formData.profileImage ? 'Change Image' : 'Upload Image' }}
+                                    {{ formData.profileImage ? t('editSellerProfileModal.changeImage') : t('editSellerProfileModal.uploadImage') }}
                                 </button>
                                 <input type="file" @change="handleProfileImageUpload" accept="image/*" class="hidden"
                                     ref="profileImageInput">
@@ -67,7 +67,7 @@
 
                     <!-- Background Image -->
                     <div class="space-y-2">
-                        <label class="text-sm font-medium text-gray-700 block">Background Image</label>
+                        <label class="text-sm font-medium text-gray-700 block">{{ t('editSellerProfileModal.backgroundImage') }}</label>
                         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
                             <div
                                 class="relative h-12 w-20 sm:h-20 sm:w-32 rounded-lg overflow-hidden border-2 border-gray-200 flex-shrink-0">
@@ -78,7 +78,7 @@
                             <div class="flex-1 w-full sm:w-auto">
                                 <button type="button" @click="$refs.backgroundImageInput.click()"
                                     class="w-full sm:w-auto px-3 sm:px-4 py-2 sm:py-2 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white rounded-lg font-medium shadow-md transition-all duration-300 text-sm sm:text-base">
-                                    {{ formData.backgroundImage ? 'Change Image' : 'Upload Image' }}
+                                    {{ formData.backgroundImage ? t('editSellerProfileModal.changeImage') : t('editSellerProfileModal.uploadImage') }}
                                 </button>
                                 <input type="file" @change="handleBackgroundImageUpload" accept="image/*" class="hidden"
                                     ref="backgroundImageInput">
@@ -91,12 +91,12 @@
                         class="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 pt-4 sm:pt-6 border-t border-gray-100">
                         <button type="button" @click="$emit('close')"
                             class="w-full sm:w-auto px-4 sm:px-6 py-2.5 text-gray-700 font-medium hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors text-sm sm:text-base order-2 sm:order-1">
-                            Cancel
+                            {{ t('editSellerProfileModal.cancel') }}
                         </button>
                         <button type="submit" :disabled="isSubmitting"
                             class="w-full sm:w-auto px-4 sm:px-6 py-2.5 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white rounded-lg font-medium shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base order-1 sm:order-2">
                             <Loader2 v-if="isSubmitting" class="w-4 h-4 animate-spin" />
-                            <span>{{ isSubmitting ? 'Updating Profile...' : 'Update Profile' }}</span>
+                            <span>{{ isSubmitting ? t('editSellerProfileModal.updatingProfile') : t('editSellerProfileModal.updateProfile') }}</span>
                         </button>
                     </div>
                 </form>
@@ -107,6 +107,7 @@
 
 <script>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useSellerStore } from '../store/sellerStore';
 import { toast } from 'vue-sonner';
 import uploadService from '../services/uploadService';
@@ -124,6 +125,7 @@ export default {
     },
     emits: ['close', 'profile-updated'],
     setup(props, { emit }) {
+        const { t } = useI18n();
         const sellerStore = useSellerStore();
         const isSubmitting = ref(false);
 
@@ -140,24 +142,24 @@ export default {
             if (file) {
                 // Validate file size (5MB limit)
                 if (file.size > 5 * 1024 * 1024) {
-                    toast.error('Profile image must be less than 5MB');
+                    toast.error(t('editSellerProfileModal.toasts.profileImageTooLarge'));
                     return;
                 }
 
                 // Validate file type
                 if (!file.type.startsWith('image/')) {
-                    toast.error('Please select a valid image file');
+                    toast.error(t('editSellerProfileModal.toasts.invalidImageFile'));
                     return;
                 }
 
                 try {
-                    toast.loading('Uploading profile image...');
+                    toast.loading(t('editSellerProfileModal.toasts.uploadingProfileImage'));
                     const url = await uploadService.uploadImage(file);
                     formData.value.profileImage = url;
-                    toast.success('Profile image uploaded successfully');
+                    toast.success(t('editSellerProfileModal.toasts.profileImageUploaded'));
                 } catch (error) {
                     console.error('Error uploading profile image:', error);
-                    toast.error('Failed to upload profile image');
+                    toast.error(t('editSellerProfileModal.toasts.profileImageUploadFailed'));
                 }
             }
         };
@@ -167,24 +169,24 @@ export default {
             if (file) {
                 // Validate file size (10MB limit for background images)
                 if (file.size > 10 * 1024 * 1024) {
-                    toast.error('Background image must be less than 10MB');
+                    toast.error(t('editSellerProfileModal.toasts.backgroundImageTooLarge'));
                     return;
                 }
 
                 // Validate file type
                 if (!file.type.startsWith('image/')) {
-                    toast.error('Please select a valid image file');
+                    toast.error(t('editSellerProfileModal.toasts.invalidImageFile'));
                     return;
                 }
 
                 try {
-                    toast.loading('Uploading background image...');
+                    toast.loading(t('editSellerProfileModal.toasts.uploadingBackgroundImage'));
                     const url = await uploadService.uploadImage(file);
                     formData.value.backgroundImage = url;
-                    toast.success('Background image uploaded successfully');
+                    toast.success(t('editSellerProfileModal.toasts.backgroundImageUploaded'));
                 } catch (error) {
                     console.error('Error uploading background image:', error);
-                    toast.error('Failed to upload background image');
+                    toast.error(t('editSellerProfileModal.toasts.backgroundImageUploadFailed'));
                 }
             }
         };
@@ -192,35 +194,36 @@ export default {
         const updateProfile = async () => {
             // Validate form data
             if (!formData.value.storeName.trim()) {
-                toast.error('Store name is required');
+                toast.error(t('editSellerProfileModal.toasts.storeNameRequired'));
                 return;
             }
 
             if (formData.value.storeName.trim().length < 3) {
-                toast.error('Store name must be at least 3 characters');
+                toast.error(t('editSellerProfileModal.toasts.storeNameTooShort'));
                 return;
             }
 
             if (formData.value.storeDescription.trim().length > 500) {
-                toast.error('Store description must be less than 500 characters');
+                toast.error(t('editSellerProfileModal.toasts.storeDescriptionTooLong'));
                 return;
             }
 
             try {
                 isSubmitting.value = true;
                 await sellerStore.updateSellerProfile(sellerStore.sellerProfile._id, formData.value);
-                toast.success('Profile updated successfully');
+                toast.success(t('editSellerProfileModal.toasts.profileUpdated'));
                 emit('profile-updated');
                 emit('close');
             } catch (error) {
                 console.error('Error updating profile:', error);
-                toast.error('Failed to update profile. Please try again.');
+                toast.error(t('editSellerProfileModal.toasts.profileUpdateFailed'));
             } finally {
                 isSubmitting.value = false;
             }
         };
 
         return {
+            t,
             formData,
             isSubmitting,
             updateProfile,

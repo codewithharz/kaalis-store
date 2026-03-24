@@ -26,18 +26,21 @@
                 'bg-[#24a6bb] text-white hover:bg-[#1a7f8f]': featured,
                 'border border-[#24a6bb] text-[#24a6bb] hover:bg-[#24a6bb] hover:text-white': !featured
             }">
-                Get Started
+                {{ t('pageComponents.getStarted') }}
             </button>
         </div>
 
         <div v-if="featured" class="absolute top-6 right-6 bg-[#24a6bb] text-white text-sm px-3 py-1 rounded-full">
-            Popular
+            {{ t('pageComponents.popular') }}
         </div>
     </div>
 </template>
 
 <script setup>
 import { Check } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 defineProps({
     tier: {

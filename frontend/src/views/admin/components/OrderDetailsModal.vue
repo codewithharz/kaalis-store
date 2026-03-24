@@ -6,15 +6,15 @@
             <div class="flex justify-between items-start mb-6">
                 <div>
                     <h3 class="text-lg font-medium text-gray-900">
-                        Order Details - #{{ order.orderId }}
+                        {{ t('adminOrderDetailsModal.title', { id: order.orderId }) }}
                     </h3>
                     <p class="text-sm text-gray-500">
-                        Placed on {{ formatDate(order.createdAt) }}
+                        {{ t('adminOrderDetailsModal.placedOn', { date: formatDate(order.createdAt) }) }}
                     </p>
                     <p class="text-sm text-gray-500">
-                        Email: {{ order.user?.email }}</p>
+                        {{ t('adminOrderDetailsModal.email', { value: order.user?.email }) }}</p>
                     <p class="text-sm text-gray-500">
-                        Buyer: {{ order.user?.username }}</p>
+                        {{ t('adminOrderDetailsModal.buyer', { value: order.user?.username }) }}</p>
                 </div>
                 <button @click="$emit('close')" class="text-gray-400 hover:text-gray-500">
                     <XIcon class="h-6 w-6" />
@@ -25,9 +25,9 @@
             <div class="grid grid-cols-2 gap-6 mb-6">
                 <!-- Customer Info -->
                 <div>
-                    <h4 class="font-medium text-gray-900 mb-2">Shipping Information</h4>
+                    <h4 class="font-medium text-gray-900 mb-2">{{ t('adminOrderDetailsModal.sections.shippingInformation') }}</h4>
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <p class="mb-1"><span class="font-medium">Address:</span> {{ order.address.street }}</p>
+                        <p class="mb-1"><span class="font-medium">{{ t('adminOrderDetailsModal.labels.address') }}</span> {{ order.address.street }}</p>
                         <p class="mb-1">{{ order.address.city }}, {{ order.address.state }}</p>
                         <p>{{ order.address.country }} {{ order.address.postalCode }}</p>
                     </div>
@@ -35,10 +35,10 @@
 
                 <!-- Payment Info -->
                 <div>
-                    <h4 class="font-medium text-gray-900 mb-2">Payment Information</h4>
+                    <h4 class="font-medium text-gray-900 mb-2">{{ t('adminOrderDetailsModal.sections.paymentInformation') }}</h4>
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <p class="mb-1"><span class="font-medium">Method:</span> {{ order.paymentMethod }}</p>
-                        <p class="mb-1"><span class="font-medium">Status:</span>
+                        <p class="mb-1"><span class="font-medium">{{ t('adminOrderDetailsModal.labels.method') }}</span> {{ order.paymentMethod }}</p>
+                        <p class="mb-1"><span class="font-medium">{{ t('adminOrderDetailsModal.labels.status') }}</span>
                             <span :class="[
                                 'ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
                                 getStatusClass(order.status)
@@ -46,7 +46,7 @@
                                 {{ formatStatus(order.status) }}
                             </span>
                         </p>
-                        <p v-if="order.transactionId"><span class="font-medium">Transaction ID:</span>
+                        <p v-if="order.transactionId"><span class="font-medium">{{ t('adminOrderDetailsModal.labels.transactionId') }}</span>
                             {{ order.transactionId }}
                         </p>
                     </div>
@@ -56,31 +56,31 @@
             <!-- Financial Summary -->
             <div class="grid grid-cols-3 gap-4 mb-6">
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <p class="text-sm text-gray-500">Platform Fee</p>
+                    <p class="text-sm text-gray-500">{{ t('adminOrderDetailsModal.financial.platformFee') }}</p>
                     <p class="text-xl font-semibold">{{ formatCurrency(order.platformFee) }}</p>
                 </div>
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <p class="text-sm text-gray-500">Vendor Amount</p>
+                    <p class="text-sm text-gray-500">{{ t('adminOrderDetailsModal.financial.vendorAmount') }}</p>
                     <p class="text-xl font-semibold">{{ formatCurrency(order.vendorAmount) }}</p>
                 </div>
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <p class="text-sm text-gray-500">CluesBucks Used</p>
+                    <p class="text-sm text-gray-500">{{ t('adminOrderDetailsModal.financial.cluesBucksUsed') }}</p>
                     <p class="text-xl font-semibold">{{ order.cluesBucks?.pointsUsed || 0 }}</p>
                 </div>
             </div>
 
             <!-- Coupon Info -->
             <div v-if="order.appliedCoupon" class="mb-6">
-                <h4 class="font-medium text-gray-900 mb-2">Coupon Applied</h4>
+                <h4 class="font-medium text-gray-900 mb-2">{{ t('adminOrderDetailsModal.sections.couponApplied') }}</h4>
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <p><span class="font-medium">Code:</span> {{ order.appliedCoupon.code }}</p>
-                    <p><span class="font-medium">Discount:</span> {{ formatCurrency(order.discount) }}</p>
+                    <p><span class="font-medium">{{ t('adminOrderDetailsModal.labels.code') }}</span> {{ order.appliedCoupon.code }}</p>
+                    <p><span class="font-medium">{{ t('adminOrderDetailsModal.labels.discount') }}</span> {{ formatCurrency(order.discount) }}</p>
                 </div>
             </div>
 
             <!-- Order Items -->
             <div class="mb-6">
-                <h4 class="font-medium text-gray-900 mb-2">Order Items</h4>
+                <h4 class="font-medium text-gray-900 mb-2">{{ t('adminOrderDetailsModal.sections.orderItems') }}</h4>
                 <div class="bg-white shadow overflow-hidden rounded-lg">
                     <!-- Loading state -->
                     <div v-if="isLoading" class="flex justify-center py-8">
@@ -91,11 +91,11 @@
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ t('adminOrderDetailsModal.table.product') }}</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ t('adminOrderDetailsModal.table.quantity') }}
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ t('adminOrderDetailsModal.table.price') }}</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ t('adminOrderDetailsModal.table.total') }}</th>
                             </tr>
                         </thead>
                         <!-- Order Items -->
@@ -137,21 +137,21 @@
                         </tfoot>
                         <tfoot class="bg-gray-50">
                             <tr>
-                                <td colspan="3" class="px-6 py-3 text-right font-medium text-gray-500">Subtotal</td>
+                                <td colspan="3" class="px-6 py-3 text-right font-medium text-gray-500">{{ t('adminOrderDetailsModal.summary.subtotal') }}</td>
                                 <td class="px-6 py-3 text-sm text-gray-900">{{ formatCurrency(order.subtotal) }}</td>
                             </tr>
                             <tr v-if="order.discount">
-                                <td colspan="3" class="px-6 py-3 text-right font-medium text-gray-500">Discount</td>
+                                <td colspan="3" class="px-6 py-3 text-right font-medium text-gray-500">{{ t('adminOrderDetailsModal.summary.discount') }}</td>
                                 <td class="px-6 py-3 text-sm text-red-600">-{{ formatCurrency(order.discount) }}</td>
                             </tr>
                             <tr>
-                                <td colspan="3" class="px-6 py-3 text-right font-medium text-gray-500">Shipping</td>
+                                <td colspan="3" class="px-6 py-3 text-right font-medium text-gray-500">{{ t('adminOrderDetailsModal.summary.shipping') }}</td>
                                 <td class="px-6 py-3 text-sm text-gray-900">
                                     {{ formatCurrency(order.shippingFee || 0) }}
                                 </td>
                             </tr>
                             <tr>
-                                <td colspan="3" class="px-6 py-3 text-right font-medium text-gray-900">Total</td>
+                                <td colspan="3" class="px-6 py-3 text-right font-medium text-gray-900">{{ t('adminOrderDetailsModal.summary.total') }}</td>
                                 <td class="px-6 py-3 text-sm font-bold text-gray-900">{{
                                     formatCurrency(order.totalAmount) }}</td>
                             </tr>
@@ -162,7 +162,7 @@
 
             <!-- Order Timeline -->
             <div>
-                <h4 class="font-medium text-gray-900 mb-2">Order Timeline</h4>
+                <h4 class="font-medium text-gray-900 mb-2">{{ t('adminOrderDetailsModal.sections.orderTimeline') }}</h4>
                 <div class="flow-root">
                     <ul role="list" class="-mb-5">
                         <li v-for="(event, eventIdx) in timeline" :key="eventIdx">
@@ -195,6 +195,7 @@
 
 <script>
 import { ref, computed, watchEffect } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useProductStore } from '../../../store/productStore.js';
 import { XIcon, ShoppingCart, Truck, CheckCircle, XCircle, ImageIcon } from 'lucide-vue-next'
 
@@ -220,6 +221,7 @@ export default {
     emits: ['close'],
 
     setup(props) {
+        const { t, locale } = useI18n();
         const productStore = useProductStore();
         const loadedProducts = ref([]);
         const isLoading = ref(true);
@@ -228,7 +230,7 @@ export default {
             const events = [
                 {
                     type: 'order_placed',
-                    message: 'Order placed',
+                    message: t('adminOrderDetailsModal.timeline.orderPlaced'),
                     timestamp: props.order.createdAt
                 }
             ]
@@ -236,7 +238,7 @@ export default {
             if (props.order.status === 'Processing') {
                 events.push({
                     type: 'processing',
-                    message: 'Order processing started',
+                    message: t('adminOrderDetailsModal.timeline.processingStarted'),
                     timestamp: props.order.updatedAt
                 })
             }
@@ -244,11 +246,11 @@ export default {
             if (props.order.status === 'Shipped') {
                 events.push({
                     type: 'processing',
-                    message: 'Order processing started',
+                    message: t('adminOrderDetailsModal.timeline.processingStarted'),
                     timestamp: props.order.updatedAt
                 }, {
                     type: 'shipped',
-                    message: 'Order shipped',
+                    message: t('adminOrderDetailsModal.timeline.shipped'),
                     timestamp: props.order.updatedAt
                 })
             }
@@ -256,15 +258,15 @@ export default {
             if (props.order.status === 'Delivered') {
                 events.push({
                     type: 'processing',
-                    message: 'Order processing started',
+                    message: t('adminOrderDetailsModal.timeline.processingStarted'),
                     timestamp: props.order.updatedAt
                 }, {
                     type: 'shipped',
-                    message: 'Order shipped',
+                    message: t('adminOrderDetailsModal.timeline.shipped'),
                     timestamp: props.order.updatedAt
                 }, {
                     type: 'completed',
-                    message: 'Order delivered',
+                    message: t('adminOrderDetailsModal.timeline.delivered'),
                     timestamp: props.order.updatedAt
                 })
             }
@@ -272,7 +274,7 @@ export default {
             if (props.order.status === 'Cancelled') {
                 events.push({
                     type: 'cancelled',
-                    message: 'Order cancelled',
+                    message: t('adminOrderDetailsModal.timeline.cancelled'),
                     timestamp: props.order.updatedAt
                 })
             }
@@ -307,7 +309,7 @@ export default {
         };
 
         const formatDate = (date) => {
-            return new Date(date).toLocaleDateString('en-US', {
+            return new Date(date).toLocaleDateString(locale.value === 'fr' ? 'fr-FR' : 'en-US', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -317,11 +319,11 @@ export default {
         }
 
         const formatStatus = (status) => {
-            return status.charAt(0).toUpperCase() + status.slice(1)
+            return t(`adminOrderDetailsModal.statuses.${status?.toLowerCase?.()}`, status)
         }
 
         const formatCurrency = (amount) => {
-            return new Intl.NumberFormat('en-NG', {
+            return new Intl.NumberFormat(locale.value === 'fr' ? 'fr-FR' : 'en-NG', {
                 style: 'currency',
                 currency: 'NGN',
                 minimumFractionDigits: 2
@@ -373,12 +375,13 @@ export default {
 
         const getProductName = (item) => {
             if (typeof item.product === 'string') {
-                return 'Loading product...';
+                return t('adminOrderDetailsModal.product.loading');
             }
-            return item.product?.name || 'Product name not available';
+            return item.product?.name || t('adminOrderDetailsModal.product.unavailable');
         };
 
         return {
+            t,
             timeline,
             formatDate,
             formatStatus,

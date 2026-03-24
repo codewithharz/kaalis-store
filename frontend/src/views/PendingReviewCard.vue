@@ -16,8 +16,8 @@
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-2xl font-bold text-gray-900">Pending Reviews</h2>
-                            <p class="text-sm text-gray-600">Share your experience with recently delivered products</p>
+                            <h2 class="text-2xl font-bold text-gray-900">{{ t('pendingReviewsPage.title') }}</h2>
+                            <p class="text-sm text-gray-600">{{ t('pendingReviewsPage.subtitle') }}</p>
                         </div>
                     </div>
                 </div>
@@ -33,8 +33,8 @@
                         class="absolute inset-0 animate-ping h-12 w-12 border-2 border-orange-300 rounded-full opacity-75">
                     </div>
                 </div>
-                <p class="mt-4 text-lg font-medium text-gray-700">Loading pending reviews...</p>
-                <p class="text-sm text-gray-500">Finding products awaiting your feedback</p>
+                <p class="mt-4 text-lg font-medium text-gray-700">{{ t('pendingReviewsPage.loadingTitle') }}</p>
+                <p class="text-sm text-gray-500">{{ t('pendingReviewsPage.loadingBody') }}</p>
             </div>
 
             <!-- Enhanced Error State -->
@@ -47,7 +47,7 @@
                             d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
-                <h3 class="text-lg font-bold text-red-800 mb-2">Unable to load reviews</h3>
+                <h3 class="text-lg font-bold text-red-800 mb-2">{{ t('pendingReviewsPage.errorTitle') }}</h3>
                 <p class="text-red-700">{{ error }}</p>
             </div>
 
@@ -61,13 +61,13 @@
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">All Caught Up!</h3>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">{{ t('pendingReviewsPage.allCaughtUp') }}</h3>
                 <p class="text-gray-600 mb-6 max-w-md mx-auto">
-                    You've reviewed all your delivered products. Thank you for sharing your valuable feedback!
+                    {{ t('pendingReviewsPage.allCaughtUpBody') }}
                 </p>
                 <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
                     <p class="text-green-700 text-sm font-medium">
-                        🎉 Your reviews help other customers make informed decisions
+                        🎉 {{ t('pendingReviewsPage.allCaughtUpTip') }}
                     </p>
                 </div>
             </div>
@@ -84,7 +84,7 @@
                             <div class="flex items-start gap-6 flex-1">
                                 <!-- Product Image -->
                                 <div class="relative group">
-                                    <img :src="getProductImage(item.product)" :alt="item.product?.name || 'Product'"
+                                    <img :src="getProductImage(item.product)" :alt="item.product?.name || t('pendingReviewsPage.productAlt')"
                                         class="w-24 h-24 object-cover rounded-xl border-2 border-gray-200 shadow-sm group-hover:scale-105 transition-all duration-300"
                                         @error="handleImageError">
                                     <div
@@ -95,19 +95,19 @@
                                 <!-- Product Details -->
                                 <div class="flex-1">
                                     <h3 class="text-xl font-bold text-gray-900 mb-3">
-                                        {{ item.product?.name || 'Unknown Product' }}
+                                        {{ item.product?.name || t('pendingReviewsPage.unknownProduct') }}
                                     </h3>
 
                                     <div class="space-y-2">
                                         <div class="flex items-center gap-2">
                                             <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                            <span class="text-sm font-medium text-gray-600">Order ID:</span>
+                                            <span class="text-sm font-medium text-gray-600">{{ t('pendingReviewsPage.orderId') }}</span>
                                             <span class="text-sm font-bold text-gray-900">{{ item.orderId }}</span>
                                         </div>
 
                                         <div class="flex items-center gap-2">
                                             <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                                            <span class="text-sm font-medium text-gray-600">Delivered on:</span>
+                                            <span class="text-sm font-medium text-gray-600">{{ t('pendingReviewsPage.deliveredOn') }}</span>
                                             <span class="text-sm font-bold text-gray-900">{{
                                                 formatDate(item.deliveryDate) }}</span>
                                         </div>
@@ -121,7 +121,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M5 13l4 4L19 7"></path>
                                             </svg>
-                                            Delivered Successfully
+                                            {{ t('pendingReviewsPage.deliveredSuccessfully') }}
                                         </span>
                                     </div>
                                 </div>
@@ -135,7 +135,7 @@
                                         d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
                                     </path>
                                 </svg>
-                                Write Review
+                                {{ t('pendingReviewsPage.writeReview') }}
                             </button>
                         </div>
                     </div>
@@ -154,10 +154,9 @@
                                     </svg>
                                 </div>
                                 <div>
-                                    <h4 class="text-sm font-bold text-orange-800 mb-1">Help Other Customers</h4>
+                                    <h4 class="text-sm font-bold text-orange-800 mb-1">{{ t('pendingReviewsPage.helpCustomers') }}</h4>
                                     <p class="text-sm text-orange-700">
-                                        Share your experience with this product to help fellow shoppers make informed
-                                        decisions.
+                                        {{ t('pendingReviewsPage.helpCustomersBody') }}
                                     </p>
                                 </div>
                             </div>
@@ -183,8 +182,8 @@
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="text-xl font-bold">Write a Review</h3>
-                                <p class="text-orange-100 text-sm mt-1">Share your honest feedback</p>
+                                <h3 class="text-xl font-bold">{{ t('pendingReviewsPage.writeReviewTitle') }}</h3>
+                                <p class="text-orange-100 text-sm mt-1">{{ t('pendingReviewsPage.writeReviewSubtitle') }}</p>
                             </div>
                         </div>
                         <button @click="closeReviewModal" class="p-2 hover:bg-white/20 rounded-lg transition-colors">
@@ -201,16 +200,16 @@
                     <!-- Product Info -->
                     <div class="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-6 border border-gray-200 mb-6">
                         <div class="flex items-center gap-4">
-                            <img :src="getProductImage(selectedProduct)" :alt="selectedProduct?.name || 'Product'"
+                            <img :src="getProductImage(selectedProduct)" :alt="selectedProduct?.name || t('pendingReviewsPage.productAlt')"
                                 class="w-20 h-20 object-cover rounded-xl border-2 border-gray-200 shadow-sm"
                                 @error="handleImageError">
                             <div>
                                 <h4 class="text-lg font-bold text-gray-900 mb-1">
-                                    {{ selectedProduct?.name || 'Unknown Product' }}
+                                    {{ selectedProduct?.name || t('pendingReviewsPage.unknownProduct') }}
                                 </h4>
                                 <div class="flex items-center gap-2">
                                     <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                    <span class="text-sm text-gray-600">Order ID: <span class="font-medium">{{
+                                    <span class="text-sm text-gray-600">{{ t('pendingReviewsPage.orderId') }} <span class="font-medium">{{
                                         selectedOrderId }}</span></span>
                                 </div>
                             </div>
@@ -219,7 +218,7 @@
 
                     <!-- Rating Section -->
                     <div class="mb-6">
-                        <label class="block text-sm font-bold text-gray-700 mb-3">Your Rating *</label>
+                        <label class="block text-sm font-bold text-gray-700 mb-3">{{ t('pendingReviewsPage.yourRating') }}</label>
                         <div class="bg-white rounded-xl p-4 border-2 border-gray-200">
                             <div class="flex items-center gap-3 mb-2">
                                 <div class="flex gap-1">
@@ -238,12 +237,12 @@
                                 </div>
                             </div>
                             <p class="text-sm text-gray-600">
-                                {{ rating === 0 ? 'Click to rate this product' :
-                                    rating === 1 ? 'Poor - Disappointed with this product' :
-                                        rating === 2 ? 'Fair - Below expectations' :
-                                            rating === 3 ? 'Good - Meets expectations' :
-                                                rating === 4 ? 'Very Good - Exceeds expectations' :
-                                                    'Excellent - Outstanding product!' }}
+                                {{ rating === 0 ? t('pendingReviewsPage.ratingPrompt') :
+                                    rating === 1 ? t('pendingReviewsPage.ratingPoor') :
+                                        rating === 2 ? t('pendingReviewsPage.ratingFair') :
+                                            rating === 3 ? t('pendingReviewsPage.ratingGood') :
+                                                rating === 4 ? t('pendingReviewsPage.ratingVeryGood') :
+                                                    t('pendingReviewsPage.ratingExcellent') }}
                             </p>
                         </div>
                     </div>
@@ -251,29 +250,29 @@
                     <!-- Review Text -->
                     <div class="mb-6">
                         <label for="review" class="block text-sm font-bold text-gray-700 mb-3">
-                            Your Review *
+                            {{ t('pendingReviewsPage.yourReview') }}
                         </label>
                         <div class="relative">
                             <textarea id="review" v-model="reviewText" rows="5"
                                 class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all resize-none"
-                                placeholder="Tell others about your experience with this product. What did you like or dislike? Would you recommend it?"></textarea>
+                                :placeholder="t('pendingReviewsPage.reviewPlaceholder')"></textarea>
                             <div class="absolute bottom-3 right-3 text-xs text-gray-400">
                                 {{ reviewText.length }}/500
                             </div>
                         </div>
                         <p class="text-xs text-gray-500 mt-2">
-                            Minimum 3 characters required. Be honest and helpful to other customers.
+                            {{ t('pendingReviewsPage.reviewHint') }}
                         </p>
                     </div>
 
                     <!-- Tips Section -->
                     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200 mb-6">
-                        <h5 class="text-sm font-bold text-blue-800 mb-2">💡 Review Tips</h5>
+                        <h5 class="text-sm font-bold text-blue-800 mb-2">💡 {{ t('pendingReviewsPage.reviewTips') }}</h5>
                         <ul class="text-xs text-blue-700 space-y-1">
-                            <li>• Share specific details about the product quality</li>
-                            <li>• Mention if it met your expectations</li>
-                            <li>• Include any pros and cons you noticed</li>
-                            <li>• Be honest and constructive</li>
+                            <li>• {{ t('pendingReviewsPage.tipQuality') }}</li>
+                            <li>• {{ t('pendingReviewsPage.tipExpectations') }}</li>
+                            <li>• {{ t('pendingReviewsPage.tipProsCons') }}</li>
+                            <li>• {{ t('pendingReviewsPage.tipHonest') }}</li>
                         </ul>
                     </div>
                 </div>
@@ -282,7 +281,7 @@
                 <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3">
                     <button @click="closeReviewModal"
                         class="px-6 py-2 border-2 border-gray-300 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-all">
-                        Cancel
+                        {{ t('pendingReviewsPage.cancel') }}
                     </button>
                     <button @click="submitReview" :disabled="!isValidReview || isSubmitting"
                         class="px-8 py-2 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl hover:from-orange-600 hover:to-amber-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all transform hover:scale-105 shadow-lg"
@@ -290,14 +289,14 @@
                         <span v-if="isSubmitting" class="flex items-center gap-2">
                             <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin">
                             </div>
-                            Submitting...
+                            {{ t('pendingReviewsPage.submitting') }}
                         </span>
                         <span v-else class="flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                             </svg>
-                            Submit Review
+                            {{ t('pendingReviewsPage.submitReview') }}
                         </span>
                     </button>
                 </div>
@@ -308,6 +307,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useOrderStore } from '../store/orderStore';
 import { useProductStore } from '../store/productStore';
 import { toast } from 'vue-sonner';
@@ -316,6 +316,7 @@ export default {
     name: 'PendingReviewCard',
 
     setup() {
+        const { t } = useI18n();
         const orderStore = useOrderStore();
         const productStore = useProductStore();
         const loading = ref(true);
@@ -397,8 +398,8 @@ export default {
                 pendingReviews.value = pending;
             } catch (err) {
                 console.error('Error fetching pending reviews:', err);
-                error.value = 'Failed to load pending reviews';
-                toast.error('Could not load pending reviews. Please try again.');
+                error.value = t('pendingReviewsPage.failedLoad');
+                toast.error(t('pendingReviewsPage.failedLoadToast'));
             } finally {
                 loading.value = false;
             }
@@ -467,7 +468,7 @@ export default {
                 // Update order store
                 orderStore.updateProductRatedStatus(selectedProduct.value._id);
 
-                toast.success('Review submitted successfully! Thank you for your feedback.');
+                toast.success(t('pendingReviewsPage.reviewSubmitted'));
                 closeReviewModal();
             } catch (err) {
                 console.error('Review submission error:', err);
@@ -476,9 +477,9 @@ export default {
                     pendingReviews.value = pendingReviews.value.filter(
                         item => item.product._id !== selectedProduct.value._id
                     );
-                    toast.error('You have already rated this product');
+                    toast.error(t('pendingReviewsPage.alreadyRated'));
                 } else {
-                    toast.error('Failed to submit review. Please try again.');
+                    toast.error(t('pendingReviewsPage.failedSubmit'));
                 }
             } finally {
                 isSubmitting.value = false;
@@ -490,6 +491,7 @@ export default {
         });
 
         return {
+            t,
             loading,
             error,
             pendingReviews,

@@ -11,9 +11,8 @@
 
             <div class="container mx-auto px-4 py-16 relative">
                 <div class="max-w-3xl mx-auto text-center">
-                    <h1 class="text-4xl font-bold mb-4">Contact Sellers</h1>
-                    <p class="text-lg mb-8 text-white/90">Send a message to {{ sellerProfile?.storeName || 'the seller'
-                        }}</p>
+                    <h1 class="text-4xl font-bold mb-4">{{ t('contactSellerPage.title') }}</h1>
+                    <p class="text-lg mb-8 text-white/90">{{ t('contactSellerPage.subtitle', { seller: sellerProfile?.storeName || t('contactSellerPage.theSeller') }) }}</p>
                 </div>
             </div>
         </div>
@@ -48,7 +47,7 @@
                                         </div>
                                         <span class="mx-2 text-gray-300">•</span>
                                         <span class="text-sm text-gray-600">
-                                            {{ sellerProfile?.reviews?.length || 0 }} reviews
+                                            {{ t('contactSellerPage.reviewsCount', { count: sellerProfile?.reviews?.length || 0 }) }}
                                         </span>
                                     </div>
                                 </div>
@@ -59,25 +58,25 @@
                         <form @submit.prevent="sendMessage" class="space-y-6 mt-6">
                             <!-- Subject -->
                             <div class="space-y-2">
-                                <label class="text-sm font-medium text-gray-700">Subject</label>
+                                <label class="text-sm font-medium text-gray-700">{{ t('contactSellerPage.subjectLabel') }}</label>
                                 <div
                                     class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                     <MessageCircle
                                         class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                                     <input v-model="messageForm.subject" type="text"
                                         class="w-full px-4 py-3 pl-11 text-gray-700 bg-transparent border-none focus:outline-none"
-                                        placeholder="Enter message subject" required />
+                                        :placeholder="t('contactSellerPage.subjectPlaceholder')" required />
                                 </div>
                             </div>
 
                             <!-- Message -->
                             <div class="space-y-2">
-                                <label class="text-sm font-medium text-gray-700">Message</label>
+                                <label class="text-sm font-medium text-gray-700">{{ t('contactSellerPage.messageLabel') }}</label>
                                 <div
                                     class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                     <textarea v-model="messageForm.message" rows="5"
                                         class="w-full px-4 py-3 text-gray-700 bg-transparent border-none focus:outline-none resize-none"
-                                        placeholder="Type your message here..." required></textarea>
+                                        :placeholder="t('contactSellerPage.messagePlaceholder')" required></textarea>
                                 </div>
                             </div>
 
@@ -86,12 +85,12 @@
                                 <button type="button" @click="handleBackToStore"
                                     class="px-6 py-2.5 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium shadow-sm transition-all duration-300 flex items-center gap-2">
                                     <ArrowLeft class="w-4 h-4" />
-                                    Back to Store
+                                    {{ t('contactSellerPage.backToStore') }}
                                 </button>
                                 <button type="submit" :disabled="isLoading"
                                     class="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg font-medium shadow-lg transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <span v-if="isLoading">Sending...</span>
-                                    <span v-else>Send Message</span>
+                                    <span v-if="isLoading">{{ t('contactSellerPage.sending') }}</span>
+                                    <span v-else>{{ t('contactSellerPage.sendMessage') }}</span>
                                     <Send v-if="!isLoading" class="w-4 h-4" />
                                     <Loader2 v-else class="w-4 h-4 animate-spin" />
                                 </button>
@@ -104,7 +103,7 @@
                 <div class="space-y-6 lg:-mt-20 relative z-10">
                     <!-- FAQ Section -->
                     <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
-                        <h3 class="text-xl font-semibold mb-4">Have a question?</h3>
+                        <h3 class="text-xl font-semibold mb-4">{{ t('contactSellerPage.haveAQuestion') }}</h3>
                         <div class="space-y-4">
                             <div v-for="(faq, index) in commonQuestions" :key="index"
                                 class="p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
@@ -116,7 +115,7 @@
 
                     <!-- Social Media -->
                     <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
-                        <h3 class="text-xl font-semibold mb-4">Connect with us</h3>
+                        <h3 class="text-xl font-semibold mb-4">{{ t('contactSellerPage.connectWithUs') }}</h3>
                         <div class="grid grid-cols-2 gap-4">
                             <a v-for="social in socialLinks" :key="social.name" :href="social.url" target="_blank"
                                 class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
@@ -128,14 +127,13 @@
 
                     <!-- Additional Support -->
                     <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-6 shadow-lg">
-                        <h3 class="text-xl font-semibold mb-4">Need more help?</h3>
-                        <p class="text-gray-600 mb-4">Can't find the answer you're looking for? Our support team is here
-                            to help.</p>
+                        <h3 class="text-xl font-semibold mb-4">{{ t('contactSellerPage.needMoreHelp') }}</h3>
+                        <p class="text-gray-600 mb-4">{{ t('contactSellerPage.supportBody') }}</p>
                         <div class="flex items-center gap-4">
                             <HelpCircle class="w-6 h-6 text-indigo-600" />
                             <div>
-                                <p class="text-sm text-gray-600">Support Hours:</p>
-                                <p class="font-medium text-gray-900">Mon-Fri, 9:00 AM - 6:00 PM</p>
+                                <p class="text-sm text-gray-600">{{ t('contactSellerPage.supportHoursLabel') }}</p>
+                                <p class="font-medium text-gray-900">{{ t('contactSellerPage.supportHoursValue') }}</p>
                             </div>
                         </div>
                     </div>
@@ -151,15 +149,14 @@
                     <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <CheckCircle class="w-8 h-8 text-green-500" />
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Message Sent Successfully!</h3>
-                    <p class="text-gray-600 mb-6">Thank you for contacting {{ sellerProfile?.storeName }}. They will
-                        respond to your message soon.</p>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ t('contactSellerPage.successTitle') }}</h3>
+                    <p class="text-gray-600 mb-6">{{ t('contactSellerPage.successBody', { seller: sellerProfile?.storeName }) }}</p>
                     <div class="text-sm text-gray-500 mb-4">
-                        Redirecting in {{ countdown }} seconds...
+                        {{ t('contactSellerPage.redirectingCountdown', { count: countdown }) }}
                     </div>
                     <button @click="handleRedirectNow"
                         class="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg font-medium shadow-lg transition-all duration-300">
-                        Return to Store Now
+                        {{ t('contactSellerPage.returnNow') }}
                     </button>
                 </div>
             </div>
@@ -169,6 +166,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { useSellerStore } from '../store/sellerStore';
 import {
@@ -177,6 +175,7 @@ import {
 } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const sellerStore = useSellerStore();
@@ -212,7 +211,7 @@ const handleRedirectNow = () => {
 const handleBackToStore = () => {
     // Show confirmation if form has content
     if (messageForm.value.subject.trim() || messageForm.value.message.trim()) {
-        if (confirm('Are you sure you want to leave? Your message will not be saved.')) {
+        if (confirm(t('contactSellerPage.leaveConfirm'))) {
             router.push(`/seller-store/${route.params.sellerId}/home`);
         }
     } else {
@@ -223,16 +222,16 @@ const handleBackToStore = () => {
 // Common Questions
 const commonQuestions = [
     {
-        question: "What's your shipping policy?",
-        answer: "We typically process and ship orders within 1-2 business days. Delivery times vary by location."
+        question: t('contactSellerPage.faq1Question'),
+        answer: t('contactSellerPage.faq1Answer')
     },
     {
-        question: "How can I track my order?",
-        answer: "Once your order ships, you'll receive a tracking number via email to monitor your delivery."
+        question: t('contactSellerPage.faq2Question'),
+        answer: t('contactSellerPage.faq2Answer')
     },
     {
-        question: "What's your return policy?",
-        answer: "We accept returns within 30 days of delivery. Items must be unused and in original packaging."
+        question: t('contactSellerPage.faq3Question'),
+        answer: t('contactSellerPage.faq3Answer')
     }
 ];
 
@@ -247,14 +246,14 @@ const socialLinks = [
 onMounted(async () => {
     try {
         if (!route.params.sellerId) {
-            toast.error('Seller not found');
+            toast.error(t('contactSellerPage.errors.sellerNotFound'));
             router.push('/');
             return;
         }
         sellerProfile.value = await sellerStore.fetchSellerProfile(route.params.sellerId);
     } catch (error) {
         console.error('Error loading seller profile:', error);
-        toast.error('Failed to load seller information');
+        toast.error(t('contactSellerPage.errors.loadSellerFailed'));
     }
 });
 
@@ -270,11 +269,11 @@ const sendMessage = async () => {
         await sellerStore.sendMessageToSeller(route.params.sellerId, messageForm.value);
         startCountdown(); // Start countdown instead of immediate redirect
 
-        toast.success('Message sent successfully');
+        toast.success(t('contactSellerPage.toasts.sent'));
         // router.push(`/seller-store/${route.params.sellerId}/home`);
     } catch (error) {
         console.error('Error sending message:', error);
-        toast.error('Failed to send message. Please try again.');
+        toast.error(t('contactSellerPage.errors.sendFailed'));
     } finally {
         isLoading.value = false;
     }

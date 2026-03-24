@@ -1,9 +1,9 @@
 <template>
     <div class="bg-white px-5 pt-5 pb-0 mb-2">
-        <h1 class="text-2xl font-semibold lg:mb-6">{{ sidebarOpen ? 'My Account' : '' }}</h1>
+        <h1 class="text-2xl font-semibold lg:mb-6">{{ sidebarOpen ? t('navbar.myAccount') : '' }}</h1>
         <div class="overflow-x-auto hide-scrollbar lg:overflow-x-visible">
             <ul class="flex lg:flex-col space-x-10 lg:space-x-0 lg:space-y-4 px-6 lg:px-0 whitespace-nowrap">
-                <li v-for="item in menuItems" :key="item.label"
+                <li v-for="item in translatedMenuItems" :key="item.label"
                     class="border-b-2 border-white hover:border-b-2 hover:border-[#24a3b5] lg:border-b-0 lg:hover:border-b-0">
                     <router-link active-class="active-link" :to="item.link"
                         class="flex items-center space-x-2 pr-2 text-gray-500 hover:text-[#24a3b5] transition-all duration-300 ease-in-out py-2 lg:py-1 lg:pl-2 lg:rounded-md lg:hover:bg-[#24a3b5] lg:hover:text-white">
@@ -22,6 +22,8 @@
 </template>
 
 <script>
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { menuItems } from '../utils/menuItems.js';
 import {
     PackageOpen,
@@ -45,10 +47,19 @@ export default {
         Store,
         HelpCircle
     },
-    data() {
+    setup() {
+        const { t } = useI18n();
+        const translatedMenuItems = computed(() =>
+            menuItems.map((item) => ({
+                ...item,
+                label: t(item.labelKey),
+            }))
+        );
+
         return {
+            t,
             sidebarOpen: true,
-            menuItems: menuItems,
+            translatedMenuItems,
         };
     },
 };

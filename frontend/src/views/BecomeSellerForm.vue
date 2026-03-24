@@ -6,29 +6,28 @@
             <div class="flex items-center justify-center py-12">
                 <div class="mx-auto grid w-[350px] gap-6">
                     <div class="grid gap-2 text-center">
-                        <h1 class="text-3xl font-bold">Become a Seller</h1>
-                        <p class="text-balance text-muted-foreground text-gray-300">Create your store profile</p>
+                        <h1 class="text-3xl font-bold">{{ t('becomeSellerFormPage.title') }}</h1>
+                        <p class="text-balance text-muted-foreground text-gray-300">{{ t('becomeSellerFormPage.subtitle') }}</p>
                     </div>
                     <!-- Form -->
                     <form @submit.prevent="submitSellerForm">
                         <div class="grid gap-4">
                             <div class="grid gap-2">
                                 <label for="storeName"
-                                    class="block text-lg font-semibold text-gray-300 mb-2 text-left">Store Name</label>
+                                    class="block text-lg font-semibold text-gray-300 mb-2 text-left">{{ t('becomeSellerFormPage.storeName') }}</label>
                                 <input type="text" id="storeName" v-model="storeName"
                                     class="w-full text-gray-800 px-4 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     required />
                             </div>
                             <div class="grid gap-2">
                                 <label for="storeDescription"
-                                    class="block text-lg font-semibold text-gray-300 mb-2 text-left">Store
-                                    Description</label>
+                                    class="block text-lg font-semibold text-gray-300 mb-2 text-left">{{ t('becomeSellerFormPage.storeDescription') }}</label>
                                 <textarea id="storeDescription" v-model="storeDescription"
                                     class="w-full text-gray-800 px-4 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     required></textarea>
                             </div>
                             <button type="submit"
-                                class="w-full text-white font-bold py-2 px-4 button-hover bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white font-bold py-2 px-4 rounded-r focus:outline-none mt-4">Submit</button>
+                                class="w-full text-white font-bold py-2 px-4 button-hover bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white font-bold py-2 px-4 rounded-r focus:outline-none mt-4">{{ t('becomeSellerFormPage.submit') }}</button>
                             <p v-if="errorMessage" class="mt-4 text-red-500 text-center">{{ errorMessage }}</p>
                         </div>
                     </form>
@@ -40,12 +39,11 @@
                     class="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale" />
                 <div
                     class="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 text-white p-8">
-                    <h2 class="text-5xl font-extrabold mb-4 animate-pulse">Join Us Today!</h2>
-                    <p class="text-lg mb-4 animate-fade-in">Create your store and start selling.</p>
-                    <p class="text-md">Already a seller? Visit your store dashboard!</p>
+                    <h2 class="text-5xl font-extrabold mb-4 animate-pulse">{{ t('becomeSellerFormPage.heroTitle') }}</h2>
+                    <p class="text-lg mb-4 animate-fade-in">{{ t('becomeSellerFormPage.heroSubtitle') }}</p>
+                    <p class="text-md">{{ t('becomeSellerFormPage.heroCtaText') }}</p>
                     <router-link to="/seller-store"
-                        class="text-white font-bold py-2 px-4 button-hover bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white hover:text-white rounded-r focus:outline-none mt-4">Visit
-                        Store</router-link>
+                        class="text-white font-bold py-2 px-4 button-hover bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white hover:text-white rounded-r focus:outline-none mt-4">{{ t('becomeSellerFormPage.visitStore') }}</router-link>
                 </div>
             </div>
         </div>
@@ -54,12 +52,14 @@
 
 <script>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useUserStore } from "../store/user.js";
 import { useRouter } from 'vue-router';
 import { toast } from 'vue-sonner';
 
 export default {
     setup() {
+        const { t } = useI18n();
         const userStore = useUserStore();
         const router = useRouter();
 
@@ -73,7 +73,7 @@ export default {
                     storeName: storeName.value,
                     storeDescription: storeDescription.value,
                 });
-                toast.success("Successfully became a seller.");
+                toast.success(t('becomeSellerFormPage.toasts.success'));
                 router.push({ name: 'UserSellerDashboard' });
             } catch (error) {
                 console.error("Failed to become seller:", error);
@@ -83,6 +83,7 @@ export default {
         };
 
         return {
+            t,
             storeName,
             storeDescription,
             errorMessage,

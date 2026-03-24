@@ -13,13 +13,13 @@
                             <TrendingUp class="w-4 h-4 sm:w-5 sm:h-5 text-white drop-shadow-sm" />
                         </div>
                         <div>
-                            <h3 class="text-base sm:text-lg font-bold text-gray-900">Revenue Trend</h3>
-                            <p class="text-xs sm:text-sm text-gray-600">Monthly revenue performance</p>
+                            <h3 class="text-base sm:text-lg font-bold text-gray-900">{{ t('orderAnalyticsPage.revenueTrend.title') }}</h3>
+                            <p class="text-xs sm:text-sm text-gray-600">{{ t('orderAnalyticsPage.revenueTrend.subtitle') }}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2 self-start sm:self-auto">
                         <div class="px-2 sm:px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                            {{ Object.keys(monthlyData).length }} Months
+                            {{ t('orderAnalyticsPage.revenueTrend.monthsCount', { count: Object.keys(monthlyData).length }) }}
                         </div>
                     </div>
                 </div>
@@ -46,13 +46,13 @@
                             <BarChart class="w-4 h-4 sm:w-5 sm:h-5 text-white drop-shadow-sm" />
                         </div>
                         <div>
-                            <h3 class="text-base sm:text-lg font-bold text-gray-900">Order Volume</h3>
-                            <p class="text-xs sm:text-sm text-gray-600">Orders and average value</p>
+                            <h3 class="text-base sm:text-lg font-bold text-gray-900">{{ t('orderAnalyticsPage.orderVolume.title') }}</h3>
+                            <p class="text-xs sm:text-sm text-gray-600">{{ t('orderAnalyticsPage.orderVolume.subtitle') }}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2 self-start sm:self-auto">
                         <div class="px-2 sm:px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                            Dual Axis
+                            {{ t('orderAnalyticsPage.orderVolume.badge') }}
                         </div>
                     </div>
                 </div>
@@ -79,13 +79,13 @@
                             <ShoppingBag class="w-4 h-4 sm:w-5 sm:h-5 text-white drop-shadow-sm" />
                         </div>
                         <div>
-                            <h3 class="text-base sm:text-lg font-bold text-gray-900">Popular Products</h3>
-                            <p class="text-xs sm:text-sm text-gray-600">Top 5 bestselling items</p>
+                            <h3 class="text-base sm:text-lg font-bold text-gray-900">{{ t('orderAnalyticsPage.popularProducts.title') }}</h3>
+                            <p class="text-xs sm:text-sm text-gray-600">{{ t('orderAnalyticsPage.popularProducts.subtitle') }}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2 self-start sm:self-auto">
                         <div class="px-2 sm:px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
-                            Top 5
+                            {{ t('orderAnalyticsPage.popularProducts.badge') }}
                         </div>
                     </div>
                 </div>
@@ -112,13 +112,13 @@
                             <BarChart2 class="w-4 h-4 sm:w-5 sm:h-5 text-white drop-shadow-sm" />
                         </div>
                         <div>
-                            <h3 class="text-base sm:text-lg font-bold text-gray-900">Order Status</h3>
-                            <p class="text-xs sm:text-sm text-gray-600">Distribution by status</p>
+                            <h3 class="text-base sm:text-lg font-bold text-gray-900">{{ t('orderAnalyticsPage.orderStatus.title') }}</h3>
+                            <p class="text-xs sm:text-sm text-gray-600">{{ t('orderAnalyticsPage.orderStatus.subtitle') }}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2 self-start sm:self-auto">
                         <div class="px-2 sm:px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">
-                            All Status
+                            {{ t('orderAnalyticsPage.orderStatus.badge') }}
                         </div>
                     </div>
                 </div>
@@ -140,7 +140,7 @@
             class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg sm:rounded-xl p-3 sm:p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
                 <div class="flex-1">
-                    <p class="text-blue-100 text-xs sm:text-sm font-medium">Total Revenue</p>
+                    <p class="text-blue-100 text-xs sm:text-sm font-medium">{{ t('orderAnalyticsPage.stats.totalRevenue') }}</p>
                     <p class="text-lg sm:text-2xl font-bold">{{ formatCurrency(totalRevenue) }}</p>
                 </div>
                 <div
@@ -155,8 +155,8 @@
             class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg sm:rounded-xl p-3 sm:p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
                 <div class="flex-1">
-                    <p class="text-green-100 text-xs sm:text-sm font-medium">Total Orders</p>
-                    <p class="text-lg sm:text-2xl font-bold">{{ totalOrders.toLocaleString() }}</p>
+                    <p class="text-green-100 text-xs sm:text-sm font-medium">{{ t('orderAnalyticsPage.stats.totalOrders') }}</p>
+                    <p class="text-lg sm:text-2xl font-bold">{{ totalOrders.toLocaleString(locale) }}</p>
                 </div>
                 <div
                     class="w-8 h-8 sm:w-12 sm:h-12 bg-white/20 rounded-lg sm:rounded-xl flex items-center justify-center self-end sm:self-auto">
@@ -170,7 +170,7 @@
             class="bg-gradient-to-br from-purple-500 to-violet-600 rounded-lg sm:rounded-xl p-3 sm:p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
                 <div class="flex-1">
-                    <p class="text-purple-100 text-xs sm:text-sm font-medium">Avg Order Value</p>
+                    <p class="text-purple-100 text-xs sm:text-sm font-medium">{{ t('orderAnalyticsPage.stats.averageOrderValue') }}</p>
                     <p class="text-lg sm:text-2xl font-bold">{{ formatCurrency(averageOrderValue) }}</p>
                 </div>
                 <div
@@ -185,7 +185,7 @@
             class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg sm:rounded-xl p-3 sm:p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 col-span-2 lg:col-span-1">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
                 <div class="flex-1">
-                    <p class="text-amber-100 text-xs sm:text-sm font-medium">Growth Rate</p>
+                    <p class="text-amber-100 text-xs sm:text-sm font-medium">{{ t('orderAnalyticsPage.stats.growthRate') }}</p>
                     <p class="text-lg sm:text-2xl font-bold">+{{ growthRate.toFixed(1) }}%</p>
                 </div>
                 <div
@@ -201,6 +201,7 @@
 <script>
 import { computed } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
+import { useI18n } from 'vue-i18n';
 import {
     Wallet,
     TrendingUp,
@@ -230,6 +231,8 @@ export default {
         }
     },
     setup(props) {
+        const { t, locale } = useI18n();
+
         // Process monthly data with proper sorting and validation
         const monthlyData = computed(() => {
             if (!props.orders || !Array.isArray(props.orders) || props.orders.length === 0) {
@@ -256,7 +259,7 @@ export default {
                         return;
                     }
 
-                    const monthYear = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
+                    const monthYear = `${date.toLocaleString(locale.value, { month: 'short' })} ${date.getFullYear()}`;
                     const sortKey = date.getFullYear() * 12 + date.getMonth();
 
                     if (!data[monthYear]) {
@@ -299,7 +302,7 @@ export default {
         };
 
         const formatCurrency = (value) => {
-            return `₦${formatLargeNumber(value)}`;
+            return `${t('orderAnalyticsPage.currencySymbol')}${formatLargeNumber(value)}`;
         };
 
         // Enhanced computed statistics
@@ -369,7 +372,7 @@ export default {
         const revenueSeries = computed(() => {
             const monthData = monthlyData.value;
             const series = [{
-                name: 'Revenue',
+                name: t('orderAnalyticsPage.datasets.revenue'),
                 data: Object.values(monthData).map(data => data.revenue || 0)
             }];
             console.log('Revenue series data:', series);
@@ -421,7 +424,7 @@ export default {
                 },
                 tooltip: {
                     y: {
-                        formatter: (value) => `₦${value.toLocaleString()}`
+                        formatter: (value) => `${t('orderAnalyticsPage.currencySymbol')}${value.toLocaleString(locale.value)}`
                     }
                 },
                 fill: {
@@ -444,11 +447,11 @@ export default {
             const monthData = monthlyData.value;
             const series = [
                 {
-                    name: 'Orders',
+                    name: t('orderAnalyticsPage.datasets.orders'),
                     data: Object.values(monthData).map(data => data.orders || 0)
                 },
                 {
-                    name: 'Average Order Value',
+                    name: t('orderAnalyticsPage.datasets.averageOrderValue'),
                     data: Object.values(monthData).map(data => data.avgOrderValue || 0)
                 }
             ];
@@ -489,7 +492,7 @@ export default {
                 yaxis: [
                     {
                         title: {
-                            text: 'Number of Orders',
+                            text: t('orderAnalyticsPage.axes.numberOfOrders'),
                             style: {
                                 color: '#6b7280',
                                 fontSize: '11px',
@@ -511,7 +514,7 @@ export default {
                     {
                         opposite: true,
                         title: {
-                            text: 'Average Order Value (₦)',
+                            text: t('orderAnalyticsPage.axes.averageOrderValue'),
                             style: {
                                 color: '#6b7280',
                                 fontSize: '11px',
@@ -551,7 +554,7 @@ export default {
             props.orders.forEach(order => {
                 if (order.products && Array.isArray(order.products)) {
                     order.products.forEach(item => {
-                        const productName = item.product?.name || 'Unknown Product';
+                        const productName = item.product?.name || t('orderAnalyticsPage.unknownProduct');
                         popularity[productName] = (popularity[productName] || 0) + (item.quantity || 0);
                     });
                 }
@@ -563,7 +566,7 @@ export default {
         });
 
         const productsSeries = computed(() => [{
-            name: 'Units Sold',
+            name: t('orderAnalyticsPage.datasets.unitsSold'),
             data: productPopularity.value.map(([, count]) => count)
         }]);
 
@@ -635,15 +638,32 @@ export default {
 
         // Status Distribution Chart
         const statusDistribution = computed(() => {
-            const statuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+            const statuses = [
+                t('orderAnalyticsPage.statuses.pending'),
+                t('orderAnalyticsPage.statuses.processing'),
+                t('orderAnalyticsPage.statuses.shipped'),
+                t('orderAnalyticsPage.statuses.delivered'),
+                t('orderAnalyticsPage.statuses.cancelled'),
+            ];
             return statuses.map(status => ({
                 status,
-                count: props.orders.filter(order => order.status === status).length
+                count: props.orders.filter(order => {
+                    const normalizedStatus = String(order.status || '').toLowerCase();
+                    const localizedStatus = {
+                        pending: t('orderAnalyticsPage.statuses.pending'),
+                        processing: t('orderAnalyticsPage.statuses.processing'),
+                        shipped: t('orderAnalyticsPage.statuses.shipped'),
+                        delivered: t('orderAnalyticsPage.statuses.delivered'),
+                        cancelled: t('orderAnalyticsPage.statuses.cancelled'),
+                    }[normalizedStatus];
+
+                    return localizedStatus === status;
+                }).length
             }));
         });
 
         const statusSeries = computed(() => [{
-            name: 'Orders',
+            name: t('orderAnalyticsPage.datasets.orders'),
             data: statusDistribution.value.map(item => item.count)
         }]);
 
@@ -728,7 +748,9 @@ export default {
             totalRevenue,
             totalOrders,
             averageOrderValue,
-            growthRate
+            growthRate,
+            t,
+            locale
         };
     }
 };

@@ -11,9 +11,8 @@
 
             <div class="container mx-auto px-4 py-8 sm:py-12 lg:py-16 relative">
                 <div class="max-w-3xl mx-auto text-center">
-                    <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4">My Products</h1>
-                    <p class="text-sm sm:text-base lg:text-lg mb-6 sm:mb-8 text-white/90">Manage and organize your
-                        product listings</p>
+                    <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4">{{ t('userProductsPage.title') }}</h1>
+                    <p class="text-sm sm:text-base lg:text-lg mb-6 sm:mb-8 text-white/90">{{ t('userProductsPage.subtitle') }}</p>
                 </div>
             </div>
         </div>
@@ -32,7 +31,7 @@
                                     class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                     <Search
                                         class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
-                                    <input v-model="searchQuery" placeholder="Search products..."
+                                    <input v-model="searchQuery" :placeholder="t('userProductsPage.searchPlaceholder')"
                                         class="w-full pl-9 sm:pl-11 pr-3 sm:pr-4 py-2.5 text-gray-700 bg-transparent border-none focus:outline-none text-sm sm:text-base" />
                                 </div>
                             </div>
@@ -47,7 +46,7 @@
                                             ? 'bg-indigo-50 text-indigo-600'
                                             : 'text-gray-500 hover:bg-gray-50'
                                     ]">
-                                        Grid
+                                        {{ t('userProductsPage.viewModes.grid') }}
                                     </button>
                                     <button @click="viewMode = 'list'" :class="[
                                         'flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg font-medium transition-all text-sm sm:text-base',
@@ -55,14 +54,14 @@
                                             ? 'bg-indigo-50 text-indigo-600'
                                             : 'text-gray-500 hover:bg-gray-50'
                                     ]">
-                                        List
+                                        {{ t('userProductsPage.viewModes.list') }}
                                     </button>
                                 </div>
                                 <button @click="createNewProduct"
                                     class="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg font-medium shadow-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base">
                                     <PlusCircle class="w-4 h-4 sm:w-5 sm:h-5" />
-                                    <span class="hidden sm:inline">Add Product</span>
-                                    <span class="sm:hidden">Add</span>
+                                    <span class="hidden sm:inline">{{ t('userProductsPage.addProduct') }}</span>
+                                    <span class="sm:hidden">{{ t('userProductsPage.add') }}</span>
                                 </button>
                             </div>
                         </div>
@@ -99,8 +98,8 @@
                             <nav class="flex items-center gap-1 sm:gap-2">
                                 <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1"
                                     class="px-2 sm:px-3 py-2 rounded-lg border font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 text-xs sm:text-sm">
-                                    <span class="hidden sm:inline">Previous</span>
-                                    <span class="sm:hidden">Prev</span>
+                                    <span class="hidden sm:inline">{{ t('userProductsPage.pagination.previous') }}</span>
+                                    <span class="sm:hidden">{{ t('userProductsPage.pagination.prev') }}</span>
                                 </button>
 
                                 <div class="flex items-center gap-1">
@@ -117,8 +116,8 @@
 
                                 <button @click="changePage(currentPage + 1)" :disabled="currentPage === totalPages"
                                     class="px-2 sm:px-3 py-2 rounded-lg border font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 text-xs sm:text-sm">
-                                    <span class="hidden sm:inline">Next</span>
-                                    <span class="sm:hidden">Next</span>
+                                    <span class="hidden sm:inline">{{ t('userProductsPage.pagination.next') }}</span>
+                                    <span class="sm:hidden">{{ t('userProductsPage.pagination.nextShort') }}</span>
                                 </button>
                             </nav>
                         </div>
@@ -129,17 +128,17 @@
                                 class="w-12 h-12 sm:w-16 sm:h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                                 <Package class="w-6 h-6 sm:w-8 sm:h-8 text-indigo-500" />
                             </div>
-                            <h2 class="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No products found</h2>
+                            <h2 class="text-lg sm:text-xl font-semibold text-gray-900 mb-2">{{ t('userProductsPage.empty.title') }}</h2>
                             <p v-if="searchQuery" class="text-gray-500 mb-4 sm:mb-6 text-sm sm:text-base">
-                                Try adjusting your search to find what you're looking for.
+                                {{ t('userProductsPage.empty.searching') }}
                             </p>
                             <p v-else class="text-gray-500 mb-4 sm:mb-6 text-sm sm:text-base">
-                                You haven't added any products yet. Start building your inventory!
+                                {{ t('userProductsPage.empty.default') }}
                             </p>
                             <button @click="createNewProduct"
                                 class="w-full sm:w-auto px-4 sm:px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg font-medium shadow-lg transition-all duration-300 inline-flex items-center justify-center gap-2 text-sm sm:text-base">
                                 <PlusCircle class="w-4 h-4 sm:w-5 sm:h-5" />
-                                <span>Add New Product</span>
+                                <span>{{ t('userProductsPage.addNewProduct') }}</span>
                             </button>
                         </div>
                     </div>
@@ -159,6 +158,7 @@
 <script>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { Search, PlusCircle, AlertCircle, Package } from 'lucide-vue-next';
 import { useProductStore } from '../store/productStore';
 import { useUserStore } from '../store/user';
@@ -178,6 +178,7 @@ export default {
         Package
     },
     setup() {
+        const { t } = useI18n();
         const router = useRouter();
         const productStore = useProductStore();
         const userStore = useUserStore();
@@ -220,7 +221,7 @@ export default {
                 }
             } catch (err) {
                 console.error('Error fetching user products:', err);
-                error.value = 'Failed to load products. Please try again.';
+                error.value = t('userProductsPage.toasts.loadFailed');
                 toast.error(error.value);
             } finally {
                 loading.value = false;
@@ -250,7 +251,7 @@ export default {
                 isEditModalOpen.value = true;
             } else {
                 console.error('Product not found:', productId);
-                toast.error('Error: Product not found');
+                toast.error(t('userProductsPage.toasts.productNotFound'));
             }
         };
 
@@ -263,7 +264,7 @@ export default {
 
                 // Then update local state immediately
                 userProducts.value = userProducts.value.filter(product => product._id !== productId);
-                toast.success('Product deleted successfully');
+                toast.success(t('userProductsPage.toasts.deleted'));
 
                 // If this was the last item on the current page and we're not on page 1,
                 // go to the previous page
@@ -275,7 +276,7 @@ export default {
                 }
             } catch (error) {
                 console.error('Error deleting product:', error);
-                toast.error('Failed to delete product. Please try again.');
+                toast.error(t('userProductsPage.toasts.deleteFailed'));
             }
         };
 
@@ -290,10 +291,10 @@ export default {
                 }
                 isEditModalOpen.value = false;
                 localEditingProduct.value = null;
-                toast.success('Product updated successfully');
+                toast.success(t('userProductsPage.toasts.updated'));
             } catch (error) {
                 console.error('Error updating product:', error);
-                toast.error('Failed to update product');
+                toast.error(t('userProductsPage.toasts.updateFailed'));
             }
         };
 
@@ -335,6 +336,7 @@ export default {
             currentPage,
             totalPages,
             changePage,
+            t,
         };
     }
 }

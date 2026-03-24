@@ -3,9 +3,9 @@
     <div>
         <!-- Header & Actions -->
         <div class="flex justify-between items-center mb-3 px-8 py-4 bg-white">
-            <h2 class="text-2xl font-bold text-gray-800">Products Management</h2>
+            <h2 class="text-2xl font-bold text-gray-800">{{ t('adminProducts.title') }}</h2>
             <button @click="showAddModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                Add New Product
+                {{ t('adminProducts.addNewProduct') }}
             </button>
         </div>
 
@@ -14,19 +14,19 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <!-- Search -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-                    <input type="text" v-model="filters.search" placeholder="Search products..."
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('adminProducts.filters.search') }}</label>
+                    <input type="text" v-model="filters.search" :placeholder="t('adminProducts.filters.searchPlaceholder')"
                         class="w-full p-2 border rounded-md" @input="handleSearch">
                 </div>
 
                 <!-- Category Filter -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('adminProducts.filters.category') }}</label>
                     <div class="relative">
                         <select v-model="filters.category"
                             class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
                             @change="fetchProducts">
-                            <option value="">All Categories</option>
+                            <option value="">{{ t('adminProducts.filters.allCategories') }}</option>
                             <option v-for="category in categories" :key="category._id" :value="category._id">
                                 {{ category.name }}
                             </option>
@@ -39,15 +39,15 @@
 
                 <!-- Stock Filter -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Stock Status</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('adminProducts.filters.stockStatus') }}</label>
                     <div class="relative">
                         <select v-model="filters.stock"
                             class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
                             @change="fetchProducts">
-                            <option value="">All</option>
-                            <option value="in_stock">In Stock</option>
-                            <option value="low_stock">Low Stock</option>
-                            <option value="out_of_stock">Out of Stock</option>
+                            <option value="">{{ t('adminProducts.filters.all') }}</option>
+                            <option value="in_stock">{{ t('adminProducts.stockStatuses.inStock') }}</option>
+                            <option value="low_stock">{{ t('adminProducts.stockStatuses.lowStock') }}</option>
+                            <option value="out_of_stock">{{ t('adminProducts.stockStatuses.outOfStock') }}</option>
                         </select>
                         <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                             <ChevronDown class="w-5 h-5 text-gray-400" />
@@ -57,14 +57,14 @@
 
                 <!-- Status Filter -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('adminProducts.filters.status') }}</label>
                     <div class="relative">
                         <select v-model="filters.status"
                             class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
                             @change="fetchProducts">
-                            <option value="">All</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
+                            <option value="">{{ t('adminProducts.filters.all') }}</option>
+                            <option value="active">{{ t('adminProducts.statuses.active') }}</option>
+                            <option value="inactive">{{ t('adminProducts.statuses.inactive') }}</option>
                         </select>
                         <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                             <ChevronDown class="w-5 h-5 text-gray-400" />
@@ -81,22 +81,22 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Product
+                                {{ t('adminProducts.table.product') }}
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Category
+                                {{ t('adminProducts.table.category') }}
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Price
+                                {{ t('adminProducts.table.price') }}
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Stock
+                                {{ t('adminProducts.table.stock') }}
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status
+                                {{ t('adminProducts.table.status') }}
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Actions
+                                {{ t('adminProducts.table.actions') }}
                             </th>
                         </tr>
                     </thead>
@@ -113,14 +113,14 @@
                                             {{ product.name }}
                                         </div>
                                         <div class="text-sm text-gray-500">
-                                            SKU: {{ product.sku }}
+                                            {{ t('adminProducts.sku', { value: product.sku }) }}
                                         </div>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="text-sm text-gray-900">
-                                    {{ product.category?.name || 'Uncategorized' }}
+                                    {{ product.category?.name || t('adminProducts.uncategorized') }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -133,7 +133,7 @@
                                     'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
                                     getStockStatusClass(product.stock)
                                 ]">
-                                    {{ product.stock }} in stock
+                                    {{ t('adminProducts.stockCount', { count: product.stock }) }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -141,16 +141,16 @@
                                     'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
                                     product.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                                 ]">
-                                    {{ product.status }}
+                                    {{ t(`adminProducts.statuses.${product.status}`) }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <button @click="editProduct(product)"
                                     class="text-indigo-600 hover:text-indigo-900 mr-3">
-                                    Edit
+                                    {{ t('adminProducts.actions.edit') }}
                                 </button>
                                 <button @click="confirmDelete(product)" class="text-red-600 hover:text-red-900">
-                                    Delete
+                                    {{ t('adminProducts.actions.delete') }}
                                 </button>
                             </td>
                         </tr>
@@ -164,24 +164,24 @@
                     <button @click="prevPage" :disabled="currentPage === 1"
                         class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                         :class="{ 'opacity-50 cursor-not-allowed': currentPage === 1 }">
-                        Previous
+                        {{ t('adminProducts.pagination.previous') }}
                     </button>
                     <button @click="nextPage" :disabled="currentPage === totalPages"
                         class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                         :class="{ 'opacity-50 cursor-not-allowed': currentPage === totalPages }">
-                        Next
+                        {{ t('adminProducts.pagination.next') }}
                     </button>
                 </div>
                 <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                     <div>
                         <p class="text-sm text-gray-700">
-                            Showing
+                            {{ t('adminProducts.pagination.showing') }}
                             <span class="font-medium">{{ startItem }}</span>
-                            to
+                            {{ t('adminProducts.pagination.to') }}
                             <span class="font-medium">{{ endItem }}</span>
-                            of
+                            {{ t('adminProducts.pagination.of') }}
                             <span class="font-medium">{{ totalItems }}</span>
-                            results
+                            {{ t('adminProducts.pagination.results') }}
                         </p>
                     </div>
                     <div>
@@ -189,12 +189,12 @@
                             <button @click="prevPage" :disabled="currentPage === 1"
                                 class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 :class="{ 'opacity-50 cursor-not-allowed': currentPage === 1 }">
-                                Previous
+                                {{ t('adminProducts.pagination.previous') }}
                             </button>
                             <button @click="nextPage" :disabled="currentPage === totalPages"
                                 class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 :class="{ 'opacity-50 cursor-not-allowed': currentPage === totalPages }">
-                                Next
+                                {{ t('adminProducts.pagination.next') }}
                             </button>
                         </nav>
                     </div>
@@ -207,37 +207,37 @@
             class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
             <div class="bg-white rounded-lg p-6 w-full max-w-2xl">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">
-                    {{ selectedProduct ? 'Edit Product' : 'Add New Product' }}
+                    {{ selectedProduct ? t('adminProducts.modal.editTitle') : t('adminProducts.modal.addTitle') }}
                 </h3>
                 <form @submit.prevent="handleSubmit">
                     <!-- Form fields -->
                     <div class="grid grid-cols-2 gap-4">
                         <div class="col-span-2">
-                            <label class="block text-sm font-medium text-gray-700">Name</label>
+                            <label class="block text-sm font-medium text-gray-700">{{ t('adminProducts.form.name') }}</label>
                             <input type="text" v-model="formData.name"
                                 class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3" required>
                         </div>
 
                         <div class="col-span-2">
-                            <label class="block text-sm font-medium text-gray-700">Description</label>
+                            <label class="block text-sm font-medium text-gray-700">{{ t('adminProducts.form.description') }}</label>
                             <textarea v-model="formData.description"
                                 class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3" rows="3"></textarea>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Price</label>
+                            <label class="block text-sm font-medium text-gray-700">{{ t('adminProducts.form.price') }}</label>
                             <input type="number" v-model="formData.price"
                                 class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3" step="0.01" required>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Stock</label>
+                            <label class="block text-sm font-medium text-gray-700">{{ t('adminProducts.form.stock') }}</label>
                             <input type="number" v-model="formData.stock"
                                 class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3" required>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Category</label>
+                            <label class="block text-sm font-medium text-gray-700">{{ t('adminProducts.form.category') }}</label>
                             <select v-model="formData.category"
                                 class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
                                 <option v-for="category in categories" :key="category._id" :value="category._id">
@@ -247,11 +247,11 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Status</label>
+                            <label class="block text-sm font-medium text-gray-700">{{ t('adminProducts.form.status') }}</label>
                             <select v-model="formData.status"
                                 class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
+                                <option value="active">{{ t('adminProducts.statuses.active') }}</option>
+                                <option value="inactive">{{ t('adminProducts.statuses.inactive') }}</option>
                             </select>
                         </div>
                     </div>
@@ -259,10 +259,10 @@
                     <div class="mt-6 flex justify-end space-x-3">
                         <button type="button" @click="closeModal"
                             class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300">
-                            Cancel
+                            {{ t('adminProducts.actions.cancel') }}
                         </button>
                         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                            {{ selectedProduct ? 'Update' : 'Create' }}
+                            {{ selectedProduct ? t('adminProducts.actions.update') : t('adminProducts.actions.create') }}
                         </button>
                     </div>
                 </form>
@@ -273,18 +273,18 @@
         <div v-if="showDeleteModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
             <div class="bg-white rounded-lg p-6 max-w-md w-full">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">
-                    Confirm Delete
+                    {{ t('adminProducts.deleteModal.title') }}
                 </h3>
                 <p class="text-gray-500 mb-6">
-                    Are you sure you want to delete this product? This action cannot be undone.
+                    {{ t('adminProducts.deleteModal.message') }}
                 </p>
                 <div class="flex justify-end space-x-3">
                     <button @click="showDeleteModal = false"
                         class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300">
-                        Cancel
+                        {{ t('adminProducts.actions.cancel') }}
                     </button>
                     <button @click="deleteProduct" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
-                        Delete
+                        {{ t('adminProducts.actions.delete') }}
                     </button>
                 </div>
             </div>
@@ -294,6 +294,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { toast } from 'vue-sonner';
 import { ChevronDown } from 'lucide-vue-next';
@@ -307,6 +308,7 @@ export default {
     },
 
     setup() {
+        const { t } = useI18n();
         const router = useRouter();
         const products = ref([]);
         const categories = ref([]);
@@ -359,7 +361,7 @@ export default {
                 totalItems.value = data.pagination.total;
             } catch (error) {
                 console.error('Error fetching products:', error);
-                toast.error('Failed to fetch products');
+                toast.error(t('adminProducts.toasts.fetchProductsFailed'));
             }
         };
 
@@ -370,7 +372,7 @@ export default {
                 categories.value = data;
             } catch (error) {
                 console.error('Error fetching categories:', error);
-                toast.error('Failed to fetch categories');
+                toast.error(t('adminProducts.toasts.fetchCategoriesFailed'));
             }
         };
 
@@ -382,20 +384,20 @@ export default {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(formData.value)
                     });
-                    toast.success('Product updated successfully');
+                    toast.success(t('adminProducts.toasts.updated'));
                 } else {
                     await fetch('/api/admin/products', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(formData.value)
                     });
-                    toast.success('Product created successfully');
+                    toast.success(t('adminProducts.toasts.created'));
                 }
                 closeModal();
                 fetchProducts();
             } catch (error) {
                 console.error('Error submitting product:', error);
-                toast.error('Failed to save product');
+                toast.error(t('adminProducts.toasts.saveFailed'));
             }
         };
 
@@ -422,13 +424,13 @@ export default {
                 await fetch(`/api/admin/products/${productToDelete.value._id}`, {
                     method: 'DELETE'
                 });
-                toast.success('Product deleted successfully');
+                toast.success(t('adminProducts.toasts.deleted'));
                 showDeleteModal.value = false;
                 productToDelete.value = null;
                 fetchProducts();
             } catch (error) {
                 console.error('Error deleting product:', error);
-                toast.error('Failed to delete product');
+                toast.error(t('adminProducts.toasts.deleteFailed'));
             }
         };
 
@@ -499,7 +501,8 @@ export default {
             prevPage,
             nextPage,
             getStockStatusClass,
-            fetchProducts
+            fetchProducts,
+            t
         };
     }
 };

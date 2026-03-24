@@ -13,8 +13,8 @@
                             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
                 </div>
-                <h2 class="text-2xl font-bold text-gray-900">Verifying your email...</h2>
-                <p class="text-gray-600">Please wait a moment</p>
+                <h2 class="text-2xl font-bold text-gray-900">{{ t('emailVerifiedPage.verifyingTitle') }}</h2>
+                <p class="text-gray-600">{{ t('emailVerifiedPage.verifyingDescription') }}</p>
             </div>
 
             <!-- Error State -->
@@ -25,11 +25,11 @@
                             d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </div>
-                <h1 class="text-4xl font-bold text-gray-900 mb-4">Verification Failed</h1>
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">{{ t('emailVerifiedPage.failedTitle') }}</h1>
                 <p class="text-lg text-gray-600 mb-8">{{ errorMessage }}</p>
                 <button @click="router.push('/register')"
                     class="w-full py-4 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] text-white font-bold text-lg rounded-xl hover:scale-105 transition transform">
-                    Register Again
+                    {{ t('emailVerifiedPage.registerAgain') }}
                 </button>
             </div>
 
@@ -40,16 +40,16 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
-                <h1 class="text-4xl font-bold text-gray-900 mb-4">Email Verified!</h1>
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">{{ t('emailVerifiedPage.successTitle') }}</h1>
                 <p class="text-lg text-gray-600 mb-8">
-                    Welcome to Bruthol, {{ username || 'friend' }}! Your account is now active.
+                    {{ t('emailVerifiedPage.successBody', { username: username || t('emailVerifiedPage.friend') }) }}
                 </p>
                 <button @click="goToDashboard"
                     class="w-full py-4 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] text-white font-bold text-lg rounded-xl hover:scale-105 transition transform">
-                    Continue to Dashboard
+                    {{ t('emailVerifiedPage.continueToDashboard') }}
                 </button>
                 <p class="text-sm text-gray-500">
-                    Redirecting in <span class="font-bold">{{ countdown }}</span> seconds...
+                    {{ t('emailVerifiedPage.redirectingCountdown', { count: countdown }) }}
                 </p>
             </div>
         </div>
@@ -58,11 +58,13 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '../store/user'
 import { toast } from 'vue-sonner'
 import apiClient from '../api/axios'
 
+const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
@@ -81,7 +83,7 @@ onMounted(async () => {
 
     if (!token) {
         hasError.value = true
-        errorMessage.value = 'Invalid verification link'
+        errorMessage.value = t('emailVerifiedPage.errors.invalidLink')
         isVerifying.value = false
         return
     }
@@ -113,10 +115,10 @@ onMounted(async () => {
             // Fetch full profile
             await userStore.getUserProfile()
 
-            username.value = response.data.username || userStore.user?.username || 'friend'
+            username.value = response.data.username || userStore.user?.username || t('emailVerifiedPage.friend')
             isVerifying.value = false
 
-            toast.success('Email verified! Welcome to Bruthol!')
+            toast.success(t('emailVerifiedPage.toasts.verified'))
 
             // Auto redirect countdown
             const timer = setInterval(() => {
@@ -134,7 +136,7 @@ onMounted(async () => {
         hasError.value = true
 
         errorMessage.value = error.response?.data?.message ||
-            'This verification link is invalid or has expired. Please try registering again.'
+            t('emailVerifiedPage.errors.expiredLink')
 
         toast.error(errorMessage.value)
     }

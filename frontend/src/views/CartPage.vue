@@ -1,14 +1,14 @@
 <template>
     <div class="container mx-auto p-4">
-        <h1 class="text-2xl font-bold mb-4">Shopping Cart ({{ cartStore.cartCount }})</h1>
+        <h1 class="text-2xl font-bold mb-4">{{ t('cart.shoppingCart', { count: cartStore.cartCount }) }}</h1>
 
         <div v-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
             role="alert">
-            <strong class="font-bold">Error!</strong>
+            <strong class="font-bold">{{ t('cart.error') }}</strong>
             <span class="block sm:inline">{{ error }}</span>
             <button @click="retryLoading"
                 class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-2">
-                Retry
+                {{ t('cart.retry') }}
             </button>
         </div>
 
@@ -20,10 +20,10 @@
                         <div class="flex items-center mr-4 mb-2 sm:mb-0">
                             <input type="checkbox" v-model="selectAll" @change="toggleSelectAll"
                                 class="mr-2 custom-checkbox">
-                            <span class="mr-4">Select all items</span>
+                            <span class="mr-4">{{ t('cart.selectAllItems') }}</span>
                         </div>
                         <button @click="deleteSelectedItems" class="text-blue-500">
-                            Delete selected items
+                            {{ t('cart.deleteSelectedItems') }}
                         </button>
                     </div>
 
@@ -32,7 +32,7 @@
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                             <div class="mb-2 sm:mb-0">
                                 <div class="flex items-center space-x-2">
-                                    <span class="font-semibold">Shipped by Bruthol</span>
+                                    <span class="font-semibold">{{ t('cart.shippedByBruthol') }}</span>
                                     <span>
                                         <TooltipProvider>
                                             <Tooltip>
@@ -40,20 +40,19 @@
                                                     <ShieldQuestion class="w-4 h-4" />
                                                 </TooltipTrigger>
                                                 <TooltipContent>
-                                                    <p class="text-sm w-72">Choice items are curated, selected and
-                                                        shipped directly by Bruthol. This includes a delivery guarantee
-                                                        and free returns on all items.</p>
+                                                    <p class="text-sm w-72">{{ t('cart.shippedByBrutholInfo') }}</p>
                                                 </TooltipContent>
                                             </Tooltip>
                                         </TooltipProvider>
                                     </span>
                                 </div>
                                 <p class="text-sm text-gray-600 font-bold">
-                                    To save <span class="text-red-500">US ₦{{ shippingCost.toFixed(2) }}</span> shipping
-                                    fee shop <span class="text-red-500">US ₦{{ minimumForFreeShipping.toFixed(2)
-                                        }}</span> more
+                                    {{ t('cart.saveShippingFee', {
+                                        shipping: `US ₦${shippingCost.toFixed(2)}`,
+                                        minimum: `US ₦${minimumForFreeShipping.toFixed(2)}`
+                                    }) }}
                                 </p>
-                                <p class="text-sm text-gray-600">Lower carbon footprint with reduced packaging</p>
+                                <p class="text-sm text-gray-600">{{ t('cart.lowerCarbonFootprint') }}</p>
                             </div>
                             <ChevronRight class="w-5 h-5 text-gray-400 mt-2 sm:mt-0" />
                         </div>
@@ -61,7 +60,7 @@
 
                     <!-- Product Items -->
                     <div v-if="cartStore.items.length === 0" class="text-center py-4">
-                        <p class="text-gray-600">Your cart is empty.</p>
+                        <p class="text-gray-600">{{ t('cart.empty') }}</p>
                     </div>
                     <div v-else v-for="item in cartStore.items" :key="item.product?._id + (item.variant?._id || '')"
                         class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
@@ -69,17 +68,17 @@
                             <img v-if="item.product?.images?.length > 0" :src="item.product.images[0]"
                                 :alt="item.product?.name || 'Product image'" class="w-16 h-16 object-cover mr-4">
                             <div v-else class="w-16 h-16 bg-gray-200 rounded mr-4 flex items-center justify-center">
-                                <span class="text-gray-400">No image</span>
+                                <span class="text-gray-400">{{ t('cart.noImage') }}</span>
                             </div>
                             <div>
-                                <h3 class="font-semibold" :title="item.product?.name || 'Product name unavailable'">
-                                    {{ formatTitle(item.product?.name || 'Product name unavailable') }}
+                                <h3 class="font-semibold" :title="item.product?.name || t('cart.productUnavailable')">
+                                    {{ formatTitle(item.product?.name || t('cart.productUnavailable')) }}
                                 </h3>
 
                                 <!-- Add variant details -->
                                 <div v-if="item.variant" class="text-sm text-gray-600 flex flex-wrap gap-x-2">
                                     <span v-if="item.variant.color">
-                                        Color: {{ typeof item.variant.color === 'object' ? item.variant.color.name :
+                                        {{ t('cart.color') }}: {{ typeof item.variant.color === 'object' ? item.variant.color.name :
                                         item.variant.color }}
                                     </span>
                                     <span v-for="(attr, attrIdx) in item.variant.attributes" :key="attrIdx">
@@ -88,7 +87,7 @@
                                     <!-- Fallback for legacy size field if not in attributes -->
                                     <span
                                         v-if="item.variant.size && (!item.variant.attributes || !item.variant.attributes.some(a => a.name.toLowerCase() === 'size'))">
-                                        Size: {{ item.variant.size }}
+                                        {{ t('cart.size') }}: {{ item.variant.size }}
                                     </span>
                                 </div>
 
@@ -98,7 +97,7 @@
                                     </p>
                                     <span v-if="item.product?.description && item.product.description.length > 100"
                                         @click="toggleDescription(item)" class="text-blue-500 cursor-pointer text-sm">
-                                        {{ item.showFullDescription ? 'Read less' : 'Read more' }}
+                                        {{ item.showFullDescription ? t('cart.readLess') : t('cart.readMore') }}
                                     </span>
                                 </div>
                             </div>
@@ -127,37 +126,37 @@
             <!-- Summary -->
             <div class="w-full lg:w-1/3 mt-4 lg:mt-0 summary-container">
                 <div class="bg-white shadow-md rounded-lg p-4">
-                    <h2 class="text-xl font-semibold mb-4">Summary</h2>
+                    <h2 class="text-xl font-semibold mb-4">{{ t('cart.summary') }}</h2>
                     <div>
                         <div class="flex justify-between mb-2">
-                            <span>Subtotal</span>
+                            <span>{{ t('cart.subtotal') }}</span>
                             <span>₦ {{ cartSubtotal.toFixed(2) }}</span>
                         </div>
                         <div v-if="cartStore.items.length > 0" class="flex justify-between mb-2">
-                            <span>Shipping fee</span>
+                            <span>{{ t('cart.shippingFee') }}</span>
                             <span>₦ {{ shippingCost.toFixed(2) }}</span>
                         </div>
                         <div class="flex justify-between mb-4">
-                            <span>Promo codes</span>
+                            <span>{{ t('cart.promoCodes') }}</span>
                             <div v-if="cartStore.coupon">
-                                <span>{{ cartStore.coupon.code }} applied</span>
-                                <button @click="removeCoupon" class="text-red-500 ml-2">Remove</button>
+                                <span>{{ cartStore.coupon.code }} {{ t('cart.appliedSuffix') }}</span>
+                                <button @click="removeCoupon" class="text-red-500 ml-2">{{ t('checkout.remove') }}</button>
                             </div>
                             <div v-else class="flex items-center justify-end">
-                                <input v-model="couponCode" type="text" placeholder="Enter code"
+                                <input v-model="couponCode" type="text" :placeholder="t('cart.enterCode')"
                                     class="w-1/2 rounded-l px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 <button @click="applyPromoCode"
                                     class="bg-blue-500 text-white px-4 py-[0.35em] rounded-r hover:bg-blue-600 transition duration-300 border border-blue-500">
-                                    Apply
+                                    {{ t('cart.apply') }}
                                 </button>
                             </div>
                         </div>
                         <div v-if="cartStore.discount > 0" class="flex justify-between mb-4 text-green-600">
-                            <span>Discount</span>
+                            <span>{{ t('cart.discount') }}</span>
                             <span>-₦{{ cartStore.discount.toFixed(2) }}</span>
                         </div>
                         <div class="flex justify-between font-bold text-lg mb-4">
-                            <span>Total</span>
+                            <span>{{ t('cart.total') }}</span>
                             <span>₦ {{ total.toFixed(2) }}</span>
                         </div>
                         <div class="text-right mb-4">
@@ -169,13 +168,13 @@
                         <button @click="proceedToCheckout"
                             class="w-full bg-[#24a6bb] text-white py-2 rounded-lg hover:bg-[#1c8a9e] transition duration-300"
                             :disabled="cartStore.items.length === 0">
-                            Checkout ({{ cartStore.cartCount }})
+                            {{ t('cart.checkout', { count: cartStore.cartCount }) }}
                         </button>
                     </div>
 
                     <!-- Payment Methods and Buyer Protection -->
                     <div class="mt-4">
-                        <h3 class="font-semibold mb-2">Pay with</h3>
+                        <h3 class="font-semibold mb-2">{{ t('cart.payWith') }}</h3>
                         <div class="flex flex-wrap gap-2">
                             <img :src="paymentImages.visaLogo" alt="Visa" class="h-8">
                             <img :src="paymentImages.mastercardLogo" alt="Mastercard" class="h-8">
@@ -187,10 +186,10 @@
                     </div>
 
                     <div class="mt-4">
-                        <h3 class="font-semibold mb-2">Buyer protection</h3>
+                        <h3 class="font-semibold mb-2">{{ t('cart.buyerProtection') }}</h3>
                         <p class="text-sm text-gray-600 flex items-center">
                             <ShieldCheck class="w-6 h-6 mr-2 text-green-500" />
-                            Get full refund if the item is not as described or if is not delivered
+                            {{ t('cart.buyerProtectionBody') }}
                         </p>
                     </div>
                 </div>
@@ -203,6 +202,7 @@
 <script setup>
 import { ref, computed, onMounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import {
     Tooltip,
     TooltipContent,
@@ -224,6 +224,7 @@ import paypalLogo from '../assets/images/paypal-pay.webp';
 import orangeMoney from '../assets/images/orange-p.jpeg';
 
 const router = useRouter();
+const { t } = useI18n();
 const cartStore = useCartStore();
 const productStore = useProductStore();
 const selectAll = ref(false);
@@ -271,7 +272,7 @@ const decrementQuantity = async (item) => {
         await refreshCart();
     } catch (error) {
         console.error('Error decrementing quantity:', error);
-        toast.error('Failed to update quantity');
+        toast.error(t('cart.failedUpdateQuantity'));
     } finally {
         loadingItems[item.product._id] = false;
     }
@@ -285,7 +286,7 @@ const incrementQuantity = async (item) => {
         await refreshCart();
     } catch (error) {
         console.error('Error incrementing quantity:', error);
-        toast.error('Failed to update quantity');
+        toast.error(t('cart.failedUpdateQuantity'));
     } finally {
         loadingItems[item.product._id] = false;
     }
@@ -338,16 +339,16 @@ const refreshCart = async () => {
         const invalidItems = cartStore.items.filter(item => !item.product || !item.product.price);
         if (invalidItems.length > 0) {
             console.error('Invalid items found:', invalidItems);
-            error.value = 'Some items in your cart are no longer available.';
-            toast.error('Some items in your cart are no longer available and have been removed.');
+            error.value = t('cart.unavailableItems');
+            toast.error(t('cart.unavailableItems'));
 
             await Promise.all(invalidItems.map(item => cartStore.removeFromCart(item._id)));
             await cartStore.fetchCart();
         }
     } catch (err) {
         console.error('Error refreshing cart:', err);
-        error.value = 'Failed to load cart. Please try again.';
-        toast.error('Failed to refresh cart. Please try again.');
+        error.value = t('cart.failedLoadCart');
+        toast.error(t('cart.failedRefreshCart'));
     }
 };
 
@@ -360,7 +361,7 @@ const cartSubtotal = computed(() => {
 
 const applyPromoCode = async () => {
     if (!couponCode.value) {
-        toast.error('Please enter a coupon code');
+        toast.error(t('cart.enterCouponCode'));
         return;
     }
     const code = couponCode.value; // Store the code in a local variable
@@ -369,10 +370,10 @@ const applyPromoCode = async () => {
         // await cartStore.applyCoupon(couponCode.value);
         await cartStore.applyCoupon(code);
         couponCode.value = ''; // Clear the input field
-        toast.success(`Coupon applied successfully! You saved $${cartStore.discount.toFixed(2)}`);
+        toast.success(t('cart.couponApplied', { amount: cartStore.discount.toFixed(2) }));
     } catch (error) {
         console.error('Error applying coupon:', error);
-        toast.error(error.response?.data?.message || 'Failed to apply coupon');
+        toast.error(error.response?.data?.message || t('cart.failedApplyCoupon'));
     }
 };
 
@@ -389,7 +390,7 @@ const removeCoupon = async () => {
 
 const proceedToCheckout = () => {
     if (cartStore.items.length === 0) {
-        toast.error('Your cart is empty. Add some items before checking out.');
+        toast.error(t('cart.emptyBeforeCheckout'));
         return;
     }
     router.push({ name: 'Checkout' });

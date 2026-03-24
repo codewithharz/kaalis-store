@@ -1,9 +1,9 @@
 <template>
     <div class=" bg-white px-5 pt-5 pb-0 mb-2">
-        <h1 class="text-2xl font-semibold mb-6">My Orders</h1>
+        <h1 class="text-2xl font-semibold mb-6">{{ t('account.myOrders') }}</h1>
         <div class="">
             <ul class="flex space-x-10 px-6">
-                <li v-for="item in orderItems" :key="item.label"
+                <li v-for="item in translatedOrderItems" :key="item.label"
                     class="border-b-2 border-white hover:border-b-2 hover:border-[#24a3b5]">
                     <router-link active-class="active-link" :to="item.link"
                         class="flex items-center space-x-2 text-gray-500 hover:text-[#24a3b5] transition-all duration-300 ease-in-out">
@@ -16,11 +16,22 @@
 </template>
 
 <script>
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { orderItems } from '../utils/orderItems.js';
 export default {
-    data() {
+    setup() {
+        const { t } = useI18n();
+        const translatedOrderItems = computed(() =>
+            orderItems.map((item) => ({
+                ...item,
+                label: t(item.labelKey),
+            }))
+        );
+
         return {
-            orderItems: orderItems,
+            t,
+            translatedOrderItems,
         };
     },
 };

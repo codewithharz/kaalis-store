@@ -5,11 +5,11 @@
       <nav class="flex" aria-label="Breadcrumb">
         <ol class="flex items-center space-x-2">
           <li>
-            <router-link to="/" class="text-gray-500 hover:text-gray-700 text-sm">Home</router-link>
+            <router-link to="/" class="text-gray-500 hover:text-gray-700 text-sm">{{ t('searchPage.home') }}</router-link>
           </li>
           <li class="flex items-center space-x-2">
             <ChevronRight class="w-4 h-4 text-gray-400" />
-            <span class="text-gray-900 font-medium text-sm">Search results for "{{ searchQuery }}"</span>
+            <span class="text-gray-900 font-medium text-sm">{{ t('searchPage.searchResultsFor', { query: searchQuery }) }}</span>
           </li>
         </ol>
       </nav>
@@ -18,17 +18,17 @@
     <!-- Loading State -->
     <div v-if="loading" class="text-center py-8 sm:py-12">
       <div class="spinner mx-auto"></div>
-      <p class="mt-4 text-sm sm:text-base text-gray-600">Searching for products...</p>
+      <p class="mt-4 text-sm sm:text-base text-gray-600">{{ t('searchPage.searchingProducts') }}</p>
     </div>
 
     <!-- Main Content -->
     <div v-else>
       <div class="mb-6">
         <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-1">
-          Search Results
+          {{ t('searchPage.title') }}
         </h1>
         <p class="text-sm sm:text-base text-gray-600">
-          Showing results for "{{ searchQuery }}" ({{ products.length }} found)
+          {{ t('searchPage.showingResults', { query: searchQuery, count: products.length }) }}
         </p>
       </div>
 
@@ -50,15 +50,15 @@
         <div class="text-gray-400 mb-6 font-light">
           <Search class="w-16 h-16 sm:w-20 sm:h-20 mx-auto opacity-20" />
         </div>
-        <h3 class="text-lg sm:text-xl font-semibold text-gray-600 mb-2">No matching products</h3>
+        <h3 class="text-lg sm:text-xl font-semibold text-gray-600 mb-2">{{ t('searchPage.noMatchingProducts') }}</h3>
         <p class="text-sm sm:text-base text-gray-500 mb-6 max-w-md mx-auto">
-          We couldn't find any products matching your search. Try checking for typos or using more general terms.
+          {{ t('searchPage.noMatchingProductsBody') }}
         </p>
         <router-link 
           to="/" 
           class="inline-block bg-[#24a3b5] text-white px-8 py-3 rounded-lg hover:bg-[#1f8f9e] transition-colors font-medium shadow-md"
         >
-          Return to Shopping
+          {{ t('searchPage.returnToShopping') }}
         </router-link>
       </div>
     </div>
@@ -71,6 +71,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { Search, ChevronRight } from 'lucide-vue-next';
 import ProductCard from './ProductCard.vue';
 import apiClient from '../api/axios';
+import { useI18n } from 'vue-i18n';
 
 export default {
   name: 'Search',
@@ -82,6 +83,7 @@ export default {
   setup() {
     const route = useRoute();
     const router = useRouter();
+    const { t } = useI18n();
     const loading = ref(true);
     const products = ref([]);
     const searchQuery = ref('');
@@ -125,6 +127,7 @@ export default {
       loading,
       products,
       searchQuery,
+      t,
       viewProduct
     };
   }

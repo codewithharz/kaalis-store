@@ -2,8 +2,7 @@
     <div class="p-6 space-y-8">
         <!-- Report Header -->
         <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-gray-800">{{ reportType.charAt(0).toUpperCase() + reportType.slice(1) }}
-                Report</h2>
+            <h2 class="text-2xl font-bold text-gray-800">{{ t(`reportViewerPage.titles.${reportType}`) }}</h2>
             <div class="bg-gray-100 px-4 py-2 rounded-lg text-sm text-gray-600">
                 {{ formatDateRange(reportData.dateRange) }}
             </div>
@@ -14,22 +13,22 @@
             <!-- Summary Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h4 class="text-sm font-medium text-gray-500 mb-2">Total Revenue</h4>
+                    <h4 class="text-sm font-medium text-gray-500 mb-2">{{ t('reportViewerPage.sales.summary.totalRevenue') }}</h4>
                     <p class="text-2xl font-bold text-gray-900">{{ formatCurrency(reportData.summary.totalRevenue) }}
                     </p>
                 </div>
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h4 class="text-sm font-medium text-gray-500 mb-2">Total Orders</h4>
+                    <h4 class="text-sm font-medium text-gray-500 mb-2">{{ t('reportViewerPage.sales.summary.totalOrders') }}</h4>
                     <p class="text-2xl font-bold text-gray-900">{{ reportData.summary.totalOrders }}</p>
                 </div>
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h4 class="text-sm font-medium text-gray-500 mb-2">Average Order Value</h4>
+                    <h4 class="text-sm font-medium text-gray-500 mb-2">{{ t('reportViewerPage.sales.summary.averageOrderValue') }}</h4>
                     <p class="text-2xl font-bold text-gray-900">
                         {{ formatCurrency(reportData.summary.totalRevenue / reportData.summary.totalOrders) }}
                     </p>
                 </div>
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h4 class="text-sm font-medium text-gray-500 mb-2">Daily Average</h4>
+                    <h4 class="text-sm font-medium text-gray-500 mb-2">{{ t('reportViewerPage.sales.summary.dailyAverage') }}</h4>
                     <p class="text-2xl font-bold text-gray-900">
                         {{ formatCurrency(reportData.summary.totalRevenue / reportData.data.length) }}
                     </p>
@@ -38,7 +37,7 @@
 
             <!-- Sales Chart -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 class="text-lg font-semibold mb-4">Sales Trend</h3>
+                <h3 class="text-lg font-semibold mb-4">{{ t('reportViewerPage.sales.chartTitle') }}</h3>
                 <div class="h-96">
                     <canvas ref="salesChart"></canvas>
                 </div>
@@ -47,7 +46,7 @@
             <!-- Daily Breakdown Table -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100">
                 <div class="px-6 py-4 border-b border-gray-100">
-                    <h3 class="text-lg font-semibold">Daily Breakdown</h3>
+                    <h3 class="text-lg font-semibold">{{ t('reportViewerPage.sales.dailyBreakdown') }}</h3>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -55,16 +54,16 @@
                             <tr>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Date</th>
+                                    {{ t('reportViewerPage.sales.columns.date') }}</th>
                                 <th
                                     class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Revenue</th>
+                                    {{ t('reportViewerPage.sales.columns.revenue') }}</th>
                                 <th
                                     class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Orders</th>
+                                    {{ t('reportViewerPage.sales.columns.orders') }}</th>
                                 <th
                                     class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Avg Order Value</th>
+                                    {{ t('reportViewerPage.sales.columns.avgOrderValue') }}</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -85,7 +84,7 @@
                         </tbody>
                         <tfoot class="bg-gray-50">
                             <tr>
-                                <td class="px-6 py-3 text-left text-sm font-medium text-gray-900">Total</td>
+                                <td class="px-6 py-3 text-left text-sm font-medium text-gray-900">{{ t('reportViewerPage.sales.total') }}</td>
                                 <td class="px-6 py-3 text-right text-sm font-medium text-gray-900">
                                     {{ formatCurrency(reportData.summary.totalRevenue) }}
                                 </td>
@@ -108,17 +107,17 @@
             <!-- Customer Stats -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h4 class="text-sm font-medium text-gray-500 mb-2">Total Customers</h4>
+                    <h4 class="text-sm font-medium text-gray-500 mb-2">{{ t('reportViewerPage.customers.summary.totalCustomers') }}</h4>
                     <p class="text-2xl font-bold text-gray-900">{{ reportData.summary.totalCustomers }}</p>
                 </div>
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h4 class="text-sm font-medium text-gray-500 mb-2">Average Spend per Customer</h4>
+                    <h4 class="text-sm font-medium text-gray-500 mb-2">{{ t('reportViewerPage.customers.summary.averageSpendPerCustomer') }}</h4>
                     <p class="text-2xl font-bold text-gray-900">
                         {{ formatCurrency(getTotalSpent() / reportData.summary.totalCustomers) }}
                     </p>
                 </div>
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h4 class="text-sm font-medium text-gray-500 mb-2">Total Revenue</h4>
+                    <h4 class="text-sm font-medium text-gray-500 mb-2">{{ t('reportViewerPage.customers.summary.totalRevenue') }}</h4>
                     <p class="text-2xl font-bold text-gray-900">{{ formatCurrency(getTotalSpent()) }}</p>
                 </div>
             </div>
@@ -126,7 +125,7 @@
             <!-- Customer Table -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100">
                 <div class="px-6 py-4 border-b border-gray-100">
-                    <h3 class="text-lg font-semibold">Customer Details</h3>
+                    <h3 class="text-lg font-semibold">{{ t('reportViewerPage.customers.detailsTitle') }}</h3>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -134,19 +133,19 @@
                             <tr>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Customer</th>
+                                    {{ t('reportViewerPage.customers.columns.customer') }}</th>
                                 <th
                                     class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Orders</th>
+                                    {{ t('reportViewerPage.customers.columns.orders') }}</th>
                                 <th
                                     class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Total Spent</th>
+                                    {{ t('reportViewerPage.customers.columns.totalSpent') }}</th>
                                 <th
                                     class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Avg Order Value</th>
+                                    {{ t('reportViewerPage.customers.columns.avgOrderValue') }}</th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Last Purchase</th>
+                                    {{ t('reportViewerPage.customers.columns.lastPurchase') }}</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -191,15 +190,15 @@
         <!-- Report Metadata -->
         <div class="mt-8 text-sm text-gray-500 space-y-1">
             <p class="flex items-center gap-2">
-                <span class="font-medium">Generated:</span>
+                <span class="font-medium">{{ t('reportViewerPage.meta.generated') }}</span>
                 {{ formatDate(reportData.generatedAt) }}
             </p>
             <p class="flex items-center gap-2">
-                <span class="font-medium">Store:</span>
+                <span class="font-medium">{{ t('reportViewerPage.meta.store') }}</span>
                 {{ reportData.seller.storeName }}
             </p>
             <p class="flex items-center gap-2">
-                <span class="font-medium">Generation Time:</span>
+                <span class="font-medium">{{ t('reportViewerPage.meta.generationTime') }}</span>
                 {{ reportData.generationTimeMs }}ms
             </p>
         </div>
@@ -208,6 +207,7 @@
 
 <script>
 import { ref, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Chart from 'chart.js/auto';
 
 export default {
@@ -223,19 +223,20 @@ export default {
         }
     },
     setup(props) {
+        const { t, locale } = useI18n();
         const salesChart = ref(null);
         let chartInstance = null;
 
         const formatCurrency = (value) => {
-            if (!value || isNaN(value)) return '₦0';
-            return `₦${new Intl.NumberFormat('en-NG', {
+            if (!value || isNaN(value)) return `${t('reportViewerPage.currencySymbol')}0`;
+            return `${t('reportViewerPage.currencySymbol')}${new Intl.NumberFormat(locale.value === 'fr' ? 'fr-FR' : 'en-NG', {
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0
             }).format(value)}`;
         };
 
         const formatDate = (date) => {
-            return new Date(date).toLocaleString('en-NG', {
+            return new Date(date).toLocaleString(locale.value === 'fr' ? 'fr-FR' : 'en-NG', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
@@ -281,13 +282,13 @@ export default {
             chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: data.map(item => new Date(item._id).toLocaleDateString('en-NG', {
+                    labels: data.map(item => new Date(item._id).toLocaleDateString(locale.value === 'fr' ? 'fr-FR' : 'en-NG', {
                         month: 'short',
                         day: 'numeric'
                     })),
                     datasets: [
                         {
-                            label: 'Revenue',
+                            label: t('reportViewerPage.sales.datasets.revenue'),
                             data: data.map(item => item.totalSales),
                             borderColor: '#8b5cf6',
                             backgroundColor: 'rgba(139, 92, 246, 0.1)',
@@ -296,7 +297,7 @@ export default {
                             yAxisID: 'revenue'
                         },
                         {
-                            label: 'Orders',
+                            label: t('reportViewerPage.sales.datasets.orders'),
                             data: data.map(item => item.ordersCount),
                             borderColor: '#10b981',
                             backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -325,7 +326,7 @@ export default {
                                     if (context.dataset.yAxisID === 'revenue') {
                                         return `${label}: ${formatCurrency(value)}`;
                                     }
-                                    return `${label}: ${value} orders`;
+                                    return `${label}: ${t('reportViewerPage.sales.ordersCount', { count: value })}`;
                                 }
                             }
                         }
@@ -336,7 +337,7 @@ export default {
                             position: 'left',
                             title: {
                                 display: true,
-                                text: 'Revenue (₦)',
+                                text: t('reportViewerPage.sales.axes.revenue'),
                                 color: '#8b5cf6'
                             },
                             ticks: {
@@ -353,7 +354,7 @@ export default {
                             position: 'right',
                             title: {
                                 display: true,
-                                text: 'Number of Orders',
+                                text: t('reportViewerPage.sales.axes.numberOfOrders'),
                                 color: '#10b981'
                             },
                             ticks: {
@@ -387,7 +388,8 @@ export default {
             formatCurrency,
             formatDate,
             formatDateRange,
-            getTotalSpent
+            getTotalSpent,
+            t
         };
     }
 };

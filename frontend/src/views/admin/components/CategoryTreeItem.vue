@@ -13,12 +13,12 @@
             <div class="flex-1">
                 <span class="font-medium">{{ category.name }}</span>
                 <span class="text-sm text-gray-500 ml-2">
-                    ({{ getSubcategoriesCount }} items)
+                    {{ t('adminCategoryTree.itemsCount', { count: getSubcategoriesCount }) }}
                 </span>
             </div>
 
             <span v-if="!category.active" class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
-                Inactive
+                {{ t('adminCategoryTree.inactive') }}
             </span>
         </div>
 
@@ -32,6 +32,7 @@
 
 <script>
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ChevronRight, ChevronDown } from 'lucide-vue-next';
 
 export default {
@@ -60,6 +61,7 @@ export default {
     emits: ['select'],
 
     setup(props) {
+        const { t } = useI18n();
         const expanded = ref(false);
 
         const subcategories = computed(() => {
@@ -102,7 +104,8 @@ export default {
             hasChildren,
             isSelected,
             getSubcategoriesCount,
-            toggleExpand
+            toggleExpand,
+            t
         };
     }
 };

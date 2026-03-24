@@ -4,11 +4,11 @@
         <div class="lg:hidden px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-100">
             <div class="flex items-center justify-between">
                 <span class="text-xs sm:text-sm text-gray-500 truncate">
-                    {{ selectedCountry ? `Country: ${selectedCountry}` : 'Select Country' }}
+                    {{ selectedCountry ? t('navbar.countryLabel', { country: selectedCountry }) : t('navbar.selectCountry') }}
                 </span>
                 <button @click="openCountryModal"
                     class="text-[#24a6bb] text-xs sm:text-sm font-semibold whitespace-nowrap ml-2">
-                    {{ selectedCountry ? 'Change' : 'Select' }}
+                    {{ selectedCountry ? t('common.change') : t('common.select') }}
                 </button>
             </div>
         </div>
@@ -19,20 +19,20 @@
                 <div class="flex items-center">
                     <span v-if="selectedCountry" class="text-[#24a6bb] font-semibold mr-2">{{ selectedCountry }}</span>
                     <button @click="openCountryModal" class="text-[#374141] hover:text-gray-700 cursor-pointer">
-                        Change Country
+                        {{ t('navbar.changeCountry') }}
                     </button>
                 </div>
                 <div class="flex space-x-2 md:space-x-4">
-                    <a href="#" class="hover:text-gray-700 text-[#374141]">My Discount</a>
+                    <a href="#" class="hover:text-gray-700 text-[#374141]">{{ t('navbar.myDiscount') }}</a>
                     <span class="hidden sm:inline">|</span>
-                    <a href="#" class="hover:text-gray-700 text-[#374141]">Coupons</a>
+                    <a href="#" class="hover:text-gray-700 text-[#374141]">{{ t('navbar.coupons') }}</a>
                     <span class="hidden sm:inline">|</span>
                     <router-link to="/become-seller" class="hover:text-gray-700 text-[#374141] cursor-pointer">
-                        Sell on Bruthol
+                        {{ t('navbar.sellOnBruthol') }}
                     </router-link>
                     <span class="hidden sm:inline">|</span>
                     <router-link to="/page/help/live-help" class="hover:text-gray-700 text-[#374141] cursor-pointer">
-                        Help & Support
+                        {{ t('navbar.helpSupport') }}
                     </router-link>
                 </div>
             </div>
@@ -57,7 +57,7 @@
                 <div class="relative flex items-center">
                     <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
                     <input v-model="searchQuery" type="text" @keyup.enter="handleSearch"
-                        placeholder="Write the product, category or brand you are looking for"
+                        :placeholder="t('navbar.desktopSearchPlaceholder')"
                         class="w-full text-[#363636] bg-[#f3f3f3] pl-10 pr-10 py-2 rounded-l-full focus:outline-none focus:ring-1 focus:ring-[#ff2f62] focus:border-transparent" />
                     <button v-if="searchQuery" @click="clearSearch"
                         class="absolute right-[100px] top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -65,7 +65,7 @@
                     </button>
                     <button @click="handleSearch"
                         class="bg-gradient-to-t from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white font-light py-2 px-4 rounded-r-full focus:outline-none transition duration-300 ease-in-out">
-                        Search
+                        {{ t('common.search') }}
                     </button>
                 </div>
             </div>
@@ -78,8 +78,7 @@
                         <Button variant="outline"
                             class="flex items-center text-[#363636] hover:text-[#24a6bb] transition duration-300 p-1 sm:p-2 touch-manipulation">
                             <UserRound class="hover:fill-[#24a6bb] w-4 h-4 sm:w-5 sm:h-5" />
-                            <span class="text-xs font-medium ml-1 hidden lg:inline">{{ isLoggedIn ? `Hi
-                                ${user.username}` : 'Login' }}</span>
+                            <span class="text-xs font-medium ml-1 hidden lg:inline">{{ isLoggedIn ? t('navbar.hiUser', { username: user.username }) : t('navbar.login') }}</span>
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent class="w-48 sm:w-56">
@@ -98,7 +97,7 @@
                                         <DropdownMenuItem v-if="!isLoggedIn"
                                             class="text-xs hover:text-[#363636] font-medium px-2 py-0">
                                             <router-link to="/login" class="text-white py-1 hover:text-[#24a3b5]">
-                                                Login/Register
+                                                {{ t('navbar.loginRegisterCompact') }}
                                             </router-link>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem v-else
@@ -114,7 +113,7 @@
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup v-if="isLoggedIn">
                             <DropdownMenuItem class="flex flex-col items-start space-y-1">
-                                <span v-for="item in menuItems" :key="item.label" class="w-full p-1">
+                                <span v-for="item in translatedMenuItems" :key="item.label" class="w-full p-1">
                                     <router-link active-class="active-link" :to="item.link"
                                         class="flex items-center text-gray-700 hover:text-[#24a3b5] transition-colors duration-300">
                                         <component :is="item.icon" class="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" />
@@ -126,7 +125,7 @@
                         <DropdownMenuSeparator />
                         <div v-if="isLoggedIn">
                             <DropdownMenuItem @click="logout">
-                                <span class="text-sm">Log out</span>
+                                <span class="text-sm">{{ t('navbar.logout') }}</span>
                             </DropdownMenuItem>
                         </div>
                     </DropdownMenuContent>
@@ -167,20 +166,20 @@
                     <div v-if="showNotifications"
                         class="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-xl z-50 overflow-hidden border border-gray-200">
                         <div class="p-3 sm:p-4 border-b border-gray-100 bg-gradient-to-r from-indigo-500 to-purple-500">
-                            <h3 class="text-base sm:text-lg font-semibold text-white">Notifications</h3>
+                            <h3 class="text-base sm:text-lg font-semibold text-white">{{ t('navbar.notifications') }}</h3>
                         </div>
 
                         <div class="max-h-80 sm:max-h-[480px] overflow-y-auto">
                             <div v-if="notificationStore.isLoading"
                                 class="p-6 sm:p-8 text-center text-gray-500 flex items-center justify-center">
                                 <Loader2 class="w-5 h-5 sm:w-6 sm:h-6 animate-spin" />
-                                <span class="ml-2 text-sm">Loading notifications...</span>
+                                <span class="ml-2 text-sm">{{ t('navbar.loadingNotifications') }}</span>
                             </div>
 
                             <div v-else-if="notificationStore.notifications.length === 0"
                                 class="p-6 sm:p-8 text-center text-gray-500">
                                 <InboxIcon class="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 text-gray-400" />
-                                <p class="text-sm">No notifications yet</p>
+                                <p class="text-sm">{{ t('navbar.noNotifications') }}</p>
                             </div>
 
                             <div v-else class="divide-y divide-gray-100">
@@ -233,7 +232,7 @@
                 <Search
                     class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
                 <input v-model="searchQuery" type="text" @keyup.enter="handleSearch"
-                    placeholder="What is on your mind today?"
+                    :placeholder="t('navbar.mobileSearchPlaceholder')"
                     class="w-full text-[#363636] bg-[#f3f3f3] pl-8 sm:pl-10 pr-10 py-2 sm:py-2.5 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-[#ff2f62] focus:border-transparent" />
                 <button v-if="searchQuery" @click="clearSearch"
                     class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -248,7 +247,7 @@
                 class="fixed inset-y-0 left-0 w-64 sm:w-72 bg-white shadow-lg z-50 lg:hidden overflow-y-auto"
                 v-click-outside="handleClickOutside">
                 <div class="flex justify-between items-center p-3 sm:p-4 border-b border-gray-200">
-                    <h2 class="text-lg font-semibold text-gray-900">Menu</h2>
+                    <h2 class="text-lg font-semibold text-gray-900">{{ t('navbar.menu') }}</h2>
                     <button @click="toggleMenu" class="text-[#363636] p-1 touch-manipulation">
                         <X class="w-5 h-5 sm:w-6 sm:h-6" />
                     </button>
@@ -263,16 +262,16 @@
                             </div>
                             <div>
                                 <p class="font-medium text-gray-900 text-sm">{{ user.username }}</p>
-                                <p class="text-xs text-gray-500">Welcome back!</p>
+                                <p class="text-xs text-gray-500">{{ t('navbar.welcomeBack') }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Menu Items -->
                     <div v-if="isLoggedIn" class="mb-6">
-                        <h3 class="font-semibold text-base mb-3 text-gray-900">My Account</h3>
+                        <h3 class="font-semibold text-base mb-3 text-gray-900">{{ t('navbar.myAccount') }}</h3>
                         <ul class="space-y-1">
-                            <li v-for="item in menuItems" :key="item.label">
+                            <li v-for="item in translatedMenuItems" :key="item.label">
                                 <router-link :to="item.link" @click="closeMenu"
                                     class="flex items-center text-gray-700 hover:text-[#24a6bb] hover:bg-gray-50 py-2.5 px-3 rounded-lg transition-all duration-200">
                                     <component :is="item.icon" class="w-5 h-5 mr-3 flex-shrink-0" />
@@ -284,13 +283,13 @@
 
                     <!-- Categories -->
                     <div class="mb-6">
-                        <h3 class="font-semibold text-base mb-3 text-gray-900">Categories</h3>
+                        <h3 class="font-semibold text-base mb-3 text-gray-900">{{ t('navbar.categories') }}</h3>
                         <ul class="space-y-1">
                             <!-- <li v-for="category in mainCategories.slice(0, 8)" :key="category._id"> -->
                             <li v-for="category in mainCategories.slice(7, 16)" :key="category._id">
                                 <router-link :to="`/category/${category.slug}`" @click="closeMenu"
                                     class="flex items-center text-gray-700 hover:text-[#24a6bb] hover:bg-gray-50 py-2.5 px-3 rounded-lg transition-all duration-200">
-                                    <span class="text-sm">{{ category.name }}</span>
+                                    <span class="text-sm">{{ category.displayName || category.name }}</span>
                                 </router-link>
                             </li>
                             <!-- when we have above 8 categories -->
@@ -305,20 +304,20 @@
 
                     <!-- Quick Links -->
                     <div class="mb-6">
-                        <h3 class="font-semibold text-base mb-3 text-gray-900">Quick Links</h3>
+                        <h3 class="font-semibold text-base mb-3 text-gray-900">{{ t('navbar.quickLinks') }}</h3>
                         <ul class="space-y-1">
                             <li>
                                 <router-link to="/become-seller" @click="closeMenu"
                                     class="flex items-center text-gray-700 hover:text-[#24a6bb] hover:bg-gray-50 py-2.5 px-3 rounded-lg transition-all duration-200">
                                     <Store class="w-5 h-5 mr-3" />
-                                    <span class="text-sm">Sell on Bruthol</span>
+                                    <span class="text-sm">{{ t('navbar.sellOnBruthol') }}</span>
                                 </router-link>
                             </li>
                             <li>
                                 <router-link to="/page/help/live-help" @click="closeMenu"
                                     class="flex items-center text-gray-700 hover:text-[#24a6bb] hover:bg-gray-50 py-2.5 px-3 rounded-lg transition-all duration-200">
                                     <HelpCircle class="w-5 h-5 mr-3" />
-                                    <span class="text-sm">Help & Support</span>
+                                    <span class="text-sm">{{ t('navbar.helpSupport') }}</span>
                                 </router-link>
                             </li>
                         </ul>
@@ -330,13 +329,13 @@
                             <router-link to="/login" @click="closeMenu"
                                 class="flex items-center justify-center bg-[#24a3b5] text-white py-3 px-4 rounded-lg font-medium hover:bg-[#1f8f9e] transition-colors duration-200">
                                 <UserRound class="w-5 h-5 mr-2" />
-                                <span>Login / Register</span>
+                                <span>{{ t('navbar.loginRegister') }}</span>
                             </router-link>
                         </div>
                         <div v-else>
                             <button @click="logout"
                                 class="flex items-center justify-center w-full text-red-600 hover:bg-red-50 py-3 px-4 rounded-lg font-medium transition-colors duration-200">
-                                <span>Log Out</span>
+                                <span>{{ t('navbar.logout') }}</span>
                             </button>
                         </div>
                     </div>
@@ -400,9 +399,11 @@ import { useProductStore } from '../store/productStore.js';
 import { storeToRefs } from 'pinia';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useCountryStore } from '../store/countryStore';
+import { useLanguageStore } from '../store/languageStore';
 import CountrySelectionModal from './CountrySelectionModal.vue';
 import { useRouter, useRoute } from 'vue-router';
 import { clickOutside } from '../utils/clickOutside.js';
+import { useI18n } from 'vue-i18n';
 
 export default {
     name: 'Navbar',
@@ -462,6 +463,7 @@ export default {
         const wishlistStore = useWishlistStore();
         const router = useRouter();
         const route = useRoute();
+        const { t, locale } = useI18n();
 
         const isLoggedIn = computed(() => userStore.isLoggedIn);
         const user = computed(() => userStore.user || { username: 'Guest' });
@@ -487,6 +489,7 @@ export default {
         let closeTimeout = null;
 
         const countryStore = useCountryStore();
+        const languageStore = useLanguageStore();
         const isCountryModalOpen = ref(false);
 
         const notificationStore = useNotificationStore();
@@ -494,6 +497,12 @@ export default {
         const notificationsRef = ref(null);
 
         const selectedCountry = computed(() => countryStore.selectedCountry);
+        const translatedMenuItems = computed(() =>
+            menuItems.map((item) => ({
+                ...item,
+                label: t(item.labelKey),
+            }))
+        );
 
         const unreadCount = computed(() => notificationStore.unreadCount);
 
@@ -507,7 +516,7 @@ export default {
                     await notificationStore.fetchMyNotifications();
                 } catch (error) {
                     console.error('Error fetching notifications:', error);
-                    toast.error('Failed to load notifications');
+                    toast.error(t('navbar.notificationsLoadFailed'));
                     showNotifications.value = false;
                 }
             }
@@ -537,7 +546,7 @@ export default {
                 showNotifications.value = false;
             } catch (error) {
                 console.error('Error handling notification click:', error);
-                toast.error('Failed to process notification');
+                toast.error(t('navbar.notificationProcessFailed'));
             }
         };
 
@@ -661,6 +670,10 @@ export default {
             }
         });
 
+        watch(locale, async () => {
+            await productStore.fetchCategories();
+        });
+
         onUnmounted(() => {
             document.removeEventListener('click', handleClickOutside);
         });
@@ -677,7 +690,7 @@ export default {
             cartStore.$reset(); // Reset cart state
             productStore.$reset(); // Reset product state
             router.push('/');
-            toast.success("Logged Out Successfully");
+            toast.success(t('navbar.loggedOutSuccess'));
         };
 
         const toggleMenu = (event) => {
@@ -713,7 +726,7 @@ export default {
                 router.push('/account/wishlist');
             } else {
                 router.push('/login');
-                toast.info('Please login to view your wishlist');
+                toast.info(t('navbar.pleaseLoginWishlist'));
             }
         };
 
@@ -772,10 +785,11 @@ export default {
         return {
             isLoggedIn,
             user,
+            t,
             logout,
             toggleMenu,
             closeMenu,
-            menuItems,
+            translatedMenuItems,
             handleClickOutside,
             cartCount,
             navigateToCart,

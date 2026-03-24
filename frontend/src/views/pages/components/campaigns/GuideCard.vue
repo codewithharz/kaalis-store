@@ -13,10 +13,10 @@
                 <p class="text-gray-600 mb-4">{{ description }}</p>
                 <div class="flex items-center justify-between">
                     <button class="text-[#24a6bb] hover:text-[#1a7f8f] font-medium flex items-center">
-                        Read Guide
+                        {{ t('pageComponents.readGuide') }}
                         <ArrowRight class="w-4 h-4 ml-1" />
                     </button>
-                    <span class="text-gray-500 text-sm">{{ readTime }} min read</span>
+                    <span class="text-gray-500 text-sm">{{ t('pageComponents.minRead', { count: readTime }) }}</span>
                 </div>
             </div>
         </div>
@@ -25,6 +25,9 @@
 
 <script setup>
 import { ArrowRight } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 defineProps({
     title: {

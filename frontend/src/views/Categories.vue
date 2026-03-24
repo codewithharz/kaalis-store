@@ -42,10 +42,10 @@
             <div class="px-3 sm:px-4">
                 <div class="flex space-x-2 overflow-x-auto scrollbar-hide pb-2">
                     <!-- <router-link v-for="category in rootCategories.slice(0, 8)" :key="category._id" -->
-                    <router-link v-for="category in rootCategories.slice(7, 16)" :key="category._id"
+                    <router-link v-for="category in rootCategories.slice(0, 9)" :key="category._id"
                         :to="`/category/${category.slug}`"
                         class="flex-shrink-0 px-3 py-1.5 bg-gray-100 rounded-full text-xs sm:text-sm font-medium text-gray-700 hover:bg-[#24a6bb] hover:text-white transition-colors duration-200 whitespace-nowrap">
-                        {{ category.name }}
+                        {{ category.displayName || category.name }}
                     </router-link>
                 </div>
             </div>
@@ -58,7 +58,7 @@
                 <button @click="toggleCategoryMenu" @mouseleave="startCloseTimer"
                     class="flex items-center space-x-2 text-gray-700 hover:text-gray-900 mr-4 flex-shrink-0 touch-manipulation">
                     <Menu class="w-6 h-6" />
-                    <span class="font-medium text-[15px]">ALL CATEGORIES</span>
+                    <span class="font-medium text-[15px]">{{ t('categories.allCategories') }}</span>
                     <ChevronDown class="w-4 h-4 transition-transform duration-200"
                         :class="{ 'transform rotate-180': isCategoryMenuOpen }" />
                 </button>
@@ -66,12 +66,12 @@
                 <!-- Scrollable category list -->
                 <div class="flex overflow-x-auto category-scroll-container">
                     <!-- Root categories Side Panel -->
-                    <div v-for="category in rootCategories.slice(7, 16)" :key="category._id" class="relative"
+                    <div v-for="category in rootCategories.slice(0, 9)" :key="category._id" class="relative"
                         @mouseenter="showSubcategories(category)" @mouseleave="startHideTimer">
                         <router-link :to="`/category/${category.slug}`"
                             class="text-[14px] whitespace-nowrap px-3 py-2 text-gray-700 hover:text-[#24a6bb] flex-shrink-0 block transition-colors duration-200"
                             @click="closeDropdown">
-                            {{ category.name }}
+                            {{ category.displayName || category.name }}
                         </router-link>
                     </div>
                 </div>
@@ -84,11 +84,11 @@
                     <div class="flex">
                         <!-- Root categories Side Panel -->
                         <div class="flex flex-col items-start bg-gray-50 px-4 border-r border-gray-200 w-48">
-                            <button v-for="category in rootCategories.slice(7, 16)" :key="category._id"
+                            <button v-for="category in rootCategories.slice(0, 9)" :key="category._id"
                                 @mouseenter="showSubcategories(category)"
                                 class="text-left w-full text-[14px] py-3 pl-3 hover:bg-gray-100 focus:outline-none transition duration-150 ease-in-out rounded"
                                 :class="{ 'bg-gray-100 text-[#24a6bb] font-medium': selectedCategory?._id === category._id }">
-                                {{ category.name }}
+                                {{ category.displayName || category.name }}
                             </button>
                         </div>
 
@@ -99,14 +99,14 @@
                                 <div v-for="subcategory in selectedCategory.children" :key="subcategory._id"
                                     class="space-y-2">
                                     <h3 class="font-semibold mb-3 text-[#24a6bb] text-sm border-b border-gray-100 pb-1">
-                                        {{ subcategory.name }}
+                                        {{ subcategory.displayName || subcategory.name }}
                                     </h3>
                                     <ul class="space-y-2">
                                         <li v-for="item in subcategory.children" :key="item._id">
                                             <router-link :to="`/category/${item.slug}`"
                                                 class="text-[13px] text-gray-600 hover:text-[#24a6bb] transition duration-150 ease-in-out block py-1"
                                                 @click="closeDropdown">
-                                                {{ item.name }}
+                                                {{ item.displayName || item.name }}
                                             </router-link>
                                         </li>
                                     </ul>
@@ -125,14 +125,14 @@
                     <div class="grid grid-cols-6 gap-6">
                         <div v-for="subcategory in selectedCategory.children" :key="subcategory._id" class="space-y-2">
                             <h3 class="font-semibold text-sm text-gray-900 border-b border-gray-100 pb-2">
-                                {{ subcategory.name }}
+                                {{ subcategory.displayName || subcategory.name }}
                             </h3>
                             <ul class="space-y-2">
                                 <li v-for="item in subcategory.children" :key="item._id">
                                     <router-link :to="`/category/${item.slug}`"
                                         class="text-[13px] text-gray-600 hover:text-[#24a6bb] transition duration-150 ease-in-out block py-1"
                                         @click="closeDropdown">
-                                        {{ item.name }}
+                                        {{ item.displayName || item.name }}
                                     </router-link>
                                 </li>
                             </ul>
@@ -146,7 +146,7 @@
         <div v-if="showAllCategoriesModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden">
             <div class="absolute inset-x-0 bottom-0 bg-white rounded-t-2xl max-h-[80vh] overflow-hidden">
                 <div class="flex items-center justify-between p-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-900">All Categories</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">{{ t('categories.allCategories') }}</h3>
                     <button @click="closeAllCategoriesModal" class="p-2 hover:bg-gray-100 rounded-full">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -161,10 +161,10 @@
                             :to="`/category/${category.slug}`" @click="closeAllCategoriesModal"
                             class="p-4 text-center hover:bg-gray-50 transition-colors duration-200">
                             <div class="text-sm font-medium text-gray-700">
-                                {{ category.name }}
+                                {{ category.displayName || category.name }}
                             </div>
                             <div v-if="category.children?.length" class="text-xs text-gray-500 mt-1">
-                                {{ category.children.length }} subcategories
+                                {{ t('categories.subcategoriesCount', { count: category.children.length }) }}
                             </div>
                         </router-link>
                     </div>
@@ -175,7 +175,8 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Menu, ChevronDown } from 'lucide-vue-next';
 import { useProductStore } from '../store/productStore.js';
 import { storeToRefs } from 'pinia';
@@ -187,6 +188,7 @@ export default {
         ChevronDown
     },
     setup() {
+        const { t, locale } = useI18n();
         const productStore = useProductStore();
         const { categories } = storeToRefs(productStore);
 
@@ -311,6 +313,10 @@ export default {
             document.addEventListener('click', handleClickOutside);
         });
 
+        watch(locale, async () => {
+            await productStore.fetchCategories();
+        });
+
         onUnmounted(() => {
             if (closeTimeout) {
                 clearTimeout(closeTimeout);
@@ -343,7 +349,8 @@ export default {
             toggleMobileCategoryMenu,
             closeMobileCategoryMenu,
             showAllMobileCategories,
-            closeAllCategoriesModal
+            closeAllCategoriesModal,
+            t
         };
     }
 };

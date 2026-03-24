@@ -35,7 +35,7 @@
                             </h1>
                             <div v-if="sellerProfile.verificationStatus === 'approved'" class="text-xs w-fit px-2 mt-1 sm:mt-2 font-medium rounded-full
                             text-[#ff934b] bg-white border border-[#ff934b]">
-                                Verified
+                                {{ t('sellerStoreHeader.verified') }}
                             </div>
                         </div>
                     </div>
@@ -50,11 +50,11 @@
                             ? 'text-white bg-[#ff934b] hover:bg-white hover:text-[#ff934b] border-[1px] border-[#ff934b]'
                             : 'text-[#ff934b] hover:text-white bg-white hover:bg-[#ff934b] border-[1px] border-[#ff934b]'
                     ]">
-                        {{ isFollowing ? 'Unfollow' : 'Follow' }}
+                        {{ isFollowing ? t('sellerStoreHeader.unfollow') : t('sellerStoreHeader.follow') }}
                     </button>
                     <div class="ml-3 sm:ml-0 sm:mt-1">
                         <span class="text-xs font-semibold">{{ followersCount }}</span>
-                        <span class="text-xs"> Followers</span>
+                        <span class="text-xs"> {{ t('sellerStoreHeader.followers') }}</span>
                     </div>
                 </div>
             </div>
@@ -66,7 +66,7 @@
                 <!-- Navigation Items -->
                 <div class="overflow-x-auto">
                     <ul class="flex items-baseline space-x-4 sm:space-x-10 px-2 sm:px-6 min-w-max">
-                        <li v-for="item in sellerItems" :key="item.label"
+                        <li v-for="item in translatedSellerItems" :key="item.label"
                             class="border-b-2 border-white hover:border-b-2 hover:border-[#24a3b5] flex-shrink-0">
                             <router-link active-class="active-link" :to="item.link"
                                 class="flex items-center space-x-2 text-gray-500 hover:text-[#24a3b5] transition-all duration-300 ease-in-out">
@@ -78,7 +78,7 @@
                         <li v-if="isOwnProfile && canRequestVerification" class="flex-shrink-0">
                             <button @click="requestVerification" :disabled="isLoading" class="button-hover font-semibold text-xs sm:text-sm shadow-md px-4 sm:px-10 py-1 rounded-sm text-[#ff934b] hover:text-white 
                                 bg-white hover:bg-[#ff934b] border-[1px] border-[#ff934b] whitespace-nowrap">
-                                {{ isLoading ? 'Submitting...' : 'Request Verification' }}
+                                {{ isLoading ? t('sellerStoreHeader.submitting') : t('sellerStoreHeader.requestVerification') }}
                             </button>
                         </li>
                     </ul>
@@ -93,8 +93,7 @@
 
                     <!-- Cooldown Timer -->
                     <p v-if="showCooldownTimer" class="text-xs sm:text-sm text-red-500 text-center sm:text-left">
-                        Please wait {{ formatCooldownTime(cooldownTimeRemaining) }} before requesting verification
-                        again.
+                        {{ t('sellerStoreHeader.cooldownMessage', { time: formatCooldownTime(cooldownTimeRemaining) }) }}
                     </p>
                 </div>
             </div>
@@ -104,6 +103,7 @@
 
 <script>
 import { computed, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useSellerStore } from '../store/sellerStore';
 import { useUserStore } from '../store/user';
 import { sellerItems } from '../utils/sellerItems.js';
@@ -111,6 +111,7 @@ import defaultBackground from '../assets/images/Kyrian.png';
 
 export default {
     setup() {
+        const { t } = useI18n();
         const sellerStore = useSellerStore();
         const userStore = useUserStore();
         const isLoading = ref(false);
@@ -124,9 +125,16 @@ export default {
                 await sellerStore.toggleFollow(sellerStore.sellerProfile._id);
             } else {
                 // Handle case when user is not logged in (e.g., redirect to login page)
-                console.log('User needs to log in to follow');
+                console.log(t('sellerStoreHeader.loginRequired'));
             }
         };
+
+        const translatedSellerItems = computed(() =>
+            sellerItems.map((item) => ({
+                ...item,
+                label: t(`sellerStoreHeader.nav.${item.labelKey}`)
+            }))
+        );
 
         // count down timer for cooldown time remaining
         const canRequestVerification = computed(() => {
@@ -219,13 +227,13 @@ export default {
         const statusMessage = computed(() => {
             switch (sellerStore.sellerProfile.verificationStatus) {
                 case 'submitted':
-                    return 'Verification in Progress';
+                    return t('sellerStoreHeader.statuses.submitted');
                 case 'under_review':
-                    return 'Under Review';
+                    return t('sellerStoreHeader.statuses.underReview');
                 case 'rejected':
-                    return 'Verification Rejected';
+                    return t('sellerStoreHeader.statuses.rejected');
                 case 'approved':
-                    return 'Verified Store';
+                    return t('sellerStoreHeader.statuses.approved');
                 default:
                     return '';
             }
@@ -240,8 +248,9 @@ export default {
         });
 
         return {
+            t,
             isOwnProfile,
-            sellerItems,
+            translatedSellerItems,
             defaultBackground,
             sellerProfile: computed(() => sellerStore.sellerProfile),
             isFollowing: computed(() => sellerStore.isFollowing),

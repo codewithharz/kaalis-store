@@ -9,40 +9,40 @@
             <div class="flex items-center justify-center py-12">
                 <div class="mx-auto grid w-[350px] gap-6">
                     <div class="grid gap-2 text-center">
-                        <h1 class="text-3xl font-bold">Register</h1>
-                        <p class="text-balance text-muted-foreground text-gray-300">Create your account</p>
+                        <h1 class="text-3xl font-bold">{{ t('auth.register') }}</h1>
+                        <p class="text-balance text-muted-foreground text-gray-300">{{ t('auth.createAccount') }}</p>
                     </div>
                     <!-- Form -->
                     <form @submit.prevent="register">
                         <div class="grid gap-4">
                             <div class="grid gap-2">
                                 <label for="username"
-                                    class="block text-lg font-semibold text-gray-300 mb-2 text-left">Username</label>
+                                    class="block text-lg font-semibold text-gray-300 mb-2 text-left">{{ t('auth.username') }}</label>
                                 <input type="text" id="username" v-model="username"
                                     class="w-full text-gray-800 px-4 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     required />
                             </div>
                             <div class="grid gap-2">
                                 <label for="email"
-                                    class="block text-lg font-semibold text-gray-300 mb-2 text-left">Email</label>
+                                    class="block text-lg font-semibold text-gray-300 mb-2 text-left">{{ t('auth.email') }}</label>
                                 <input type="email" id="email" v-model="email"
                                     class="w-full text-gray-800 px-4 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     required />
                             </div>
                             <div class="grid gap-2">
                                 <label for="password"
-                                    class="block text-lg font-semibold text-gray-300 mb-2 text-left">Password</label>
+                                    class="block text-lg font-semibold text-gray-300 mb-2 text-left">{{ t('auth.password') }}</label>
                                 <input type="password" id="password" v-model="password"
                                     class="w-full text-gray-800 px-4 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     required />
                             </div>
                             <button type="submit"
-                                class="w-full text-white font-bold py-2 px-4 button-hover bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white font-bold py-2 px-4 rounded-r focus:outline-none mt-4">Register</button>
+                                class="w-full text-white font-bold py-2 px-4 button-hover bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white font-bold py-2 px-4 rounded-r focus:outline-none mt-4">{{ t('auth.register') }}</button>
                             <p v-if="errorMessage" class="mt-4 text-red-500 text-center">{{ errorMessage }}</p>
                         </div>
                     </form>
                     <div class="mt-4 text-center text-sm">
-                        Already have an account? <router-link to="/login" class="underline">Login</router-link>
+                        {{ t('auth.alreadyHaveAccount') }} <router-link to="/login" class="underline">{{ t('auth.login') }}</router-link>
                     </div>
                 </div>
             </div>
@@ -52,11 +52,11 @@
                     class="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale" />
                 <div
                     class="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 text-white p-8">
-                    <h2 class="text-5xl font-extrabold mb-4 animate-pulse">Join Us Today!</h2>
-                    <p class="text-lg mb-4 animate-fade-in">Become a member and enjoy exclusive benefits.</p>
-                    <p class="text-md">Already have an account? Login and explore more!</p>
+                    <h2 class="text-5xl font-extrabold mb-4 animate-pulse">{{ t('auth.joinUsToday') }}</h2>
+                    <p class="text-lg mb-4 animate-fade-in">{{ t('auth.joinUsSubtitle') }}</p>
+                    <p class="text-md">{{ t('auth.joinUsExisting') }}</p>
                     <router-link to="/login"
-                        class=" text-white font-bold py-2 px-4 button-hover bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white hover:text-white rounded-r focus:outline-none mt-4">Login</router-link>
+                        class=" text-white font-bold py-2 px-4 button-hover bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white hover:text-white rounded-r focus:outline-none mt-4">{{ t('auth.login') }}</router-link>
                 </div>
             </div>
         </div>
@@ -66,8 +66,13 @@
 
 <script>
 import apiClient from '../api/axios';
+import { useI18n } from 'vue-i18n';
 
 export default {
+    setup() {
+        const { t } = useI18n();
+        return { t };
+    },
     data() {
         return {
             username: '',
@@ -79,14 +84,15 @@ export default {
     methods: {
         async register() {
             if (!this.username || !this.email || !this.password) {
-                this.errorMessage = 'Please fill in all fields';
+                this.errorMessage = this.t('auth.fillAllFields');
                 return;
             }
 
             const newUser = {
                 username: this.username,
                 email: this.email,
-                password: this.password
+                password: this.password,
+                locale: localStorage.getItem('locale') || 'en',
             };
 
             try {
@@ -95,7 +101,7 @@ export default {
                 this.$router.push('/login');
             } catch (error) {
                 console.error('Registration failed:', error);
-                this.errorMessage = 'An error occurred. Please try again.';
+                this.errorMessage = this.t('auth.genericError');
             }
         }
     }

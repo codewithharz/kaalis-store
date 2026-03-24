@@ -29,6 +29,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -39,28 +40,36 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue', 'prev', 'next'])
+const { t, locale } = useI18n()
 
-const periods = [
-    { label: '7 Days', value: '7d' },
-    { label: '30 Days', value: '30d' },
-    { label: '90 Days', value: '90d' },
-    { label: 'Year', value: '1y' }
-]
+const periods = computed(() => [
+    { label: t('adminTimePeriodSelector.periods.7d'), value: '7d' },
+    { label: t('adminTimePeriodSelector.periods.30d'), value: '30d' },
+    { label: t('adminTimePeriodSelector.periods.90d'), value: '90d' },
+    { label: t('adminTimePeriodSelector.periods.1y'), value: '1y' }
+])
 
 const currentPeriodLabel = computed(() => {
     const date = props.currentDate
     const options = { year: 'numeric', month: 'short' }
+    const currentLocale = locale.value === 'fr' ? 'fr-FR' : 'en-US'
 
     switch (props.modelValue) {
         case '7d':
         case '30d':
-            return `${date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - Present`
+            return t('adminTimePeriodSelector.currentPeriod.rangeToPresent', {
+                date: date.toLocaleDateString(currentLocale, { month: 'short', day: 'numeric' })
+            })
         case '90d':
-            return `${date.toLocaleDateString(undefined, options)} - Present`
+            return t('adminTimePeriodSelector.currentPeriod.rangeToPresent', {
+                date: date.toLocaleDateString(currentLocale, options)
+            })
         case '1y':
             return date.getFullYear().toString()
         default:
-            return `${date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - Present`
+            return t('adminTimePeriodSelector.currentPeriod.rangeToPresent', {
+                date: date.toLocaleDateString(currentLocale, { month: 'short', day: 'numeric' })
+            })
     }
 })
 </script>

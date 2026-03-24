@@ -5,6 +5,12 @@ const categorySchema = new mongoose.Schema(
     name: { type: String, required: true },
     slug: { type: String, required: true },
     description: { type: String },
+    translations: {
+      fr: {
+        name: { type: String, trim: true },
+        description: { type: String, trim: true },
+      },
+    },
     parent: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
     level: { type: Number, default: 0 },
     ancestors: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }],
@@ -26,7 +32,7 @@ categorySchema.statics.createCategoryPath = async function (categories) {
   let fullPath = [];
 
   for (let i = 0; i < categories.length; i++) {
-    const { name, description } = categories[i];
+    const { name, description, translations } = categories[i];
     fullPath.push(name.toLowerCase().replace(/[^a-z0-9]+/g, "-"));
     const slug = fullPath.join("-");
 
@@ -37,6 +43,7 @@ categorySchema.statics.createCategoryPath = async function (categories) {
         name,
         slug,
         description,
+        translations,
         parent: parent?._id,
         level: i,
         ancestors: [...ancestors],

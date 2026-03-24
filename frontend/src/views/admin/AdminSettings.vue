@@ -3,7 +3,7 @@
     <div>
         <!-- Header -->
         <div class="mb-3 px-8 py-4 bg-white">
-            <h2 class="text-2xl font-bold text-gray-800">Platform Settings</h2>
+            <h2 class="text-2xl font-bold text-gray-800">{{ t('adminSettings.title') }}</h2>
         </div>
 
         <!-- Settings Navigation -->
@@ -30,23 +30,23 @@
                 <div class="bg-white rounded-lg shadow-sm p-6">
                     <!-- General Settings -->
                     <div v-if="currentTab === 'general'" class="space-y-6">
-                        <h3 class="text-lg font-medium text-gray-900">General Settings</h3>
+                        <h3 class="text-lg font-medium text-gray-900">{{ t('adminSettings.sections.general') }}</h3>
 
                         <div class="grid grid-cols-2 gap-6">
                             <div>
-                                <label class="block pb-1 text-sm font-medium text-gray-700">Platform Name</label>
+                                <label class="block pb-1 text-sm font-medium text-gray-700">{{ t('adminSettings.general.platformName') }}</label>
                                 <input type="text" v-model="settings.platformName"
                                     class="mt-1 block w-full border rounded-md shadow-sm p-2">
                             </div>
 
                             <div>
-                                <label class="block pb-1 text-sm font-medium text-gray-700">Support Email</label>
+                                <label class="block pb-1 text-sm font-medium text-gray-700">{{ t('adminSettings.general.supportEmail') }}</label>
                                 <input type="email" v-model="settings.supportEmail"
                                     class="mt-1 block w-full border rounded-md shadow-sm p-2">
                             </div>
 
                             <div>
-                                <label class="block pb-1 text-sm font-medium text-gray-700">Currency</label>
+                                <label class="block pb-1 text-sm font-medium text-gray-700">{{ t('adminSettings.general.currency') }}</label>
                                 <div class="relative">
                                     <select v-model="settings.currency"
                                         class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent">
@@ -64,12 +64,12 @@
 
 
                             <div>
-                                <label class="block pb-1 text-sm font-medium text-gray-700">Timezone</label>
+                                <label class="block pb-1 text-sm font-medium text-gray-700">{{ t('adminSettings.general.timezone') }}</label>
                                 <div class="relative">
                                     <select v-model="settings.timezone"
                                         class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent">
                                         <option value="UTC">UTC</option>
-                                        <option value="WAT">West Africa Time</option>
+                                        <option value="WAT">{{ t('adminSettings.general.westAfricaTime') }}</option>
                                         <option value="GMT">GMT</option>
                                     </select>
                                     <div
@@ -83,25 +83,25 @@
                         <div class="flex items-center space-x-2">
                             <input type="checkbox" id="maintenanceMode" v-model="settings.maintenanceMode">
                             <label for="maintenanceMode" class="text-sm text-gray-700">
-                                Enable Maintenance Mode
+                                {{ t('adminSettings.general.enableMaintenanceMode') }}
                             </label>
                         </div>
                     </div>
 
                     <!-- Payment Settings -->
                     <div v-if="currentTab === 'payment'" class="space-y-6">
-                        <h3 class="text-lg font-medium text-gray-900">Payment Settings</h3>
+                        <h3 class="text-lg font-medium text-gray-900">{{ t('adminSettings.sections.payment') }}</h3>
 
                         <div class="space-y-6">
                             <!-- Paystack Configuration -->
                             <div class="border rounded-lg p-4">
                                 <div class="flex items-center justify-between mb-4">
-                                    <h4 class="font-medium text-gray-900">Paystack</h4>
+                                    <h4 class="font-medium text-gray-900">{{ t('adminSettings.payment.paystack') }}</h4>
                                     <div class="flex items-center">
                                         <input type="checkbox" id="paystackEnabled"
                                             v-model="settings.payment.paystack.enabled" class="mr-2">
                                         <label for="paystackEnabled" class="text-sm text-gray-700">
-                                            Enable Paystack
+                                            {{ t('adminSettings.payment.enablePaystack') }}
                                         </label>
                                     </div>
                                 </div>
@@ -109,7 +109,7 @@
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="block pb-1 text-sm font-medium text-gray-700">
-                                            Public Key
+                                            {{ t('adminSettings.payment.publicKey') }}
                                         </label>
                                         <input type="text" v-model="settings.payment.paystack.publicKey"
                                             :disabled="!settings.payment.paystack.enabled"
@@ -118,7 +118,7 @@
 
                                     <div>
                                         <label class="block pb-1 text-sm font-medium text-gray-700">
-                                            Secret Key
+                                            {{ t('adminSettings.payment.secretKey') }}
                                         </label>
                                         <input type="password" v-model="settings.payment.paystack.secretKey"
                                             :disabled="!settings.payment.paystack.enabled"
@@ -129,11 +129,11 @@
 
                             <!-- Commission Settings -->
                             <div class="border rounded-lg p-4">
-                                <h4 class="font-medium text-gray-900 mb-4">Commission Settings</h4>
+                                <h4 class="font-medium text-gray-900 mb-4">{{ t('adminSettings.payment.commissionSettings') }}</h4>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="block pb-1 text-sm font-medium text-gray-700">
-                                            Platform Fee (%)
+                                            {{ t('adminSettings.payment.platformFee') }}
                                         </label>
                                         <input type="number" v-model="settings.payment.platformFee" min="0" max="100"
                                             class="mt-1 block w-full border rounded-md shadow-sm p-2">
@@ -141,7 +141,7 @@
 
                                     <div>
                                         <label class="block pb-1 text-sm font-medium text-gray-700">
-                                            Minimum Payout Amount
+                                            {{ t('adminSettings.payment.minimumPayoutAmount') }}
                                         </label>
                                         <input type="number" v-model="settings.payment.minimumPayout" min="0"
                                             class="mt-1 block w-full border rounded-md shadow-sm p-2">
@@ -153,31 +153,31 @@
 
                     <!-- Email Settings -->
                     <div v-if="currentTab === 'email'" class="space-y-6">
-                        <h3 class="text-lg font-medium text-gray-900">Email Settings</h3>
+                        <h3 class="text-lg font-medium text-gray-900">{{ t('adminSettings.sections.email') }}</h3>
 
                         <div class="space-y-6">
                             <!-- SMTP Configuration -->
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block pb-1 text-sm font-medium text-gray-700">SMTP Host</label>
+                                    <label class="block pb-1 text-sm font-medium text-gray-700">{{ t('adminSettings.email.smtpHost') }}</label>
                                     <input type="text" v-model="settings.email.smtp.host"
                                         class="mt-1 block w-full border rounded-md shadow-sm p-2">
                                 </div>
 
                                 <div>
-                                    <label class="block pb-1 text-sm font-medium text-gray-700">SMTP Port</label>
+                                    <label class="block pb-1 text-sm font-medium text-gray-700">{{ t('adminSettings.email.smtpPort') }}</label>
                                     <input type="number" v-model="settings.email.smtp.port"
                                         class="mt-1 block w-full border rounded-md shadow-sm p-2">
                                 </div>
 
                                 <div>
-                                    <label class="block pb-1 text-sm font-medium text-gray-700">Username</label>
+                                    <label class="block pb-1 text-sm font-medium text-gray-700">{{ t('adminSettings.email.username') }}</label>
                                     <input type="text" v-model="settings.email.smtp.username"
                                         class="mt-1 block w-full border rounded-md shadow-sm p-2">
                                 </div>
 
                                 <div>
-                                    <label class="block pb-1 text-sm font-medium text-gray-700">Password</label>
+                                    <label class="block pb-1 text-sm font-medium text-gray-700">{{ t('adminSettings.email.password') }}</label>
                                     <input type="password" v-model="settings.email.smtp.password"
                                         class="mt-1 block w-full border rounded-md shadow-sm p-2">
                                 </div>
@@ -187,7 +187,7 @@
                             <div class="border-t pt-4">
                                 <button @click="sendTestEmail"
                                     class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                                    Send Test Email
+                                    {{ t('adminSettings.email.sendTestEmail') }}
                                 </button>
                             </div>
                         </div>
@@ -195,17 +195,17 @@
 
                     <!-- Shipping Settings -->
                     <div v-if="currentTab === 'shipping'" class="space-y-6">
-                        <h3 class="text-lg font-medium text-gray-900">Shipping Settings</h3>
+                        <h3 class="text-lg font-medium text-gray-900">{{ t('adminSettings.sections.shipping') }}</h3>
 
                         <div class="space-y-6">
                             <!-- Default Shipping Rules -->
                             <div class="border rounded-lg p-4">
-                                <h4 class="font-medium text-gray-900 mb-4">Default Shipping Rules</h4>
+                                <h4 class="font-medium text-gray-900 mb-4">{{ t('adminSettings.shipping.defaultShippingRules') }}</h4>
 
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="block pb-1 text-sm font-medium text-gray-700">
-                                            Base Shipping Cost
+                                            {{ t('adminSettings.shipping.baseShippingCost') }}
                                         </label>
                                         <input type="number" v-model="settings.shipping.baseCost" min="0"
                                             class="mt-1 block w-full border rounded-md shadow-sm p-2">
@@ -213,7 +213,7 @@
 
                                     <div>
                                         <label class="block pb-1 text-sm font-medium text-gray-700">
-                                            Free Shipping Threshold
+                                            {{ t('adminSettings.shipping.freeShippingThreshold') }}
                                         </label>
                                         <input type="number" v-model="settings.shipping.freeThreshold" min="0"
                                             class="mt-1 block w-full border rounded-md shadow-sm p-2">
@@ -224,9 +224,9 @@
                             <!-- Shipping Zones -->
                             <div class="border rounded-lg p-4">
                                 <div class="flex justify-between items-center">
-                                    <h4 class="font-medium text-gray-900">Shipping Zones</h4>
+                                    <h4 class="font-medium text-gray-900">{{ t('adminSettings.shipping.shippingZones') }}</h4>
                                     <button @click="addShippingZone" class="text-blue-600 hover:text-blue-800">
-                                        Add Zone
+                                        {{ t('adminSettings.shipping.addZone') }}
                                     </button>
                                 </div>
 
@@ -236,7 +236,7 @@
                                         <div class="grid grid-cols-3 gap-4">
                                             <div>
                                                 <label class="block pb-1 text-sm font-medium text-gray-700">
-                                                    Zone Name
+                                                    {{ t('adminSettings.shipping.zoneName') }}
                                                 </label>
                                                 <input type="text" v-model="zone.name"
                                                     class="mt-1 block w-full border rounded-md shadow-sm p-2">
@@ -244,16 +244,16 @@
 
                                             <div>
                                                 <label class="block pb-1 text-sm font-medium text-gray-700">
-                                                    Regions
+                                                    {{ t('adminSettings.shipping.regions') }}
                                                 </label>
                                                 <input type="text" v-model="zone.regions"
                                                     class="mt-1 block w-full border rounded-md shadow-sm p-2"
-                                                    placeholder="Comma-separated regions">
+                                                    :placeholder="t('adminSettings.shipping.regionsPlaceholder')">
                                             </div>
 
                                             <div>
                                                 <label class="block pb-1 text-sm font-medium text-gray-700">
-                                                    Rate
+                                                    {{ t('adminSettings.shipping.rate') }}
                                                 </label>
                                                 <input type="number" v-model="zone.rate" min="0"
                                                     class="mt-1 block w-full border rounded-md shadow-sm p-2">
@@ -261,7 +261,7 @@
                                         </div>
                                         <button @click="removeShippingZone(index)"
                                             class="text-red-600 hover:text-red-800 text-sm mt-2">
-                                            Remove Zone
+                                            {{ t('adminSettings.shipping.removeZone') }}
                                         </button>
                                     </div>
                                 </div>
@@ -273,7 +273,7 @@
                     <div class="mt-6 flex justify-end">
                         <button @click="saveSettings"
                             class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                            Save Changes
+                            {{ t('adminSettings.saveChanges') }}
                         </button>
                     </div>
                 </div>
@@ -284,6 +284,7 @@
 
 <script>
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
     Settings as SettingsIcon,
     CreditCard,
@@ -306,14 +307,15 @@ export default {
     },
 
     setup() {
+        const { t } = useI18n();
         const currentTab = ref('general');
         const loading = ref(false);
 
         const tabs = [
-            { id: 'general', name: 'General', icon: Globe },
-            { id: 'payment', name: 'Payment', icon: CreditCard },
-            { id: 'email', name: 'Email', icon: Mail },
-            { id: 'shipping', name: 'Shipping', icon: Truck }
+            { id: 'general', name: t('adminSettings.tabs.general'), icon: Globe },
+            { id: 'payment', name: t('adminSettings.tabs.payment'), icon: CreditCard },
+            { id: 'email', name: t('adminSettings.tabs.email'), icon: Mail },
+            { id: 'shipping', name: t('adminSettings.tabs.shipping'), icon: Truck }
         ];
 
         const settings = ref({
@@ -354,7 +356,7 @@ export default {
                 settings.value = { ...settings.value, ...data };
             } catch (error) {
                 console.error('Error fetching settings:', error);
-                toast.error('Failed to fetch settings');
+                toast.error(t('adminSettings.toasts.fetchFailed'));
             } finally {
                 loading.value = false;
             }
@@ -370,10 +372,10 @@ export default {
                     },
                     body: JSON.stringify(settings.value)
                 });
-                toast.success('Settings saved successfully');
+                toast.success(t('adminSettings.toasts.saved'));
             } catch (error) {
                 console.error('Error saving settings:', error);
-                toast.error('Failed to save settings');
+                toast.error(t('adminSettings.toasts.saveFailed'));
             } finally {
                 loading.value = false;
             }
@@ -388,10 +390,10 @@ export default {
                     },
                     body: JSON.stringify(settings.value.email)
                 });
-                toast.success('Test email sent successfully');
+                toast.success(t('adminSettings.toasts.testEmailSent'));
             } catch (error) {
                 console.error('Error sending test email:', error);
-                toast.error('Failed to send test email');
+                toast.error(t('adminSettings.toasts.testEmailFailed'));
             }
         };
 
@@ -420,7 +422,8 @@ export default {
             saveSettings,
             sendTestEmail,
             addShippingZone,
-            removeShippingZone
+            removeShippingZone,
+            t
         };
     }
 };

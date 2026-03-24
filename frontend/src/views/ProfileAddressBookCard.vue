@@ -13,17 +13,16 @@
                                 <MapPin class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                             </div>
                             <div class="min-w-0 flex-1">
-                                <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Address Book</h2>
-                                <p class="text-xs sm:text-sm text-gray-600 hidden sm:block">Manage your delivery
-                                    addresses and contact information</p>
-                                <p class="text-xs text-gray-600 sm:hidden">Manage delivery addresses</p>
+                                <h2 class="text-xl sm:text-2xl font-bold text-gray-900">{{ t('addressBook.title') }}</h2>
+                                <p class="text-xs sm:text-sm text-gray-600 hidden sm:block">{{ t('addressBook.subtitleDesktop') }}</p>
+                                <p class="text-xs text-gray-600 sm:hidden">{{ t('addressBook.subtitleMobile') }}</p>
                             </div>
                         </div>
                         <button @click="openForm"
                             class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg sm:rounded-xl hover:from-indigo-600 hover:to-purple-700 font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm sm:text-base">
                             <PlusCircle class="w-4 h-4 transition-transform group-hover:rotate-90" />
-                            <span class="hidden sm:inline">Add New Address</span>
-                            <span class="sm:hidden">Add Address</span>
+                            <span class="hidden sm:inline">{{ t('addressBook.addNewAddress') }}</span>
+                            <span class="sm:hidden">{{ t('addressBook.addAddressShort') }}</span>
                         </button>
                     </div>
                 </div>
@@ -44,14 +43,14 @@
                     class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-indigo-200 to-purple-300 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
                     <MapPin class="w-8 h-8 sm:w-10 sm:h-10 text-indigo-600" />
                 </div>
-                <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">No Addresses Yet</h3>
+                <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">{{ t('addressBook.emptyTitle') }}</h3>
                 <p class="text-gray-600 mb-4 sm:mb-6 max-w-md mx-auto text-sm sm:text-base">
-                    Add your first delivery address to make checkout faster and easier.
+                    {{ t('addressBook.emptyBody') }}
                 </p>
                 <button @click="openForm"
                     class="inline-flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg sm:rounded-xl hover:from-indigo-600 hover:to-purple-700 font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg text-sm sm:text-base">
                     <PlusCircle class="w-4 h-4 sm:w-5 sm:h-5" />
-                    Add Your First Address
+                    {{ t('addressBook.addFirstAddress') }}
                 </button>
             </div>
         </div>
@@ -71,11 +70,9 @@
                             </div>
                             <div class="min-w-0 flex-1">
                                 <h3 class="text-lg sm:text-xl font-bold">
-                                    {{ form.id ? 'Edit Address' : 'Add New Address' }}
+                                    {{ form.id ? t('addressBook.editAddress') : t('addressBook.addNewAddressModal') }}
                                 </h3>
-                                <p class="text-indigo-100 text-xs sm:text-sm mt-1 hidden sm:block">{{ form.id ? `Update
-                                    your address details` :
-                                    `Enter your delivery address information` }}</p>
+                                <p class="text-indigo-100 text-xs sm:text-sm mt-1 hidden sm:block">{{ form.id ? t('addressBook.editAddressSubtitle') : t('addressBook.addAddressSubtitle') }}</p>
                             </div>
                         </div>
                         <button @click="closeForm"
@@ -96,49 +93,49 @@
                                         class="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
                                         <UserRound class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
                                     </div>
-                                    <h4 class="text-base sm:text-lg font-bold text-gray-900">Personal Information</h4>
+                                    <h4 class="text-base sm:text-lg font-bold text-gray-900">{{ t('addressBook.personalInformation') }}</h4>
                                 </div>
                             </div>
 
                             <!-- First Name -->
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-gray-700">First Name *</label>
+                                <label class="block text-sm font-semibold text-gray-700">{{ t('addressBook.firstName') }}</label>
                                 <div class="relative">
                                     <UserRound
                                         class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                                     <input type="text" v-model="form.firstName" required
                                         class="w-full px-3 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-11 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 hover:bg-white font-medium text-sm sm:text-base"
-                                        placeholder="Enter first name">
+                                        :placeholder="t('addressBook.firstNamePlaceholder')">
                                 </div>
                             </div>
 
                             <!-- Last Name -->
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-gray-700">Last Name *</label>
+                                <label class="block text-sm font-semibold text-gray-700">{{ t('addressBook.lastName') }}</label>
                                 <div class="relative">
                                     <UserRound
                                         class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                                     <input type="text" v-model="form.lastName" required
                                         class="w-full px-3 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-11 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 hover:bg-white font-medium text-sm sm:text-base"
-                                        placeholder="Enter last name">
+                                        :placeholder="t('addressBook.lastNamePlaceholder')">
                                 </div>
                             </div>
 
                             <!-- Phone -->
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-gray-700">Phone Number *</label>
+                                <label class="block text-sm font-semibold text-gray-700">{{ t('addressBook.phoneNumber') }}</label>
                                 <div class="relative">
                                     <Phone
                                         class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                                     <input type="tel" v-model="form.phone" required
                                         class="w-full px-3 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-11 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 hover:bg-white font-medium text-sm sm:text-base"
-                                        placeholder="Enter phone number">
+                                        :placeholder="t('addressBook.phoneNumberPlaceholder')">
                                 </div>
                             </div>
 
                             <!-- Address Type -->
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-gray-700">Address Type *</label>
+                                <label class="block text-sm font-semibold text-gray-700">{{ t('addressBook.addressType') }}</label>
                                 <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
                                     <label
                                         class="flex items-center cursor-pointer bg-gray-50 hover:bg-gray-100 px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl transition-colors">
@@ -149,7 +146,7 @@
                                                 class="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-indigo-500 scale-0 peer-checked:scale-100 transition-transform">
                                             </div>
                                         </div>
-                                        <span class="ml-2 text-xs sm:text-sm font-medium text-gray-700">🏠 Home</span>
+                                        <span class="ml-2 text-xs sm:text-sm font-medium text-gray-700">🏠 {{ t('addressBook.home') }}</span>
                                     </label>
                                     <label
                                         class="flex items-center cursor-pointer bg-gray-50 hover:bg-gray-100 px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl transition-colors">
@@ -160,7 +157,7 @@
                                                 class="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-indigo-500 scale-0 peer-checked:scale-100 transition-transform">
                                             </div>
                                         </div>
-                                        <span class="ml-2 text-xs sm:text-sm font-medium text-gray-700">🏢 Office</span>
+                                        <span class="ml-2 text-xs sm:text-sm font-medium text-gray-700">🏢 {{ t('addressBook.office') }}</span>
                                     </label>
                                     <label
                                         class="flex items-center cursor-pointer bg-gray-50 hover:bg-gray-100 px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl transition-colors">
@@ -171,7 +168,7 @@
                                                 class="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-indigo-500 scale-0 peer-checked:scale-100 transition-transform">
                                             </div>
                                         </div>
-                                        <span class="ml-2 text-xs sm:text-sm font-medium text-gray-700">📍 Other</span>
+                                        <span class="ml-2 text-xs sm:text-sm font-medium text-gray-700">📍 {{ t('addressBook.other') }}</span>
                                     </label>
                                 </div>
                             </div>
@@ -183,55 +180,55 @@
                                         class="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0">
                                         <MapPinned class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
                                     </div>
-                                    <h4 class="text-base sm:text-lg font-bold text-gray-900">Address Details</h4>
+                                    <h4 class="text-base sm:text-lg font-bold text-gray-900">{{ t('addressBook.addressDetails') }}</h4>
                                 </div>
                             </div>
 
                             <!-- House No -->
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-gray-700">House/Plot No. *</label>
+                                <label class="block text-sm font-semibold text-gray-700">{{ t('addressBook.houseNumber') }}</label>
                                 <div class="relative">
                                     <Home
                                         class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                                     <input type="text" v-model="form.houseNo" required
                                         class="w-full px-3 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-11 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 hover:bg-white font-medium text-sm sm:text-base"
-                                        placeholder="Enter house/plot number">
+                                        :placeholder="t('addressBook.houseNumberPlaceholder')">
                                 </div>
                             </div>
 
                             <!-- Street -->
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-gray-700">Street/Area *</label>
+                                <label class="block text-sm font-semibold text-gray-700">{{ t('addressBook.streetArea') }}</label>
                                 <div class="relative">
                                     <MapPinned
                                         class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                                     <input type="text" v-model="form.street" required
                                         class="w-full px-3 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-11 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 hover:bg-white font-medium text-sm sm:text-base"
-                                        placeholder="Enter street name or area">
+                                        :placeholder="t('addressBook.streetAreaPlaceholder')">
                                 </div>
                             </div>
 
                             <!-- City -->
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-gray-700">City *</label>
+                                <label class="block text-sm font-semibold text-gray-700">{{ t('addressBook.city') }}</label>
                                 <div class="relative">
                                     <Building2
                                         class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                                     <input type="text" v-model="form.city" required
                                         class="w-full px-3 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-11 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 hover:bg-white font-medium text-sm sm:text-base"
-                                        placeholder="Enter city name">
+                                        :placeholder="t('addressBook.cityPlaceholder')">
                                 </div>
                             </div>
 
                             <!-- State -->
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-gray-700">State *</label>
+                                <label class="block text-sm font-semibold text-gray-700">{{ t('addressBook.state') }}</label>
                                 <div class="relative">
                                     <Map
                                         class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400 z-10" />
                                     <select v-model="form.state" required
                                         class="w-full px-3 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-11 pr-8 sm:pr-10 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 hover:bg-white font-medium appearance-none text-sm sm:text-base">
-                                        <option value="">Select state</option>
+                                        <option value="">{{ t('addressBook.selectState') }}</option>
                                         <option value="Lagos">Lagos</option>
                                         <option value="Abuja">Abuja</option>
                                         <option value="Rivers">Rivers</option>
@@ -252,13 +249,13 @@
 
                             <!-- Country -->
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-gray-700">Country *</label>
+                                <label class="block text-sm font-semibold text-gray-700">{{ t('addressBook.country') }}</label>
                                 <div class="relative">
                                     <Globe
                                         class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400 z-10" />
                                     <select v-model="form.country" required
                                         class="w-full px-3 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-11 pr-8 sm:pr-10 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 hover:bg-white font-medium appearance-none text-sm sm:text-base">
-                                        <option value="">Select Country</option>
+                                        <option value="">{{ t('addressBook.selectCountry') }}</option>
                                         <option value="Nigeria">🇳🇬 Nigeria</option>
                                         <option value="Ghana">🇬🇭 Ghana</option>
                                         <option value="Mali">🇲🇱 Mali</option>
@@ -278,13 +275,13 @@
 
                             <!-- Post/ZIP Code -->
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-gray-700">Post/ZIP Code</label>
+                                <label class="block text-sm font-semibold text-gray-700">{{ t('addressBook.postalCode') }}</label>
                                 <div class="relative">
                                     <MapPin
                                         class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                                     <input type="text" v-model="form.post"
                                         class="w-full px-3 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-11 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 hover:bg-white font-medium text-sm sm:text-base"
-                                        placeholder="Enter postal code (optional)">
+                                        :placeholder="t('addressBook.postalCodePlaceholder')">
                                 </div>
                             </div>
                         </div>
@@ -292,16 +289,13 @@
                         <!-- Tips Section -->
                         <div
                             class="mt-6 sm:mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-blue-200">
-                            <h5 class="text-xs sm:text-sm font-bold text-blue-800 mb-2">💡 Address Tips</h5>
+                            <h5 class="text-xs sm:text-sm font-bold text-blue-800 mb-2">💡 {{ t('addressBook.tipsTitle') }}</h5>
                             <ul class="text-xs text-blue-700 space-y-1">
-                                <li class="hidden sm:block">• Double-check your address details to ensure accurate
-                                    deliveries</li>
-                                <li class="hidden sm:block">• Include landmarks or additional directions in the street
-                                    field if helpful</li>
-                                <li>• Make sure your phone number is active for delivery coordination</li>
-                                <li class="hidden sm:block">• Choose the appropriate address type for better
-                                    organization</li>
-                                <li class="sm:hidden">• Double-check all details for accurate delivery</li>
+                                <li class="hidden sm:block">• {{ t('addressBook.tipDelivery') }}</li>
+                                <li class="hidden sm:block">• {{ t('addressBook.tipLandmark') }}</li>
+                                <li>• {{ t('addressBook.tipPhone') }}</li>
+                                <li class="hidden sm:block">• {{ t('addressBook.tipType') }}</li>
+                                <li class="sm:hidden">• {{ t('addressBook.tipMobile') }}</li>
                             </ul>
                         </div>
                     </form>
@@ -311,7 +305,7 @@
                         class="bg-gray-50 px-3 sm:px-4 lg:px-6 py-3 sm:py-4 flex flex-col sm:flex-row justify-end gap-3 border-t border-gray-200">
                         <button type="button" @click="closeForm"
                             class="w-full sm:w-auto px-4 sm:px-6 py-2.5 border-2 border-gray-300 rounded-lg sm:rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-all text-sm sm:text-base">
-                            Cancel
+                            {{ t('addressBook.cancel') }}
                         </button>
                         <button @click="saveAddress" :disabled="isLoading"
                             class="w-full sm:w-auto px-6 sm:px-8 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg sm:rounded-xl hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all transform hover:scale-105 shadow-lg text-sm sm:text-base"
@@ -320,14 +314,14 @@
                                 <div
                                     class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin">
                                 </div>
-                                {{ form.id ? 'Updating...' : 'Saving...' }}
+                                {{ form.id ? t('addressBook.updating') : t('addressBook.saving') }}
                             </span>
                             <span v-else class="flex items-center justify-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M5 13l4 4L19 7"></path>
                                 </svg>
-                                {{ form.id ? 'Update Address' : 'Save Address' }}
+                                {{ form.id ? t('addressBook.updateAddress') : t('addressBook.saveAddress') }}
                             </span>
                         </button>
                     </div>
@@ -339,6 +333,7 @@
 
 <script>
 import { computed, ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useAddressStore } from '../store/addressStore';
 import AddressCard from './AddressCard.vue';
 import {
@@ -362,6 +357,7 @@ export default {
         Loader2
     },
     setup() {
+        const { t } = useI18n();
         const addressStore = useAddressStore();
         const addresses = computed(() => addressStore.addresses);
         const isLoading = ref(false);
@@ -443,12 +439,13 @@ export default {
         };
 
         const confirmDelete = (address) => {
-            if (confirm('Are you sure you want to delete this address?')) {
+            if (confirm(t('addressBook.deleteConfirm'))) {
                 addressStore.deleteAddress(address._id);
             }
         };
 
         return {
+            t,
             addresses,
             form,
             showForm,

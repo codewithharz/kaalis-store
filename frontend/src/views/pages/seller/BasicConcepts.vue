@@ -7,9 +7,8 @@
                 <div class="relative h-[200px] bg-[#24a6bb]">
                     <div class="absolute inset-0 flex items-center justify-between px-8">
                         <div class="text-white">
-                            <h1 class="text-3xl font-bold mb-2">Seller Basic Concepts</h1>
-                            <p class="text-lg opacity-90">Essential knowledge for successful selling on Bruthol
-                            </p>
+                            <h1 class="text-3xl font-bold mb-2">{{ t('sellerBasicConceptsPage.heroTitle') }}</h1>
+                            <p class="text-lg opacity-90">{{ t('sellerBasicConceptsPage.heroSubtitle') }}</p>
                         </div>
                         <BookOpen class="w-24 h-24 text-white opacity-20" />
                     </div>
@@ -30,7 +29,7 @@
 
             <!-- Account Types -->
             <section id="account-types" class="bg-white rounded-lg shadow-lg p-8 mb-8">
-                <h2 class="text-2xl font-bold text-[#2d3642] mb-6">Account Types</h2>
+                <h2 class="text-2xl font-bold text-[#2d3642] mb-6">{{ t('sellerBasicConceptsPage.accountTypesTitle') }}</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div v-for="type in accountTypes" :key="type.id"
                         class="border rounded-lg p-6 hover:shadow-lg transition-shadow">
@@ -51,7 +50,7 @@
 
             <!-- Selling Process -->
             <section id="selling-process" class="bg-white rounded-lg shadow-lg p-8 mb-8">
-                <h2 class="text-2xl font-bold text-[#2d3642] mb-6">Selling Process</h2>
+                <h2 class="text-2xl font-bold text-[#2d3642] mb-6">{{ t('sellerBasicConceptsPage.sellingProcessTitle') }}</h2>
                 <div class="space-y-8">
                     <div v-for="(step, index) in sellingSteps" :key="index" class="flex">
                         <div class="flex-shrink-0 mr-6">
@@ -65,7 +64,7 @@
                             <h3 class="text-lg font-semibold text-[#2d3642] mb-2">{{ step.title }}</h3>
                             <p class="text-gray-600 mb-3">{{ step.description }}</p>
                             <div class="bg-gray-50 p-4 rounded-lg">
-                                <h4 class="font-semibold text-[#24a6bb] mb-2">Best Practices:</h4>
+                                <h4 class="font-semibold text-[#24a6bb] mb-2">{{ t('sellerBasicConceptsPage.bestPracticesTitle') }}</h4>
                                 <ul class="space-y-2">
                                     <li v-for="practice in step.bestPractices" :key="practice" class="flex items-start">
                                         <Lightbulb class="w-5 h-5 text-[#24a6bb] mr-2 flex-shrink-0 mt-0.5" />
@@ -80,10 +79,10 @@
 
             <!-- Fees and Pricing -->
             <section id="fees-pricing" class="bg-white rounded-lg shadow-lg p-8 mb-8">
-                <h2 class="text-2xl font-bold text-[#2d3642] mb-6">Fees and Pricing</h2>
+                <h2 class="text-2xl font-bold text-[#2d3642] mb-6">{{ t('sellerBasicConceptsPage.feesAndPricingTitle') }}</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
-                        <h3 class="font-semibold text-[#24a6bb] mb-4">Fee Structure</h3>
+                        <h3 class="font-semibold text-[#24a6bb] mb-4">{{ t('sellerBasicConceptsPage.feeStructureTitle') }}</h3>
                         <div class="space-y-4">
                             <div v-for="fee in fees" :key="fee.name" class="border-b pb-4 last:border-b-0">
                                 <div class="flex justify-between items-start mb-2">
@@ -97,7 +96,7 @@
                         </div>
                     </div>
                     <div>
-                        <h3 class="font-semibold text-[#24a6bb] mb-4">Pricing Tips</h3>
+                        <h3 class="font-semibold text-[#24a6bb] mb-4">{{ t('sellerBasicConceptsPage.pricingTipsTitle') }}</h3>
                         <div class="bg-gray-50 p-6 rounded-lg">
                             <ul class="space-y-4">
                                 <li v-for="tip in pricingTips" :key="tip" class="flex items-start">
@@ -112,7 +111,7 @@
 
             <!-- Policies and Guidelines -->
             <section id="policies" class="bg-white rounded-lg shadow-lg p-8">
-                <h2 class="text-2xl font-bold text-[#2d3642] mb-6">Policies and Guidelines</h2>
+                <h2 class="text-2xl font-bold text-[#2d3642] mb-6">{{ t('sellerBasicConceptsPage.policiesTitle') }}</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div v-for="policy in policies" :key="policy.title">
                         <h3 class="font-semibold text-[#24a6bb] mb-4">{{ policy.title }}</h3>
@@ -127,16 +126,16 @@
 
                 <!-- Help Box -->
                 <div class="mt-8 bg-[#e6f4f7] p-6 rounded-lg">
-                    <h3 class="font-semibold text-[#24a6bb] mb-4">Need More Help?</h3>
-                    <p class="text-gray-600 mb-4">Still have questions about selling on Bruthol?</p>
+                    <h3 class="font-semibold text-[#24a6bb] mb-4">{{ t('sellerBasicConceptsPage.helpTitle') }}</h3>
+                    <p class="text-gray-600 mb-4">{{ t('sellerBasicConceptsPage.helpBody') }}</p>
                     <div class="flex space-x-4">
                         <router-link to="/seller/academy"
                             class="bg-[#24a6bb] text-white px-4 py-2 rounded-lg hover:bg-[#1a7f8f] transition-colors">
-                            Visit Seller Academy
+                            {{ t('sellerBasicConceptsPage.visitAcademy') }}
                         </router-link>
                         <router-link to="/help/live-help"
                             class="border border-[#24a6bb] text-[#24a6bb] px-4 py-2 rounded-lg hover:bg-[#24a6bb] hover:text-white transition-colors">
-                            Contact Support
+                            {{ t('sellerBasicConceptsPage.contactSupport') }}
                         </router-link>
                     </div>
                 </div>
@@ -147,6 +146,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
     BookOpen,
     Check,
@@ -157,146 +157,147 @@ import {
     User
 } from 'lucide-vue-next';
 
+const { t } = useI18n();
 const activeSection = ref('account-types');
 
 const sections = [
-    { id: 'account-types', name: 'Account Types' },
-    { id: 'selling-process', name: 'Selling Process' },
-    { id: 'fees-pricing', name: 'Fees & Pricing' },
-    { id: 'policies', name: 'Policies' }
+    { id: 'account-types', name: t('sellerBasicConceptsPage.nav.accountTypes') },
+    { id: 'selling-process', name: t('sellerBasicConceptsPage.nav.sellingProcess') },
+    { id: 'fees-pricing', name: t('sellerBasicConceptsPage.nav.feesPricing') },
+    { id: 'policies', name: t('sellerBasicConceptsPage.nav.policies') }
 ];
 
 const accountTypes = [
     {
         id: 1,
-        name: 'Individual Seller',
+        name: t('sellerBasicConceptsPage.accountTypes.individual.name'),
         icon: User,
-        description: 'Perfect for small-scale sellers and personal businesses',
+        description: t('sellerBasicConceptsPage.accountTypes.individual.description'),
         features: [
-            'Up to 50 listings per month',
-            'Basic analytics',
-            'Standard support',
-            'Manual order processing'
+            t('sellerBasicConceptsPage.accountTypes.individual.feature1'),
+            t('sellerBasicConceptsPage.accountTypes.individual.feature2'),
+            t('sellerBasicConceptsPage.accountTypes.individual.feature3'),
+            t('sellerBasicConceptsPage.accountTypes.individual.feature4')
         ]
     },
     {
         id: 2,
-        name: 'Business Seller',
+        name: t('sellerBasicConceptsPage.accountTypes.business.name'),
         icon: Store,
-        description: 'Ideal for established businesses and high-volume sellers',
+        description: t('sellerBasicConceptsPage.accountTypes.business.description'),
         features: [
-            'Unlimited listings',
-            'Advanced analytics',
-            'Priority support',
-            'Bulk order processing'
+            t('sellerBasicConceptsPage.accountTypes.business.feature1'),
+            t('sellerBasicConceptsPage.accountTypes.business.feature2'),
+            t('sellerBasicConceptsPage.accountTypes.business.feature3'),
+            t('sellerBasicConceptsPage.accountTypes.business.feature4')
         ]
     },
     {
         id: 3,
-        name: 'Enterprise Seller',
+        name: t('sellerBasicConceptsPage.accountTypes.enterprise.name'),
         icon: Building2,
-        description: 'For large businesses and corporate sellers',
+        description: t('sellerBasicConceptsPage.accountTypes.enterprise.description'),
         features: [
-            'Custom solutions',
-            'API access',
-            'Dedicated account manager',
-            'Advanced integrations'
+            t('sellerBasicConceptsPage.accountTypes.enterprise.feature1'),
+            t('sellerBasicConceptsPage.accountTypes.enterprise.feature2'),
+            t('sellerBasicConceptsPage.accountTypes.enterprise.feature3'),
+            t('sellerBasicConceptsPage.accountTypes.enterprise.feature4')
         ]
     }
 ];
 
 const sellingSteps = [
     {
-        title: 'Account Setup',
-        description: 'Create and verify your seller account with required documentation.',
+        title: t('sellerBasicConceptsPage.sellingSteps.step1.title'),
+        description: t('sellerBasicConceptsPage.sellingSteps.step1.description'),
         bestPractices: [
-            'Prepare all necessary business documents',
-            'Use a professional email address',
-            'Set up secure payment information'
+            t('sellerBasicConceptsPage.sellingSteps.step1.practice1'),
+            t('sellerBasicConceptsPage.sellingSteps.step1.practice2'),
+            t('sellerBasicConceptsPage.sellingSteps.step1.practice3')
         ]
     },
     {
-        title: 'Product Listing',
-        description: 'Create detailed product listings with high-quality images and descriptions.',
+        title: t('sellerBasicConceptsPage.sellingSteps.step2.title'),
+        description: t('sellerBasicConceptsPage.sellingSteps.step2.description'),
         bestPractices: [
-            'Use clear, high-resolution photos',
-            'Write detailed product descriptions',
-            'Set competitive prices',
-            'Keep inventory updated'
+            t('sellerBasicConceptsPage.sellingSteps.step2.practice1'),
+            t('sellerBasicConceptsPage.sellingSteps.step2.practice2'),
+            t('sellerBasicConceptsPage.sellingSteps.step2.practice3'),
+            t('sellerBasicConceptsPage.sellingSteps.step2.practice4')
         ]
     },
     {
-        title: 'Order Management',
-        description: 'Process orders efficiently and maintain good customer service.',
+        title: t('sellerBasicConceptsPage.sellingSteps.step3.title'),
+        description: t('sellerBasicConceptsPage.sellingSteps.step3.description'),
         bestPractices: [
-            'Process orders within 24 hours',
-            'Communicate with buyers promptly',
-            'Use proper packaging materials',
-            'Provide tracking information'
+            t('sellerBasicConceptsPage.sellingSteps.step3.practice1'),
+            t('sellerBasicConceptsPage.sellingSteps.step3.practice2'),
+            t('sellerBasicConceptsPage.sellingSteps.step3.practice3'),
+            t('sellerBasicConceptsPage.sellingSteps.step3.practice4')
         ]
     },
     {
-        title: 'Growth and Optimization',
-        description: 'Monitor performance and optimize your selling strategy.',
+        title: t('sellerBasicConceptsPage.sellingSteps.step4.title'),
+        description: t('sellerBasicConceptsPage.sellingSteps.step4.description'),
         bestPractices: [
-            'Track analytics regularly',
-            'Respond to customer feedback',
-            'Update listings based on performance',
-            'Participate in promotions'
+            t('sellerBasicConceptsPage.sellingSteps.step4.practice1'),
+            t('sellerBasicConceptsPage.sellingSteps.step4.practice2'),
+            t('sellerBasicConceptsPage.sellingSteps.step4.practice3'),
+            t('sellerBasicConceptsPage.sellingSteps.step4.practice4')
         ]
     }
 ];
 
 const fees = [
     {
-        name: 'Listing Fee',
-        description: 'Fee charged per item listed on the platform',
-        rate: 'Free - ₦100/item'
+        name: t('sellerBasicConceptsPage.fees.listing.name'),
+        description: t('sellerBasicConceptsPage.fees.listing.description'),
+        rate: t('sellerBasicConceptsPage.fees.listing.rate')
     },
     {
-        name: 'Commission',
-        description: 'Percentage of sale price charged on successful sales',
-        rate: '5% - 15%'
+        name: t('sellerBasicConceptsPage.fees.commission.name'),
+        description: t('sellerBasicConceptsPage.fees.commission.description'),
+        rate: t('sellerBasicConceptsPage.fees.commission.rate')
     },
     {
-        name: 'Payment Processing',
-        description: 'Fee for processing payment transactions',
-        rate: '1.5% + ₦100'
+        name: t('sellerBasicConceptsPage.fees.paymentProcessing.name'),
+        description: t('sellerBasicConceptsPage.fees.paymentProcessing.description'),
+        rate: t('sellerBasicConceptsPage.fees.paymentProcessing.rate')
     },
     {
-        name: 'Subscription Fee',
-        description: 'Monthly fee for business and enterprise accounts',
-        rate: 'From ₦5,000/month'
+        name: t('sellerBasicConceptsPage.fees.subscription.name'),
+        description: t('sellerBasicConceptsPage.fees.subscription.description'),
+        rate: t('sellerBasicConceptsPage.fees.subscription.rate')
     }
 ];
 
 const pricingTips = [
-    'Research competitor prices for similar items',
-    'Consider all costs when setting prices (fees, shipping, etc.)',
-    'Use promotional pricing strategically',
-    'Set competitive prices while maintaining profit margins',
-    'Update prices regularly based on market trends'
+    t('sellerBasicConceptsPage.pricingTips.tip1'),
+    t('sellerBasicConceptsPage.pricingTips.tip2'),
+    t('sellerBasicConceptsPage.pricingTips.tip3'),
+    t('sellerBasicConceptsPage.pricingTips.tip4'),
+    t('sellerBasicConceptsPage.pricingTips.tip5')
 ];
 
 const policies = [
     {
-        title: 'Product Guidelines',
+        title: t('sellerBasicConceptsPage.policies.productGuidelines.title'),
         items: [
-            'All products must be legal and authentic',
-            'Accurate product descriptions required',
-            'High-quality images mandatory',
-            'Proper categorization of items',
-            'Clear return policy statement'
+            t('sellerBasicConceptsPage.policies.productGuidelines.item1'),
+            t('sellerBasicConceptsPage.policies.productGuidelines.item2'),
+            t('sellerBasicConceptsPage.policies.productGuidelines.item3'),
+            t('sellerBasicConceptsPage.policies.productGuidelines.item4'),
+            t('sellerBasicConceptsPage.policies.productGuidelines.item5')
         ]
     },
     {
-        title: 'Seller Performance Standards',
+        title: t('sellerBasicConceptsPage.policies.performanceStandards.title'),
         items: [
-            'Maintain 95% positive feedback',
-            'Process orders within 24 hours',
-            'Respond to messages within 12 hours',
-            'Keep cancellation rate below 5%',
-            'Regular inventory updates required'
+            t('sellerBasicConceptsPage.policies.performanceStandards.item1'),
+            t('sellerBasicConceptsPage.policies.performanceStandards.item2'),
+            t('sellerBasicConceptsPage.policies.performanceStandards.item3'),
+            t('sellerBasicConceptsPage.policies.performanceStandards.item4'),
+            t('sellerBasicConceptsPage.policies.performanceStandards.item5')
         ]
     }
 ];

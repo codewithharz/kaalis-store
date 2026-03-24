@@ -11,8 +11,8 @@
 
             <div class="container mx-auto px-4 py-16 relative">
                 <div class="max-w-3xl mx-auto text-center">
-                    <h1 class="text-4xl font-bold mb-4">Profile Settings</h1>
-                    <p class="text-lg mb-8 text-white/90">Manage your account information</p>
+                    <h1 class="text-4xl font-bold mb-4">{{ t('profileSettingsPage.title') }}</h1>
+                    <p class="text-lg mb-8 text-white/90">{{ t('profileSettingsPage.subtitle') }}</p>
                 </div>
             </div>
         </div>
@@ -50,7 +50,7 @@
                     <div v-if="showSuccess"
                         class="mb-6 p-4 rounded-xl border flex items-center gap-3 bg-green-50 text-green-700 border-green-200">
                         <CheckCircle class="w-5 h-5 flex-shrink-0" />
-                        <p class="text-sm">Profile updated successfully!</p>
+                        <p class="text-sm">{{ t('profileSettingsPage.profileUpdatedInline') }}</p>
                     </div>
 
                     <!-- Profile Form -->
@@ -58,64 +58,64 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- First Name -->
                             <div class="space-y-2">
-                                <label class="text-sm font-medium text-gray-700">First Name</label>
+                                <label class="text-sm font-medium text-gray-700">{{ t('profileSettingsPage.firstName') }}</label>
                                 <div
                                     class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                     <input type="text" v-model="form.firstName"
                                         class="w-full px-4 py-3 text-gray-700 bg-transparent border-none focus:outline-none"
-                                        placeholder="Enter your first name" />
+                                        :placeholder="t('profileSettingsPage.firstNamePlaceholder')" />
                                 </div>
                             </div>
 
                             <!-- Last Name -->
                             <div class="space-y-2">
-                                <label class="text-sm font-medium text-gray-700">Last Name</label>
+                                <label class="text-sm font-medium text-gray-700">{{ t('profileSettingsPage.lastName') }}</label>
                                 <div
                                     class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                     <input type="text" v-model="form.lastName"
                                         class="w-full px-4 py-3 text-gray-700 bg-transparent border-none focus:outline-none"
-                                        placeholder="Enter your last name" />
+                                        :placeholder="t('profileSettingsPage.lastNamePlaceholder')" />
                                 </div>
                             </div>
 
                             <!-- Phone -->
                             <div class="space-y-2">
-                                <label class="text-sm font-medium text-gray-700">Phone Number</label>
+                                <label class="text-sm font-medium text-gray-700">{{ t('profileSettingsPage.phoneNumber') }}</label>
                                 <div
                                     class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                     <Phone class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                                     <input type="tel" v-model="form.phone"
                                         class="w-full pl-11 pr-4 py-3 text-gray-700 bg-transparent border-none focus:outline-none"
-                                        placeholder="Enter your phone number" />
+                                        :placeholder="t('profileSettingsPage.phonePlaceholder')" />
                                 </div>
                             </div>
 
                             <!-- Email -->
                             <div class="space-y-2">
-                                <label class="text-sm font-medium text-gray-700">Email Address</label>
+                                <label class="text-sm font-medium text-gray-700">{{ t('profileSettingsPage.emailAddress') }}</label>
                                 <div
                                     class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                     <Mail class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                                     <input type="email" v-model="form.email"
                                         class="w-full pl-11 pr-4 py-3 text-gray-700 bg-transparent border-none focus:outline-none"
-                                        placeholder="Enter your email address" />
+                                        :placeholder="t('profileSettingsPage.emailPlaceholder')" />
                                 </div>
                             </div>
                         </div>
 
                         <!-- Gender Selection -->
                         <div class="space-y-2">
-                            <label class="text-sm font-medium text-gray-700">Gender</label>
+                            <label class="text-sm font-medium text-gray-700">{{ t('profileSettingsPage.gender') }}</label>
                             <div class="flex gap-6">
                                 <label class="flex items-center space-x-2 cursor-pointer">
                                     <input type="radio" v-model="form.gender" value="male"
                                         class="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-gray-300" />
-                                    <span class="text-gray-700">Male</span>
+                                    <span class="text-gray-700">{{ t('profileSettingsPage.male') }}</span>
                                 </label>
                                 <label class="flex items-center space-x-2 cursor-pointer">
                                     <input type="radio" v-model="form.gender" value="female"
                                         class="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-gray-300" />
-                                    <span class="text-gray-700">Female</span>
+                                    <span class="text-gray-700">{{ t('profileSettingsPage.female') }}</span>
                                 </label>
                             </div>
                         </div>
@@ -124,8 +124,8 @@
                         <div class="flex justify-end pt-4">
                             <button type="submit" :disabled="isLoading"
                                 class="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg font-medium shadow-lg transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                                <span v-if="isLoading">Updating...</span>
-                                <span v-else>Update Profile</span>
+                                <span v-if="isLoading">{{ t('profileSettingsPage.updating') }}</span>
+                                <span v-else>{{ t('profileSettingsPage.updateProfile') }}</span>
                             </button>
                         </div>
                     </form>
@@ -138,8 +138,8 @@
                         @click="navigateToPasswordSettings">
                         <div class="flex justify-between items-center">
                             <div>
-                                <h3 class="font-semibold text-gray-900">Password Settings</h3>
-                                <p class="text-sm text-gray-500">Update your password</p>
+                                <h3 class="font-semibold text-gray-900">{{ t('profileSettingsPage.passwordSettings') }}</h3>
+                                <p class="text-sm text-gray-500">{{ t('profileSettingsPage.passwordSettingsBody') }}</p>
                             </div>
                             <ChevronRight class="w-5 h-5 text-gray-400" />
                         </div>
@@ -150,8 +150,8 @@
                         @click="navigateToNotifications">
                         <div class="flex justify-between items-center">
                             <div>
-                                <h3 class="font-semibold text-gray-900">Notification Preferences</h3>
-                                <p class="text-sm text-gray-500">Manage your notifications</p>
+                                <h3 class="font-semibold text-gray-900">{{ t('profileSettingsPage.notificationPreferences') }}</h3>
+                                <p class="text-sm text-gray-500">{{ t('profileSettingsPage.notificationPreferencesBody') }}</p>
                             </div>
                             <ChevronRight class="w-5 h-5 text-gray-400" />
                         </div>
@@ -164,12 +164,14 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useUserStore } from '../store/user';
 import { useAddressStore } from '../store/addressStore';
 import { UserRound, Camera, Mail, Phone, ChevronRight, CheckCircle } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import { useRouter } from 'vue-router';
 
+const { t } = useI18n();
 const router = useRouter();
 const userStore = useUserStore();
 const addressStore = useAddressStore();
@@ -242,10 +244,10 @@ const updateProfile = async () => {
             };
         }
 
-        toast.success('Profile updated successfully');
+        toast.success(t('profileSettingsPage.profileUpdatedToast'));
     } catch (error) {
         console.error('Error updating profile:', error);
-        toast.error('Failed to update profile. Please try again.');
+        toast.error(t('profileSettingsPage.failedUpdate'));
     } finally {
         isLoading.value = false;
     }
@@ -303,7 +305,7 @@ onMounted(async () => {
         await addressStore.fetchUserAddresses();
     } catch (error) {
         console.error('Error loading initial data:', error);
-        toast.error('Failed to load profile data');
+        toast.error(t('profileSettingsPage.failedLoad'));
     } finally {
         isLoading.value = false;
     }

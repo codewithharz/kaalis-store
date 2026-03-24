@@ -17,27 +17,33 @@
 </template>
 
 <script>
+import { useI18n } from 'vue-i18n';
+
 export default {
     name: 'SidebarNavigation',
-    data() {
-        return {
-            menuItems: [
-                { name: 'Communication', path: '/page/communication' },
-                { name: 'Security', path: '/page/security' },
-                { name: 'Protection of Personal Data', path: '/page/protection-of-personal-data' },
-                { name: 'Membership Agreement', path: '/page/membership-agreement' },
-                { name: 'Cookie Policy', path: '/page/cookie-policy' },
-                { name: 'Communication Information Text', path: '/page/communication-information-text' },
-                { name: 'Terms of Use', path: '/page/terms-of-use' },
-                { name: 'Transaction Guide', path: '/page/transaction-guide' },
-                { name: 'Business Partnership', path: '/page/business-partnership' }
-            ]
-        };
+    setup() {
+        const { t } = useI18n();
+        return { t };
+    },
+    computed: {
+        menuItems() {
+            return [
+                { name: this.t('pageComponentsSidebar.communication'), path: '/page/communication' },
+                { name: this.t('pageComponentsSidebar.security'), path: '/page/security' },
+                { name: this.t('pageComponentsSidebar.privacy'), path: '/page/protection-of-personal-data' },
+                { name: this.t('pageComponentsSidebar.membership'), path: '/page/membership-agreement' },
+                { name: this.t('pageComponentsSidebar.cookiePolicy'), path: '/page/cookie-policy' },
+                { name: this.t('pageComponentsSidebar.communicationInfo'), path: '/page/communication-information-text' },
+                { name: this.t('pageComponentsSidebar.terms'), path: '/page/terms-of-use' },
+                { name: this.t('pageComponentsSidebar.transactionGuide'), path: '/page/transaction-guide' },
+                { name: this.t('pageComponentsSidebar.businessPartnership'), path: '/page/business-partnership' }
+            ];
+        }
     },
     methods: {
         isActive(path) {
             return this.$route.path === path;
         }
     }
-}
+};
 </script>

@@ -7,7 +7,7 @@
                 <button @click="router.back()"
                     class="flex items-center text-gray-600 hover:text-gray-800 transition duration-150">
                     <ArrowLeft class="w-5 h-5 mr-2" />
-                    <span class="text-sm sm:text-base">Back to Dashboard</span>
+                    <span class="text-sm sm:text-base">{{ t('sellerAnalyticsPage.backToDashboard') }}</span>
                 </button>
                 <div class="flex flex-col sm:flex-row gap-3 sm:space-x-4">
                     <!-- Date Range Selector - Full Width on Mobile -->
@@ -15,10 +15,10 @@
                         <select
                             class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
                             v-model="dateRange">
-                            <option value="7">Last 7 days</option>
-                            <option value="30">Last 30 days</option>
-                            <option value="90">Last 90 days</option>
-                            <option value="365">Last year</option>
+                            <option value="7">{{ t('sellerAnalyticsPage.dateRanges.last7Days') }}</option>
+                            <option value="30">{{ t('sellerAnalyticsPage.dateRanges.last30Days') }}</option>
+                            <option value="90">{{ t('sellerAnalyticsPage.dateRanges.last90Days') }}</option>
+                            <option value="365">{{ t('sellerAnalyticsPage.dateRanges.lastYear') }}</option>
                         </select>
                         <div class="absolute right-1 top-1/2 transform -translate-y-1/2 pointer-events-none">
                             <ChevronDown class="w-5 h-5 text-gray-400" />
@@ -27,14 +27,14 @@
                     <button @click="refreshData"
                         class="flex items-center justify-center px-4 py-2 bg-white border rounded-md text-gray-600 hover:bg-gray-50">
                         <RefreshCcw class="w-4 h-4 mr-2" />
-                        <span class="text-sm sm:text-base">Refresh</span>
+                        <span class="text-sm sm:text-base">{{ t('sellerAnalyticsPage.refresh') }}</span>
                     </button>
                 </div>
             </div>
 
             <!-- Analytics Content -->
             <div class="bg-white p-4 sm:p-6 rounded-lg shadow">
-                <h2 class="text-xl sm:text-2xl font-bold mb-6">Analytics Dashboard</h2>
+                <h2 class="text-xl sm:text-2xl font-bold mb-6">{{ t('sellerAnalyticsPage.title') }}</h2>
 
                 <!-- Key Metrics Cards - Scrollable on Mobile -->
                 <div class="overflow-x-auto pb-2 -mx-4 px-4 sm:overflow-x-visible sm:pb-0 sm:px-0">
@@ -54,7 +54,7 @@
                                     {{ metric.trend > 0 ? '↑' : '↓' }} {{ Math.abs(metric.trend) }}%
                                 </span>
                             </div>
-                            <p class="text-xs sm:text-sm text-gray-500 mt-1">vs last period</p>
+                            <p class="text-xs sm:text-sm text-gray-500 mt-1">{{ t('sellerAnalyticsPage.vsLastPeriod') }}</p>
                         </div>
                     </div>
                 </div>
@@ -62,16 +62,16 @@
                 <!-- Sales Chart - Adjusted Height for Mobile -->
                 <div class="mb-6 sm:mb-8 p-4 border rounded-lg mt-6">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                        <h3 class="text-lg sm:text-xl font-semibold">Sales Overview</h3>
+                        <h3 class="text-lg sm:text-xl font-semibold">{{ t('sellerAnalyticsPage.salesOverview') }}</h3>
                         <div class="flex space-x-2">
-                            <button v-for="view in ['Daily', 'Weekly', 'Monthly']" :key="view"
-                                @click="changeTimeView(view.toLowerCase())" :class="[
+                            <button v-for="view in timeViewOptions" :key="view.value"
+                                @click="changeTimeView(view.value)" :class="[
                                     'px-3 py-1 rounded-md text-xs sm:text-sm',
-                                    timeView === view.toLowerCase()
+                                    timeView === view.value
                                         ? 'bg-purple-100 text-purple-700'
                                         : 'text-gray-600 hover:bg-gray-100'
                                 ]">
-                                {{ view }}
+                                {{ view.label }}
                             </button>
                         </div>
                     </div>
@@ -85,14 +85,14 @@
                     <!-- Top Products -->
                     <div class="border rounded-lg p-4">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                            <h3 class="text-lg sm:text-xl font-semibold">Top Products</h3>
+                            <h3 class="text-lg sm:text-xl font-semibold">{{ t('sellerAnalyticsPage.topProducts') }}</h3>
                             <div class="relative">
                                 <select
                                     class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-4 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
                                     v-model="productSort">
-                                    <option value="sales">By Sales</option>
-                                    <option value="revenue">By Revenue</option>
-                                    <option value="growth">By Growth</option>
+                                    <option value="sales">{{ t('sellerAnalyticsPage.productSort.bySales') }}</option>
+                                    <option value="revenue">{{ t('sellerAnalyticsPage.productSort.byRevenue') }}</option>
+                                    <option value="growth">{{ t('sellerAnalyticsPage.productSort.byGrowth') }}</option>
                                 </select>
                                 <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                                     <ChevronDown class="w-5 h-5 text-gray-400" />
@@ -102,7 +102,7 @@
                         <div class="space-y-4">
                             <div v-if="sortedProducts && sortedProducts.length === 0"
                                 class="text-center text-gray-500 py-4">
-                                No product data available
+                                {{ t('sellerAnalyticsPage.noProductData') }}
                             </div>
                             <template v-else>
                                 <div v-for="product in sortedProducts" :key="product.id"
@@ -129,7 +129,7 @@
 
                     <!-- Orders Status -->
                     <div class="border rounded-lg p-4">
-                        <h3 class="text-lg sm:text-xl font-semibold mb-4">Orders by Status</h3>
+                        <h3 class="text-lg sm:text-xl font-semibold mb-4">{{ t('sellerAnalyticsPage.ordersByStatus') }}</h3>
                         <div class="h-48 sm:h-64">
                             <DoughnutChart :data="orderStatusData" :options="doughnutOptions" />
                         </div>
@@ -138,7 +138,7 @@
                                 class="flex items-center space-x-2">
                                 <div class="w-3 h-3 rounded-full" :style="{ backgroundColor: getStatusColor(status) }">
                                 </div>
-                                <span class="text-xs sm:text-sm text-gray-600">{{ status }}</span>
+                                <span class="text-xs sm:text-sm text-gray-600">{{ translateStatus(status) }}</span>
                             </div>
                         </div>
                     </div>
@@ -156,7 +156,7 @@
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                     </path>
                 </svg>
-                <span class="text-gray-700">Loading...</span>
+                <span class="text-gray-700">{{ t('sellerAnalyticsPage.loading') }}</span>
             </div>
         </div>
     </div>
@@ -164,6 +164,7 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { Line as LineChart, Doughnut as DoughnutChart } from 'vue-chartjs';
 import { ArrowLeft, RefreshCcw, TrendingUp, ShoppingBag, Users, CreditCard, ChevronDown } from 'lucide-vue-next';
@@ -184,6 +185,7 @@ export default {
     },
 
     setup() {
+        const { t, locale } = useI18n();
         const router = useRouter();
         const sellerStore = useSellerStore();
         const dateRange = ref('90');
@@ -197,6 +199,12 @@ export default {
             orders: [],
             products: []
         });
+
+        const timeViewOptions = computed(() => ([
+            { value: 'daily', label: t('sellerAnalyticsPage.timeViews.daily') },
+            { value: 'weekly', label: t('sellerAnalyticsPage.timeViews.weekly') },
+            { value: 'monthly', label: t('sellerAnalyticsPage.timeViews.monthly') }
+        ]));
 
         // Computed metrics based on real data
         const keyMetrics = computed(() => {
@@ -225,25 +233,25 @@ export default {
 
             return [
                 {
-                    title: 'Total Revenue',
+                    title: t('sellerAnalyticsPage.metrics.totalRevenue'),
                     value: formatCurrency(currentRevenue),
                     trend: revenueTrend,
                     icon: 'TrendingUp'
                 },
                 {
-                    title: 'Total Orders',
+                    title: t('sellerAnalyticsPage.metrics.totalOrders'),
                     value: currentOrderCount.toString(),
                     trend: orderTrend,
                     icon: 'ShoppingBag'
                 },
                 {
-                    title: 'Active Customers',
+                    title: t('sellerAnalyticsPage.metrics.activeCustomers'),
                     value: currentCustomers.toString(),
                     trend: customerTrend,
                     icon: 'Users'
                 },
                 {
-                    title: 'Average Order Value',
+                    title: t('sellerAnalyticsPage.metrics.averageOrderValue'),
                     value: formatCurrency(currentAOV),
                     trend: aovTrend,
                     icon: 'CreditCard'
@@ -262,7 +270,7 @@ export default {
             return {
                 labels: data.labels,
                 datasets: [{
-                    label: 'Sales',
+                    label: t('sellerAnalyticsPage.salesDataset'),
                     data: data.values,
                     fill: true,
                     borderColor: '#7C3AED',
@@ -331,12 +339,17 @@ export default {
         };
 
         const formatCurrency = (amount) => {
+            const currencySymbol = t('sellerAnalyticsPage.currencySymbol');
             if (amount >= 1000000) {
-                return `₦${(amount / 1000000).toFixed(1)}M`;
+                return `${currencySymbol}${(amount / 1000000).toFixed(1)}M`;
             } else if (amount >= 1000) {
-                return `₦${(amount / 1000).toFixed(1)}K`;
+                return `${currencySymbol}${(amount / 1000).toFixed(1)}K`;
             }
-            return `₦${amount.toFixed(2)}`;
+            const activeLocale = locale.value === 'fr' ? 'fr-FR' : 'en-NG';
+            return `${currencySymbol}${amount.toLocaleString(activeLocale, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })}`;
         };
 
         const processOrdersForChart = (orders, view, range) => {
@@ -356,7 +369,7 @@ export default {
                     dateFormat = { week: 'numeric' };
                     groupingFunction = date => {
                         const week = Math.ceil((date.getDate() + date.getDay()) / 7);
-                        return `Week ${week}`;
+                        return t('sellerAnalyticsPage.weekLabel', { week });
                     };
                     break;
                 case 'monthly':
@@ -479,6 +492,17 @@ export default {
             return counts;
         };
 
+        const translateStatus = (status) => {
+            const key = {
+                Pending: 'pending',
+                Processing: 'processing',
+                Shipped: 'shipped',
+                Delivered: 'delivered'
+            }[status];
+
+            return key ? t(`sellerAnalyticsPage.statuses.${key}`) : status;
+        };
+
         // Fetch data
         // In SellerAnalytics.vue
         const fetchAnalytics = async () => {
@@ -490,7 +514,7 @@ export default {
                 }
 
                 if (!sellerStore.sellerProfile?._id) {
-                    throw new Error('Seller profile not available');
+                    throw new Error(t('sellerAnalyticsPage.toasts.sellerProfileUnavailable'));
                 }
 
                 console.log('Fetching analytics for seller:', sellerStore.sellerProfile._id);
@@ -513,13 +537,13 @@ export default {
                     products: productData
                 };
 
-                toast.success('Analytics data updated');
+                toast.success(t('sellerAnalyticsPage.toasts.updated'));
             } catch (error) {
                 console.error('Error fetching analytics:', error);
                 if (error.response) {
                     console.error('Error response:', error.response.data);
                 }
-                toast.error(error.message || 'Failed to fetch analytics data');
+                toast.error(error.message || t('sellerAnalyticsPage.toasts.fetchFailed'));
             } finally {
                 isLoading.value = false;
             }
@@ -588,8 +612,10 @@ export default {
 
         return {
             router,
+            t,
             dateRange,
             timeView,
+            timeViewOptions,
             productSort,
             isLoading,
             keyMetrics,
@@ -599,6 +625,7 @@ export default {
             topProducts,
             orderStatusData,
             getStatusColor,
+            translateStatus,
             changeTimeView,
             refreshData,
             sortedProducts: computed(() => {

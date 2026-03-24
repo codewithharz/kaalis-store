@@ -3,9 +3,9 @@
     <div>
         <!-- Header -->
         <div class="flex justify-between items-center mb-3 px-8 py-4 bg-white">
-            <h2 class="text-2xl font-bold text-gray-800">Category Management</h2>
+            <h2 class="text-2xl font-bold text-gray-800">{{ t('adminCategories.title') }}</h2>
             <button @click="showAddModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                Add New Category
+                {{ t('adminCategories.addNewCategory') }}
             </button>
         </div>
 
@@ -14,15 +14,15 @@
             <!-- Category Tree -->
             <div class="col-span-4 bg-white rounded-lg shadow-sm p-4">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-medium">Categories</h3>
+                    <h3 class="text-lg font-medium">{{ t('adminCategories.categories') }}</h3>
                     <button @click="expandAll" class="text-blue-600 hover:text-blue-800 text-sm">
-                        {{ allExpanded ? 'Collapse All' : 'Expand All' }}
+                        {{ allExpanded ? t('adminCategories.collapseAll') : t('adminCategories.expandAll') }}
                     </button>
                 </div>
 
                 <!-- Search Categories -->
                 <div class="mb-4">
-                    <input type="text" v-model="searchQuery" placeholder="Search categories..."
+                    <input type="text" v-model="searchQuery" :placeholder="t('adminCategories.searchPlaceholder')"
                         class="w-full p-2 border rounded-md" @input="handleSearch">
                 </div>
 
@@ -33,7 +33,7 @@
                     </div>
 
                     <div v-else-if="filteredCategories.length === 0" class="text-center py-4 text-gray-500">
-                        No categories found
+                        {{ t('adminCategories.noCategoriesFound') }}
                     </div>
 
                     <div v-else class="space-y-2">
@@ -58,60 +58,60 @@
                                 {{ selectedCategory.name }}
                             </h3>
                             <p class="text-sm text-gray-500">
-                                Created on {{ formatDate(selectedCategory.createdAt) }}
+                                {{ t('adminCategories.createdOn', { date: formatDate(selectedCategory.createdAt) }) }}
                             </p>
                         </div>
                         <div class="space-x-2">
                             <button @click="editCategory(selectedCategory)"
                                 class="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200">
-                                Edit
+                                {{ t('adminCategories.edit') }}
                             </button>
                             <button @click="confirmDelete(selectedCategory)"
                                 class="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200">
-                                Delete
+                                {{ t('adminCategories.delete') }}
                             </button>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-6">
                         <div>
-                            <h4 class="font-medium text-gray-700 mb-2">Description</h4>
+                            <h4 class="font-medium text-gray-700 mb-2">{{ t('adminCategories.description') }}</h4>
                             <p class="text-gray-600">
-                                {{ selectedCategory.description || 'No description provided' }}
+                                {{ selectedCategory.description || t('adminCategories.noDescription') }}
                             </p>
                         </div>
                         <div>
-                            <h4 class="font-medium text-gray-700 mb-2">Parent Category</h4>
+                            <h4 class="font-medium text-gray-700 mb-2">{{ t('adminCategories.parentCategory') }}</h4>
                             <p class="text-gray-600">
                                 {{ getParentName(selectedCategory) }}
                             </p>
                         </div>
                         <div>
-                            <h4 class="font-medium text-gray-700 mb-2">Status</h4>
+                            <h4 class="font-medium text-gray-700 mb-2">{{ t('adminCategories.status') }}</h4>
                             <span :class="[
                                 'px-2 py-1 text-sm rounded-full',
                                 selectedCategory.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                             ]">
-                                {{ selectedCategory.active ? 'Active' : 'Inactive' }}
+                                {{ selectedCategory.active ? t('adminCategories.active') : t('adminCategories.inactive') }}
                             </span>
                         </div>
                         <div>
-                            <h4 class="font-medium text-gray-700 mb-2">Products Count</h4>
+                            <h4 class="font-medium text-gray-700 mb-2">{{ t('adminCategories.productsCount') }}</h4>
                             <p class="text-gray-600">
-                                {{ selectedCategory.productsCount || 0 }} products
+                                {{ t('adminCategories.productsCountValue', { count: selectedCategory.productsCount || 0 }) }}
                             </p>
                         </div>
                     </div>
 
                     <!-- Subcategories -->
                     <div class="mt-6">
-                        <h4 class="font-medium text-gray-700 mb-2">Subcategories</h4>
+                        <h4 class="font-medium text-gray-700 mb-2">{{ t('adminCategories.subcategories') }}</h4>
                         <div class="grid grid-cols-3 gap-4">
                             <div v-for="subcategory in getSubcategories(selectedCategory._id)" :key="subcategory._id"
                                 class="p-3 bg-gray-50 rounded-lg">
                                 <p class="font-medium">{{ subcategory.name }}</p>
                                 <p class="text-sm text-gray-500">
-                                    {{ subcategory.productsCount || 0 }} products
+                                    {{ t('adminCategories.productsCountValue', { count: subcategory.productsCount || 0 }) }}
                                 </p>
                             </div>
                         </div>
@@ -122,7 +122,7 @@
                 <div v-else class="bg-white rounded-lg shadow-sm p-6 text-center">
                     <div class="text-gray-400">
                         <FolderOpen class="w-12 h-12 mx-auto mb-4" />
-                        <p>Select a category to view details</p>
+                        <p>{{ t('adminCategories.selectCategoryPrompt') }}</p>
                     </div>
                 </div>
             </div>
@@ -132,25 +132,25 @@
         <div v-if="showAddModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
             <div class="bg-white rounded-lg p-6 w-full max-w-md">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">
-                    {{ selectedCategory ? 'Edit Category' : 'Add New Category' }}
+                    {{ selectedCategory ? t('adminCategories.editCategory') : t('adminCategories.addNewCategory') }}
                 </h3>
                 <form @submit.prevent="handleSubmit" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Name</label>
+                        <label class="block text-sm font-medium text-gray-700">{{ t('adminCategories.name') }}</label>
                         <input type="text" v-model="formData.name"
                             class="mt-1 block w-full border rounded-md shadow-sm p-2" required>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Description</label>
+                        <label class="block text-sm font-medium text-gray-700">{{ t('adminCategories.description') }}</label>
                         <textarea v-model="formData.description"
                             class="mt-1 block w-full border rounded-md shadow-sm p-2" rows="3"></textarea>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Parent Category</label>
+                        <label class="block text-sm font-medium text-gray-700">{{ t('adminCategories.parentCategory') }}</label>
                         <select v-model="formData.parent" class="mt-1 block w-full border rounded-md shadow-sm p-2">
-                            <option value="">None (Top Level)</option>
+                            <option value="">{{ t('adminCategories.noneTopLevel') }}</option>
                             <option v-for="cat in availableParents" :key="cat._id" :value="cat._id">
                                 {{ cat.name }}
                             </option>
@@ -161,17 +161,17 @@
                         <input type="checkbox" id="active" v-model="formData.active"
                             class="h-4 w-4 text-blue-600 rounded">
                         <label for="active" class="ml-2 block text-sm text-gray-900">
-                            Active
+                            {{ t('adminCategories.active') }}
                         </label>
                     </div>
 
                     <div class="mt-6 flex justify-end space-x-3">
                         <button type="button" @click="closeModal"
                             class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
-                            Cancel
+                            {{ t('adminCategories.cancel') }}
                         </button>
                         <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                            {{ selectedCategory ? 'Update' : 'Create' }}
+                            {{ selectedCategory ? t('adminCategories.update') : t('adminCategories.create') }}
                         </button>
                     </div>
                 </form>
@@ -181,19 +181,19 @@
         <!-- Delete Confirmation Modal -->
         <div v-if="showDeleteModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
             <div class="bg-white rounded-lg p-6 max-w-md w-full">
-                <h3 class="text-lg font-medium text-gray-900 mb-2">Confirm Delete</h3>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">{{ t('adminCategories.confirmDelete') }}</h3>
                 <p class="text-gray-500 mb-4">
-                    Are you sure you want to delete "{{ categoryToDelete?.name }}"?
+                    {{ t('adminCategories.deletePrompt', { name: categoryToDelete?.name || '' }) }}
                     {{ getSubcategories(categoryToDelete?._id).length > 0 ?
-                        'This will also delete all subcategories.' : '' }}
+                        ` ${t('adminCategories.deleteSubcategoriesWarning')}` : '' }}
                 </p>
                 <div class="flex justify-end space-x-3">
                     <button @click="showDeleteModal = false"
                         class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
-                        Cancel
+                        {{ t('adminCategories.cancel') }}
                     </button>
                     <button @click="deleteCategory" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
-                        Delete
+                        {{ t('adminCategories.delete') }}
                     </button>
                 </div>
             </div>
@@ -203,6 +203,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { FolderOpen } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import CategoryTreeItem from './components/CategoryTreeItem.vue';
@@ -217,6 +218,7 @@ export default {
     },
 
     setup() {
+        const { t } = useI18n();
         const categories = ref([]);
         const selectedCategory = ref(null);
         const showAddModal = ref(false);
@@ -242,7 +244,7 @@ export default {
                 categories.value = data;
             } catch (error) {
                 console.error('Error fetching categories:', error);
-                toast.error('Failed to fetch categories');
+                toast.error(t('adminCategories.toasts.fetchFailed'));
             } finally {
                 loading.value = false;
             }
@@ -275,9 +277,9 @@ export default {
         };
 
         const getParentName = (category) => {
-            if (!category.parent) return 'None (Top Level)';
+            if (!category.parent) return t('adminCategories.noneTopLevel');
             const parent = categories.value.find(c => c._id === category.parent);
-            return parent ? parent.name : 'Unknown';
+            return parent ? parent.name : t('adminCategories.unknown');
         };
 
         const getSubcategories = (parentId) => {
@@ -301,20 +303,20 @@ export default {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(formData.value)
                     });
-                    toast.success('Category updated successfully');
+                    toast.success(t('adminCategories.toasts.updated'));
                 } else {
                     await fetch('/api/admin/categories', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(formData.value)
                     });
-                    toast.success('Category created successfully');
+                    toast.success(t('adminCategories.toasts.created'));
                 }
                 closeModal();
                 fetchCategories();
             } catch (error) {
                 console.error('Error saving category:', error);
-                toast.error('Failed to save category');
+                toast.error(t('adminCategories.toasts.saveFailed'));
             }
         };
 
@@ -343,7 +345,7 @@ export default {
                 await fetch(`/api/admin/categories/${categoryToDelete.value._id}`, {
                     method: 'DELETE'
                 });
-                toast.success('Category deleted successfully');
+                toast.success(t('adminCategories.toasts.deleted'));
                 if (selectedCategory.value?._id === categoryToDelete.value._id) {
                     selectedCategory.value = null
                 }
@@ -352,7 +354,7 @@ export default {
                 await fetchCategories();
             } catch (error) {
                 console.error('Error deleting category:', error);
-                toast.error('Failed to delete category');
+                toast.error(t('adminCategories.toasts.deleteFailed'));
             }
         };
 
@@ -402,7 +404,8 @@ export default {
             expandAll,
             getParentName,
             getSubcategories,
-            formatDate
+            formatDate,
+            t
         };
     }
 };

@@ -11,8 +11,8 @@
 
             <div class="container mx-auto px-4 py-16 relative">
                 <div class="max-w-3xl mx-auto text-center">
-                    <h1 class="text-4xl font-bold mb-4">Add New Product</h1>
-                    <p class="text-lg mb-8 text-white/90">Create and customize your product listing</p>
+                    <h1 class="text-4xl font-bold mb-4">{{ t('addProductPage.title') }}</h1>
+                    <p class="text-lg mb-8 text-white/90">{{ t('addProductPage.subtitle') }}</p>
                 </div>
             </div>
         </div>
@@ -25,7 +25,7 @@
                     <form @submit.prevent="handleSubmit" class="p-8 space-y-8">
                         <!-- Category Selection -->
                         <div class="space-y-2">
-                            <label class="text-sm font-medium text-gray-700">Category</label>
+                            <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.category') }}</label>
                             <HierarchicalCategorySelector :categories="categories"
                                 v-model:selectedCategories="selectedCategories"
                                 @update:selectedCategories="updateSelectedCategories"
@@ -34,23 +34,23 @@
 
                         <!-- Basic Information Section -->
                         <div class="space-y-6">
-                            <h3 class="text-lg font-semibold text-gray-900">Basic Information</h3>
+                            <h3 class="text-lg font-semibold text-gray-900">{{ t('addProductPage.basicInformation') }}</h3>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 <!-- Product Name -->
                                 <div class="space-y-2 lg:col-span-2">
-                                    <label class="text-sm font-medium text-gray-700">Product Name</label>
+                                    <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.productName') }}</label>
                                     <div
                                         class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                         <input type="text" v-model="product.name"
                                             class="w-full px-4 py-3 text-gray-700 bg-transparent border-none focus:outline-none"
-                                            placeholder="e.g. Premium Wireless Headphones" required />
+                                            :placeholder="t('addProductPage.productNamePlaceholder')" required />
                                     </div>
                                 </div>
 
                                 <!-- Main Color Picker -->
                                 <div class="space-y-4 lg:col-span-3">
-                                    <label class="text-sm font-medium text-gray-700">Primary Display Color</label>
+                                    <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.primaryDisplayColor') }}</label>
                                     
                                     <!-- Scrollable Color Selection Grid -->
                                     <div class="p-4 bg-gray-50/50 rounded-xl border border-gray-100">
@@ -93,31 +93,31 @@
                                                 @input="updateMainColor" />
                                         </div>
                                         <div class="flex-1 relative rounded-lg border border-gray-200 focus-within:border-indigo-500 bg-white shadow-sm transition-all">
-                                            <input type="text" v-model="mainColorName" placeholder="e.g. Onyx Black"
+                                            <input type="text" v-model="mainColorName" :placeholder="t('addProductPage.colorNamePlaceholder')"
                                                 class="w-full px-4 py-2.5 text-sm text-gray-700 bg-transparent border-none focus:outline-none" />
                                         </div>
                                     </div>
                                     <!-- Suggestion hint -->
                                     <div v-else class="text-[10px] text-gray-400 font-medium px-1 flex items-center gap-1">
-                                        <Sparkles class="w-2.5 h-2.5" /> Selected: <span class="text-indigo-600">{{ mainColorName || 'None' }}</span>
+                                        <Sparkles class="w-2.5 h-2.5" /> {{ t('addProductPage.selected') }}: <span class="text-indigo-600">{{ mainColorName || t('addProductPage.none') }}</span>
                                     </div>
                                 </div>
 
                                 <!-- Brand -->
                                 <div class="space-y-2">
-                                    <label class="text-sm font-medium text-gray-700">Brand</label>
+                                    <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.brand') }}</label>
                                     <div
                                         class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                         <input type="text" v-model="product.brand"
                                             class="w-full px-4 py-3 text-gray-700 bg-transparent border-none focus:outline-none"
-                                            placeholder="e.g. Sony, Apple" />
+                                            :placeholder="t('addProductPage.brandPlaceholder')" />
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Description -->
                             <div class="space-y-2">
-                                <label class="text-sm font-medium text-gray-700">Description</label>
+                                <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.description') }}</label>
                                 <div
                                     class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                     <textarea v-model="product.description" rows="4"
@@ -129,7 +129,7 @@
 
                         <!-- Images Section -->
                         <div class="space-y-6">
-                            <h3 class="text-lg font-semibold text-gray-900">Product Images</h3>
+                            <h3 class="text-lg font-semibold text-gray-900">{{ t('addProductPage.productImages') }}</h3>
                             <div class="space-y-4">
                                 <div
                                     class="relative rounded-lg border-2 border-dashed border-gray-300 p-6 hover:border-indigo-500 transition-colors">
@@ -138,9 +138,9 @@
                                         accept="image/*" />
                                     <div class="text-center">
                                         <UploadCloud class="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                                        <p class="text-sm text-gray-600">Drag and drop images here or click to browse
+                                        <p class="text-sm text-gray-600">{{ t('addProductPage.imageUploadPrompt') }}
                                         </p>
-                                        <p class="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB</p>
+                                        <p class="text-xs text-gray-500 mt-1">{{ t('addProductPage.imageUploadHint') }}</p>
                                     </div>
                                 </div>
 
@@ -160,12 +160,12 @@
 
                         <!-- Pricing Section -->
                         <div class="space-y-6">
-                            <h3 class="text-lg font-semibold text-gray-900">Pricing</h3>
+                            <h3 class="text-lg font-semibold text-gray-900">{{ t('addProductPage.pricing') }}</h3>
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <!-- Price -->
                                 <div class="space-y-2">
-                                    <label class="text-sm font-medium text-gray-700">Price</label>
+                                    <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.price') }}</label>
                                     <div
                                         class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                         <input type="number" v-model.number="product.price"
@@ -176,7 +176,7 @@
 
                                 <!-- Original Price -->
                                 <div class="space-y-2">
-                                    <label class="text-sm font-medium text-gray-700">Original Price</label>
+                                    <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.originalPrice') }}</label>
                                     <div
                                         class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                         <input type="number" v-model.number="product.originalPrice"
@@ -187,7 +187,7 @@
 
                                 <!-- Discount -->
                                 <div class="space-y-2">
-                                    <label class="text-sm font-medium text-gray-700">Discount (%)</label>
+                                    <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.discount') }}</label>
                                     <div
                                         class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                         <input type="number" v-model.number="product.discount"
@@ -202,18 +202,18 @@
                         <!-- Inventory Section -->
                         <div class="space-y-6">
                             <div class="flex items-center justify-between">
-                                <h3 class="text-lg font-semibold text-gray-900">Inventory</h3>
+                                <h3 class="text-lg font-semibold text-gray-900">{{ t('addProductPage.inventory') }}</h3>
                                 <div class="flex items-center gap-2">
                                     <input type="checkbox" v-model="product.isAvailable"
                                         class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500/20" />
-                                    <label class="text-sm text-gray-700">Available for Sale</label>
+                                    <label class="text-sm text-gray-700">{{ t('addProductPage.availableForSale') }}</label>
                                 </div>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <!-- Stock -->
                                 <div class="space-y-2">
-                                    <label class="text-sm font-medium text-gray-700">Stock</label>
+                                    <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.stock') }}</label>
                                     <div
                                         class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                         <input type="number" v-model.number="product.stock"
@@ -224,24 +224,24 @@
 
                                 <!-- Reserved Stock -->
                                 <div class="space-y-2">
-                                    <label class="text-sm font-medium text-gray-700">Reserved (Locked)</label>
+                                    <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.reservedLocked') }}</label>
                                     <div
                                         class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                         <input type="number" v-model.number="product.reservedStock"
                                             class="w-full px-4 py-3 text-gray-700 bg-transparent border-none focus:outline-none"
                                             min="0" />
                                     </div>
-                                    <p class="text-[10px] text-gray-400">Items in pending orders</p>
+                                    <p class="text-[10px] text-gray-400">{{ t('addProductPage.itemsInPendingOrders') }}</p>
                                 </div>
 
                                 <!-- Available For Sale -->
                                 <div class="space-y-2">
-                                    <label class="text-sm font-medium text-indigo-700 font-bold">Available For sale</label>
+                                    <label class="text-sm font-medium text-indigo-700 font-bold">{{ t('addProductPage.availableForSaleCount') }}</label>
                                     <div
                                         class="relative rounded-lg border border-indigo-100 bg-indigo-50/30 transition-all flex items-center px-4 py-3">
                                         <span class="text-lg font-bold text-indigo-600">{{ availableStock }}</span>
                                     </div>
-                                    <p class="text-[10px] text-indigo-400">Formula: Stock - Reserved</p>
+                                    <p class="text-[10px] text-indigo-400">{{ t('addProductPage.availableForSaleFormula') }}</p>
                                 </div>
                             </div>
                         </div>
@@ -252,13 +252,13 @@
                         <!-- Unit Information Section -->
                         <div class="space-y-6">
                             <div class="flex items-center justify-between">
-                                <h3 class="text-lg font-semibold text-gray-900">Unit Information</h3>
+                                <h3 class="text-lg font-semibold text-gray-900">{{ t('addProductPage.unitInformation') }}</h3>
                                 <!-- Quick Setup Dropdown -->
                                 <div class="relative">
                                     <button type="button" @click="showSections.unitDropdown = !showSections.unitDropdown"
                                         class="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-medium hover:bg-indigo-100 transition-colors">
                                         <Sparkles class="w-3 h-3" />
-                                        Quick Setup Units
+                                        {{ t('addProductPage.quickSetupUnits') }}
                                         <ChevronDown class="w-3 h-3" />
                                     </button>
                                     <div v-if="showSections.unitDropdown"
@@ -275,20 +275,20 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 <!-- Unit Category -->
                                 <div class="space-y-2">
-                                    <label class="text-sm font-medium text-gray-700">Unit Category</label>
+                                    <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.unitCategory') }}</label>
                                     <div
                                         class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                         <select v-model="product.unit.category" @change="updateUnitOptions"
                                             class="w-full px-4 py-3 text-gray-700 bg-transparent border-none focus:outline-none appearance-none"
                                             required>
-                                            <option value="">Select Category</option>
-                                            <option value="weight">Weight</option>
-                                            <option value="volume">Volume</option>
-                                            <option value="length">Length</option>
-                                            <option value="area">Area</option>
-                                            <option value="quantity">Quantity</option>
-                                            <option value="time">Time</option>
-                                            <option value="other">Other</option>
+                                            <option value="">{{ t('addProductPage.selectCategory') }}</option>
+                                            <option value="weight">{{ t('addProductPage.unitCategories.weight') }}</option>
+                                            <option value="volume">{{ t('addProductPage.unitCategories.volume') }}</option>
+                                            <option value="length">{{ t('addProductPage.unitCategories.length') }}</option>
+                                            <option value="area">{{ t('addProductPage.unitCategories.area') }}</option>
+                                            <option value="quantity">{{ t('addProductPage.unitCategories.quantity') }}</option>
+                                            <option value="time">{{ t('addProductPage.unitCategories.time') }}</option>
+                                            <option value="other">{{ t('addProductPage.unitCategories.other') }}</option>
                                         </select>
                                         <ChevronDown
                                             class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
@@ -297,10 +297,10 @@
 
                                 <!-- Base Unit -->
                                 <div class="space-y-2">
-                                    <label class="text-sm font-medium text-gray-700">Base Unit</label>
+                                    <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.baseUnit') }}</label>
                                     <div
                                         class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
-                                        <input type="text" v-model="product.unit.baseUnit" placeholder="kilogram"
+                                        <input type="text" v-model="product.unit.baseUnit" :placeholder="t('addProductPage.baseUnitPlaceholder')"
                                             class="w-full px-4 py-3 text-gray-700 bg-transparent border-none focus:outline-none"
                                             required />
                                     </div>
@@ -308,7 +308,7 @@
 
                                 <!-- Conversion Factor -->
                                 <div class="space-y-2">
-                                    <label class="text-sm font-medium text-gray-700">Conversion Factor</label>
+                                    <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.conversionFactor') }}</label>
                                     <div
                                         class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                         <input type="number" v-model.number="product.unit.conversionFactor"
@@ -319,7 +319,7 @@
 
                                 <!-- Unit Value -->
                                 <div class="space-y-2">
-                                    <label class="text-sm font-medium text-gray-700">Unit Value</label>
+                                    <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.unitValue') }}</label>
                                     <div
                                         class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                         <input type="number" v-model.number="product.unit.value"
@@ -330,21 +330,21 @@
 
                                 <!-- Display Unit -->
                                 <div class="space-y-2">
-                                    <label class="text-sm font-medium text-gray-700">Display Unit</label>
+                                    <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.displayUnit') }}</label>
                                     <div
                                         class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
-                                        <input type="text" v-model="product.unit.displayUnit" placeholder="kg"
+                                        <input type="text" v-model="product.unit.displayUnit" :placeholder="t('addProductPage.displayUnitPlaceholder')"
                                             class="w-full px-4 py-3 text-gray-700 bg-transparent border-none focus:outline-none" />
                                     </div>
                                 </div>
 
                                 <!-- Packaging Unit -->
                                 <div class="space-y-2">
-                                    <label class="text-sm font-medium text-gray-700">Packaging Unit</label>
+                                    <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.packagingUnit') }}</label>
                                     <div
                                         class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                         <input type="text" v-model="product.unit.packagingUnit"
-                                            placeholder="pack, pieces, box, etc."
+                                            :placeholder="t('addProductPage.packagingUnitPlaceholder')"
                                             class="w-full px-4 py-3 text-gray-700 bg-transparent border-none focus:outline-none" />
                                     </div>
                                 </div>
@@ -358,14 +358,14 @@
                                 <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
                                     <ChevronDown v-if="showSections.variants" class="w-5 h-5 text-gray-400" />
                                     <ChevronRight v-else class="w-5 h-5 text-gray-400" />
-                                    Product Variants
+                                    {{ t('addProductPage.variants.title') }}
                                 </h3>
                                 <div class="flex items-center gap-3">
                                     <span class="text-xs text-indigo-500 font-medium group-hover:underline">{{
-                                        showSections.variants ? 'Hide variants' : 'Show variants' }}</span>
+                                        showSections.variants ? t('addProductPage.variants.hide') : t('addProductPage.variants.show') }}</span>
                                     <button v-show="showSections.variants" @click.stop="addVariant" type="button"
                                         class="px-4 py-2 text-sm bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
-                                        Add Variant
+                                        {{ t('addProductPage.variants.add') }}
                                     </button>
                                 </div>
                             </button>
@@ -375,22 +375,21 @@
                                     class="p-6 bg-gray-50 rounded-xl border border-gray-200 relative">
                                     <!-- Variant Header / Quick Actions -->
                                     <div class="flex justify-between items-center mb-6">
-                                        <h4 class="font-medium text-gray-900">Variant #{{ index + 1 }}</h4>
+                                        <h4 class="font-medium text-gray-900">{{ t('addProductPage.variants.variantNumber', { number: index + 1 }) }}</h4>
                                         <button @click="generateSku(index)" type="button"
                                             class="text-xs text-indigo-600 hover:underline flex items-center gap-1">
-                                            <Sparkles class="w-3 h-3" /> Auto-generate SKU
+                                            <Sparkles class="w-3 h-3" /> {{ t('addProductPage.variants.autoGenerateSku') }}
                                         </button>
                                     </div>
                                     <!-- Variant Attributes (Unified) -->
                                     <div class="space-y-4 mb-8">
                                         <div class="flex items-center justify-between">
-                                            <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Specs &
-                                                Attributes</h4>
+                                            <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider">{{ t('addProductPage.variants.specsAndAttributes') }}</h4>
                                             <div class="flex gap-2">
-                                                <button v-for="attr in ['Color', 'Size', 'Capacity', 'Material']"
-                                                    :key="attr" @click="addVariantAttribute(index, attr)" type="button"
+                                                <button v-for="attr in variantAttributePresets"
+                                                    :key="attr.value" @click="addVariantAttribute(index, attr.value)" type="button"
                                                     class="text-[10px] bg-white border border-gray-200 text-gray-500 px-2 py-1 rounded-md hover:border-indigo-300 hover:text-indigo-600 transition-all">
-                                                    + {{ attr }}
+                                                    + {{ attr.label }}
                                                 </button>
                                             </div>
                                         </div>
@@ -401,7 +400,7 @@
                                                 <div class="w-1/3">
                                                     <input v-model="attribute.name"
                                                         class="w-full text-xs font-semibold text-gray-900 border-none bg-transparent focus:outline-none"
-                                                        placeholder="Name (e.g. Size)" />
+                                                        :placeholder="t('addProductPage.variants.attributeNamePlaceholder')" />
                                                 </div>
                                                 <div class="flex-1 flex items-center gap-3">
                                                     <div v-if="attribute.name.toLowerCase() === 'color'"
@@ -430,12 +429,12 @@
                                                                 class="h-6 w-6 rounded border border-gray-200 p-0 cursor-pointer" />
                                                             <input v-model="attribute.value"
                                                                 class="flex-1 text-[10px] text-gray-600 border border-gray-100 px-2 py-1 rounded bg-gray-50 focus:bg-white focus:outline-none"
-                                                                placeholder="Hex or Color Name" />
+                                                                :placeholder="t('addProductPage.variants.hexOrColorName')" />
                                                         </div>
                                                     </div>
                                                     <input v-else v-model="attribute.value"
                                                         class="flex-1 text-xs text-gray-600 border-none bg-transparent focus:outline-none"
-                                                        placeholder="Value (e.g. XL, 40cm, 512GB)" />
+                                                        :placeholder="t('addProductPage.variants.attributeValuePlaceholder')" />
                                                 </div>
                                                 <button @click="removeAttribute(index, attrIndex)" type="button"
                                                     class="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-md transition-all opacity-0 group-hover/attr:opacity-100">
@@ -444,7 +443,7 @@
                                             </div>
                                             <button @click="addVariantAttribute(index)" type="button"
                                                 class="flex items-center justify-center gap-2 py-2 border-2 border-dashed border-gray-200 rounded-lg text-xs text-gray-400 hover:border-indigo-300 hover:text-indigo-500 transition-all">
-                                                <Plus class="w-4 h-4" /> Add custom attribute
+                                                <Plus class="w-4 h-4" /> {{ t('addProductPage.variants.addCustomAttribute') }}
                                             </button>
                                         </div>
                                     </div>
@@ -452,30 +451,30 @@
                                     <!-- Variant Details -->
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div class="space-y-2">
-                                            <label class="text-sm font-medium text-gray-700">SKU</label>
+                                            <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.variants.sku') }}</label>
                                             <input v-model="variant.sku"
                                                 class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                                                placeholder="SKU" />
+                                                :placeholder="t('addProductPage.variants.sku')" />
                                         </div>
                                         <div class="space-y-2">
-                                            <label class="text-sm font-medium text-gray-700">Price</label>
+                                            <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.price') }}</label>
                                             <input type="number" v-model.number="variant.price"
                                                 class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                                                placeholder="Price" min="0" step="0.01" />
+                                                :placeholder="t('addProductPage.price')" min="0" step="0.01" />
                                         </div>
                                         <div class="space-y-2">
-                                            <label class="text-sm font-medium text-gray-700">Stock</label>
+                                            <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.stock') }}</label>
                                             <input type="number" v-model.number="variant.stock"
                                                 class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                                                placeholder="Stock" min="0" />
+                                                :placeholder="t('addProductPage.stock')" min="0" />
                                         </div>
 
 
                                         <div class="space-y-2">
-                                            <label class="text-sm font-medium text-gray-700">Weight</label>
+                                            <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.variants.weight') }}</label>
                                             <input type="number" v-model.number="variant.weight"
                                                 class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                                                placeholder="Weight" step="0.01" />
+                                                :placeholder="t('addProductPage.variants.weight')" step="0.01" />
                                         </div>
 
 
@@ -483,29 +482,29 @@
 
                                     <!-- Variant Dimensions -->
                                     <div class="mt-6 space-y-4">
-                                        <label class="text-sm font-medium text-gray-700">Dimensions</label>
+                                        <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.variants.dimensions') }}</label>
                                         <div class="grid grid-cols-3 gap-4">
                                             <div class="space-y-2">
                                                 <input type="number" v-model.number="variant.dimensions.length"
                                                     class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                                                    placeholder="Length" step="0.01" />
+                                                    :placeholder="t('addProductPage.unitCategories.length')" step="0.01" />
                                             </div>
                                             <div class="space-y-2">
                                                 <input type="number" v-model.number="variant.dimensions.width"
                                                     class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                                                    placeholder="Width" step="0.01" />
+                                                    :placeholder="t('addProductPage.variants.width')" step="0.01" />
                                             </div>
                                             <div class="space-y-2">
                                                 <input type="number" v-model.number="variant.dimensions.height"
                                                     class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                                                    placeholder="Height" step="0.01" />
+                                                    :placeholder="t('addProductPage.variants.height')" step="0.01" />
                                             </div>
                                         </div>
                                     </div>
 
                                     <!-- Variant Images -->
                                     <div class="mt-6 space-y-4">
-                                        <label class="text-sm font-medium text-gray-700">Variant Images</label>
+                                        <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.variants.images') }}</label>
                                         <div
                                             class="relative rounded-lg border-2 border-dashed border-gray-300 p-6 hover:border-indigo-500 transition-colors">
                                             <input type="file" @change="(e) => handleVariantImageUpload(e, index)"
@@ -513,7 +512,7 @@
                                                 accept="image/*" />
                                             <div class="text-center">
                                                 <UploadCloud class="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                                                <p class="text-sm text-gray-600">Drag and drop images or click to browse
+                                                <p class="text-sm text-gray-600">{{ t('addProductPage.variants.uploadPrompt') }}
                                                 </p>
                                             </div>
                                         </div>
@@ -537,7 +536,7 @@
                                         <button @click="removeVariant(index)" type="button"
                                             class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2">
                                             <Trash2 class="w-4 h-4" />
-                                            <span>Remove Variant</span>
+                                            <span>{{ t('addProductPage.variants.removeVariant') }}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -551,14 +550,14 @@
                                 <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
                                     <ChevronDown v-if="showSections.bulkPricing" class="w-5 h-5 text-gray-400" />
                                     <ChevronRight v-else class="w-5 h-5 text-gray-400" />
-                                    Bulk Pricing
+                                    {{ t('addProductPage.bulkPricing.title') }}
                                 </h3>
                                 <div class="flex items-center gap-3">
                                     <span class="text-xs text-indigo-500 font-medium group-hover:underline">{{
-                                        showSections.bulkPricing ? 'Hide' : 'Add wholesale pricing' }}</span>
+                                        showSections.bulkPricing ? t('addProductPage.bulkPricing.hide') : t('addProductPage.bulkPricing.show') }}</span>
                                     <button v-show="showSections.bulkPricing" @click.stop="addBulkPricing" type="button"
                                         class="px-4 py-2 text-sm bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
-                                        Add Price Break
+                                        {{ t('addProductPage.bulkPricing.addPriceBreak') }}
                                     </button>
                                 </div>
                             </button>
@@ -567,10 +566,10 @@
                                 <div v-for="(pricing, index) in product.bulkPricing" :key="index"
                                     class="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
                                     <input type="number" v-model.number="pricing.quantity"
-                                        placeholder="Min quantity (e.g., 10)"
+                                        :placeholder="t('addProductPage.bulkPricing.minQuantityPlaceholder')"
                                         class="flex-1 px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                                         min="0" />
-                                    <input type="number" v-model.number="pricing.price" placeholder="Price per unit"
+                                    <input type="number" v-model.number="pricing.price" :placeholder="t('addProductPage.bulkPricing.pricePerUnitPlaceholder')"
                                         class="flex-1 px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                                         step="0.01" min="0" />
                                     <button @click="removeBulkPricing(index)" type="button"
@@ -588,13 +587,13 @@
                                 <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
                                     <ChevronDown v-if="showSections.seo" class="w-5 h-5 text-gray-400" />
                                     <ChevronRight v-else class="w-5 h-5 text-gray-400" />
-                                    SEO & Search
+                                    {{ t('addProductPage.seo.title') }}
                                 </h3>
                                 <div class="flex items-center gap-2">
                                     <span class="text-[10px] bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full"
-                                        v-if="seoAutoMode">Auto-gen ON</span>
+                                        v-if="seoAutoMode">{{ t('addProductPage.seo.autoGenOn') }}</span>
                                     <span class="text-xs text-indigo-500 font-medium group-hover:underline">{{
-                                        showSections.seo ? 'Hide' : 'Optimize for Google' }}</span>
+                                        showSections.seo ? t('addProductPage.seo.hide') : t('addProductPage.seo.show') }}</span>
                                 </div>
                             </button>
 
@@ -604,13 +603,12 @@
                                     <input type="checkbox" v-model="seoAutoMode" id="seoAuto"
                                         class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500/20" />
                                     <label for="seoAuto" class="text-xs font-medium text-indigo-700 flex items-center gap-1 cursor-pointer">
-                                        <Sparkles class="w-3 h-3" /> Auto-generate SEO from product details
+                                        <Sparkles class="w-3 h-3" /> {{ t('addProductPage.seo.autoGenerate') }}
                                     </label>
                                 </div>
                                 <!-- Meta Title -->
                                 <div class="space-y-2">
-                                    <label class="text-sm font-medium text-gray-700">Meta Title (max 60
-                                        characters)</label>
+                                    <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.seo.metaTitle') }}</label>
                                     <div
                                         class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                         <input type="text" v-model="product.metaTitle"
@@ -621,8 +619,7 @@
 
                                 <!-- Meta Description -->
                                 <div class="space-y-2">
-                                    <label class="text-sm font-medium text-gray-700">Meta Description (max 160
-                                        characters)</label>
+                                    <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.seo.metaDescription') }}</label>
                                     <div
                                         class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                         <textarea v-model="product.metaDescription"
@@ -633,13 +630,12 @@
 
                                 <!-- Tags -->
                                 <div class="space-y-2">
-                                    <label class="text-sm font-medium text-gray-700">Tags (comma-separated, max
-                                        3)</label>
+                                    <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.seo.tags') }}</label>
                                     <div
                                         class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                         <input type="text" v-model="tagsInput"
                                             class="w-full px-4 py-3 text-gray-700 bg-transparent border-none focus:outline-none"
-                                            placeholder="e.g., organic, natural, eco-friendly" />
+                                            :placeholder="t('addProductPage.seo.tagsPlaceholder')" />
                                     </div>
                                 </div>
                             </div>
@@ -649,11 +645,11 @@
                         <div class="flex items-center justify-end gap-4 pt-6 border-t border-gray-100">
                             <button type="button" @click="cancelAddProduct"
                                 class="px-6 py-2.5 text-gray-700 font-medium hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors">
-                                Cancel
+                                {{ t('addProductPage.cancel') }}
                             </button>
                             <button type="submit"
                                 class="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg font-medium shadow-lg transition-all duration-300">
-                                Add Product
+                                {{ t('addProductPage.submit') }}
                             </button>
                         </div>
 
@@ -667,6 +663,7 @@
 <script>
 import { ref, reactive, onMounted, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useProductStore } from '../store/productStore.js';
 import { useUserStore } from '../store/user.js';
 import uploadService from '../services/uploadService';
@@ -687,6 +684,7 @@ export default {
         }
     },
     setup(props) {
+        const { t } = useI18n();
         const router = useRouter();
         const productStore = useProductStore();
         const userStore = useUserStore();
@@ -762,6 +760,13 @@ export default {
             { label: 'Quantity (pack)', category: 'quantity', baseUnit: 'pack', factor: 1, display: 'pack' },
         ];
 
+        const variantAttributePresets = computed(() => ([
+            { value: 'Color', label: t('addProductPage.variants.attributePresets.color') },
+            { value: 'Size', label: t('addProductPage.variants.attributePresets.size') },
+            { value: 'Capacity', label: t('addProductPage.variants.attributePresets.capacity') },
+            { value: 'Material', label: t('addProductPage.variants.attributePresets.material') },
+        ]));
+
         const applyUnitPreset = (preset) => {
             product.unit.category = preset.category;
             product.unit.baseUnit = preset.baseUnit;
@@ -825,7 +830,7 @@ export default {
                 }
             } catch (error) {
                 console.error('Error fetching categories:', error);
-                toast.error('Failed to load categories');
+                toast.error(t('addProductPage.toasts.loadCategoriesFailed'));
                 categories.value = [];
             }
         });
@@ -840,17 +845,17 @@ export default {
                 const remainingSlots = 5 - currentImagesCount;
 
                 if (remainingSlots <= 0) {
-                    toast.error('Maximum limit of 5 images reached');
+                    toast.error(t('addProductPage.toasts.maxImagesReached'));
                     return;
                 }
 
                 const validFiles = Array.from(files).slice(0, remainingSlots).filter(file => {
                     if (!file.type.startsWith('image/')) {
-                        toast.error(`${file.name} is not an image`);
+                        toast.error(t('addProductPage.toasts.notImage', { fileName: file.name }));
                         return false;
                     }
                     if (file.size > 5 * 1024 * 1024) {
-                        toast.error(`${file.name} exceeds 5MB limit`);
+                        toast.error(t('addProductPage.toasts.fileTooLarge', { fileName: file.name }));
                         return false;
                     }
                     return true;
@@ -858,7 +863,7 @@ export default {
 
                 if (validFiles.length === 0) {
                     if (Array.from(files).length > remainingSlots) {
-                        toast.error('Some files were skipped as the limit of 5 images would be exceeded');
+                        toast.error(t('addProductPage.toasts.filesSkippedLimit'));
                     }
                     return;
                 }
@@ -873,7 +878,7 @@ export default {
                 });
 
                 // Upload to Cloudinary via Backend
-                toast.loading(`Uploading ${validFiles.length} images...`);
+                toast.loading(t('addProductPage.toasts.uploadingImages', { count: validFiles.length }));
                 const urls = await uploadService.uploadImages(validFiles);
                 console.log('Cloudinary URLs received:', urls);
 
@@ -884,11 +889,11 @@ export default {
 
                 // Add new URLs to existing ones
                 product.images.push(...urls);
-                toast.success('Images uploaded successfully');
+                toast.success(t('addProductPage.toasts.imagesUploaded'));
 
             } catch (error) {
                 console.error('Error in image upload:', error);
-                toast.error(`Failed to upload images: ${error.message}`);
+                toast.error(t('addProductPage.toasts.uploadImagesFailed', { message: error.message }));
             }
         };
 
@@ -911,7 +916,7 @@ export default {
             }
 
             try {
-                toast.loading(`Uploading ${files.length} images...`);
+                toast.loading(t('addProductPage.toasts.uploadingVariantImages', { count: files.length }));
                 const urls = await uploadService.uploadImages(files);
                 
                 // Add new URLs to variant images
@@ -922,10 +927,10 @@ export default {
                     product.variants[variantIndex].preview = urls[0];
                 }
                 
-                toast.success('Variant images uploaded');
+                toast.success(t('addProductPage.toasts.variantImagesUploaded'));
             } catch (error) {
                 console.error(`Error uploading variant images:`, error);
-                toast.error(`Failed to upload variant images: ${error.message}`);
+                toast.error(t('addProductPage.toasts.uploadVariantImagesFailed', { message: error.message }));
             }
         };
 
@@ -1068,12 +1073,12 @@ export default {
         const handleSubmit = async () => {
             try {
                 if (!product.category) {
-                    toast.error('Please select a category');
+                    toast.error(t('addProductPage.toasts.selectCategory'));
                     return;
                 }
 
                 if (!product.unit.category || !product.unit.baseUnit || !product.unit.value || !product.unit.conversionFactor) {
-                    toast.error('Please fill in all required unit information');
+                    toast.error(t('addProductPage.toasts.fillUnitInfo'));
                     return;
                 }
 
@@ -1226,7 +1231,7 @@ export default {
 
                 // Validate we have at least one image
                 if (productData.images.length === 0) {
-                    toast.error('At least one product image is required');
+                    toast.error(t('addProductPage.toasts.imageRequired'));
                     return;
                 }
 
@@ -1247,7 +1252,7 @@ export default {
                 if (productData.availableColors.length > 0) {
                     for (const color of productData.availableColors) {
                         if (!color.name || !color.hexCode) {
-                            toast.error('Each color must have both name and hex code');
+                            toast.error(t('addProductPage.toasts.colorNameHexRequired'));
                             return;
                         }
                     }
@@ -1263,9 +1268,9 @@ export default {
 
                 if (!newProduct.images || newProduct.images.length === 0) {
                     console.warn('Warning: API response contains no images');
-                    toast.warning('Product saved but images may not have been properly processed');
+                    toast.warning(t('addProductPage.toasts.savedImagesWarning'));
                 } else {
-                    toast.success('Product added successfully');
+                    toast.success(t('addProductPage.toasts.productAdded'));
                     router.push('/account/my-products');
                 }
             } catch (error) {
@@ -1273,7 +1278,7 @@ export default {
                 if (error.response && error.response.data) {
                     console.error('Server error details:', error.response.data);
                 }
-                toast.error('Failed to add product: ' + (error.response?.data?.error || error.message));
+                toast.error(t('addProductPage.toasts.addFailed', { message: error.response?.data?.error || error.message }));
             }
         };
 
@@ -1310,10 +1315,12 @@ export default {
             showSections,
             seoAutoMode,
             unitPresets,
+            variantAttributePresets,
             applyUnitPreset,
             generateSku,
             handleVariantImageUpload,
             removeVariantImage,
+            t,
         };
     },
 };

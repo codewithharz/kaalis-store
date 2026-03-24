@@ -12,8 +12,8 @@
                         class="absolute inset-0 animate-ping h-12 w-12 sm:h-16 sm:w-16 border-2 border-blue-300 rounded-full opacity-75">
                     </div>
                 </div>
-                <p class="text-lg sm:text-xl font-medium text-gray-700">Loading Dashboard...</p>
-                <p class="text-xs sm:text-sm text-gray-500 mt-2">Please wait while we prepare your seller dashboard</p>
+                <p class="text-lg sm:text-xl font-medium text-gray-700">{{ t('userSellerDashboardPage.loading') }}</p>
+                <p class="text-xs sm:text-sm text-gray-500 mt-2">{{ t('userSellerDashboardPage.loadingSubtitle') }}</p>
             </div>
         </div>
 
@@ -30,20 +30,17 @@
                                 <UserRound class="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                             </div>
                             <div class="text-white min-w-0">
-                                <h3 class="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">Become a Seller</h3>
-                                <p class="text-indigo-100 text-sm sm:text-base">Start your journey as a seller on our
-                                    platform</p>
+                                <h3 class="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">{{ t('userSellerDashboardPage.nonSeller.title') }}</h3>
+                                <p class="text-indigo-100 text-sm sm:text-base">{{ t('userSellerDashboardPage.nonSeller.subtitle') }}</p>
                             </div>
                         </div>
                     </div>
                     <div class="p-6 sm:p-8 text-center">
-                        <p class="text-base sm:text-lg text-gray-700 mb-4 sm:mb-6">You are not a seller yet. Join
-                            thousands of successful
-                            sellers and start earning today!</p>
+                        <p class="text-base sm:text-lg text-gray-700 mb-4 sm:mb-6">{{ t('userSellerDashboardPage.nonSeller.description') }}</p>
                         <button @click="navigateToBecomeSeller"
                             class="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg sm:rounded-xl font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm sm:text-base">
                             <UserRound class="w-4 h-4 sm:w-5 sm:h-5" />
-                            Become a Seller
+                            {{ t('userSellerDashboardPage.nonSeller.button') }}
                         </button>
                     </div>
                 </div>
@@ -72,14 +69,12 @@
                                         </div>
                                     </div>
                                     <div class="min-w-0 flex-1">
-                                        <h1 class="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2 truncate">Seller
-                                            Dashboard</h1>
-                                        <p class="text-white/90 text-base sm:text-lg truncate">Welcome back, {{
-                                            sellerName }}</p>
+                                        <h1 class="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2 truncate">{{ t('userSellerDashboardPage.header.title') }}</h1>
+                                        <p class="text-white/90 text-base sm:text-lg truncate">{{ t('userSellerDashboardPage.header.welcomeBack', { name: sellerName }) }}</p>
                                         <div class="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-3">
                                             <span
                                                 class="px-2 sm:px-3 py-1 bg-white/20 rounded-full text-xs sm:text-sm font-medium backdrop-blur-sm">
-                                                {{ sellerProfile.isVacationMode ? '🏖️ On Vacation' : '🟢 Active' }}
+                                                {{ sellerProfile.isVacationMode ? t('userSellerDashboardPage.header.onVacation') : t('userSellerDashboardPage.header.active') }}
                                             </span>
                                         </div>
                                     </div>
@@ -90,14 +85,14 @@
                                     <button @click="showEditProfileModal = true"
                                         class="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-white/20 backdrop-blur-sm text-white rounded-lg sm:rounded-xl font-semibold hover:bg-white/30 transition-all duration-200 transform hover:scale-105 border border-white/30 text-sm sm:text-base justify-center">
                                         <Settings class="w-4 h-4" />
-                                        Edit Profile
+                                        {{ t('userSellerDashboardPage.header.editProfile') }}
                                     </button>
                                     <button @click="toggleVacationMode" :class="{
                                         'bg-yellow-500/80 hover:bg-yellow-600/80 border-yellow-400/50': sellerProfile.isVacationMode,
                                         'bg-green-500/80 hover:bg-green-600/80 border-green-400/50': !sellerProfile.isVacationMode
                                     }"
                                         class="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 backdrop-blur-sm text-white rounded-lg sm:rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 border text-sm sm:text-base justify-center">
-                                        {{ sellerProfile.isVacationMode ? '🏖️ End Vacation' : '🌴 Start Vacation' }}
+                                        {{ sellerProfile.isVacationMode ? t('userSellerDashboardPage.header.endVacation') : t('userSellerDashboardPage.header.startVacation') }}
                                     </button>
                                 </div>
                             </div>
@@ -109,7 +104,7 @@
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-5">
                     <div v-for="stat in quickStats" :key="stat.label"
                         class="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-200 p-3 sm:p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                        :class="{ 'col-span-2': stat.label === 'Total Sales' }">
+                        :class="{ 'col-span-2': stat.key === 'totalSales' }">
                         <div class="flex items-start gap-2 sm:gap-4">
                             <div class="flex-shrink-0">
                                 <div
@@ -120,7 +115,7 @@
                             <div class="flex-1 min-w-0">
                                 <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">{{ stat.label }}</p>
                                 <p class="text-lg sm:text-2xl font-bold text-gray-900 break-words">{{ stat.value }}</p>
-                                <p v-if="stat.label === 'Total Sales'"
+                                <p v-if="stat.key === 'totalSales'"
                                     class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2 leading-relaxed hidden sm:block">
                                     {{ stat.valueInWords }}
                                 </p>
@@ -139,11 +134,11 @@
                                 </div>
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">Revenue Growth</p>
+                                <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">{{ t('userSellerDashboardPage.revenueGrowth.title') }}</p>
                                 <p class="text-lg sm:text-2xl font-bold text-gray-900 break-words">
                                     {{ revenueOverview.growth }}%
                                     <span v-if="revenueOverview.growth == 0"
-                                        class="text-xs font-normal text-gray-500 hidden sm:inline">(No change)</span>
+                                        class="text-xs font-normal text-gray-500 hidden sm:inline">({{ t('userSellerDashboardPage.revenueGrowth.noChange') }})</span>
                                 </p>
                                 <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{
                                     revenueOverview.comparisonPeriod }}</p>
@@ -162,15 +157,14 @@
                                 </div>
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">Top Selling Product</p>
+                                <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">{{ t('userSellerDashboardPage.topSellingProduct.title') }}</p>
                                 <p class="text-sm sm:text-lg font-bold text-gray-900 break-words"
                                     :title="topSellingProduct.name">
                                     {{ topSellingProduct.truncatedName }}{{ topSellingProduct.name.length > 20 ? '...' :
                                         '' }}
                                 </p>
                                 <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">
-                                    {{ topSellingProduct.quantity > 0 ? `${topSellingProduct.quantity} units sold` : `No
-                                    units sold yet` }}
+                                    {{ topSellingProduct.quantity > 0 ? t('userSellerDashboardPage.topSellingProduct.unitsSold', { count: topSellingProduct.quantity }) : t('userSellerDashboardPage.topSellingProduct.noUnitsSold') }}
                                 </p>
                             </div>
                         </div>
@@ -187,10 +181,10 @@
                                 </div>
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">Pending Orders</p>
+                                <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">{{ t('userSellerDashboardPage.pendingOrders.title') }}</p>
                                 <p class="text-lg sm:text-2xl font-bold text-gray-900 break-words">{{ pendingOrders }}
                                 </p>
-                                <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">Awaiting processing</p>
+                                <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ t('userSellerDashboardPage.pendingOrders.subtitle') }}</p>
                             </div>
                         </div>
                     </div>
@@ -208,9 +202,8 @@
                                     <ShoppingBag class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                                 </div>
                                 <div>
-                                    <h2 class="text-lg sm:text-xl font-bold text-gray-900">Recent Orders</h2>
-                                    <p class="text-xs sm:text-sm text-gray-600">{{ recentOrders.length }} orders found
-                                    </p>
+                                    <h2 class="text-lg sm:text-xl font-bold text-gray-900">{{ t('userSellerDashboardPage.recentOrders.title') }}</h2>
+                                    <p class="text-xs sm:text-sm text-gray-600">{{ t('userSellerDashboardPage.recentOrders.ordersFound', { count: recentOrders.length }) }}</p>
                                 </div>
                             </div>
                         </div>
@@ -241,10 +234,8 @@
 
                                     <!-- Customer Info -->
                                     <div class="mb-3 sm:mb-4 p-2 sm:p-3 bg-blue-50 rounded-lg">
-                                        <p class="text-xs sm:text-sm font-medium text-gray-900">Customer: {{
-                                            order.customerName }}</p>
-                                        <p class="text-xs sm:text-sm text-gray-600">Items: {{ order.products.length }}
-                                        </p>
+                                        <p class="text-xs sm:text-sm font-medium text-gray-900">{{ t('userSellerDashboardPage.recentOrders.customer', { name: order.customerName }) }}</p>
+                                        <p class="text-xs sm:text-sm text-gray-600">{{ t('userSellerDashboardPage.recentOrders.items', { count: order.products.length }) }}</p>
                                     </div>
 
                                     <!-- Products List -->
@@ -253,7 +244,7 @@
                                             class="flex justify-between items-center text-xs sm:text-sm bg-white p-2 sm:p-3 rounded-lg border border-gray-100">
                                             <span class="font-medium text-gray-900 truncate flex-1 mr-2">{{ product.name
                                             }}</span>
-                                            <span class="text-gray-600 flex-shrink-0">x{{ product.quantity }} - ₦{{
+                                            <span class="text-gray-600 flex-shrink-0">{{ t('userSellerDashboardPage.recentOrders.quantityPrefix', { count: product.quantity }) }} - ₦{{
                                                 product.formattedSubtotal }}</span>
                                         </div>
                                     </div>
@@ -261,7 +252,7 @@
                                     <!-- Order Total -->
                                     <div class="pt-2 sm:pt-3 border-t border-gray-200">
                                         <div class="flex justify-between items-center">
-                                            <span class="text-base sm:text-lg font-bold text-gray-900">Total:</span>
+                                            <span class="text-base sm:text-lg font-bold text-gray-900">{{ t('userSellerDashboardPage.recentOrders.total') }}</span>
                                             <span class="text-base sm:text-lg font-bold text-green-600">₦{{
                                                 order.formattedTotal }}</span>
                                         </div>
@@ -275,9 +266,8 @@
                                     class="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <ShoppingBag class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
                                 </div>
-                                <p class="text-gray-500 text-base sm:text-lg font-medium">No recent orders</p>
-                                <p class="text-gray-400 text-xs sm:text-sm mt-1">Orders will appear here once customers
-                                    place them</p>
+                                <p class="text-gray-500 text-base sm:text-lg font-medium">{{ t('userSellerDashboardPage.recentOrders.noRecentOrders') }}</p>
+                                <p class="text-gray-400 text-xs sm:text-sm mt-1">{{ t('userSellerDashboardPage.recentOrders.emptySubtitle') }}</p>
                             </div>
                         </div>
 
@@ -285,13 +275,12 @@
                         <div class="bg-gray-50 p-3 sm:p-4 flex justify-between items-center border-t border-gray-200">
                             <button @click="prevPage" :disabled="currentPage === 1"
                                 class="px-3 sm:px-4 py-2 text-indigo-600 hover:text-indigo-800 font-semibold disabled:text-gray-400 disabled:cursor-not-allowed transition-colors text-sm sm:text-base">
-                                Previous
+                                {{ t('userSellerDashboardPage.pagination.previous') }}
                             </button>
-                            <span class="text-xs sm:text-sm text-gray-600 font-medium">Page {{ currentPage }} of {{
-                                totalPages }}</span>
+                            <span class="text-xs sm:text-sm text-gray-600 font-medium">{{ t('userSellerDashboardPage.pagination.pageOf', { page: currentPage, total: totalPages }) }}</span>
                             <button @click="nextPage" :disabled="currentPage === totalPages"
                                 class="px-3 sm:px-4 py-2 text-indigo-600 hover:text-indigo-800 font-semibold disabled:text-gray-400 disabled:cursor-not-allowed transition-colors text-sm sm:text-base">
-                                Next
+                                {{ t('userSellerDashboardPage.pagination.next') }}
                             </button>
                         </div>
 
@@ -300,7 +289,7 @@
                             <button @click="viewAllOrders"
                                 class="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg sm:rounded-xl font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg text-sm sm:text-base">
                                 <ShoppingBag class="w-4 h-4" />
-                                View All Orders
+                                {{ t('userSellerDashboardPage.recentOrders.viewAllOrders') }}
                             </button>
                         </div>
                     </div>
@@ -314,8 +303,8 @@
                                     <Settings class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                                 </div>
                                 <div>
-                                    <h2 class="text-lg sm:text-xl font-bold text-gray-900">Quick Actions</h2>
-                                    <p class="text-xs sm:text-sm text-gray-600">Manage your store efficiently</p>
+                                    <h2 class="text-lg sm:text-xl font-bold text-gray-900">{{ t('userSellerDashboardPage.quickActions.title') }}</h2>
+                                    <p class="text-xs sm:text-sm text-gray-600">{{ t('userSellerDashboardPage.quickActions.subtitle') }}</p>
                                 </div>
                             </div>
                         </div>
@@ -325,37 +314,37 @@
                                 <button @click="addNewProduct"
                                     class="w-full flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-medium text-sm sm:text-base">
                                     <CirclePlus class="w-4 h-4 sm:w-5 sm:h-5" />
-                                    Add New Product
+                                    {{ t('userSellerDashboardPage.quickActions.addNewProduct') }}
                                 </button>
 
                                 <button @click="showUpdateInventory = true"
                                     class="w-full flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-medium text-sm sm:text-base">
                                     <Boxes class="w-4 h-4 sm:w-5 sm:h-5" />
-                                    Update Inventory
+                                    {{ t('userSellerDashboardPage.quickActions.updateInventory') }}
                                 </button>
 
                                 <button @click="showManagePromotions = true"
                                     class="w-full flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-yellow-500 to-orange-600 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-yellow-600 hover:to-orange-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-medium text-sm sm:text-base">
                                     <Tag class="w-4 h-4 sm:w-5 sm:h-5" />
-                                    Manage Promotions
+                                    {{ t('userSellerDashboardPage.quickActions.managePromotions') }}
                                 </button>
 
                                 <button @click="viewAnalytics"
                                     class="w-full flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-purple-600 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-medium text-sm sm:text-base">
                                     <AlignEndHorizontal class="w-4 h-4 sm:w-5 sm:h-5" />
-                                    View Analytics
+                                    {{ t('userSellerDashboardPage.quickActions.viewAnalytics') }}
                                 </button>
 
                                 <button @click="manageOrders"
                                     class="w-full flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-orange-600 hover:to-red-600 transition-all duration-200 transform hover:scale-105 shadow-lg font-medium text-sm sm:text-base">
                                     <ShoppingBag class="w-4 h-4 sm:w-5 sm:h-5" />
-                                    Manage Orders
+                                    {{ t('userSellerDashboardPage.quickActions.manageOrders') }}
                                 </button>
 
                                 <button @click="downloadReports"
                                     class="w-full flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-500 to-cyan-600 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-blue-600 hover:to-cyan-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-medium text-sm sm:text-base">
                                     <Download class="w-4 h-4 sm:w-5 sm:h-5" />
-                                    Download Reports
+                                    {{ t('userSellerDashboardPage.quickActions.downloadReports') }}
                                 </button>
 
                                 <!-- Additional Action Buttons -->
@@ -363,19 +352,19 @@
                                     <button @click="productCategories"
                                         class="w-full flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-slate-500 to-gray-600 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-slate-600 hover:to-gray-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-medium text-sm sm:text-base">
                                         <FolderTree class="w-4 h-4 sm:w-5 sm:h-5" />
-                                        Product Categories
+                                        {{ t('userSellerDashboardPage.quickActions.productCategories') }}
                                     </button>
 
                                     <button @click="customerManagement"
                                         class="w-full flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-pink-500 to-rose-600 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-pink-600 hover:to-rose-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-medium text-sm sm:text-base">
                                         <Users class="w-4 h-4 sm:w-5 sm:h-5" />
-                                        Customer Management
+                                        {{ t('userSellerDashboardPage.quickActions.customerManagement') }}
                                     </button>
 
                                     <button @click="supportTickets"
                                         class="w-full flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-teal-600 hover:to-cyan-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-medium text-sm sm:text-base">
                                         <TicketCheck class="w-4 h-4 sm:w-5 sm:h-5" />
-                                        Support Tickets
+                                        {{ t('userSellerDashboardPage.quickActions.supportTickets') }}
                                     </button>
                                 </div>
                             </div>
@@ -393,8 +382,8 @@
                                 <TrendingUp class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                             </div>
                             <div>
-                                <h2 class="text-lg sm:text-xl font-bold text-gray-900">Sales Performance</h2>
-                                <p class="text-xs sm:text-sm text-gray-600">Track your sales over time</p>
+                                <h2 class="text-lg sm:text-xl font-bold text-gray-900">{{ t('userSellerDashboardPage.salesPerformance.title') }}</h2>
+                                <p class="text-xs sm:text-sm text-gray-600">{{ t('userSellerDashboardPage.salesPerformance.subtitle') }}</p>
                             </div>
                         </div>
                     </div>
@@ -412,7 +401,7 @@
             <div class="bg-white rounded-xl sm:rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl">
                 <div class="p-3 sm:p-4 border-b bg-gradient-to-r from-green-500 to-emerald-600 text-white">
                     <div class="flex justify-between items-center">
-                        <h3 class="text-base sm:text-lg font-bold">Update Inventory</h3>
+                        <h3 class="text-base sm:text-lg font-bold">{{ t('userSellerDashboardPage.modals.updateInventory') }}</h3>
                         <button @click="showUpdateInventory = false"
                             class="p-1.5 sm:p-2 hover:bg-white/20 rounded-lg transition-colors">
                             <XIcon class="h-5 w-5 sm:h-6 sm:w-6" />
@@ -431,7 +420,7 @@
             <div class="bg-white rounded-xl sm:rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl">
                 <div class="p-3 sm:p-4 border-b bg-gradient-to-r from-yellow-500 to-orange-600 text-white">
                     <div class="flex justify-between items-center">
-                        <h3 class="text-base sm:text-lg font-bold">Manage Promotions</h3>
+                        <h3 class="text-base sm:text-lg font-bold">{{ t('userSellerDashboardPage.modals.managePromotions') }}</h3>
                         <button @click="showManagePromotions = false"
                             class="p-1.5 sm:p-2 hover:bg-white/20 rounded-lg transition-colors">
                             <XIcon class="h-5 w-5 sm:h-6 sm:w-6" />
@@ -460,6 +449,7 @@ import UpdateInventory from './UpdateInventory.vue';
 import ManagePromotions from './ManagePromotions.vue';
 import EditSellerProfile from './EditSellerProfile.vue';
 import { ref, onMounted, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '../store/user';
 import { useSellerStore } from '../store/sellerStore';
@@ -482,6 +472,7 @@ export default {
         ShoppingBag, Download, FolderTree, Settings, TicketCheck
     },
     setup() {
+        const { t, locale } = useI18n();
         const router = useRouter();
         const userStore = useUserStore();
         const sellerStore = useSellerStore();
@@ -512,27 +503,43 @@ export default {
         const toggleVacationMode = async () => {
             try {
                 await sellerStore.toggleVacationMode();
-                const newStatus = sellerProfile.value.isVacationMode ? 'enabled' : 'disabled';
-                const storeStatus = sellerProfile.value.isVacationMode ? 'closed' : 'opened';
-                toast.success(`Vacation mode ${newStatus} and store ${storeStatus}`);
+                const newStatus = sellerProfile.value.isVacationMode
+                    ? t('userSellerDashboardPage.toasts.vacationEnabled')
+                    : t('userSellerDashboardPage.toasts.vacationDisabled');
+                const storeStatus = sellerProfile.value.isVacationMode
+                    ? t('userSellerDashboardPage.toasts.storeClosed')
+                    : t('userSellerDashboardPage.toasts.storeOpened');
+                toast.success(t('userSellerDashboardPage.toasts.vacationModeUpdated', { vacation: newStatus, store: storeStatus }));
             } catch (error) {
                 console.error('Error toggling vacation mode:', error);
-                toast.error('Failed to toggle vacation mode. Please try again.');
+                toast.error(t('userSellerDashboardPage.toasts.toggleVacationFailed'));
             }
         };
 
         const toggleStoreOpen = async () => {
             try {
                 await sellerStore.toggleStoreOpen();
-                toast.success(`Store ${sellerProfile.value.storeOpen ? 'opened' : 'closed'}`);
+                toast.success(t('userSellerDashboardPage.toasts.storeStatusUpdated', {
+                    status: sellerProfile.value.storeOpen
+                        ? t('userSellerDashboardPage.toasts.storeOpened')
+                        : t('userSellerDashboardPage.toasts.storeClosed')
+                }));
             } catch (error) {
                 console.error('Error toggling store open status:', error);
-                toast.error('Failed to toggle store status. Please try again.');
+                toast.error(t('userSellerDashboardPage.toasts.toggleStoreFailed'));
             }
         };
 
         // Add this function to convert numbers to words
         function numberToWords(num) {
+            if (locale.value === 'fr') {
+                const formatted = new Intl.NumberFormat('fr-FR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(Math.round(num * 100) / 100);
+                return t('userSellerDashboardPage.amountInNaira', { amount: formatted });
+            }
+
             if (num === 0) return "Zero Naira";
 
             // Round to the nearest whole number
@@ -579,15 +586,15 @@ export default {
         };
 
         const quickStats = ref([
-            { label: 'Total Sales', value: '₦0', valueInWords: '', icon: Banknote, color: 'green' },
-            { label: 'Orders', value: '0', icon: ShoppingCart, color: 'blue' },
-            { label: 'Products', value: '0', icon: Package, color: 'yellow' },
-            { label: 'Customers', value: '0', icon: Users, color: 'gray' },
+            { key: 'totalSales', label: t('userSellerDashboardPage.stats.totalSales'), value: '₦0', valueInWords: '', icon: Banknote, color: 'green' },
+            { key: 'orders', label: t('userSellerDashboardPage.stats.orders'), value: '0', icon: ShoppingCart, color: 'blue' },
+            { key: 'products', label: t('userSellerDashboardPage.stats.products'), value: '0', icon: Package, color: 'yellow' },
+            { key: 'customers', label: t('userSellerDashboardPage.stats.customers'), value: '0', icon: Users, color: 'gray' },
         ]);
 
         const revenueOverview = ref({
             growth: 0,
-            comparisonPeriod: 'vs last 30 days'
+            comparisonPeriod: t('userSellerDashboardPage.revenueGrowth.comparisonPeriod')
         });
 
         const topSellingProduct = ref({
@@ -621,7 +628,7 @@ export default {
             try {
                 if (!userStore.checkTokenExpiration()) {
                     console.error('User is not logged in or token is invalid');
-                    toast.error('Please log in to access the dashboard.');
+                    toast.error(t('userSellerDashboardPage.toasts.loginRequired'));
                     router.push('/login');
                     return;
                 }
@@ -634,7 +641,7 @@ export default {
                         await loadDashboardData();
                     } else {
                         console.log('User is marked as seller but has no seller profile');
-                        toast.error('You do not have seller privileges.');
+                        toast.error(t('userSellerDashboardPage.toasts.noSellerPrivileges'));
                     }
                 } else {
                     console.log('User is not a seller');
@@ -642,7 +649,7 @@ export default {
                 }
             } catch (error) {
                 console.error('Error in checkAuthAndLoadData:', error);
-                toast.error('Failed to load dashboard. Please try again.');
+                toast.error(t('userSellerDashboardPage.toasts.loadDashboardFailed'));
             } finally {
                 isLoading.value = false;
             }
@@ -679,7 +686,7 @@ export default {
                     console.log('Pending orders:', pendingOrders.value);
 
                     console.log('Top selling product:', dashboardData.topSellingProduct);
-                    topSellingProduct.value = dashboardData.topSellingProduct || { name: 'No products', quantity: 0 };
+                    topSellingProduct.value = dashboardData.topSellingProduct || { name: t('userSellerDashboardPage.topSellingProduct.noProducts'), quantity: 0 };
 
                     console.log('Revenue growth:', dashboardData.revenueGrowth);
                     updateRevenueOverview(dashboardData.revenueGrowth);
@@ -706,11 +713,11 @@ export default {
                     }, 100);
                 } else {
                     console.log('User is not a seller');
-                    toast.error('You do not have seller privileges.');
+                    toast.error(t('userSellerDashboardPage.toasts.noSellerPrivileges'));
                 }
             } catch (error) {
                 console.error('Failed to load dashboard data:', error);
-                toast.error('Failed to load dashboard data. Please check your connection and try again.');
+                toast.error(t('userSellerDashboardPage.toasts.loadDashboardDataFailed'));
                 if (error.response && error.response.status === 401) {
                     userStore.logoutUser();
                     router.push('/login');
@@ -721,11 +728,11 @@ export default {
         const becomeSeller = async () => {
             try {
                 await userStore.becomeSeller();
-                toast.success('You are now a seller!');
+                toast.success(t('userSellerDashboardPage.toasts.becameSeller'));
                 await checkAuthAndLoadData();
             } catch (error) {
                 console.error('Failed to become a seller:', error);
-                toast.error('Failed to become a seller. Please try again.');
+                toast.error(t('userSellerDashboardPage.toasts.becomeSellerFailed'));
             }
         };
 
@@ -735,13 +742,15 @@ export default {
             }
             if (typeof price !== 'number' || isNaN(price)) {
                 console.log(`Invalid price value:`, price);
-                return 'N/A';
+                return t('userSellerDashboardPage.notAvailable');
             }
-            return price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const activeLocale = locale.value === 'fr' ? 'fr-FR' : 'en-NG';
+            return price.toLocaleString(activeLocale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         };
 
         const formatNumber = (num) => {
-            return num.toLocaleString('en-NG');
+            const activeLocale = locale.value === 'fr' ? 'fr-FR' : 'en-NG';
+            return num.toLocaleString(activeLocale);
         };
 
         const updateQuickStats = (data) => {
@@ -749,17 +758,17 @@ export default {
             const formattedSales = formatPrice(data.totalSales);
             console.log('Formatted total sales:', formattedSales);
             quickStats.value = [
-                { label: 'Total Sales', value: `₦${formattedSales}`, valueInWords: numberToWords(Math.floor(data.totalSales)), icon: Banknote, color: 'green' },
-                { label: 'Orders', value: formatNumber(data.totalOrders), icon: ShoppingCart, color: 'blue' },
-                { label: 'Products', value: formatNumber(data.totalProducts), icon: Package, color: 'yellow' },
-                { label: 'Customers', value: formatNumber(data.totalCustomers), icon: Users, color: 'gray' },
+                { key: 'totalSales', label: t('userSellerDashboardPage.stats.totalSales'), value: `₦${formattedSales}`, valueInWords: numberToWords(Math.floor(data.totalSales)), icon: Banknote, color: 'green' },
+                { key: 'orders', label: t('userSellerDashboardPage.stats.orders'), value: formatNumber(data.totalOrders), icon: ShoppingCart, color: 'blue' },
+                { key: 'products', label: t('userSellerDashboardPage.stats.products'), value: formatNumber(data.totalProducts), icon: Package, color: 'yellow' },
+                { key: 'customers', label: t('userSellerDashboardPage.stats.customers'), value: formatNumber(data.totalCustomers), icon: Users, color: 'gray' },
             ];
         };
 
         const updateRevenueOverview = (growthPercentage) => {
             revenueOverview.value = {
                 growth: growthPercentage !== undefined ? Number(growthPercentage).toFixed(2) : '0.00',
-                comparisonPeriod: 'vs last 30 days'
+                comparisonPeriod: t('userSellerDashboardPage.revenueGrowth.comparisonPeriod')
             };
         };
 
@@ -792,7 +801,7 @@ export default {
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Recent Sales',
+                        label: t('userSellerDashboardPage.salesPerformance.recentSales'),
                         data: data,
                         borderColor: 'rgb(59, 130, 246)',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -808,7 +817,7 @@ export default {
                             beginAtZero: true,
                             title: {
                                 display: true,
-                                text: 'Order Total (₦)'
+                                text: t('userSellerDashboardPage.salesPerformance.orderTotalAxis')
                             },
                             grid: {
                                 color: 'rgba(0, 0, 0, 0.1)'
@@ -817,7 +826,7 @@ export default {
                         x: {
                             title: {
                                 display: true,
-                                text: 'Order Date'
+                                text: t('userSellerDashboardPage.salesPerformance.orderDateAxis')
                             },
                             grid: {
                                 color: 'rgba(0, 0, 0, 0.1)'
@@ -851,9 +860,13 @@ export default {
         const toggleStoreStatus = async () => {
             try {
                 await sellerStore.toggleStoreStatus(user.value._id);
-                toast.success(`Store is now ${sellerProfile.value.storeOpen ? 'open' : 'closed'}`);
+                toast.success(t('userSellerDashboardPage.toasts.storeStatusUpdated', {
+                    status: sellerProfile.value.storeOpen
+                        ? t('userSellerDashboardPage.toasts.storeOpen')
+                        : t('userSellerDashboardPage.toasts.storeClosed')
+                }));
             } catch (error) {
-                toast.error('Failed to update store status');
+                toast.error(t('userSellerDashboardPage.toasts.updateStoreStatusFailed'));
             }
         };
 
@@ -892,6 +905,7 @@ export default {
         });
 
         return {
+            t,
             user,
             isSeller,
             isLoading,

@@ -8,7 +8,7 @@
             </div>
             <div class="text-right">
                 <span class="text-[#24a6bb] font-semibold">{{ targetYear }}</span>
-                <p class="text-sm text-gray-500">Target Year</p>
+                <p class="text-sm text-gray-500">{{ t('pageComponents.targetYear') }}</p>
             </div>
         </div>
 
@@ -16,12 +16,12 @@
             <div class="flex items-center justify-between mb-2">
                 <div>
                     <span class="text-xs font-semibold inline-block text-[#24a6bb]">
-                        {{ currentValue }}% Complete
+                        {{ t('pageComponents.completePercent', { value: currentValue }) }}
                     </span>
                 </div>
                 <div>
                     <span class="text-xs font-semibold inline-block text-gray-600">
-                        Target: {{ target }}%
+                        {{ t('pageComponents.targetPercent', { value: target }) }}
                     </span>
                 </div>
             </div>
@@ -34,6 +34,10 @@
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+
 defineProps({
     title: {
         type: String,

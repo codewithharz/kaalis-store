@@ -11,8 +11,8 @@
 
             <div class="container mx-auto px-4 py-16 relative">
                 <div class="max-w-3xl mx-auto text-center">
-                    <h1 class="text-4xl font-bold mb-4">My Wishlist</h1>
-                    <p class="text-lg mb-8 text-white/90">Manage your favorite products</p>
+                    <h1 class="text-4xl font-bold mb-4">{{ t('wishlistPage.title') }}</h1>
+                    <p class="text-lg mb-8 text-white/90">{{ t('wishlistPage.subtitle') }}</p>
                 </div>
             </div>
         </div>
@@ -30,7 +30,7 @@
                                 <div
                                     class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                     <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                                    <input v-model="searchQuery" placeholder="Search wishlist..."
+                                    <input v-model="searchQuery" :placeholder="t('wishlistPage.searchPlaceholder')"
                                         class="w-full sm:w-64 pl-11 pr-4 py-2.5 text-gray-700 bg-transparent border-none focus:outline-none" />
                                 </div>
                             </div>
@@ -43,7 +43,7 @@
                                         ? 'bg-indigo-50 text-indigo-600'
                                         : 'text-gray-500 hover:bg-gray-50'
                                 ]">
-                                    Grid
+                                    {{ t('wishlistPage.grid') }}
                                 </button>
                                 <button @click="viewMode = 'list'" :class="[
                                     'px-4 py-2 rounded-lg font-medium transition-all',
@@ -51,7 +51,7 @@
                                         ? 'bg-indigo-50 text-indigo-600'
                                         : 'text-gray-500 hover:bg-gray-50'
                                 ]">
-                                    List
+                                    {{ t('wishlistPage.list') }}
                                 </button>
                             </div>
                         </div>
@@ -102,7 +102,7 @@
                             <nav class="flex items-center gap-2">
                                 <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1"
                                     class="px-3 py-2 rounded-lg border font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
-                                    Previous
+                                    {{ t('wishlistPage.previous') }}
                                 </button>
 
                                 <div class="flex items-center gap-1">
@@ -119,7 +119,7 @@
 
                                 <button @click="changePage(currentPage + 1)" :disabled="currentPage === totalPages"
                                     class="px-3 py-2 rounded-lg border font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
-                                    Next
+                                    {{ t('wishlistPage.next') }}
                                 </button>
                             </nav>
                         </div>
@@ -130,14 +130,14 @@
                                 class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <HeartOff class="w-8 h-8 text-indigo-500" />
                             </div>
-                            <h2 class="text-xl font-semibold text-gray-900 mb-2">Your wishlist is empty</h2>
+                            <h2 class="text-xl font-semibold text-gray-900 mb-2">{{ t('wishlistPage.emptyTitle') }}</h2>
                             <p class="text-gray-500 mb-6">
-                                Start adding products to your wishlist to keep track of items you love.
+                                {{ t('wishlistPage.emptyBody') }}
                             </p>
                             <button @click="goToProducts"
                                 class="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg font-medium shadow-lg transition-all duration-300 inline-flex items-center gap-2">
                                 <ShoppingBag class="w-5 h-5" />
-                                <span>Explore Products</span>
+                                <span>{{ t('wishlistPage.exploreProducts') }}</span>
                             </button>
                         </div>
                     </div>
@@ -149,6 +149,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useWishlistStore } from '../store/wishlistStore.js';
 import { toast } from 'vue-sonner';
@@ -169,6 +170,7 @@ export default {
     // Update the setup function in MyWishlist.vue
 
     setup() {
+        const { t } = useI18n();
         const router = useRouter();
         const wishlistStore = useWishlistStore();
 
@@ -201,7 +203,7 @@ export default {
                 }
             } catch (err) {
                 console.error('Error fetching wishlist products:', err);
-                error.value = 'Failed to load wishlist products';
+                error.value = t('wishlistPage.failedLoad');
                 toast.error(error.value);
                 products.value = [];
                 currentPage.value = 1;
@@ -225,19 +227,19 @@ export default {
                     const wishlist = wishlistStore.wishlists[0];
                     await wishlistStore.removeFromWishlist(wishlist._id, productId);
                     await fetchWishlistProducts(currentPage.value);
-                    toast.success('Removed from wishlist');
+                    toast.success(t('wishlistPage.removedSuccess'));
                 }
             } catch (err) {
                 console.error('Error removing product from wishlist:', err);
-                toast.error('Failed to remove product from wishlist');
+                toast.error(t('wishlistPage.removedFailed'));
             }
         };
 
         const shareWishlist = (productId) => {
             const shareUrl = `${window.location.origin}/product/${productId}`;
             navigator.clipboard.writeText(shareUrl)
-                .then(() => toast.success('Product link copied to clipboard'))
-                .catch(() => toast.error('Failed to copy link'));
+                .then(() => toast.success(t('wishlistPage.copiedLink')))
+                .catch(() => toast.error(t('wishlistPage.copyFailed')));
         };
 
         const viewProduct = (productId) => {
@@ -264,6 +266,7 @@ export default {
 
         // Return all needed refs and functions
         return {
+            t,
             products: filteredProducts,
             loading,
             error,

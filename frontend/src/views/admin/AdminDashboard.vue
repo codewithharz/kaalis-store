@@ -18,14 +18,14 @@
                         <p class="text-gray-500 text-sm">{{ stat.title }}</p>
                         <p class="text-2xl font-semibold">
                             <template v-if="adminStore.isLoading">
-                                <span class="text-gray-400">Loading...</span>
+                                <span class="text-gray-400">{{ t('adminDashboard.loading') }}</span>
                             </template>
                             <template v-else>
                                 {{ stat.value }}
                             </template>
                         </p>
                         <p class="text-sm" :class="stat.changeColor">
-                            {{ stat.change }}% from last period
+                            {{ t('adminDashboard.fromLastPeriod', { change: stat.change }) }}
                         </p>
                     </div>
                 </div>
@@ -33,40 +33,40 @@
         </div>
 
         <!-- Stats Chart -->
-        <StatsChart :data="chartData" title="Performance Overview" class="mb-3" />
+        <StatsChart :data="chartData" :title="t('adminDashboard.performanceOverview')" class="mb-3" />
 
         <!-- Quick Actions & Recent Activity -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-3">
             <!-- Quick Actions -->
             <div class="bg-white rounded-lg shadow-sm p-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+                <h3 class="text-lg font-medium text-gray-900 mb-4">{{ t('adminDashboard.quickActionsTitle') }}</h3>
                 <div class="grid grid-cols-2 gap-4">
                     <button @click="router.push('/admin/products/')"
                         class="p-4 border rounded-lg hover:bg-gray-50 flex flex-col items-center">
                         <Package class="w-6 h-6 text-blue-500 mb-2" />
-                        <span class="text-sm">Add Product</span>
+                        <span class="text-sm">{{ t('adminDashboard.quickActions.addProduct') }}</span>
                     </button>
                     <button @click="router.push('/admin/orders')"
                         class="p-4 border rounded-lg hover:bg-gray-50 flex flex-col items-center">
                         <ShoppingCart class="w-6 h-6 text-green-500 mb-2" />
-                        <span class="text-sm">View Orders</span>
+                        <span class="text-sm">{{ t('adminDashboard.quickActions.viewOrders') }}</span>
                     </button>
                     <button @click="router.push('/admin/users')"
                         class="p-4 border rounded-lg hover:bg-gray-50 flex flex-col items-center">
                         <Users class="w-6 h-6 text-purple-500 mb-2" />
-                        <span class="text-sm">Manage Users</span>
+                        <span class="text-sm">{{ t('adminDashboard.quickActions.manageUsers') }}</span>
                     </button>
                     <button @click="router.push('/admin/settings')"
                         class="p-4 border rounded-lg hover:bg-gray-50 flex flex-col items-center">
                         <Settings class="w-6 h-6 text-gray-500 mb-2" />
-                        <span class="text-sm">Settings</span>
+                        <span class="text-sm">{{ t('adminDashboard.quickActions.settings') }}</span>
                     </button>
                 </div>
             </div>
 
             <!-- Recent Activity -->
             <div class="bg-white rounded-lg shadow-sm p-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Recent Activity</h3>
+                <h3 class="text-lg font-medium text-gray-900 mb-4">{{ t('adminDashboard.recentActivityTitle') }}</h3>
                 <div class="space-y-4">
                     <div v-for="activity in recentActivities" :key="activity.id" class="flex items-start space-x-3">
                         <div class="p-2 rounded-full" :class="activity.bgColor">
@@ -85,13 +85,13 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Revenue Chart -->
             <div class="bg-white rounded-lg shadow-sm p-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Revenue Overview</h3>
+                <h3 class="text-lg font-medium text-gray-900 mb-4">{{ t('adminDashboard.revenueOverviewTitle') }}</h3>
                 <RevenueChart />
             </div>
 
             <!-- Popular Products -->
             <div class="bg-white rounded-lg shadow-sm p-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Popular Products</h3>
+                <h3 class="text-lg font-medium text-gray-900 mb-4">{{ t('adminDashboard.popularProductsTitle') }}</h3>
                 <div class="space-y-4">
                     <div v-for="product in popularProducts" :key="product.id" class="flex items-center justify-between">
                         <div class="flex items-center space-x-3">
@@ -103,7 +103,7 @@
                         </div>
                         <div class="text-right">
                             <p class="font-medium">₦{{ product.price }}</p>
-                            <p class="text-sm text-gray-500">{{ product.sales }} sales</p>
+                            <p class="text-sm text-gray-500">{{ t('adminDashboard.salesCount', { count: product.sales }) }}</p>
                         </div>
                     </div>
                 </div>
@@ -115,6 +115,7 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAdminStore } from '@/store/admin'
 import TimePeriodSelector from './components/TimePeriodSelector.vue'
 import StatsChart from './charts/StatsChart.vue'
@@ -129,6 +130,7 @@ import {
 } from 'lucide-vue-next'
 
 const router = useRouter()
+const { t } = useI18n()
 const adminStore = useAdminStore()
 
 // Time period management
@@ -140,24 +142,24 @@ const isCurrentPeriod = ref(true)
 const recentActivities = ref([
     {
         id: 1,
-        message: 'New order #1234 received',
-        time: '5 minutes ago',
+        message: t('adminDashboard.activity.orderReceived', { id: '1234' }),
+        time: t('adminDashboard.activity.minutesAgo', { count: 5 }),
         icon: ShoppingCart,
         bgColor: 'bg-blue-100',
         iconColor: 'text-blue-600'
     },
     {
         id: 2,
-        message: 'User John Doe registered',
-        time: '10 minutes ago',
+        message: t('adminDashboard.activity.userRegistered', { name: 'John Doe' }),
+        time: t('adminDashboard.activity.minutesAgo', { count: 10 }),
         icon: Users,
         bgColor: 'bg-green-100',
         iconColor: 'text-green-600'
     },
     {
         id: 3,
-        message: 'Product "iPhone 13" out of stock',
-        time: '15 minutes ago',
+        message: t('adminDashboard.activity.productOutOfStock', { name: 'iPhone 13' }),
+        time: t('adminDashboard.activity.minutesAgo', { count: 15 }),
         icon: AlertCircle,
         bgColor: 'bg-red-100',
         iconColor: 'text-red-600'
@@ -169,7 +171,7 @@ const popularProducts = ref([
     {
         id: 1,
         name: 'iPhone 13',
-        category: 'Electronics',
+        category: t('adminDashboard.categories.electronics'),
         price: 999.99,
         sales: 150,
         image: '/placeholder.jpg'
@@ -177,7 +179,7 @@ const popularProducts = ref([
     {
         id: 2,
         name: 'Samsung TV',
-        category: 'Electronics',
+        category: t('adminDashboard.categories.electronics'),
         price: 799.99,
         sales: 120,
         image: '/placeholder.jpg'
@@ -185,7 +187,7 @@ const popularProducts = ref([
     {
         id: 3,
         name: 'Nike Shoes',
-        category: 'Fashion',
+        category: t('adminDashboard.categories.fashion'),
         price: 89.99,
         sales: 200,
         image: '/placeholder.jpg'
@@ -194,7 +196,7 @@ const popularProducts = ref([
 
 const stats = computed(() => [
     {
-        title: 'Total Users',
+        title: t('adminDashboard.stats.totalUsers'),
         value: adminStore.dashboardStats.totalUsers,
         change: adminStore.dashboardStats.userGrowth || 0,
         icon: Users,
@@ -203,7 +205,7 @@ const stats = computed(() => [
         changeColor: adminStore.dashboardStats.userGrowth >= 0 ? 'text-green-500' : 'text-red-500'
     },
     {
-        title: 'Total Products',
+        title: t('adminDashboard.stats.totalProducts'),
         value: adminStore.dashboardStats.totalProducts,
         change: adminStore.dashboardStats.productGrowth || 0,
         icon: Package,
@@ -212,7 +214,7 @@ const stats = computed(() => [
         changeColor: adminStore.dashboardStats.productGrowth >= 0 ? 'text-green-500' : 'text-red-500'
     },
     {
-        title: 'Total Orders',
+        title: t('adminDashboard.stats.totalOrders'),
         value: adminStore.dashboardStats.totalOrders,
         change: adminStore.dashboardStats.orderGrowth || 0,
         icon: ShoppingCart,
@@ -221,7 +223,7 @@ const stats = computed(() => [
         changeColor: adminStore.dashboardStats.orderGrowth >= 0 ? 'text-green-500' : 'text-red-500'
     },
     {
-        title: 'Revenue',
+        title: t('adminDashboard.stats.revenue'),
         value: `₦${adminStore.dashboardStats.totalRevenue.toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2

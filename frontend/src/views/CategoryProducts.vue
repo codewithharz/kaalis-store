@@ -8,7 +8,7 @@
         <!-- Loading State -->
         <div v-if="loading" class="text-center py-8 sm:py-12">
             <div class="spinner mx-auto"></div>
-            <p class="mt-4 text-sm sm:text-base text-gray-600">Loading products...</p>
+            <p class="mt-4 text-sm sm:text-base text-gray-600">{{ t('categoryPage.loadingProducts') }}</p>
         </div>
 
         <!-- Error State -->
@@ -25,7 +25,7 @@
                 <p class="text-sm sm:text-base text-red-600 font-semibold">{{ error }}</p>
                 <button @click="fetchProducts"
                     class="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors text-sm">
-                    Try Again
+                    {{ t('categoryPage.tryAgain') }}
                 </button>
             </div>
         </div>
@@ -38,7 +38,7 @@
                     class="w-full flex items-center justify-between bg-white border border-gray-200 shadow-sm px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                     <span class="flex items-center">
                         <Filter class="w-4 h-4 mr-2" />
-                        {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
+                        {{ showFilters ? t('categoryPage.hideFilters') : t('categoryPage.showFilters') }}
                     </span>
                     <ChevronDown class="w-4 h-4 transform transition-transform text-gray-500"
                         :class="{ 'rotate-180': showFilters }" />
@@ -54,21 +54,21 @@
                 <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-5 space-y-6 sticky top-24">
                    <!-- Header with Clear All -->
                     <div class="flex items-center justify-between pb-4 border-b border-gray-100">
-                        <h3 class="font-bold text-gray-900">Filters</h3>
+                        <h3 class="font-bold text-gray-900">{{ t('categoryPage.filters') }}</h3>
                          <button v-if="hasActiveFilters" @click="clearAllFilters"
                             class="text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors">
-                            Clear All
+                            {{ t('categoryPage.clearAll') }}
                         </button>
                     </div>
 
                     <!-- Subcategories Navigation -->
                     <div v-if="subCategories && subCategories.length > 0">
-                         <h4 class="font-semibold text-sm text-gray-800 mb-3">Subcategories</h4>
+                         <h4 class="font-semibold text-sm text-gray-800 mb-3">{{ t('categoryPage.subcategories') }}</h4>
                          <ul class="space-y-2">
                              <li v-for="sub in subCategories" :key="sub._id">
                                  <router-link :to="{ name: 'CategoryProducts', params: { categorySlug: sub.slug } }"
                                      class="text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 block px-2 py-1.5 rounded transition-colors flex items-center justify-between group">
-                                     <span>{{ sub.name }}</span>
+                                     <span>{{ sub.displayName || sub.name }}</span>
                                       <ChevronRight class="w-3.5 h-3.5 text-gray-300 group-hover:text-blue-400" />
                                  </router-link>
                              </li>
@@ -80,7 +80,7 @@
                     <!-- Price Filter -->
                     <details class="group" open>
                         <summary class="flex justify-between items-center cursor-pointer list-none py-2 text-sm font-semibold text-gray-800">
-                             Price Range
+                             {{ t('categoryPage.priceRange') }}
                              <ChevronDown class="w-4 h-4 text-gray-400 transition-transform group-open:rotate-180"/>
                         </summary>
                         <div class="mt-3 space-y-2">
@@ -103,7 +103,7 @@
                     <!-- Discount Filter -->
                     <details class="group" open>
                          <summary class="flex justify-between items-center cursor-pointer list-none py-2 text-sm font-semibold text-gray-800">
-                             Discount
+                             {{ t('categoryPage.discount') }}
                              <ChevronDown class="w-4 h-4 text-gray-400 transition-transform group-open:rotate-180"/>
                         </summary>
                         <div class="mt-3 space-y-2">
@@ -126,12 +126,12 @@
                      <!-- Brand Filter -->
                      <details class="group" open v-if="brandCounts.length > 0">
                         <summary class="flex justify-between items-center cursor-pointer list-none py-2 text-sm font-semibold text-gray-800">
-                             Brand
+                             {{ t('categoryPage.brand') }}
                              <ChevronDown class="w-4 h-4 text-gray-400 transition-transform group-open:rotate-180"/>
                         </summary>
                         <div class="mt-3">
                             <div class="relative mb-3">
-                                <input type="text" v-model="brandSearch" placeholder="Search brands..."
+                                <input type="text" v-model="brandSearch" :placeholder="t('categoryPage.searchBrands')"
                                     class="w-full text-xs border border-gray-200 rounded-md py-1.5 pl-2 pr-7 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                                 <Search class="w-3 h-3 text-gray-400 absolute right-2 top-2" />
                             </div>
@@ -156,7 +156,7 @@
                     <!-- Rating Filter -->
                     <details class="group" open>
                         <summary class="flex justify-between items-center cursor-pointer list-none py-2 text-sm font-semibold text-gray-800">
-                             Rating
+                             {{ t('categoryPage.rating') }}
                              <ChevronDown class="w-4 h-4 text-gray-400 transition-transform group-open:rotate-180"/>
                         </summary>
                          <div class="mt-3 space-y-2">
@@ -171,7 +171,7 @@
                                         <Star v-for="i in 5" :key="i" class="w-3.5 h-3.5"
                                             :class="i <= rating ? 'fill-current' : 'text-gray-200'" />
                                     </div>
-                                    <span class="ml-2 text-xs text-gray-500">& Up</span>
+                                    <span class="ml-2 text-xs text-gray-500">{{ t('categoryPage.andUp') }}</span>
                                 </div>
                             </label>
                         </div>
@@ -186,7 +186,7 @@
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900 mb-1 leading-tight">{{ categoryName }}</h1>
                         <p class="text-sm text-gray-500">
-                            Showing {{ filteredProducts.length }} results
+                            {{ t('categoryPage.showingResults', { count: filteredProducts.length }) }}
                         </p>
                     </div>
 
@@ -194,13 +194,13 @@
                     <div class="w-full sm:w-auto">
                         <select v-model="sortOption"
                             class="w-full sm:w-48 appearance-none border border-gray-200 rounded-lg py-2.5 px-4 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer hover:border-gray-300">
-                            <option value="">Sort By: Featured</option>
-                            <option value="price-low-high">Price: Low to High</option>
-                            <option value="price-high-low">Price: High to Low</option>
-                            <option value="name-a-z">Name: A to Z</option>
-                            <option value="name-z-a">Name: Z to A</option>
-                            <option value="discount">Discount: High to Low</option>
-                            <option value="rating">Top Rated</option>
+                            <option value="">{{ t('categoryPage.sortFeatured') }}</option>
+                            <option value="price-low-high">{{ t('categoryPage.sortPriceLowHigh') }}</option>
+                            <option value="price-high-low">{{ t('categoryPage.sortPriceHighLow') }}</option>
+                            <option value="name-a-z">{{ t('categoryPage.sortNameAZ') }}</option>
+                            <option value="name-z-a">{{ t('categoryPage.sortNameZA') }}</option>
+                            <option value="discount">{{ t('categoryPage.sortDiscount') }}</option>
+                            <option value="rating">{{ t('categoryPage.sortTopRated') }}</option>
                         </select>
                     </div>
                 </div>
@@ -221,13 +221,13 @@
                         </template>
                     </template>
                      <button @click="clearAllFilters" class="text-xs text-gray-500 hover:text-gray-900 underline ml-2">
-                        Clear all
+                        {{ t('categoryPage.clearAllFilters') }}
                     </button>
                 </div>
 
                 <!-- Search Field (Mobile only mostly, or secondary) -->
                  <div class="mb-6 relative w-full sm:max-w-md" v-if="searchQuery">
-                        <input v-model="searchQuery" type="text" placeholder="Search within this category..."
+                        <input v-model="searchQuery" type="text" :placeholder="t('categoryPage.searchWithinCategory')"
                             class="w-full text-sm border border-gray-200 rounded-lg py-2.5 pl-10 pr-4 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
                         <Search class="absolute w-4 h-4 left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400" />
                  </div>
@@ -245,13 +245,13 @@
                     <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white shadow-sm mb-4">
                         <Search class="w-8 h-8 text-gray-300" />
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-900 mb-1">No matches found</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ t('categoryPage.noMatches') }}</h3>
                     <p class="text-sm text-gray-500 mb-6 max-w-xs mx-auto">
-                        We couldn't find any products matching your selected filters.
+                        {{ t('categoryPage.noMatchesBody') }}
                     </p>
                     <button @click="clearAllFilters"
                         class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        Clear all filters
+                        {{ t('categoryPage.clearAllFilters') }}
                     </button>
                 </div>
             </div>
@@ -261,6 +261,7 @@
 
 <script>
 import { ref, computed, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { useProductStore } from '../store/productStore.js';
 import { Search, Filter, ChevronDown, ChevronRight, Star } from 'lucide-vue-next';
@@ -271,6 +272,7 @@ export default {
     name: 'CategoryProducts',
     components: { Search, Filter, ChevronDown, ChevronRight, Star, Breadcrumb, ProductCard },
     setup() {
+        const { t, locale } = useI18n();
         const route = useRoute();
         const router = useRouter();
         const productStore = useProductStore();
@@ -339,7 +341,7 @@ export default {
 
                 // Update breadcrumbs
                 breadcrumbs.value = [
-                    { name: 'Home', path: '/' },
+                    { name: t('categoryPage.home'), path: '/' },
                     ...(result.categoryPath || []).map(cat => ({
                         name: cat.name,
                         path: `/category/${cat.slug}`
@@ -353,7 +355,7 @@ export default {
 
             } catch (err) {
                 console.error('Error fetching products:', err);
-                error.value = 'Failed to load products. Please try again.';
+                error.value = t('categoryPage.failedLoadProducts');
             } finally {
                 loading.value = false;
             }
@@ -368,6 +370,10 @@ export default {
                 clearAllFilters();
                 fetchProducts();
             }
+        });
+
+        watch(locale, () => {
+            fetchProducts();
         });
 
         // Filter Logic
@@ -445,11 +451,11 @@ export default {
         // Computed Counts
         const priceCounts = computed(() => {
              const ranges = [
-                { label: 'Under ₦1,000', value: '0-1000' },
-                { label: '₦1,000 - ₦5,000', value: '1000-5000' },
-                { label: '₦5,000 - ₦10,000', value: '5000-10000' },
-                { label: '₦10,000 - ₦50,000', value: '10000-50000' },
-                { label: 'Above ₦50,000', value: '50000-0' }
+                { label: t('categoryPage.priceUnder1000'), value: '0-1000' },
+                { label: t('categoryPage.price1000To5000'), value: '1000-5000' },
+                { label: t('categoryPage.price5000To10000'), value: '5000-10000' },
+                { label: t('categoryPage.price10000To50000'), value: '10000-50000' },
+                { label: t('categoryPage.priceAbove50000'), value: '50000-0' }
             ];
              return ranges.map(range => {
                 const [min, max] = range.value.split('-').map(Number);
@@ -462,11 +468,11 @@ export default {
 
         const discountCounts = computed(() => {
              const ranges = [
-                { label: '50% or more', value: '50' },
-                { label: '40% or more', value: '40' },
-                { label: '30% or more', value: '30' },
-                { label: '20% or more', value: '20' },
-                { label: '10% or more', value: '10' } // Fixed order to logical descending
+                { label: t('categoryPage.discount50'), value: '50' },
+                { label: t('categoryPage.discount40'), value: '40' },
+                { label: t('categoryPage.discount30'), value: '30' },
+                { label: t('categoryPage.discount20'), value: '20' },
+                { label: t('categoryPage.discount10'), value: '10' }
             ];
             return ranges.map(range => {
                  const count = products.value.filter(product =>
@@ -524,13 +530,13 @@ export default {
         const formatFilterLabel = (type, value) => {
              if (type === 'price') {
                  // Simple mapping for display
-                  if(value === '0-1000') return 'Under ₦1,000';
-                  if(value === '50000-0') return 'Above ₦50,000';
+                  if(value === '0-1000') return t('categoryPage.priceUnder1000');
+                  if(value === '50000-0') return t('categoryPage.priceAbove50000');
                   const [min, max] = value.split('-');
                   return `₦${Number(min).toLocaleString()} - ₦${Number(max).toLocaleString()}`;
              }
-             if (type === 'discount') return `${value}%+ Off`;
-             if (type === 'rating') return `${value} Stars & Up`;
+             if (type === 'discount') return `${value}${t('categoryPage.offSuffix')}`;
+             if (type === 'rating') return t('categoryPage.starsUp', { value });
              return value;
         };
 
@@ -539,6 +545,7 @@ export default {
         };
 
         return {
+            t,
             loading,
             error,
             categoryName,

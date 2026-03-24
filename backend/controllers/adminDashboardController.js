@@ -8,9 +8,11 @@ const Product = require("../models/productModels");
 const Order = require("../models/orderModels");
 const Category = require("../models/categoryModels");
 const Payment = require("../models/paymentModels");
-const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
+const {
+  sendAdminTriggeredPasswordResetEmail,
+} = require("../services/emailService");
 
 // backend/controllers/adminDashboardController.js
 exports.getDashboardStats = async (req, res) => {
@@ -634,53 +636,13 @@ exports.resetPassword = async (req, res) => {
 
     await user.save();
 
-    // Send email with temp password
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.EMAIL_PASSWORD,
-      },
-    });
-
-    const mailOptions = {
+    await sendAdminTriggeredPasswordResetEmail({
       to: user.email,
-      from: process.env.EMAIL,
-      subject: "Password Reset by Admin",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(to right, #ff934b, #ff5e62); padding: 20px; border-radius: 8px;">
-            <h1 style="color: white; margin: 0;">Password Reset</h1>
-          </div>
-          
-          <div style="padding: 20px; background: #f8f9fa; border-radius: 8px; margin-top: 20px;">
-            <p style="font-size: 16px;">Dear ${user.username},</p>
-            
-            <p style="font-size: 16px;">Your account password has been reset by an administrator.</p>
-            
-            <div style="background: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p style="margin: 0; font-size: 15px;">Your temporary password is:</p>
-              <p style="font-family: monospace; font-size: 20px; margin: 10px 0; color: #ff5e62;">${tempPassword}</p>
-            </div>
-            
-            <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p style="margin: 0; color: #856404;">⚠️ For security reasons, please change your password immediately after logging in.</p>
-            </div>
-    
-            <p style="font-size: 14px; color: #6c757d; margin-top: 30px;">
-              If you did not request this password reset or have any concerns, please contact our support team immediately.
-            </p>
-          </div>
-          
-          <div style="text-align: center; margin-top: 20px; padding: 20px; color: #6c757d;">
-            <p style="margin: 0;">Best regards,</p>
-            <p style="margin: 5px 0; font-weight: bold;">Bruthol Admin Team</p>
-          </div>
-        </div>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions);
+      username: user.username,
+      tempPassword,
+      locale: user.preferredLanguage,
+      accountType: "user",
+    });
 
     // Log password reset
     await logUserActivity(id, "password_reset", {
@@ -981,52 +943,13 @@ exports.resetSellerPassword = async (req, res) => {
     await seller.user.save();
 
     // Send email
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.EMAIL_PASSWORD,
-      },
-    });
-
-    const mailOptions = {
+    await sendAdminTriggeredPasswordResetEmail({
       to: seller.user.email,
-      from: process.env.EMAIL,
-      subject: "Password Reset by Admin",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(to right, #ff934b, #ff5e62); padding: 20px; border-radius: 8px;">
-            <h1 style="color: white; margin: 0;">Password Reset</h1>
-          </div>
-          
-          <div style="padding: 20px; background: #f8f9fa; border-radius: 8px; margin-top: 20px;">
-            <p style="font-size: 16px;">Dear ${seller.user.username},</p>
-            
-            <p style="font-size: 16px;">Your seller account password has been reset by an administrator.</p>
-            
-            <div style="background: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p style="margin: 0; font-size: 15px;">Your temporary password is:</p>
-              <p style="font-family: monospace; font-size: 20px; margin: 10px 0; color: #ff5e62;">${tempPassword}</p>
-            </div>
-            
-            <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p style="margin: 0; color: #856404;">⚠️ For security reasons, please change your password immediately after logging in.</p>
-            </div>
-    
-            <p style="font-size: 14px; color: #6c757d; margin-top: 30px;">
-              If you did not request this password reset or have any concerns, please contact our support team immediately.
-            </p>
-          </div>
-          
-          <div style="text-align: center; margin-top: 20px; padding: 20px; color: #6c757d;">
-            <p style="margin: 0;">Best regards,</p>
-            <p style="margin: 5px 0; font-weight: bold;">Bruthol Admin Team</p>
-          </div>
-        </div>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions);
+      username: seller.user.username,
+      tempPassword,
+      locale: seller.user.preferredLanguage,
+      accountType: "seller",
+    });
 
     // Log password reset
     await logUserActivity(seller.user._id, "password_reset", {

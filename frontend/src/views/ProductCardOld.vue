@@ -40,10 +40,10 @@
                     </span>
                     <span v-if="product.numberOfRatings > 0" class="ml-2 text-gray-500 text-[10px]">
                         ({{ product.numberOfRatings }}
-                        {{ product.numberOfRatings === 1 ? 'review' : 'reviews' }})
+                        {{ product.numberOfRatings === 1 ? t('productCardOld.review') : t('productCardOld.reviews') }})
                     </span>
                     <span v-else class="ml-2 text-gray-500 text-[10px]">
-                        (No reviews yet)
+                        ({{ t('productCardOld.noReviewsYet') }})
                     </span>
                 </div>
                 <!-- <div class="text-[0.9rem] font-bold text-[#f47a24]">₦{{ product.price?.toFixed(2) }}</div> -->
@@ -54,33 +54,33 @@
                             / {{ formatUnitDisplay(product.unit) }}
                         </span>
                     </p>
-                    <p v-else class="text-[#f47a24] font-semibold">Price not available</p>
+                    <p v-else class="text-[#f47a24] font-semibold">{{ t('productCardOld.priceNotAvailable') }}</p>
 
                     <p v-if="product.originalPrice" class="text-gray-500 line-through">
                         ₦{{ product.originalPrice.toFixed(2) }}
                     </p>
                 </div>
 
-                <p v-if="product.discount > 0" class="text-[13px] text-[#f47a24]">{{ product.discount }}% off</p>
+                <p v-if="product.discount > 0" class="text-[13px] text-[#f47a24]">{{ t('productCardOld.percentOff', { discount: product.discount }) }}</p>
 
                 <!-- Stock information -->
                 <p class="text-[11px] text-gray-600">
-                    {{ product.isAvailable ? `In stock: ${product.stock}` : 'Out of stock' }}
+                    {{ product.isAvailable ? t('productCardOld.inStock', { stock: product.stock }) : t('productCardOld.outOfStock') }}
                 </p>
 
                 <!-- Bulk pricing hint -->
                 <p v-if="product.bulkPricing && product.bulkPricing.length > 0" class="text-[11px] text-green-600">
-                    Bulk pricing available
+                    {{ t('productCardOld.bulkPricingAvailable') }}
                 </p>
 
                 <!-- Variant hint -->
                 <p v-if="product.variants && product.variants.length > 0" class="text-[11px] text-blue-600">
-                    {{ product.variants.length }} variant(s) available
+                    {{ t('productCardOld.variantsAvailable', { count: product.variants.length }) }}
                 </p>
 
                 <!-- Brand -->
                 <p v-if="product.brand" class="text-[11px] text-gray-600">
-                    Brand: {{ product.brand }}
+                    {{ t('productCardOld.brand', { brand: product.brand }) }}
                 </p>
 
             </div>
@@ -99,6 +99,7 @@
 import { useProductStore } from '../store/productStore';
 import { useRouter } from 'vue-router';
 import { toast } from 'vue-sonner';
+import { useI18n } from 'vue-i18n';
 import { Star, Heart, Edit, Trash, Camera } from 'lucide-vue-next';
 import { computed } from 'vue';
 
@@ -141,7 +142,7 @@ export default {
         // truncate words
         truncatedDescription() {
             if (!this.product || !this.product.description) {
-                return 'No description available';
+                return this.t('productCardOld.noDescriptionAvailable');
             }
             const words = this.product.description.split(' ');
             return words.length > 5 ? words.slice(0, 5).join(' ') + '...' : this.product.description;
@@ -184,6 +185,7 @@ export default {
     setup(props, { emit }) {
         const productStore = useProductStore();
         const router = useRouter();
+        const { t } = useI18n();
 
         console.log('Product Props:', props.product);
         console.log('Is User Product:', props.isUserProduct);
@@ -209,15 +211,15 @@ export default {
         };
 
         const handleDeleteProduct = async () => {
-            if (confirm('Are you sure you want to delete this product?')) {
+            if (confirm(t('productCardOld.confirmDelete'))) {
                 try {
                     console.log("Deleting product with ID:", props.product._id);
                     await productStore.deleteProduct(props.product._id);
-                    toast.success('Product deleted successfully');
+                    toast.success(t('productCardOld.toasts.productDeleted'));
                     emit('productDeleted', props.product._id);
                 } catch (error) {
                     console.error('Error deleting product:', error);
-                    toast.error('Failed to delete product. Please try again.');
+                    toast.error(t('productCardOld.toasts.productDeleteFailed'));
                 }
             }
         };
@@ -236,7 +238,8 @@ export default {
             handleEditProduct,
             handleDeleteProduct,
             fetchProductDetails,
-            calculateOriginalPrice
+            calculateOriginalPrice,
+            t
         };
     },
 };

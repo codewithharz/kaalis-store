@@ -12,9 +12,8 @@
 
             <div class="container mx-auto px-4 py-8 sm:py-12 lg:py-16 relative">
                 <div class="max-w-3xl mx-auto text-center">
-                    <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4">Payment Methods</h1>
-                    <p class="text-sm sm:text-base lg:text-lg mb-6 sm:mb-8 text-white/90">Manage your payment methods
-                        and saved cards</p>
+                    <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4">{{ t('paymentMethodsPage.title') }}</h1>
+                    <p class="text-sm sm:text-base lg:text-lg mb-6 sm:mb-8 text-white/90">{{ t('paymentMethodsPage.subtitle') }}</p>
                 </div>
             </div>
         </div>
@@ -29,9 +28,9 @@
                         class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-lg bg-white/80 border border-white/20">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-xs sm:text-sm text-gray-500">Default Payment</p>
+                                <p class="text-xs sm:text-sm text-gray-500">{{ t('paymentMethodsPage.defaultPayment') }}</p>
                                 <p class="text-base sm:text-lg font-medium text-gray-900 break-words">
-                                    {{ defaultCard ? 'Credit Card' : 'Not Set' }}
+                                    {{ defaultCard ? t('paymentMethodsPage.creditCard') : t('paymentMethodsPage.notSet') }}
                                 </p>
                             </div>
                             <div
@@ -46,8 +45,8 @@
                         class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-lg bg-white/80 border border-white/20">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-xs sm:text-sm text-gray-500">Active Cards</p>
-                                <p class="text-base sm:text-lg font-medium text-gray-900">{{ savedCards.length }} Cards
+                                <p class="text-xs sm:text-sm text-gray-500">{{ t('paymentMethodsPage.activeCards') }}</p>
+                                <p class="text-base sm:text-lg font-medium text-gray-900">{{ t('paymentMethodsPage.cardsCount', { count: savedCards.length }) }}
                                 </p>
                             </div>
                             <div
@@ -62,9 +61,9 @@
                         class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-lg bg-white/80 border border-white/20 sm:col-span-2 lg:col-span-1">
                         <div class="flex items-center justify-between">
                             <div class="min-w-0 flex-1">
-                                <p class="text-xs sm:text-sm text-gray-500">Last Transaction</p>
+                                <p class="text-xs sm:text-sm text-gray-500">{{ t('paymentMethodsPage.lastTransaction') }}</p>
                                 <p class="text-base sm:text-lg font-medium text-gray-900 break-words">{{
-                                    lastTransactionDate || 'No transactions' }}</p>
+                                    lastTransactionDate || t('paymentMethodsPage.noTransactions') }}</p>
                             </div>
                             <div
                                 class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-pink-50 flex items-center justify-center flex-shrink-0">
@@ -85,7 +84,7 @@
                                     ? 'text-indigo-600'
                                     : 'text-gray-500 hover:text-gray-700'
                             ]">
-                                <span class="relative z-10 text-sm sm:text-base">Credit Cards</span>
+                                <span class="relative z-10 text-sm sm:text-base">{{ t('paymentMethodsPage.creditCardsTab') }}</span>
                                 <span v-if="activeTab === 'cards'"
                                     class="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 transition-all"></span>
                             </button>
@@ -95,7 +94,7 @@
                                     ? 'text-indigo-600'
                                     : 'text-gray-500 hover:text-gray-700'
                             ]">
-                                <span class="relative z-10 text-sm sm:text-base">Transaction History</span>
+                                <span class="relative z-10 text-sm sm:text-base">{{ t('paymentMethodsPage.transactionHistoryTab') }}</span>
                                 <span v-if="activeTab === 'transactions'"
                                     class="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 transition-all"></span>
                             </button>
@@ -108,11 +107,10 @@
                         <div class="flex flex-col gap-4 mb-6 sm:mb-8">
                             <div>
                                 <h2 class="text-xl sm:text-2xl font-semibold text-gray-900">
-                                    {{ activeTab === 'cards' ? 'Saved Cards' : 'Transactions' }}
+                                    {{ activeTab === 'cards' ? t('paymentMethodsPage.savedCards') : t('paymentMethodsPage.transactions') }}
                                 </h2>
                                 <p class="text-xs sm:text-sm text-gray-500 mt-1">
-                                    {{ activeTab === 'cards' ? `Manage your payment cards` : `View your transaction
-                                    history` }}
+                                    {{ activeTab === 'cards' ? t('paymentMethodsPage.manageCards') : t('paymentMethodsPage.viewHistory') }}
                                 </p>
                             </div>
                             <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -121,15 +119,15 @@
                                     <Search
                                         class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                                     <input type="text" v-model="searchQuery"
-                                        :placeholder="activeTab === 'cards' ? 'Search cards...' : 'Search transactions...'"
+                                        :placeholder="activeTab === 'cards' ? t('paymentMethodsPage.searchCards') : t('paymentMethodsPage.searchTransactions')"
                                         class="pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 w-full border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm sm:text-base" />
                                 </div>
                                 <!-- Modern Add Card Button -->
                                 <button v-if="activeTab === 'cards'" @click="handleAddCardClick"
                                     class="group w-full sm:w-auto px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2 hover:shadow-indigo-500/25 text-sm sm:text-base">
                                     <PlusCircle class="w-4 h-4 transition-transform group-hover:rotate-90" />
-                                    <span class="hidden sm:inline">Add New Card</span>
-                                    <span class="sm:hidden">Add Card</span>
+                                    <span class="hidden sm:inline">{{ t('paymentMethodsPage.addNewCard') }}</span>
+                                    <span class="sm:hidden">{{ t('paymentMethodsPage.addCardShort') }}</span>
                                 </button>
                             </div>
                         </div>
@@ -155,7 +153,7 @@
                                                         card.last4 }}</span>
                                                     <span v-if="card.isDefault"
                                                         class="px-2 py-0.5 bg-indigo-500/10 text-indigo-600 text-xs rounded-full w-fit">
-                                                        Default
+                                                        {{ t('paymentMethodsPage.default') }}
                                                     </span>
                                                 </div>
                                                 <div
@@ -163,8 +161,7 @@
                                                     <div
                                                         class="flex items-center gap-1 text-xs sm:text-sm text-gray-500">
                                                         <Calendar class="w-3 h-3 sm:w-4 sm:h-4" />
-                                                        <span>Expires {{ card.expiryMonth }}/{{ card.expiryYear
-                                                        }}</span>
+                                                        <span>{{ t('paymentMethodsPage.expires', { month: card.expiryMonth, year: card.expiryYear }) }}</span>
                                                     </div>
                                                     <div
                                                         class="flex items-center gap-1 text-xs sm:text-sm text-gray-500">
@@ -180,12 +177,12 @@
                                             class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-3 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-200">
                                             <button v-if="!card.isDefault" @click="setDefaultCard(card.id)"
                                                 class="w-full sm:w-auto text-center sm:text-left text-sm text-gray-500 hover:text-indigo-600 transition-colors py-2 sm:py-0">
-                                                Set as Default
+                                                {{ t('paymentMethodsPage.setAsDefault') }}
                                             </button>
                                             <button @click="showDeleteConfirmation(card.id)"
                                                 class="w-full sm:w-auto flex items-center justify-center sm:justify-start gap-2 text-gray-400 hover:text-red-500 transition-colors py-2 sm:py-0">
                                                 <Trash2 class="w-4 h-4 sm:w-5 sm:h-5" />
-                                                <span class="sm:hidden text-sm">Delete Card</span>
+                                                <span class="sm:hidden text-sm">{{ t('paymentMethodsPage.deleteCard') }}</span>
                                             </button>
                                         </div>
                                     </div>
@@ -195,7 +192,7 @@
                                         class="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200">
                                         <div
                                             class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-0 text-xs sm:text-sm">
-                                            <p class="text-gray-500">Recent Transaction:</p>
+                                            <p class="text-gray-500">{{ t('paymentMethodsPage.recentTransaction') }}</p>
                                             <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                                                 <p class="text-gray-900 font-medium">
                                                     {{ card.lastTransaction.description }} -
@@ -215,8 +212,8 @@
                                     class="w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <CreditCard class="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
                                 </div>
-                                <h3 class="text-lg sm:text-xl font-medium text-gray-900 mb-2">No Cards Found</h3>
-                                <p class="text-gray-500 text-sm sm:text-base">Add your first payment card to get started
+                                <h3 class="text-lg sm:text-xl font-medium text-gray-900 mb-2">{{ t('paymentMethodsPage.noCardsFound') }}</h3>
+                                <p class="text-gray-500 text-sm sm:text-base">{{ t('paymentMethodsPage.addFirstCard') }}
                                 </p>
                             </div>
 
@@ -224,8 +221,7 @@
                             <div v-if="filteredCards.length"
                                 class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200">
                                 <p class="text-xs sm:text-sm text-gray-500 text-center sm:text-left">
-                                    Showing {{ paginationStart + 1 }}-{{ paginationEnd }} of {{ filteredCards.length }}
-                                    cards
+                                    {{ t('paymentMethodsPage.showingCards', { start: paginationStart + 1, end: paginationEnd, total: filteredCards.length }) }}
                                 </p>
                                 <div class="flex items-center gap-2">
                                     <button @click="currentPage--" :disabled="currentPage === 1"
@@ -246,7 +242,7 @@
                             <div v-if="paymentStore.isLoading" class="text-center py-8 sm:py-12">
                                 <Loader2
                                     class="w-8 h-8 sm:w-10 sm:h-10 animate-spin mx-auto text-indigo-600 mb-3 sm:mb-4" />
-                                <p class="text-gray-500 text-sm sm:text-base">Loading your transactions...</p>
+                                <p class="text-gray-500 text-sm sm:text-base">{{ t('paymentMethodsPage.loadingTransactions') }}</p>
                             </div>
 
                             <!-- Transactions List -->
@@ -268,14 +264,15 @@
                                                             transaction.status === 'pending' ? 'bg-amber-600' :
                                                                 'bg-red-600'
                                                     ]"></span>
-                                                    {{ transaction.status === 'success' ? 'Success' :
-                                                        transaction.status === 'pending' ? 'Pending' : 'Failed' }}
+                                                    {{ transaction.status === 'success' ? t('paymentMethodsPage.success') :
+                                                        transaction.status === 'pending' ? t('paymentMethodsPage.pending') : t('paymentMethodsPage.failed') }}
                                                 </span>
                                                 <p class="text-xs sm:text-sm font-mono text-gray-500 break-all">{{
                                                     transaction.reference }}</p>
                                             </div>
-                                            <p class="font-medium text-gray-900 text-sm sm:text-base">Order #{{
-                                                transaction.orderId || 'N/A' }}</p>
+                                            <p class="font-medium text-gray-900 text-sm sm:text-base">{{ t('paymentMethodsPage.orderNumber', {
+                                                id: transaction.orderId || t('paymentMethodsPage.notAvailable')
+                                            }) }}</p>
                                             <p class="text-xs sm:text-sm text-gray-600 break-all">{{ transaction.email
                                             }}</p>
                                             <p
@@ -292,12 +289,12 @@
                                             </p>
                                             <div class="flex flex-col gap-1 mt-2">
                                                 <div class="text-xs sm:text-sm text-gray-600">
-                                                    <span>Vendor: </span>
+                                                    <span>{{ t('paymentMethodsPage.vendor') }} </span>
                                                     <span class="font-medium">{{
                                                         formatCurrency(transaction.vendorAmount) }}</span>
                                                 </div>
                                                 <div class="text-xs sm:text-sm text-gray-600">
-                                                    <span>Platform Fee: </span>
+                                                    <span>{{ t('paymentMethodsPage.platformFee') }} </span>
                                                     <span class="font-medium">{{ formatCurrency(transaction.platformFee)
                                                     }}</span>
                                                 </div>
@@ -315,8 +312,8 @@
                                     class="w-12 h-12 sm:w-16 sm:h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                                     <History class="w-6 h-6 sm:w-8 sm:h-8 text-gray-300" />
                                 </div>
-                                <h3 class="text-base sm:text-lg font-medium text-gray-900 mb-2">No Transactions Yet</h3>
-                                <p class="text-gray-500 text-sm sm:text-base">Your transaction history will appear here
+                                <h3 class="text-base sm:text-lg font-medium text-gray-900 mb-2">{{ t('paymentMethodsPage.noTransactionsYet') }}</h3>
+                                <p class="text-gray-500 text-sm sm:text-base">{{ t('paymentMethodsPage.transactionsAppearHere') }}
                                 </p>
                             </div>
                         </div>
@@ -328,9 +325,8 @@
                     <div class="py-6 sm:py-8">
                         <div class="flex items-center justify-between mb-4 sm:mb-6">
                             <div>
-                                <h2 class="text-xl sm:text-2xl font-semibold text-gray-900">Digital Wallets</h2>
-                                <p class="text-xs sm:text-sm text-gray-500 mt-1">Coming soon to enhance your payment
-                                    experience</p>
+                                <h2 class="text-xl sm:text-2xl font-semibold text-gray-900">{{ t('paymentMethodsPage.digitalWallets') }}</h2>
+                                <p class="text-xs sm:text-sm text-gray-500 mt-1">{{ t('paymentMethodsPage.walletsComingSoon') }}</p>
                             </div>
                         </div>
 
@@ -349,12 +345,10 @@
                                 <div class="flex-1">
                                     <span
                                         class="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-600 mb-3 sm:mb-4">
-                                        Coming Soon
+                                        {{ t('paymentMethodsPage.comingSoon') }}
                                     </span>
-                                    <h3 class="text-lg sm:text-xl font-medium text-gray-900 mb-2">Digital Wallet Support
-                                    </h3>
-                                    <p class="text-gray-500 text-sm sm:text-base">We're working on bringing you seamless
-                                        digital wallet integration. Stay tuned for updates!</p>
+                                    <h3 class="text-lg sm:text-xl font-medium text-gray-900 mb-2">{{ t('paymentMethodsPage.walletSupport') }}</h3>
+                                    <p class="text-gray-500 text-sm sm:text-base">{{ t('paymentMethodsPage.walletSupportBody') }}</p>
                                 </div>
                                 <div class="relative">
                                     <div
@@ -383,8 +377,8 @@
                 class="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-xl p-4 sm:p-6 lg:p-8 transform transition-all max-h-[95vh] overflow-y-auto">
                 <div class="flex items-center justify-between mb-4 sm:mb-6">
                     <div>
-                        <h3 class="text-xl sm:text-2xl font-bold text-gray-900">Add New Card</h3>
-                        <p class="text-xs sm:text-sm text-gray-500 mt-1">Enter your card details below</p>
+                        <h3 class="text-xl sm:text-2xl font-bold text-gray-900">{{ t('paymentMethodsPage.addCardTitle') }}</h3>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-1">{{ t('paymentMethodsPage.addCardSubtitle') }}</p>
                     </div>
                     <button @click="closeAddCardModal" class="text-gray-400 hover:text-gray-500 transition-colors p-1">
                         <X class="w-5 h-5 sm:w-6 sm:h-6" />
@@ -394,41 +388,52 @@
                 <form @submit.prevent="handleAddCard" class="space-y-4 sm:space-y-6">
                     <!-- Card Number -->
                     <div class="space-y-2">
-                        <label class="text-sm font-medium text-gray-700">Card Number</label>
+                        <label class="text-sm font-medium text-gray-700">{{ t('paymentMethodsPage.cardNumber') }}</label>
                         <div
                             class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                             <CreditCard
                                 class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                             <input type="text" v-model="cardForm.number" @input="formatCardNumber" maxlength="19"
                                 class="w-full px-3 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-11 text-gray-700 bg-transparent border-none focus:outline-none text-sm sm:text-base"
-                                placeholder="Enter your card number" />
+                                :placeholder="t('paymentMethodsPage.cardNumberPlaceholder')" />
                         </div>
                     </div>
 
                     <!-- Card Holder -->
                     <div class="space-y-2">
-                        <label class="text-sm font-medium text-gray-700">Card Holder Name</label>
+                        <label class="text-sm font-medium text-gray-700">{{ t('paymentMethodsPage.cardHolderName') }}</label>
                         <div
                             class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                             <User
                                 class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                             <input type="text" v-model="cardForm.holderName"
                                 class="w-full px-3 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-11 text-gray-700 bg-transparent border-none focus:outline-none text-sm sm:text-base"
-                                placeholder="Enter card holder name" />
+                                :placeholder="t('paymentMethodsPage.cardHolderPlaceholder')" />
                         </div>
                     </div>
 
                     <!-- Expiry and CVV -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <div class="space-y-2">
-                            <label class="text-sm font-medium text-gray-700">Expiry Date</label>
+                            <label class="text-sm font-medium text-gray-700">{{ t('paymentMethodsPage.expiryDate') }}</label>
+                            <div
+                                class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+                                <Lock
+                                    class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                                <input type="text" v-model="cardForm.expiry" @input="formatExpiry" maxlength="5"
+                                    class="w-full px-3 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-11 text-gray-700 bg-transparent border-none focus:outline-none text-sm sm:text-base"
+                                    :placeholder="t('paymentMethodsPage.expiryPlaceholder')" />
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-700">{{ t('paymentMethodsPage.cvv') }}</label>
                             <div
                                 class="relative rounded-lg border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
                                 <Lock
                                     class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                                 <input type="text" v-model="cardForm.cvv" maxlength="4"
                                     class="w-full px-3 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-11 text-gray-700 bg-transparent border-none focus:outline-none text-sm sm:text-base"
-                                    placeholder="Enter CVV" />
+                                    :placeholder="t('paymentMethodsPage.cvvPlaceholder')" />
                             </div>
                         </div>
                     </div>
@@ -437,19 +442,19 @@
                     <div class="flex items-center gap-2">
                         <input type="checkbox" id="setDefault" v-model="cardForm.setAsDefault"
                             class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500/20" />
-                        <label for="setDefault" class="text-sm text-gray-700">Set as default payment method</label>
+                        <label for="setDefault" class="text-sm text-gray-700">{{ t('paymentMethodsPage.setDefaultMethod') }}</label>
                     </div>
 
                     <!-- Form Actions -->
                     <div class="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 pt-4 sm:pt-6">
                         <button type="button" @click="closeAddCardModal"
                             class="w-full sm:w-auto px-4 sm:px-6 py-2.5 text-gray-700 font-medium hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors order-2 sm:order-1">
-                            Cancel
+                            {{ t('paymentMethodsPage.cancel') }}
                         </button>
                         <button type="submit" :disabled="isSubmitting"
                             class="w-full sm:w-auto px-4 sm:px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg font-medium shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 order-1 sm:order-2">
                             <Loader2 v-if="isSubmitting" class="w-4 h-4 animate-spin" />
-                            <span>{{ isSubmitting ? 'Adding Card...' : 'Add Card' }}</span>
+                            <span>{{ isSubmitting ? t('paymentMethodsPage.addingCard') : t('paymentMethodsPage.addCard') }}</span>
                         </button>
                     </div>
                 </form>
@@ -463,20 +468,19 @@
                 class="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-md p-6 sm:p-8 transform transition-all">
                 <div class="text-center">
                     <AlertCircle class="w-10 h-10 sm:w-12 sm:h-12 text-red-500 mx-auto mb-3 sm:mb-4" />
-                    <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">Delete Card</h3>
-                    <p class="text-gray-500 text-sm sm:text-base">Are you sure you want to delete this card? This action
-                        cannot be undone.</p>
+                    <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">{{ t('paymentMethodsPage.deleteCardTitle') }}</h3>
+                    <p class="text-gray-500 text-sm sm:text-base">{{ t('paymentMethodsPage.deleteCardConfirm') }}</p>
                 </div>
 
                 <div class="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 mt-6 sm:mt-8">
                     <button @click="showDeleteModal = false"
                         class="w-full sm:w-auto px-4 sm:px-6 py-2.5 text-gray-700 font-medium hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors order-2 sm:order-1">
-                        Cancel
+                        {{ t('paymentMethodsPage.cancel') }}
                     </button>
                     <button @click="confirmDelete" :disabled="isDeleting"
                         class="w-full sm:w-auto px-4 sm:px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium shadow-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 order-1 sm:order-2">
                         <Loader2 v-if="isDeleting" class="w-4 h-4 animate-spin" />
-                        <span>{{ isDeleting ? 'Deleting...' : 'Delete Card' }}</span>
+                        <span>{{ isDeleting ? t('paymentMethodsPage.deleting') : t('paymentMethodsPage.deleteCard') }}</span>
                     </button>
                 </div>
             </div>
@@ -489,9 +493,8 @@
                 class="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl p-4 sm:p-6 lg:p-8 transform transition-all max-h-[95vh] overflow-y-auto">
                 <div class="flex items-center justify-between mb-4 sm:mb-6">
                     <div>
-                        <h3 class="text-xl sm:text-2xl font-bold text-gray-900">Card Limit Reached</h3>
-                        <p class="text-xs sm:text-sm text-gray-500 mt-1">You have reached the maximum limit of 5 cards
-                        </p>
+                        <h3 class="text-xl sm:text-2xl font-bold text-gray-900">{{ t('paymentMethodsPage.cardLimitReached') }}</h3>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-1">{{ t('paymentMethodsPage.cardLimitBody') }}</p>
                     </div>
                     <button @click="closeCardLimitModal"
                         class="text-gray-400 hover:text-gray-500 transition-colors p-1">
@@ -500,8 +503,7 @@
                 </div>
 
                 <div class="mt-4">
-                    <p class="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">Please delete one of your existing cards
-                        to add a new one:</p>
+                    <p class="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">{{ t('paymentMethodsPage.deleteOneCard') }}</p>
                     <!-- Existing Cards List -->
                     <div class="space-y-3 sm:space-y-4">
                         <div v-for="card in savedCards" :key="card.id"
@@ -518,11 +520,10 @@
                                         }}</span>
                                         <span v-if="card.isDefault"
                                             class="px-2 py-0.5 bg-indigo-500/10 text-indigo-600 text-xs rounded-full w-fit">
-                                            Default
+                                            {{ t('paymentMethodsPage.default') }}
                                         </span>
                                     </div>
-                                    <p class="text-xs sm:text-sm text-gray-500">Expires {{ card.expMonth }}/{{
-                                        card.expYear }}</p>
+                                    <p class="text-xs sm:text-sm text-gray-500">{{ t('paymentMethodsPage.expires', { month: card.expMonth, year: card.expYear }) }}</p>
                                 </div>
                             </div>
                             <button @click="handleDeleteAndReplace(card.id)" :disabled="card.isDefault" :class="[
@@ -531,7 +532,7 @@
                                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                     : 'bg-red-50 text-red-600 hover:bg-red-100'
                             ]">
-                                {{ card.isDefault ? 'Default Card' : 'Delete & Replace' }}
+                                {{ card.isDefault ? t('paymentMethodsPage.defaultCard') : t('paymentMethodsPage.deleteReplace') }}
                             </button>
                         </div>
                     </div>
@@ -540,7 +541,7 @@
                 <div class="flex justify-end gap-3 sm:gap-4 mt-6 sm:mt-8">
                     <button @click="closeCardLimitModal"
                         class="w-full sm:w-auto px-4 sm:px-6 py-2.5 text-gray-700 font-medium hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors">
-                        Cancel
+                        {{ t('paymentMethodsPage.cancel') }}
                     </button>
                 </div>
             </div>
@@ -548,9 +549,8 @@
 
         <!-- Vendor Payment section if user is a vendor -->
         <div v-if="isSeller" class="mt-6 sm:mt-8 pb-8 sm:pb-10">
-            <h2 class="text-xl sm:text-2xl font-bold mb-1 px-4 sm:px-8 lg:px-12">Vendor Payouts</h2>
-            <p class="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6 px-4 sm:px-8 lg:px-12">Manage your payout settings
-                and view history</p>
+            <h2 class="text-xl sm:text-2xl font-bold mb-1 px-4 sm:px-8 lg:px-12">{{ t('paymentMethodsPage.vendorPayouts') }}</h2>
+            <p class="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6 px-4 sm:px-8 lg:px-12">{{ t('paymentMethodsPage.vendorPayoutsBody') }}</p>
             <VendorPaymentSetup />
         </div>
     </div>
@@ -560,6 +560,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import VendorPaymentSetup from './VendorPaymentSetup.vue';
 import {
     CreditCard, PlusCircle, Wallet, Trash2, X, Search, User,
@@ -570,6 +571,8 @@ import { useUserStore } from '../store/user';
 import { usePaymentStore } from '../store/paymentStore';
 import { useOrderStore } from '../store/orderStore.js';
 import { toast } from 'vue-sonner';
+
+const { t } = useI18n();
 
 // Store initialization
 const userStore = useUserStore();
@@ -675,8 +678,8 @@ const transactions = computed(() => {
 
         return {
             reference: transaction.reference || transaction.transactionId || '',
-            orderId: transaction.orderId || 'N/A',
-            email: transaction.email || userStore.user?.email || 'N/A',
+            orderId: transaction.orderId || t('paymentMethodsPage.notAvailable'),
+            email: transaction.email || userStore.user?.email || t('paymentMethodsPage.notAvailable'),
             status: transaction.status?.toLowerCase() || 'pending',
             amount,
             vendorAmount,
@@ -692,7 +695,7 @@ const transactions = computed(() => {
                     day: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit'
-                }) : 'N/A'
+                }) : t('paymentMethodsPage.notAvailable')
         };
     });
 });
@@ -719,7 +722,7 @@ const lastTransactionDate = computed(() => {
         minute: "2-digit",
 
     })
-        : 'No recent transactions';
+        : t('paymentMethodsPage.noRecentTransactions');
 });
 
 const getCardIcon = computed(() => {
@@ -804,7 +807,7 @@ onMounted(async () => {
         }
     } catch (error) {
         console.error('Failed to load data:', error);
-        toast.error('Failed to load payment data. Please refresh the page.');
+        toast.error(t('paymentMethodsPage.failedLoadData'));
     }
 });
 
@@ -858,7 +861,7 @@ const validateCard = (number) => {
         return {
             isValid: false,
             type: null,
-            message: 'Card number is required'
+            message: t('paymentMethodsPage.cardRequired')
         };
     }
 
@@ -866,7 +869,7 @@ const validateCard = (number) => {
         return {
             isValid: false,
             type: null,
-            message: 'Card number can only contain digits'
+            message: t('paymentMethodsPage.digitsOnly')
         };
     }
 
@@ -888,7 +891,7 @@ const validateCard = (number) => {
             return {
                 isValid: false,
                 type: cardType,
-                message: 'Invalid Verve card number length'
+                message: t('paymentMethodsPage.invalidVerveLength')
             };
         }
 
@@ -897,7 +900,7 @@ const validateCard = (number) => {
         return {
             isValid: luhnValid,
             type: cardType,
-            message: luhnValid ? '' : 'Invalid card number (checksum failed)'
+            message: luhnValid ? '' : t('paymentMethodsPage.invalidChecksum')
         };
     }
 
@@ -906,7 +909,7 @@ const validateCard = (number) => {
         return {
             isValid: false,
             type: null,
-            message: 'Unsupported card type. Please use Visa, Mastercard, or Verve'
+            message: t('paymentMethodsPage.unsupportedCard')
         };
     }
 
@@ -914,7 +917,7 @@ const validateCard = (number) => {
         return {
             isValid: false,
             type: cardType,
-            message: 'Invalid card number length'
+            message: t('paymentMethodsPage.invalidCardLength')
         };
     }
 
@@ -929,7 +932,7 @@ const validateExpiry = (expiry) => {
     if (!/^\d{2}\/\d{2}$/.test(expiry)) {
         return {
             isValid: false,
-            message: 'Expiry date must be in MM/YY format'
+            message: t('paymentMethodsPage.expiryFormat')
         };
     }
 
@@ -942,7 +945,7 @@ const validateExpiry = (expiry) => {
     if (month < 1 || month > 12) {
         return {
             isValid: false,
-            message: 'Invalid month in expiry date'
+            message: t('paymentMethodsPage.invalidExpiryMonth')
         };
     }
 
@@ -950,7 +953,7 @@ const validateExpiry = (expiry) => {
     if (year < currentYear || (year === currentYear && month < currentMonth)) {
         return {
             isValid: false,
-            message: 'Card has expired'
+            message: t('paymentMethodsPage.cardExpired')
         };
     }
     return {
@@ -966,7 +969,7 @@ const validateCVV = (cvv, cardType) => {
 
     return {
         isValid,
-        message: isValid ? '' : 'CVV must be 3 digits'
+        message: isValid ? '' : t('paymentMethodsPage.cvvLength')
     };
 };
 
@@ -1019,9 +1022,9 @@ const validateForm = () => {
     // Card holder validation
     const holderName = cardForm.value.holderName.trim();
     if (!holderName) {
-        errors.push('Cardholder name is required');
+        errors.push(t('paymentMethodsPage.cardholderRequired'));
     } else if (!/^[a-zA-Z\s]+$/.test(holderName)) {
-        errors.push('Cardholder name can only contain letters and spaces');
+        errors.push(t('paymentMethodsPage.cardholderLetters'));
     }
 
     return errors;
@@ -1073,10 +1076,10 @@ const handleAddCard = async () => {
             cvv: '',
             setAsDefault: false
         };
-        toast.success('Card added successfully');
+        toast.success(t('paymentMethodsPage.cardAdded'));
     } catch (error) {
         console.error('Error adding card:', error);
-        const errorMessage = error.response?.data?.message || 'Failed to add card. Please try again.';
+        const errorMessage = error.response?.data?.message || t('paymentMethodsPage.failedAddCard');
         toast.error(errorMessage);
     }
 };
@@ -1085,7 +1088,7 @@ const handleAddCard = async () => {
 const confirmDelete = async () => {
     try {
         if (!cardToDelete.value) {
-            toast.error('Invalid card selected');
+            toast.error(t('paymentMethodsPage.invalidCardSelected'));
             return;
         }
 
@@ -1097,10 +1100,10 @@ const confirmDelete = async () => {
 
         // Close modal and show success message
         showDeleteModal.value = false;
-        toast.success('Card deleted successfully');
+        toast.success(t('paymentMethodsPage.cardDeleted'));
     } catch (error) {
         console.error('Error deleting card:', error);
-        toast.error(error.response?.data?.message || 'Failed to delete card. Please try again.');
+        toast.error(error.response?.data?.message || t('paymentMethodsPage.failedDeleteCard'));
     } finally {
         // Clean up
         cardToDelete.value = null;
@@ -1110,7 +1113,7 @@ const confirmDelete = async () => {
 
 const showDeleteConfirmation = (cardId) => {
     if (!cardId) {
-        toast.error('Invalid card selected');
+        toast.error(t('paymentMethodsPage.invalidCardSelected'));
         return;
     }
     cardToDelete.value = cardId;
@@ -1121,10 +1124,10 @@ const showDeleteConfirmation = (cardId) => {
 const setDefaultCard = async (cardId) => {
     try {
         await paymentStore.setDefaultCard(cardId);
-        toast.success('Default card updated successfully');
+        toast.success(t('paymentMethodsPage.defaultUpdated'));
     } catch (error) {
         console.error('Error setting default card:', error);
-        toast.error(error.response?.data?.message || 'Failed to update default card. Please try again.');
+        toast.error(error.response?.data?.message || t('paymentMethodsPage.failedDefaultUpdate'));
     }
 };
 
@@ -1152,10 +1155,10 @@ const deleteAndAddNew = async (cardId) => {
         showDeleteReplaceModal.value = false;
         showCardLimitModal.value = false;
         showAddCardModal.value = true;
-        toast.success('Card deleted. You can now add a new card.');
+        toast.success(t('paymentMethodsPage.cardDeletedReplace'));
     } catch (error) {
         console.error('Error deleting card:', error);
-        toast.error(error.response?.data?.message || 'Failed to delete card. Please try again.');
+        toast.error(error.response?.data?.message || t('paymentMethodsPage.failedDeleteCard'));
     } finally {
         cardToDeleteAndReplace.value = null;
     }

@@ -33,10 +33,9 @@
                         <AlertCircle class="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600" />
                     </div>
                     <div class="flex-1 min-w-0">
-                        <h3 class="text-sm font-semibold text-yellow-800">Demo Mode Active</h3>
+                        <h3 class="text-sm font-semibold text-yellow-800">{{ t('bankDetailsPage.demoModeActive') }}</h3>
                         <p class="text-xs sm:text-sm text-yellow-700 mt-1 break-words">
-                            This is a demo environment using mock bank verification. Any 10-digit number can be used for
-                            testing.
+                            {{ t('bankDetailsPage.demoModeBody') }}
                         </p>
                     </div>
                 </div>
@@ -75,7 +74,7 @@
                                 class="group w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-lg sm:rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base">
                                 <PlusCircle
                                     class="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform duration-300" />
-                                <span class="font-semibold">Add Bank Details</span>
+                                <span class="font-semibold">{{ t('bankDetailsPage.addBankDetails') }}</span>
                             </button>
                         </div>
                     </div>
@@ -96,8 +95,8 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <h2 class="text-lg sm:text-2xl font-bold text-gray-900">Your Bank Account</h2>
-                                    <p class="text-gray-600 text-sm sm:text-base">Verified and ready for transactions
+                                    <h2 class="text-lg sm:text-2xl font-bold text-gray-900">{{ t('bankDetailsPage.yourBankAccount') }}</h2>
+                                    <p class="text-gray-600 text-sm sm:text-base">{{ t('bankDetailsPage.verifiedReady') }}
                                     </p>
                                 </div>
                             </div>
@@ -105,13 +104,13 @@
                                 <button @click="handleDelete"
                                     class="group px-3 sm:px-4 py-2 sm:py-2.5 text-red-600 font-medium hover:text-white hover:bg-red-600 rounded-lg sm:rounded-xl border-2 border-red-600 transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md flex items-center justify-center gap-2 text-sm sm:text-base">
                                     <Trash2 class="w-3 h-3 sm:w-4 sm:h-4 group-hover:animate-pulse" />
-                                    <span>Delete</span>
+                                    <span>{{ t('bankDetailsPage.delete') }}</span>
                                 </button>
                                 <button @click="handleEdit"
                                     class="group px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-600 font-medium hover:from-indigo-500 hover:to-purple-600 hover:text-white rounded-lg sm:rounded-xl border-2 border-indigo-200 hover:border-transparent transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md flex items-center justify-center gap-2 text-sm sm:text-base">
                                     <Edit
                                         class="w-3 h-3 sm:w-4 sm:h-4 group-hover:rotate-12 transition-transform duration-200" />
-                                    <span>Edit Details</span>
+                                    <span>{{ t('bankDetailsPage.editDetails') }}</span>
                                 </button>
                             </div>
                         </div>
@@ -129,11 +128,11 @@
                                             </div>
                                             <p
                                                 class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                                                Account Name</p>
+                                                {{ t('bankDetailsPage.accountName') }}</p>
                                         </div>
                                         <p
                                             class="text-base sm:text-lg font-bold text-gray-900 ml-8 sm:ml-11 break-words">
-                                            {{ user.paystack?.accountName || 'N/A' }}</p>
+                                            {{ user.paystack?.accountName || t('bankDetailsPage.notAvailable') }}</p>
                                     </div>
 
                                     <div class="group">
@@ -144,12 +143,12 @@
                                             </div>
                                             <p
                                                 class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                                                Bank Name</p>
+                                                {{ t('bankDetailsPage.bankName') }}</p>
                                         </div>
                                         <p
                                             class="text-base sm:text-lg font-bold text-gray-900 ml-8 sm:ml-11 break-words">
                                             {{
-                                                getBankName(user.paystack?.bankCode) || 'N/A' }}</p>
+                                                getBankName(user.paystack?.bankCode) || t('bankDetailsPage.notAvailable') }}</p>
                                     </div>
                                 </div>
 
@@ -162,11 +161,11 @@
                                             </div>
                                             <p
                                                 class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                                                Account Number</p>
+                                                {{ t('bankDetailsPage.accountNumber') }}</p>
                                         </div>
                                         <p class="text-base sm:text-lg font-bold text-gray-900 font-mono ml-8 sm:ml-11">
                                             {{
-                                                user.paystack?.accountNumber || 'N/A' }}</p>
+                                                user.paystack?.accountNumber || t('bankDetailsPage.notAvailable') }}</p>
                                     </div>
 
                                     <div v-if="user?.isSeller" class="group">
@@ -177,12 +176,12 @@
                                             </div>
                                             <p
                                                 class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                                                Payout Schedule</p>
+                                                {{ t('bankDetailsPage.payoutSchedule') }}</p>
                                         </div>
                                         <p
                                             class="text-base sm:text-lg font-bold text-gray-900 capitalize ml-8 sm:ml-11">
                                             {{
-                                                user.paystack?.payoutSchedule || 'N/A' }}</p>
+                                                user.paystack?.payoutSchedule || t('bankDetailsPage.notAvailable') }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -196,15 +195,13 @@
                                             <Wallet class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                                         </div>
                                         <div>
-                                            <h4 class="font-semibold text-gray-900 text-sm sm:text-base">Payment
-                                                Processing Active</h4>
-                                            <p class="text-xs sm:text-sm text-gray-600">Ready to receive customer
-                                                payments</p>
+                                            <h4 class="font-semibold text-gray-900 text-sm sm:text-base">{{ t('bankDetailsPage.paymentProcessingActive') }}</h4>
+                                            <p class="text-xs sm:text-sm text-gray-600">{{ t('bankDetailsPage.readyToReceive') }}</p>
                                         </div>
                                     </div>
                                     <div
                                         class="px-3 sm:px-4 py-1.5 sm:py-2 bg-green-100 text-green-800 rounded-full text-xs sm:text-sm font-medium text-center">
-                                        ✓ Verified
+                                        ✓ {{ t('bankDetailsPage.verified') }}
                                     </div>
                                 </div>
                             </div>
@@ -228,9 +225,8 @@
                                 <Building class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                             </div>
                             <div class="min-w-0 flex-1">
-                                <h3 class="text-lg sm:text-2xl font-bold">Add Bank Account</h3>
-                                <p class="text-indigo-100 text-xs sm:text-sm mt-1 hidden sm:block">Enter your banking
-                                    details securely</p>
+                                <h3 class="text-lg sm:text-2xl font-bold">{{ t('bankDetailsPage.addBankAccount') }}</h3>
+                                <p class="text-indigo-100 text-xs sm:text-sm mt-1 hidden sm:block">{{ t('bankDetailsPage.enterBankingDetails') }}</p>
                             </div>
                         </div>
                         <button @click="closeForm"
@@ -247,7 +243,7 @@
                         <div class="space-y-2 sm:space-y-3">
                             <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
                                 <User class="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500" />
-                                Account Name
+                                {{ t('bankDetailsPage.accountName') }}
                             </label>
                             <div class="relative group">
                                 <div
@@ -257,7 +253,7 @@
                                 </div>
                                 <input type="text" v-model="form.accountName"
                                     class="w-full pl-9 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 text-gray-700 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/20 transition-all duration-200 text-sm sm:text-base"
-                                    placeholder="Enter account holder name">
+                                    :placeholder="t('bankDetailsPage.accountNamePlaceholder')">
                             </div>
                         </div>
 
@@ -265,12 +261,12 @@
                         <div class="space-y-2 sm:space-y-3">
                             <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
                                 <CreditCard class="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500" />
-                                Payment Method
+                                {{ t('bankDetailsPage.paymentMethod') }}
                             </label>
                             <div class="relative group">
                                 <select v-model="form.paymentMethod"
                                     class="w-full px-3 sm:px-4 py-3 sm:py-4 text-gray-700 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/20 transition-all duration-200 appearance-none text-sm sm:text-base">
-                                    <option value="">Select Payment Method</option>
+                                    <option value="">{{ t('bankDetailsPage.selectPaymentMethod') }}</option>
                                     <option value="Paystack">Paystack</option>
                                     <option value="OPay">OPay</option>
                                 </select>
@@ -281,7 +277,7 @@
                         <div class="space-y-2 sm:space-y-3">
                             <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
                                 <Building class="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500" />
-                                Bank Name
+                                {{ t('bankDetailsPage.bankName') }}
                             </label>
                             <div class="relative group">
                                 <div
@@ -291,7 +287,7 @@
                                 </div>
                                 <select v-model="form.bankName"
                                     class="w-full pl-9 sm:pl-12 pr-8 sm:pr-10 py-3 sm:py-4 text-gray-700 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/20 transition-all duration-200 appearance-none text-sm sm:text-base">
-                                    <option value="">Select Bank</option>
+                                    <option value="">{{ t('bankDetailsPage.selectBank') }}</option>
                                     <option v-for="bank in availableBanks" :key="bank.code" :value="bank.code">
                                         {{ bank.name }}
                                     </option>
@@ -307,7 +303,7 @@
                         <div class="space-y-2 sm:space-y-3">
                             <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
                                 <CreditCard class="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500" />
-                                Account Number
+                                {{ t('bankDetailsPage.accountNumber') }}
                             </label>
                             <div class="relative group">
                                 <div
@@ -317,7 +313,7 @@
                                 </div>
                                 <input type="text" :value="form.accountNumber" @input="handleAccountNumberChange"
                                     class="w-full pl-9 sm:pl-12 pr-10 sm:pr-12 py-3 sm:py-4 text-gray-700 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/20 transition-all duration-200 text-sm sm:text-base"
-                                    placeholder="Enter 10-digit account number">
+                                    :placeholder="t('bankDetailsPage.accountNumberPlaceholder')">
                                 <div class="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center">
                                     <template v-if="verifying">
                                         <Loader2 class="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-indigo-500" />
@@ -336,7 +332,7 @@
                         <div v-if="user?.isSeller" class="space-y-2 sm:space-y-3">
                             <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
                                 <Calendar class="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500" />
-                                Payout Schedule
+                                {{ t('bankDetailsPage.payoutSchedule') }}
                             </label>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                                 <label
@@ -348,7 +344,7 @@
                                             :class="[form.payoutSchedule === 'daily' ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-600 group-hover:bg-indigo-100 group-hover:text-indigo-600']">
                                             <Calendar class="w-3 h-3 sm:w-4 sm:h-4" />
                                         </div>
-                                        <span class="text-xs sm:text-sm font-medium text-gray-700">Daily</span>
+                                        <span class="text-xs sm:text-sm font-medium text-gray-700">{{ t('bankDetailsPage.daily') }}</span>
                                     </div>
                                 </label>
                                 <label
@@ -360,7 +356,7 @@
                                             :class="[form.payoutSchedule === 'weekly' ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-600 group-hover:bg-indigo-100 group-hover:text-indigo-600']">
                                             <Calendar class="w-3 h-3 sm:w-4 sm:h-4" />
                                         </div>
-                                        <span class="text-xs sm:text-sm font-medium text-gray-700">Weekly</span>
+                                        <span class="text-xs sm:text-sm font-medium text-gray-700">{{ t('bankDetailsPage.weekly') }}</span>
                                     </div>
                                 </label>
                                 <label
@@ -372,7 +368,7 @@
                                             :class="[form.payoutSchedule === 'monthly' ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-600 group-hover:bg-indigo-100 group-hover:text-indigo-600']">
                                             <Calendar class="w-3 h-3 sm:w-4 sm:h-4" />
                                         </div>
-                                        <span class="text-xs sm:text-sm font-medium text-gray-700">Monthly</span>
+                                        <span class="text-xs sm:text-sm font-medium text-gray-700">{{ t('bankDetailsPage.monthly') }}</span>
                                     </div>
                                 </label>
                             </div>
@@ -384,12 +380,12 @@
                         class="bg-gray-50 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 border-t border-gray-200">
                         <button type="button" @click="closeForm"
                             class="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 text-gray-700 font-semibold hover:bg-gray-100 rounded-lg sm:rounded-xl border-2 border-gray-200 hover:border-gray-300 transition-all duration-200 order-2 sm:order-1 text-sm sm:text-base">
-                            Cancel
+                            {{ t('bankDetailsPage.cancel') }}
                         </button>
                         <button @click="saveBankDetails"
                             class="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-lg sm:rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 order-1 sm:order-2 text-sm sm:text-base">
                             <Wallet class="w-3 h-3 sm:w-4 sm:h-4" />
-                            <span>Save Bank Details</span>
+                            <span>{{ t('bankDetailsPage.saveBankDetails') }}</span>
                         </button>
                     </div>
                 </div>
@@ -407,11 +403,9 @@
                         class="w-12 h-12 sm:w-16 sm:h-16 bg-red-100 rounded-xl sm:rounded-2xl mx-auto mb-4 sm:mb-6 flex items-center justify-center">
                         <AlertCircle class="w-6 h-6 sm:w-8 sm:h-8 text-red-600" />
                     </div>
-                    <h3 class="text-lg sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Delete Bank Account</h3>
+                    <h3 class="text-lg sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">{{ t('bankDetailsPage.deleteBankAccount') }}</h3>
                     <p class="text-gray-600 leading-relaxed text-sm sm:text-base">
-                        Are you sure you want to delete this bank account? This action cannot be undone and will affect
-                        your
-                        payment processing.
+                        {{ t('bankDetailsPage.deleteConfirmBody') }}
                     </p>
                 </div>
 
@@ -419,13 +413,13 @@
                 <div class="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 p-4 sm:p-6 lg:p-8 pt-0">
                     <button @click="showDeleteConfirm = false"
                         class="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 text-gray-700 font-semibold hover:bg-gray-100 rounded-lg sm:rounded-xl border-2 border-gray-200 hover:border-gray-300 transition-all duration-200 order-2 sm:order-1 text-sm sm:text-base">
-                        Cancel
+                        {{ t('bankDetailsPage.cancel') }}
                     </button>
                     <button @click="confirmDelete"
                         class="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white rounded-lg sm:rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 order-1 sm:order-2 text-sm sm:text-base">
                         <Loader2 v-if="isDeleting" class="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
                         <Trash2 v-else class="w-3 h-3 sm:w-4 sm:h-4" />
-                        <span>{{ isDeleting ? 'Deleting...' : 'Delete Account' }}</span>
+                        <span>{{ isDeleting ? t('bankDetailsPage.deleting') : t('bankDetailsPage.deleteAccount') }}</span>
                     </button>
                 </div>
             </div>
@@ -435,12 +429,14 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useUserStore } from '../store/user';
 import { usePaymentStore } from '../store/paymentStore.js';
 import { Landmark, PlusCircle, X, User, Building, CreditCard, Edit, Trash2, AlertCircle, Calendar, Wallet, Loader2, Check } from 'lucide-vue-next';
 
 import { toast } from 'vue-sonner';
 
+const { t } = useI18n();
 const userStore = useUserStore();
 const user = computed(() => userStore.user);
 const paymentStore = usePaymentStore();
@@ -467,25 +463,25 @@ const showDeleteConfirm = ref(false);
 
 // Computed properties for conditional text
 const headerText = computed(() => {
-    return user.value?.isSeller ? 'Receive Payments' : 'Bank Details';
+    return user.value?.isSeller ? t('bankDetailsPage.receivePayments') : t('bankDetailsPage.bankDetails');
 });
 
 const subHeaderText = computed(() => {
     return user.value?.isSeller
-        ? 'Manage your payment information for receiving customer payments'
-        : 'Manage your bank account information';
+        ? t('bankDetailsPage.receivePaymentsSubtitle')
+        : t('bankDetailsPage.bankDetailsSubtitle');
 });
 
 const emptyStateTitle = computed(() => {
     return user.value?.isSeller
-        ? "You haven't added your payment details"
-        : "You haven't added any bank account yet";
+        ? t('bankDetailsPage.sellerEmptyTitle')
+        : t('bankDetailsPage.buyerEmptyTitle');
 });
 
 const emptyStateSubtitle = computed(() => {
     return user.value?.isSeller
-        ? 'Add your bank details to receive payments from customers'
-        : 'Add your bank details to manage your banking information';
+        ? t('bankDetailsPage.sellerEmptySubtitle')
+        : t('bankDetailsPage.buyerEmptySubtitle');
 });
 
 const getDefaultBackground = () => {
@@ -495,7 +491,7 @@ const getDefaultBackground = () => {
 // Convert bank code to display name
 const getBankName = (bankCode) => {
     const bank = availableBanks.value.find(b => b.code === bankCode);
-    return bank ? bank.name : (user.value?.paystack?.bankName || 'N/A');
+    return bank ? bank.name : (user.value?.paystack?.bankName || t('bankDetailsPage.notAvailable'));
 };
 
 const openForm = async () => {
@@ -581,8 +577,8 @@ const verifyAccount = async () => {
     if (!form.value.accountNumber || !form.value.bankName) {
         toast.error(
             paymentStore.isDemoMode
-                ? 'Please enter any 10 digits for demo'
-                : 'Please enter account number and select bank'
+                ? t('bankDetailsPage.enterAny10Digits')
+                : t('bankDetailsPage.enterAccountAndBank')
         );
         return;
     }
@@ -604,11 +600,11 @@ const verifyAccount = async () => {
                 // In demo mode, if backend doesn't return a name, use a placeholder
                 form.value.accountName = response.data.account_name || 'Demo Account';
             }
-            toast.success('Account verified successfully');
+            toast.success(t('bankDetailsPage.accountVerified'));
         }
     } catch (error) {
         console.error('Verification error:', error);
-        toast.error(error.message || 'Failed to verify account');
+        toast.error(error.message || t('bankDetailsPage.failedVerify'));
         verifiedAccount.value = null;
     } finally {
         verifying.value = false;
@@ -656,18 +652,18 @@ const saveBankDetails = async () => {
     try {
         // Ensure account is verified before saving
         if (!verifiedAccount.value) {
-            toast.error('Please verify account details first');
+            toast.error(t('bankDetailsPage.verifyFirst'));
             return;
         }
 
         // Validate account number format again
         if (!/^\d{10}$/.test(form.value.accountNumber)) {
-            toast.error('Invalid account number format');
+            toast.error(t('bankDetailsPage.invalidAccountNumber'));
             return;
         }
 
         // Show loading state
-        const loadingToast = toast.loading('Saving bank details...');
+        const loadingToast = toast.loading(t('bankDetailsPage.savingBankDetails'));
 
         try {
             const bank = availableBanks.value.find(b => b.code === form.value.bankName);
@@ -684,22 +680,22 @@ const saveBankDetails = async () => {
 
             if (response.status) {
                 toast.dismiss(loadingToast);
-                toast.success('Bank details saved successfully');
+                toast.success(t('bankDetailsPage.bankDetailsSaved'));
                 showForm.value = false;
                 await userStore.getUserProfile();
             } else {
                 toast.dismiss(loadingToast);
-                toast.error(response.message || 'Failed to save bank details');
+                toast.error(response.message || t('bankDetailsPage.failedSave'));
             }
         } catch (error) {
             toast.dismiss(loadingToast);
-            const errorMessage = error.response?.data?.message || error.message || 'Failed to save bank details';
+            const errorMessage = error.response?.data?.message || error.message || t('bankDetailsPage.failedSave');
             toast.error(errorMessage);
             console.error('Error saving bank details:', error);
         }
     } catch (error) {
         console.error('Unexpected error:', error);
-        toast.error('An unexpected error occurred. Please try again.');
+        toast.error(t('bankDetailsPage.unexpectedError'));
     }
 };
 
@@ -721,16 +717,16 @@ const handleDelete = () => {
 };
 
 const confirmDelete = async () => {
-    const loadingToast = toast.loading('Removing bank account...');
+    const loadingToast = toast.loading(t('bankDetailsPage.removingBankAccount'));
     try {
         await paymentStore.deleteBankDetails();
         toast.dismiss(loadingToast);
-        toast.success('Bank account removed successfully');
+        toast.success(t('bankDetailsPage.bankAccountRemoved'));
         showDeleteConfirm.value = false;
         await userStore.getUserProfile();
     } catch (error) {
         toast.dismiss(loadingToast);
-        toast.error(error.message || 'Failed to remove bank account');
+        toast.error(error.message || t('bankDetailsPage.failedRemove'));
     }
 };
 

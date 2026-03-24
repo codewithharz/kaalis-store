@@ -1,4 +1,4 @@
 export const orderItems = [
-  { label: "Orders", link: "/account/orders" },
-  { label: "Returns", link: "/account/orders/profile-returns" },
+  { labelKey: "account.myOrders", link: "/account/orders" },
+  { labelKey: "account.returns", link: "/account/orders/profile-returns" },
 ];

@@ -6,17 +6,16 @@
             <div class="container mx-auto px-4">
                 <div class="flex flex-col md:flex-row items-center justify-between">
                     <div class="md:w-1/2 mb-8 md:mb-0">
-                        <h1 class="text-4xl font-bold mb-4">Bruthol Academy</h1>
-                        <p class="text-xl opacity-90 mb-6">Master e-commerce and grow your business with our expert-led
-                            courses</p>
+                        <h1 class="text-4xl font-bold mb-4">{{ t('brutholAcademyPage.heroTitle') }}</h1>
+                        <p class="text-xl opacity-90 mb-6">{{ t('brutholAcademyPage.heroSubtitle') }}</p>
                         <div class="flex flex-wrap gap-4">
                             <button @click="startLearning"
                                 class="bg-white text-[#24a6bb] px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-                                Start Learning
+                                {{ t('brutholAcademyPage.startLearning') }}
                             </button>
                             <button @click="showCertifications"
                                 class="border border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white/10 transition-colors">
-                                View Certifications
+                                {{ t('brutholAcademyPage.viewCertifications') }}
                             </button>
                         </div>
                     </div>
@@ -31,9 +30,9 @@
             <!-- Learning Paths -->
             <section class="mb-12">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-[#2d3642]">Learning Paths</h2>
+                    <h2 class="text-2xl font-bold text-[#2d3642]">{{ t('brutholAcademyPage.learningPathsTitle') }}</h2>
                     <button @click="viewAllPaths" class="text-[#24a6bb] hover:underline flex items-center">
-                        View All
+                        {{ t('brutholAcademyPage.viewAll') }}
                         <ArrowRight class="w-4 h-4 ml-1" />
                     </button>
                 </div>
@@ -56,7 +55,7 @@
                                 </div>
                                 <div class="flex items-center text-sm text-gray-600">
                                     <BookOpen class="w-4 h-4 mr-2" />
-                                    <span>{{ path.coursesCount }} Courses</span>
+                                    <span>{{ t('brutholAcademyPage.coursesCount', { count: path.coursesCount }) }}</span>
                                 </div>
                                 <div class="flex items-center text-sm text-gray-600">
                                     <Award class="w-4 h-4 mr-2" />
@@ -65,7 +64,7 @@
                             </div>
                             <div class="space-y-2">
                                 <div class="flex items-center justify-between text-sm">
-                                    <span class="text-gray-600">Progress</span>
+                                    <span class="text-gray-600">{{ t('brutholAcademyPage.progress') }}</span>
                                     <span class="text-[#24a6bb] font-medium">{{ path.progress }}%</span>
                                 </div>
                                 <div class="w-full bg-gray-200 rounded-full h-2">
@@ -75,7 +74,7 @@
                             </div>
                             <button @click="continuePath(path.id)"
                                 class="w-full mt-6 bg-[#24a6bb] text-white py-2 px-4 rounded-lg hover:bg-[#1a7f8f] transition-colors">
-                                Continue Learning
+                                {{ t('brutholAcademyPage.continueLearning') }}
                             </button>
                         </div>
                     </div>
@@ -84,7 +83,7 @@
 
             <!-- Featured Courses -->
             <section class="mb-12">
-                <h2 class="text-2xl font-bold text-[#2d3642] mb-6">Featured Courses</h2>
+                <h2 class="text-2xl font-bold text-[#2d3642] mb-6">{{ t('brutholAcademyPage.featuredCoursesTitle') }}</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div v-for="course in featuredCourses" :key="course.id"
                         class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
@@ -109,12 +108,12 @@
                                 </div>
                                 <div class="flex items-center text-sm text-gray-600">
                                     <Users class="w-4 h-4 mr-1" />
-                                    <span>{{ course.enrollments }}+ enrolled</span>
+                                    <span>{{ t('brutholAcademyPage.enrolledCount', { count: course.enrollments }) }}</span>
                                 </div>
                             </div>
                             <button @click="startCourse(course.id)"
                                 class="w-full bg-[#24a6bb] text-white py-2 px-4 rounded-lg hover:bg-[#1a7f8f] transition-colors">
-                                Start Course
+                                {{ t('brutholAcademyPage.startCourse') }}
                             </button>
                         </div>
                     </div>
@@ -123,7 +122,7 @@
 
             <!-- Live Workshops -->
             <section class="mb-12">
-                <h2 class="text-2xl font-bold text-[#2d3642] mb-6">Upcoming Live Workshops</h2>
+                <h2 class="text-2xl font-bold text-[#2d3642] mb-6">{{ t('brutholAcademyPage.liveWorkshopsTitle') }}</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div v-for="workshop in workshops" :key="workshop.id"
                         class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
@@ -154,7 +153,7 @@
                             </div>
                             <button @click="registerWorkshop(workshop.id)"
                                 class="bg-[#24a6bb] text-white px-4 py-2 rounded-lg hover:bg-[#1a7f8f] transition-colors">
-                                Register Now
+                                {{ t('brutholAcademyPage.registerNow') }}
                             </button>
                         </div>
                     </div>
@@ -163,7 +162,7 @@
 
             <!-- Success Stories -->
             <section class="bg-white rounded-lg shadow-lg p-8">
-                <h2 class="text-2xl font-bold text-[#2d3642] mb-6">Success Stories</h2>
+                <h2 class="text-2xl font-bold text-[#2d3642] mb-6">{{ t('brutholAcademyPage.successStoriesTitle') }}</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div v-for="story in successStories" :key="story.id" class="bg-gray-50 rounded-lg p-6">
                         <div class="flex items-center mb-4">
@@ -181,7 +180,7 @@
                             </div>
                             <button @click="readStory(story.id)"
                                 class="text-[#24a6bb] hover:underline text-sm flex items-center">
-                                Read More
+                                {{ t('brutholAcademyPage.readMore') }}
                                 <ArrowRight class="w-4 h-4 ml-1" />
                             </button>
                         </div>
@@ -194,6 +193,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
     GraduationCap,
     ArrowRight,
@@ -212,35 +212,37 @@ import {
 } from 'lucide-vue-next';
 import image from '../../../assets/images/Kyrian.png';
 
+const { t } = useI18n();
+
 const learningPaths = [
     {
         id: 1,
-        title: 'Getting Started',
-        description: 'Essential knowledge for new sellers',
+        title: t('brutholAcademyPage.learningPaths.path1.title'),
+        description: t('brutholAcademyPage.learningPaths.path1.description'),
         icon: Store,
-        duration: '10 hours',
+        duration: t('brutholAcademyPage.learningPaths.path1.duration'),
         coursesCount: 5,
-        certificationType: 'Beginner Certificate',
+        certificationType: t('brutholAcademyPage.learningPaths.path1.certificationType'),
         progress: 65
     },
     {
         id: 2,
-        title: 'Business Growth',
-        description: 'Scale your online business',
+        title: t('brutholAcademyPage.learningPaths.path2.title'),
+        description: t('brutholAcademyPage.learningPaths.path2.description'),
         icon: TrendingUp,
-        duration: '15 hours',
+        duration: t('brutholAcademyPage.learningPaths.path2.duration'),
         coursesCount: 8,
-        certificationType: 'Advanced Certificate',
+        certificationType: t('brutholAcademyPage.learningPaths.path2.certificationType'),
         progress: 30
     },
     {
         id: 3,
-        title: 'Marketing Master',
-        description: 'Advanced marketing strategies',
+        title: t('brutholAcademyPage.learningPaths.path3.title'),
+        description: t('brutholAcademyPage.learningPaths.path3.description'),
         icon: Target,
-        duration: '12 hours',
+        duration: t('brutholAcademyPage.learningPaths.path3.duration'),
         coursesCount: 6,
-        certificationType: 'Expert Certificate',
+        certificationType: t('brutholAcademyPage.learningPaths.path3.certificationType'),
         progress: 0
     }
 ];
@@ -248,29 +250,29 @@ const learningPaths = [
 const featuredCourses = [
     {
         id: 1,
-        title: 'Product Photography Essentials',
-        description: 'Learn to take professional product photos',
+        title: t('brutholAcademyPage.featuredCourses.course1.title'),
+        description: t('brutholAcademyPage.featuredCourses.course1.description'),
         thumbnail: image,
-        level: 'Beginner',
-        duration: '2.5 hours',
+        level: t('brutholAcademyPage.levels.beginner'),
+        duration: t('brutholAcademyPage.featuredCourses.course1.duration'),
         enrollments: 1250
     },
     {
         id: 2,
-        title: 'Pricing Strategies',
-        description: 'Optimize your pricing for maximum profit',
+        title: t('brutholAcademyPage.featuredCourses.course2.title'),
+        description: t('brutholAcademyPage.featuredCourses.course2.description'),
         thumbnail: image,
-        level: 'Intermediate',
-        duration: '3 hours',
+        level: t('brutholAcademyPage.levels.intermediate'),
+        duration: t('brutholAcademyPage.featuredCourses.course2.duration'),
         enrollments: 980
     },
     {
         id: 3,
-        title: 'Inventory Management',
-        description: 'Master inventory and stock control',
+        title: t('brutholAcademyPage.featuredCourses.course3.title'),
+        description: t('brutholAcademyPage.featuredCourses.course3.description'),
         thumbnail: image,
-        level: 'Advanced',
-        duration: '4 hours',
+        level: t('brutholAcademyPage.levels.advanced'),
+        duration: t('brutholAcademyPage.featuredCourses.course3.duration'),
         enrollments: 750
     }
 ];
@@ -278,10 +280,10 @@ const featuredCourses = [
 const workshops = [
     {
         id: 1,
-        title: 'Mastering Customer Service',
-        description: 'Learn how to provide exceptional customer service and handle difficult situations',
-        category: 'Customer Support',
-        date: 'March 15, 2025',
+        title: t('brutholAcademyPage.workshops.workshop1.title'),
+        description: t('brutholAcademyPage.workshops.workshop1.description'),
+        category: t('brutholAcademyPage.workshops.workshop1.category'),
+        date: t('brutholAcademyPage.workshops.workshop1.date'),
         time: '2:00 PM WAT',
         speakers: [
             { id: 1, name: 'John Doe', avatar: image },
@@ -290,10 +292,10 @@ const workshops = [
     },
     {
         id: 2,
-        title: 'Q1 2025 E-commerce Trends',
-        description: 'Stay ahead of the curve with latest e-commerce trends and strategies',
-        category: 'Market Insights',
-        date: 'March 20, 2025',
+        title: t('brutholAcademyPage.workshops.workshop2.title'),
+        description: t('brutholAcademyPage.workshops.workshop2.description'),
+        category: t('brutholAcademyPage.workshops.workshop2.category'),
+        date: t('brutholAcademyPage.workshops.workshop2.date'),
         time: '3:00 PM WAT',
         speakers: [
             { id: 3, name: 'Mike Johnson', avatar: image },
@@ -306,26 +308,26 @@ const successStories = [
     {
         id: 1,
         name: 'Amina Ibrahim',
-        business: 'Fashion Haven',
+        business: t('brutholAcademyPage.successStories.story1.business'),
         avatar: image,
-        quote: 'The Academy helped me transform my small fashion business into a thriving online store. Sales increased by 300% in just 6 months!',
-        achievement: '300% growth in 6 months'
+        quote: t('brutholAcademyPage.successStories.story1.quote'),
+        achievement: t('brutholAcademyPage.successStories.story1.achievement')
     },
     {
         id: 2,
         name: 'Chidi Okonkwo',
-        business: 'Tech Gadgets Plus',
+        business: t('brutholAcademyPage.successStories.story2.business'),
         avatar: image,
-        quote: 'The marketing strategies I learned here completely changed my approach to selling. My customer base has grown exponentially.',
-        achievement: '5000+ new customers'
+        quote: t('brutholAcademyPage.successStories.story2.quote'),
+        achievement: t('brutholAcademyPage.successStories.story2.achievement')
     },
     {
         id: 3,
         name: 'Folake Adebayo',
-        business: 'Beauty Essentials',
+        business: t('brutholAcademyPage.successStories.story3.business'),
         avatar: image,
-        quote: 'From a beginner to a power seller - the Academy guided me every step of the way. Now I\'m mentoring others!',
-        achievement: 'Top 100 Seller'
+        quote: t('brutholAcademyPage.successStories.story3.quote'),
+        achievement: t('brutholAcademyPage.successStories.story3.achievement')
     }
 ];
 

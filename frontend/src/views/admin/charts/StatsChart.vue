@@ -6,10 +6,10 @@
             <div class="relative">
                 <select v-model="selectedMetric"
                     class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent">
-                    <option value="users">Users</option>
-                    <option value="orders">Orders</option>
-                    <option value="products">Products</option>
-                    <option value="revenue">Revenue</option>
+                    <option value="users">{{ t('adminStatsChart.metrics.users') }}</option>
+                    <option value="orders">{{ t('adminStatsChart.metrics.orders') }}</option>
+                    <option value="products">{{ t('adminStatsChart.metrics.products') }}</option>
+                    <option value="revenue">{{ t('adminStatsChart.metrics.revenue') }}</option>
                 </select>
                 <div class="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
                     <ChevronDown class="w-5 h-5 text-gray-400" />
@@ -22,7 +22,7 @@
             {{ chartError }}
         </div>
         <div v-else-if="isLoading" class="h-64 flex items-center justify-center text-gray-500">
-            Loading chart data...
+            {{ t('adminStatsChart.loading') }}
         </div>
         <div v-else class="h-64 relative">
             <Line v-if="chartData.labels.length" :data="chartData" :options="chartOptions" />
@@ -31,15 +31,15 @@
         <!-- Stats Summary -->
         <div class="mt-6 grid grid-cols-3 gap-4">
             <div class="text-center">
-                <p class="text-sm text-gray-500">Total</p>
+                <p class="text-sm text-gray-500">{{ t('adminStatsChart.summary.total') }}</p>
                 <p class="text-xl font-semibold">{{ formatValue(totals[selectedMetric]) }}</p>
             </div>
             <div class="text-center">
-                <p class="text-sm text-gray-500">Average</p>
+                <p class="text-sm text-gray-500">{{ t('adminStatsChart.summary.average') }}</p>
                 <p class="text-xl font-semibold">{{ formatValue(averages[selectedMetric]) }}</p>
             </div>
             <div class="text-center">
-                <p class="text-sm text-gray-500">Growth</p>
+                <p class="text-sm text-gray-500">{{ t('adminStatsChart.summary.growth') }}</p>
                 <p class="text-xl font-semibold" :class="growthColor">
                     {{ growth[selectedMetric] }}%
                 </p>
@@ -50,6 +50,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Line } from 'vue-chartjs'
 import { ChevronDown } from 'lucide-vue-next';
 import {
@@ -86,6 +87,7 @@ const props = defineProps({
         default: 'Stats Overview'
     }
 })
+const { t, locale } = useI18n()
 
 const selectedMetric = ref('revenue')
 const isLoading = ref(false)
@@ -113,14 +115,14 @@ const chartData = computed(() => {
         const data = props.data[selectedMetric.value] || []
         return {
             labels: data.map(item =>
-                new Date(item.date).toLocaleDateString(undefined, {
+                new Date(item.date).toLocaleDateString(locale.value === 'fr' ? 'fr-FR' : 'en-US', {
                     month: 'short',
                     day: 'numeric'
                 })
             ),
             datasets: [
                 {
-                    label: selectedMetric.value.charAt(0).toUpperCase() + selectedMetric.value.slice(1),
+                    label: t(`adminStatsChart.metrics.${selectedMetric.value}`),
                     data: data.map(item => item.value),
                     borderColor: getMetricColor.value,
                     backgroundColor: `${getMetricColor.value}20`,
@@ -132,7 +134,7 @@ const chartData = computed(() => {
         }
     } catch (error) {
         console.error('Error processing chart data:', error)
-        chartError.value = 'Error processing chart data'
+        chartError.value = t('adminStatsChart.errors.processingFailed')
         return { labels: [], datasets: [] }
     }
 })
@@ -206,9 +208,15 @@ const chartOptions = {
                 label: (context) => {
                     const value = context.raw
                     if (selectedMetric.value === 'revenue') {
-                        return `${selectedMetric.value}: ${formatAmount(value)}`
+                        return t('adminStatsChart.tooltip.revenue', {
+                            label: t(`adminStatsChart.metrics.${selectedMetric.value}`),
+                            value: formatAmount(value)
+                        })
                     }
-                    return `${selectedMetric.value}: ${value.toLocaleString()}`
+                    return t('adminStatsChart.tooltip.default', {
+                        label: t(`adminStatsChart.metrics.${selectedMetric.value}`),
+                        value: value.toLocaleString(locale.value === 'fr' ? 'fr-FR' : 'en-US')
+                    })
                 }
             }
         }
@@ -245,6 +253,6 @@ const formatValue = (value) => {
     if (selectedMetric.value === 'revenue') {
         return formatAmount(value)
     }
-    return value.toLocaleString()
+    return value.toLocaleString(locale.value === 'fr' ? 'fr-FR' : 'en-US')
 }
 </script>

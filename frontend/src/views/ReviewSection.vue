@@ -4,7 +4,7 @@
         <!-- Header Section -->
         <div class="reviews-header">
             <div class="rating-summary">
-                <span class="total-reviews">{{ totalReviews }} reviews</span>
+                <span class="total-reviews">{{ t('productReviewSection.totalReviews', { count: totalReviews }) }}</span>
                 <span class="separator hidden sm:inline">|</span>
                 <div class="star-rating">
                     <span class="hidden sm:inline">{{ averageRating }}</span>
@@ -17,10 +17,10 @@
             <div
                 class="verified-badge font-semibold flex items-center gap-1 sm:gap-1.5 bg-[#f6ffed] px-2 sm:px-3 py-1 sm:py-1.5 rounded">
                 <ShieldPlus class="w-4 h-4 sm:w-6 sm:h-6 bg-gray-800 verified-badge rounded-l-sm"
-                    title="Buyer Review" />
+                    :title="t('productReviewSection.buyerReview')" />
                 <p class="text-green-700 text-xs sm:text-sm">
-                    <span class="hidden sm:inline">All reviews are from verified purchases</span>
-                    <span class="sm:hidden">Verified purchases</span>
+                    <span class="hidden sm:inline">{{ t('productReviewSection.verifiedPurchasesFull') }}</span>
+                    <span class="sm:hidden">{{ t('productReviewSection.verifiedPurchasesShort') }}</span>
                 </p>
             </div>
         </div>
@@ -28,33 +28,33 @@
         <!-- Review Tabs -->
         <div class="review-tabs">
             <button class="tab-button" :class="{ active: activeTab === 'item' }" @click="activeTab = 'item'">
-                <span class="hidden sm:inline">Item reviews ({{ itemReviewsCount }})</span>
-                <span class="sm:hidden">Item ({{ itemReviewsCount }})</span>
+                <span class="hidden sm:inline">{{ t('productReviewSection.itemReviews', { count: itemReviewsCount }) }}</span>
+                <span class="sm:hidden">{{ t('productReviewSection.itemShort', { count: itemReviewsCount }) }}</span>
             </button>
             <button class="tab-button" :class="{ active: activeTab === 'store' }" @click="activeTab = 'store'">
-                <span class="hidden sm:inline">Store reviews ({{ storeReviewsCount }})</span>
-                <span class="sm:hidden">Store ({{ storeReviewsCount }})</span>
+                <span class="hidden sm:inline">{{ t('productReviewSection.storeReviews', { count: storeReviewsCount }) }}</span>
+                <span class="sm:hidden">{{ t('productReviewSection.storeShort', { count: storeReviewsCount }) }}</span>
             </button>
         </div>
 
         <!-- Size Fit Section -->
         <div class="size-fit-section w-full sm:w-2/3" v-if="showSizeFit">
             <div class="fit-row">
-                <span class="fit-label">Small</span>
+                <span class="fit-label">{{ t('productReviewSection.sizeSmall') }}</span>
                 <div class="fit-bar-container">
                     <div class="fit-bar" :style="{ width: smallPercentage + '%' }"></div>
                 </div>
                 <span class="fit-percentage">{{ smallPercentage }}%</span>
             </div>
             <div class="fit-row">
-                <span class="fit-label">True to size</span>
+                <span class="fit-label">{{ t('productReviewSection.sizeTrue') }}</span>
                 <div class="fit-bar-container">
                     <div class="fit-bar" :style="{ width: trueToSizePercentage + '%' }"></div>
                 </div>
                 <span class="fit-percentage">{{ trueToSizePercentage }}%</span>
             </div>
             <div class="fit-row">
-                <span class="fit-label">Large</span>
+                <span class="fit-label">{{ t('productReviewSection.sizeLarge') }}</span>
                 <div class="fit-bar-container">
                     <div class="fit-bar" :style="{ width: largePercentage + '%' }"></div>
                 </div>
@@ -77,7 +77,7 @@
                     <div class="reviewer-info flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                         <img :src="review.avatar || getRandomAvatarUrl(review.user?._id || review.id)"
                             class="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border border-gray-100 flex-shrink-0"
-                            alt="reviewer avatar" />
+                            :alt="t('productReviewSection.reviewerAvatar')" />
                         <div class="flex flex-col gap-0.5 min-w-0 flex-1 sm:flex-initial">
                             <span class="text-sm sm:text-[15px] font-medium text-gray-900 truncate sm:text-clip">{{
                                 review.username }}</span>
@@ -87,8 +87,8 @@
                     </div>
                     <div v-if="review.purchaseCount > 1"
                         class="px-2 sm:px-3 py-0.5 sm:py-1 bg-[#fff3e0] text-[#ff6b00] text-xs font-medium rounded-full border border-[#ffd591] flex-shrink-0 self-start sm:self-center">
-                        <span class="hidden sm:inline">Bought {{ review.purchaseCount }} times</span>
-                        <span class="sm:hidden">{{ review.purchaseCount }}x buyer</span>
+                        <span class="hidden sm:inline">{{ t('productReviewSection.boughtTimes', { count: review.purchaseCount }) }}</span>
+                        <span class="sm:hidden">{{ t('productReviewSection.buyerCountShort', { count: review.purchaseCount }) }}</span>
                     </div>
                 </div>
 
@@ -109,7 +109,7 @@
                     </p>
                     <button v-if="review.isTruncated" @click="toggleReview(review.id)"
                         class="text-[#40a9ff] text-xs sm:text-sm font-medium hover:underline mt-1">
-                        {{ isReviewExpanded(review.id) ? 'Read less' : 'Read more' }}
+                        {{ isReviewExpanded(review.id) ? t('cart.readLess') : t('cart.readMore') }}
                     </button>
                 </div>
             </div>
@@ -118,8 +118,8 @@
         <!-- See All Reviews Button -->
         <button v-if="hasMoreReviews" @click="handleSeeAll"
             class="w-full sm:w-1/2 py-2.5 sm:py-3 px-4 mt-4 sm:mt-6 mb-2 mx-auto border border-gray-200 rounded-[20px] text-gray-800 hover:bg-gray-50 text-center font-medium flex items-center justify-center text-sm sm:text-base">
-            <span class="hidden sm:inline">See all reviews</span>
-            <span class="sm:hidden">See all ({{ totalReviews }})</span>
+            <span class="hidden sm:inline">{{ t('productReviewSection.seeAllReviews') }}</span>
+            <span class="sm:hidden">{{ t('productReviewSection.seeAllShort', { count: totalReviews }) }}</span>
         </button>
     </div>
 </template>
@@ -128,10 +128,15 @@
 import {
     ShieldPlus
 } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
 
 export default {
     name: 'ReviewSection',
     components: { ShieldPlus },
+    setup() {
+        const { t, locale } = useI18n();
+        return { t, locale };
+    },
     props: {
         reviews: {
             type: Array,
@@ -161,10 +166,10 @@ export default {
             totalCount: 0, // Total number of reviews
             showAllReviews: false, // Toggle for showing all reviews
             featureCounts: {
-                'Good Quality': 4,
-                'Good': 6,
-                'Fast Shipping': 1,
-                'Fit Well': 1
+                goodQuality: 4,
+                good: 6,
+                fastShipping: 1,
+                fitWell: 1
             }
         }
     },
@@ -185,7 +190,7 @@ export default {
                 return {
                     ...review,
                     id: review._id || review.id,
-                    username: review.user?.username || review.userName || 'Anonymous',
+                    username: review.user?.username || review.userName || this.t('reviewsPage.anonymousCustomer'),
                     review: reviewText,
                     truncatedReview: text,
                     isTruncated,
@@ -208,26 +213,29 @@ export default {
     },
     methods: {
         formatDate(date) {
-            if (!date) return 'From abroad';
+            const activeLocale = this.locale === 'fr' ? 'fr-FR' : 'en-US';
+            if (!date) return this.t('productReviewSection.fromAbroad');
 
             try {
                 const parsedDate = new Date(date);
                 if (isNaN(parsedDate.getTime())) {
-                    return 'From abroad';
+                    return this.t('productReviewSection.fromAbroad');
                 }
 
-                return `From abroad on ${parsedDate.toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                })}`;
+                return this.t('productReviewSection.fromAbroadOn', {
+                    date: parsedDate.toLocaleDateString(activeLocale, {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                    })
+                });
             } catch (error) {
                 console.error('Date parsing error:', error);
-                return 'From abroad';
+                return this.t('productReviewSection.fromAbroad');
             }
         },
         formatFeatureTag(feature) {
-            return feature.replace(/([A-Z])/g, ' $1').trim()
+            return this.t(`productReviewSection.features.${feature}`)
         },
         handleSeeAll() {
             this.showAllReviews = true;

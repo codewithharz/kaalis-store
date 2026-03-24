@@ -62,7 +62,7 @@
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                            <AlertDialogCancel class="hover:bg-[#24a6bb] hover:text-white">Close</AlertDialogCancel>
+                            <AlertDialogCancel class="hover:bg-[#24a6bb] hover:text-white">{{ t('productDetails.close') }}</AlertDialogCancel>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
@@ -108,9 +108,9 @@
                             <span class="font-bold">HAPPY</span>
                             <span class="font-bold">2025</span>
                             <div class="h-4 w-[1px] bg-white/30 hidden sm:block"></div>
-                            <span>✓ Free shipping for you</span>
+                            <span>{{ t('productDetails.freeShippingForYou') }}</span>
                         </div>
-                        <span class="text-xs">Limited-time offer</span>
+                        <span class="text-xs">{{ t('productDetails.limitedTimeOffer') }}</span>
                     </div>
                 </div>
 
@@ -118,7 +118,7 @@
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between text-sm gap-3">
                     <div class="flex items-center space-x-1">
                         <div>
-                            <span class="font-bold text-gray-800">Provided by</span>
+                            <span class="font-bold text-gray-800">{{ t('productDetails.providedBy') }}</span>
                         </div>
                         <div v-if="product?.user" class="flex items-center cursor-pointer" @click="visitSellerStore">
                             <img :src="product.user?.sellerProfile?.profileImage || randomAvatarUrl"
@@ -144,7 +144,7 @@
                                 {{ formatRating(product?.averageRating) }}
                             </span>
                         </div>
-                        <span class="text-gray-600 text-xs">{{ product?.numberOfRatings || 0 }} ratings</span>
+                        <span class="text-gray-600 text-xs">{{ product?.numberOfRatings || 0 }} {{ t('productDetails.ratings') }}</span>
                     </div>
                 </div>
 
@@ -153,14 +153,14 @@
                     <span v-html="formatDescription(product)"></span>
                     <span v-if="product?.description?.length > 100" @click="toggleDescription"
                         class="text-blue-500 cursor-pointer">
-                        {{ product?.showFullDescription ? ' Read less' : ' Read more' }}
+                        {{ product?.showFullDescription ? ` ${t('productDetails.readLess')}` : ` ${t('productDetails.readMore')}` }}
                     </span>
                 </p>
 
                 <!-- Mobile Color Selection -->
                 <div v-if="hasColors" class="space-y-3">
                     <div class="flex items-center gap-2 mb-2 p-2.5 bg-gray-50 rounded-xl border border-gray-100">
-                        <span class="text-[10px] font-bold uppercase tracking-widest text-indigo-500">Selected Color</span>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-indigo-500">{{ t('productDetails.selectedColor') }}</span>
                         <h2 class="font-bold text-gray-900">{{ getSelectedColorName }}</h2>
                     </div>
                     <div class="grid grid-cols-4 sm:grid-cols-6 gap-2">
@@ -214,7 +214,7 @@
                 <!-- Mobile Quantity and Add to Cart -->
                 <div class="space-y-4">
                     <div class="flex items-center gap-3">
-                        <h2 class="font-medium text-gray-700">Quantity</h2>
+                        <h2 class="font-medium text-gray-700">{{ t('productDetails.quantity') }}</h2>
                         <div class="inline-flex items-stretch rounded-lg border border-gray-200">
                             <button @click="decrementQuantity"
                                 class="px-3 py-2 flex items-center justify-center hover:bg-gray-50 border-r border-gray-200"
@@ -242,9 +242,9 @@
 
                     <!-- Mobile Stock Alert -->
                     <Alert v-if="showStockAlert">
-                        <AlertTitle>Low Stock Alert!</AlertTitle>
+                        <AlertTitle>{{ t('productDetails.lowStockAlert') }}</AlertTitle>
                         <AlertDescription>
-                            Only {{ product?.stock }} items left. Order soon to avoid disappointment.
+                            {{ t('productDetails.lowStockBody', { count: product?.stock }) }}
                         </AlertDescription>
                     </Alert>
 
@@ -252,7 +252,7 @@
                     <div class="flex items-center space-x-3">
                         <button @click="addToCart"
                             class="flex-grow bg-[#24a3b5] text-white py-3 px-4 rounded-lg font-semibold hover:bg-[#26afc1] transition duration-300 text-sm sm:text-base">
-                            Add to Cart
+                            {{ t('productDetails.addToCart') }}
                             <span class="text-xs ml-2">{{ product?.discount }}% OFF</span>
                         </button>
                         <button @click="toggleWishlist"
@@ -273,11 +273,11 @@
                                     <Package class="w-5 h-5 text-[#24a3b5]" />
                                 </div>
                                 <div>
-                                    <span class="font-semibold block text-gray-900 text-sm">Free Delivery</span>
-                                    <span class="text-xs text-gray-600">Estimated delivery within 3 days</span>
+                                    <span class="font-semibold block text-gray-900 text-sm">{{ t('productDetails.freeDelivery') }}</span>
+                                    <span class="text-xs text-gray-600">{{ t('productDetails.estimatedDelivery') }}</span>
                                 </div>
                             </div>
-                            <span class="text-[#24a3b5] text-sm font-medium">Free</span>
+                            <span class="text-[#24a3b5] text-sm font-medium">{{ t('productDetails.free') }}</span>
                         </div>
                     </div>
 
@@ -289,11 +289,11 @@
                                     <Shield class="w-5 h-5 text-green-600" />
                                 </div>
                                 <div>
-                                    <span class="font-semibold block text-gray-900 text-sm">Secure Shopping</span>
-                                    <span class="text-xs text-gray-600">Money back guarantee</span>
+                                    <span class="font-semibold block text-gray-900 text-sm">{{ t('productDetails.secureShopping') }}</span>
+                                    <span class="text-xs text-gray-600">{{ t('productDetails.moneyBackGuarantee') }}</span>
                                 </div>
                             </div>
-                            <button class="text-xs text-[#24a3b5] hover:underline">Learn more</button>
+                            <button class="text-xs text-[#24a3b5] hover:underline">{{ t('productDetails.learnMore') }}</button>
                         </div>
 
                         <div class="flex items-center justify-between">
@@ -302,8 +302,8 @@
                                     <RefreshCcw class="w-5 h-5 text-orange-600" />
                                 </div>
                                 <div>
-                                    <span class="font-semibold block text-gray-900 text-sm">90-Day Returns</span>
-                                    <span class="text-xs text-gray-600">With price adjustment</span>
+                                    <span class="font-semibold block text-gray-900 text-sm">{{ t('productDetails.returns90Day') }}</span>
+                                    <span class="text-xs text-gray-600">{{ t('productDetails.withPriceAdjustment') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -315,10 +315,10 @@
                     <!-- Seller Header -->
                     <div class="p-4">
                         <div class="flex items-center justify-between mb-4">
-                            <h2 class="font-semibold text-gray-900">Seller Information</h2>
+                            <h2 class="font-semibold text-gray-900">{{ t('productDetails.sellerInformation') }}</h2>
                             <button v-if="product?.user?.sellerProfile" @click="visitSellerStore"
                                 class="text-sm text-[#24a3b5] hover:underline flex items-center space-x-1">
-                                <span>Visit Store</span>
+                                <span>{{ t('productDetails.visitStore') }}</span>
                                 <ArrowRight class="w-4 h-4" />
                             </button>
                         </div>
@@ -356,7 +356,7 @@
                                         </TooltipTrigger>
                                         <TooltipContent>
                                             <p>{{ !product.user.sellerProfile.isVacationMode ?
-                                                'Seller is Active' : 'Seller is on Vacation Mode' }}</p>
+                                                t('productDetails.sellerActive') : t('productDetails.sellerVacation') }}</p>
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
@@ -399,7 +399,7 @@
                                     <div class="flex items-center text-xs text-gray-600">
                                         <Users class="w-3 h-3 mr-1" />
                                         <span>{{ product.user?.sellerProfile?.followers?.length || 0 }}
-                                            Followers</span>
+                                            {{ t('productDetails.followers') }}</span>
                                     </div>
                                 </div>
 
@@ -411,7 +411,7 @@
                                     </div>
                                     <span class="text-xs text-gray-600">
                                         {{ product.user?.sellerProfile?.averageRating?.toFixed(1) || '0.0' }}
-                                        ({{ product.user?.sellerProfile?.reviews?.length || 0 }} reviews)
+                                        ({{ product.user?.sellerProfile?.reviews?.length || 0 }} {{ t('productDetails.reviews') }})
                                     </span>
                                 </div>
                             </div>
@@ -419,22 +419,22 @@
 
                         <!-- Show message if no seller info -->
                         <div v-else class="text-gray-500 text-center py-4 text-sm">
-                            Seller information not available
+                            {{ t('productDetails.sellerInfoUnavailable') }}
                         </div>
                     </div>
 
                     <!-- Quick Stats -->
                     <div v-if="!isLoading && product?.user?.sellerProfile" class="p-4 grid grid-cols-3 gap-4">
                         <div class="text-center">
-                            <span class="text-xs font-medium text-gray-900">Response Rate</span>
+                            <span class="text-xs font-medium text-gray-900">{{ t('productDetails.responseRate') }}</span>
                             <p class="text-lg font-bold text-[#24a3b5]">98%</p>
                         </div>
                         <div class="text-center">
-                            <span class="text-xs font-medium text-gray-900">Ship On Time</span>
+                            <span class="text-xs font-medium text-gray-900">{{ t('productDetails.shipOnTime') }}</span>
                             <p class="text-lg font-bold text-[#24a3b5]">95%</p>
                         </div>
                         <div class="text-center">
-                            <span class="text-xs font-medium text-gray-900">Products</span>
+                            <span class="text-xs font-medium text-gray-900">{{ t('productDetails.products') }}</span>
                             <p class="text-lg font-bold text-[#24a3b5]">
                                 {{ product.user?.sellerProfile?.products?.length || 0 }}
                             </p>
@@ -449,7 +449,7 @@
                                     ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                     : 'bg-[#24a3b5] text-white hover:bg-[#1f8f9e]'
                             ]">
-                            {{ isFollowing ? 'Unfollow Store' : 'Follow Store' }}
+                            {{ isFollowing ? t('productDetails.unfollowStore') : t('productDetails.followStore') }}
                         </button>
                         <button @click="messageStore"
                             class="flex items-center justify-center w-12 h-10 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
@@ -462,9 +462,9 @@
                 <div class="bg-white shadow-sm rounded-lg">
                     <Tabs defaultValue="features" class="w-full">
                         <TabsList class="grid w-full grid-cols-3 sticky top-0 bg-white z-10 border-b">
-                            <TabsTrigger value="features" class="text-xs sm:text-sm">Features</TabsTrigger>
-                            <TabsTrigger value="specs" class="text-xs sm:text-sm">Specifications</TabsTrigger>
-                            <TabsTrigger value="reviews" class="text-xs sm:text-sm">Reviews</TabsTrigger>
+                            <TabsTrigger value="features" class="text-xs sm:text-sm">{{ t('productDetails.features') }}</TabsTrigger>
+                            <TabsTrigger value="specs" class="text-xs sm:text-sm">{{ t('productDetails.specifications') }}</TabsTrigger>
+                            <TabsTrigger value="reviews" class="text-xs sm:text-sm">{{ t('productDetails.reviewsTab') }}</TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="features" class="mt-4 p-4">
@@ -485,7 +485,7 @@
                                         <span class="text-gray-600 text-sm ml-2">{{ value }}</span>
                                     </div>
                                 </div>
-                                <p v-else class="text-gray-500 text-sm italic">No detailed specifications available.</p>
+                                <p v-else class="text-gray-500 text-sm italic">{{ t('productDetails.noDetailedSpecifications') }}</p>
                             </div>
                         </TabsContent>
 
@@ -495,19 +495,17 @@
                                 <div
                                     class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                                     <div>
-                                        <h3 class="text-lg font-semibold">Customer Reviews</h3>
+                                        <h3 class="text-lg font-semibold">{{ t('productDetails.customerReviews') }}</h3>
                                         <div class="flex items-center">
                                             <Star v-for="star in 5" :key="star"
                                                 :class="['w-4 h-4', star <= displayRating ? 'text-yellow-400' : 'text-gray-300']" />
-                                            <span class="ml-2 text-sm">{{ product?.averageRating?.toFixed(1) }} out of
-                                                5</span>
+                                            <span class="ml-2 text-sm">{{ product?.averageRating?.toFixed(1) }} {{ t('productDetails.outOfFive') }}</span>
                                         </div>
-                                        <p class="text-sm text-gray-600">{{ product?.numberOfRatings }} global ratings
-                                        </p>
+                                        <p class="text-sm text-gray-600">{{ product?.numberOfRatings }} {{ t('productDetails.globalRatings') }}</p>
                                     </div>
                                     <button v-if="canReview" @click="openReviewModal"
                                         class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm w-full sm:w-auto">
-                                        Write a review
+                                        {{ t('productDetails.writeReview') }}
                                     </button>
                                 </div>
 
@@ -519,7 +517,7 @@
                                         @see-all="handleSeeAll" />
                                 </div>
 
-                                <p v-else class="text-gray-600 text-sm">No reviews yet.</p>
+                                <p v-else class="text-gray-600 text-sm">{{ t('productDetails.noReviewsYet') }}</p>
                             </div>
                         </TabsContent>
                     </Tabs>
@@ -564,9 +562,9 @@
                     <div class="bg-white shadow-sm rounded-lg mx-14 mt-6 mb-8">
                         <Tabs defaultValue="features" class="w-full my-10">
                             <TabsList class="grid w-full grid-cols-3 sticky top-0 bg-white z-10 px-8 border-b">
-                                <TabsTrigger value="features">Features</TabsTrigger>
-                                <TabsTrigger value="specs">Specifications</TabsTrigger>
-                                <TabsTrigger value="reviews">Reviews</TabsTrigger>
+                                <TabsTrigger value="features">{{ t('productDetails.features') }}</TabsTrigger>
+                                <TabsTrigger value="specs">{{ t('productDetails.specifications') }}</TabsTrigger>
+                                <TabsTrigger value="reviews">{{ t('productDetails.reviewsTab') }}</TabsTrigger>
                             </TabsList>
 
                             <TabsContent value="features" class="mt-4">
@@ -589,7 +587,7 @@
                                         <span class="text-gray-600 ml-2">{{ value }}</span>
                                     </div>
                                 </div>
-                                <p v-else class="text-gray-500 italic">No detailed specifications available.</p>
+                                <p v-else class="text-gray-500 italic">{{ t('productDetails.noDetailedSpecifications') }}</p>
                                 </div>
                             </TabsContent>
 
@@ -598,20 +596,17 @@
                                     <!-- Review Summary -->
                                     <div class="flex items-center justify-between">
                                         <div>
-                                            <h3 class="text-lg font-semibold">Customer Reviews</h3>
+                                            <h3 class="text-lg font-semibold">{{ t('productDetails.customerReviews') }}</h3>
                                             <div class="flex items-center">
                                                 <Star v-for="star in 5" :key="star"
                                                     :class="['w-4 h-4', star <= displayRating ? 'text-yellow-400' : 'text-gray-300']" />
-                                                <span class="ml-2">{{ product?.averageRating?.toFixed(1) }} out of
-                                                    5</span>
+                                                <span class="ml-2">{{ product?.averageRating?.toFixed(1) }} {{ t('productDetails.outOfFive') }}</span>
                                             </div>
-                                            <p class="text-sm text-gray-600">{{ product?.numberOfRatings }} global
-                                                ratings
-                                            </p>
+                                            <p class="text-sm text-gray-600">{{ product?.numberOfRatings }} {{ t('productDetails.globalRatings') }}</p>
                                         </div>
                                         <button v-if="canReview" @click="openReviewModal"
                                             class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                                            Write a review
+                                            {{ t('productDetails.writeReview') }}
                                         </button>
                                     </div>
 
@@ -623,7 +618,7 @@
                                             @see-all="handleSeeAll" />
                                     </div>
 
-                                    <p v-else class="text-gray-600">No reviews yet.</p>
+                                    <p v-else class="text-gray-600">{{ t('productDetails.noReviewsYet') }}</p>
                                 </div>
                             </TabsContent>
                         </Tabs>
@@ -642,9 +637,9 @@
                         <!-- Description -->
                         <p class="text-gray-600 leading-relaxed">
                             <span v-html="formatDescription(product)"></span>
-                            <span v-if="product?.description?.length > 100" @click="toggleDescription"
-                                class="text-blue-500 cursor-pointer">
-                                {{ product?.showFullDescription ? ' Read less' : ' Read more' }}
+                                <span v-if="product?.description?.length > 100" @click="toggleDescription"
+                                    class="text-blue-500 cursor-pointer">
+                                {{ product?.showFullDescription ? ` ${t('productDetails.readLess')}` : ` ${t('productDetails.readMore')}` }}
                             </span>
                         </p>
 
@@ -655,16 +650,16 @@
                                     <span class="font-bold">HAPPY</span>
                                     <span class="font-bold">2025</span>
                                     <div class="h-5 w-[1px] bg-white/30"></div>
-                                    <span>✓ Free shipping for you</span>
+                                    <span>{{ t('productDetails.estimatedDelivery') }}</span>
                                 </div>
-                                <span class="text-sm">Limited-time offer</span>
+                                <span class="text-sm">{{ t('productDetails.limitedTimeOffer') }}</span>
                             </div>
                         </div>
 
                         <div class="flex items-center justify-between text-sm">
                             <div class="flex items-center space-x-1">
                                 <div>
-                                    <span class="font-bold text-gray-800">Provided by</span>
+                                    <span class="font-bold text-gray-800">{{ t('productDetails.providedBy') }}</span>
                                 </div>
                                 <div v-if="product?.user" class="flex items-center cursor-pointer"
                                     @click="visitSellerStore">
@@ -691,7 +686,7 @@
                                         {{ formatRating(product?.averageRating) }}
                                     </span>
                                 </div>
-                                <span class="text-gray-600">{{ product?.numberOfRatings || 0 }} ratings</span>
+                                <span class="text-gray-600">{{ product?.numberOfRatings || 0 }} {{ t('productDetails.ratings') }}</span>
                             </div>
                         </div>
 
@@ -717,7 +712,7 @@
                         <div v-if="hasColors" class="space-y-4 w-3/4">
                             <div class="flex items-center gap-3 mb-4 p-3 bg-gray-50/80 rounded-2xl border border-gray-100 backdrop-blur-sm">
                                 <div class="flex flex-col">
-                                    <span class="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-0.5">Primary Display Color</span>
+                                    <span class="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-0.5">{{ t('productDetails.primaryDisplayColor') }}</span>
                                     <h2 class="text-xl font-black text-gray-900 leading-tight">{{ getSelectedColorName }}</h2>
                                 </div>
                             </div>
@@ -771,7 +766,7 @@
                         </div>
                         <!-- Quantity -->
                         <div class="space-y-2 flex items-center gap-2">
-                            <h2 class="font-medium text-gray-700">Quantity </h2>
+                            <h2 class="font-medium text-gray-700">{{ t('productDetails.quantity') }} </h2>
                             <div class="inline-flex items-stretch rounded-lg border border-gray-200">
                                 <button @click="decrementQuantity"
                                     class="px-3 py-2 flex items-center justify-center hover:bg-gray-50 border-r border-gray-200"
@@ -799,9 +794,9 @@
 
                         <!-- Stock Alert -->
                         <Alert v-if="showStockAlert">
-                            <AlertTitle>Low Stock Alert!</AlertTitle>
+                            <AlertTitle>{{ t('productDetails.lowStockAlert') }}</AlertTitle>
                             <AlertDescription>
-                                Only {{ product?.stock }} items left. Order soon to avoid disappointment.
+                                {{ t('productDetails.lowStockBody', { count: product?.stock }) }}
                             </AlertDescription>
                         </Alert>
 
@@ -809,7 +804,7 @@
                         <div class="flex items-center space-x-4">
                             <button @click="addToCart"
                                 class="flex-grow bg-[#24a3b5] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#26afc1] transition duration-300">
-                                Add to Cart
+                                {{ t('productDetails.addToCart') }}
                                 <span class="text-sm ml-2">{{ product?.discount }}% OFF</span>
                             </button>
                             <button @click="toggleWishlist"
@@ -829,11 +824,11 @@
                                             <Package class="w-5 h-5 text-[#24a3b5]" />
                                         </div>
                                         <div>
-                                            <span class="font-semibold block text-gray-900">Free Delivery</span>
-                                            <span class="text-sm text-gray-600">Estimated delivery within 3 days</span>
+                                            <span class="font-semibold block text-gray-900">{{ t('productDetails.freeDelivery') }}</span>
+                                            <span class="text-sm text-gray-600">{{ t('productDetails.estimatedDelivery') }}</span>
                                         </div>
                                     </div>
-                                    <span class="text-[#24a3b5] text-sm font-medium">Free</span>
+                                    <span class="text-[#24a3b5] text-sm font-medium">{{ t('productDetails.free') }}</span>
                                 </div>
                             </div>
 
@@ -845,11 +840,11 @@
                                             <Shield class="w-5 h-5 text-green-600" />
                                         </div>
                                         <div>
-                                            <span class="font-semibold block text-gray-900">Secure Shopping</span>
-                                            <span class="text-sm text-gray-600">Money back guarantee</span>
+                                            <span class="font-semibold block text-gray-900">{{ t('productDetails.secureShopping') }}</span>
+                                            <span class="text-sm text-gray-600">{{ t('productDetails.moneyBackGuarantee') }}</span>
                                         </div>
                                     </div>
-                                    <button class="text-sm text-[#24a3b5] hover:underline">Learn more</button>
+                                    <button class="text-sm text-[#24a3b5] hover:underline">{{ t('productDetails.learnMore') }}</button>
                                 </div>
 
                                 <div class="flex items-center justify-between">
@@ -858,8 +853,8 @@
                                             <RefreshCcw class="w-5 h-5 text-orange-600" />
                                         </div>
                                         <div>
-                                            <span class="font-semibold block text-gray-900">90-Day Returns</span>
-                                            <span class="text-sm text-gray-600">With price adjustment</span>
+                                            <span class="font-semibold block text-gray-900">{{ t('productDetails.returns90Day') }}</span>
+                                            <span class="text-sm text-gray-600">{{ t('productDetails.withPriceAdjustment') }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -870,10 +865,10 @@
                                 <!-- Seller Header -->
                                 <div class="p-4">
                                     <div class="flex items-center justify-between mb-4">
-                                        <h2 class="font-semibold text-gray-900">Seller Information</h2>
+                                        <h2 class="font-semibold text-gray-900">{{ t('productDetails.sellerInformation') }}</h2>
                                         <button v-if="product?.user?.sellerProfile" @click="visitSellerStore"
                                             class="text-sm text-[#24a3b5] hover:underline flex items-center space-x-1">
-                                            <span>Visit Store</span>
+                                            <span>{{ t('productDetails.visitStore') }}</span>
                                             <ArrowRight class="w-4 h-4" />
                                         </button>
                                     </div>
@@ -911,7 +906,7 @@
                                                     </TooltipTrigger>
                                                     <TooltipContent>
                                                         <p>{{ !product.user.sellerProfile.isVacationMode ?
-                                                            'Seller is Active' : 'Seller is on Vacation Mode' }}</p>
+                                                            t('productDetails.sellerActive') : t('productDetails.sellerVacation') }}</p>
                                                     </TooltipContent>
                                                 </Tooltip>
                                             </TooltipProvider>
@@ -942,7 +937,7 @@
 
                                                 <div v-if="product.user?.sellerProfile.verificationStatus === 'approved'"
                                                     class="text-xs w-fit px-2 font-medium rounded-full text-[#ff934b] bg-white border border-[#ff934b]">
-                                                    Verified
+                                                    {{ t('productDetails.verified') }}
                                                 </div>
                                             </div>
 
@@ -951,12 +946,12 @@
                                                 <div class="flex items-center text-sm text-gray-600">
                                                     <Package class="w-4 h-4 mr-1" />
                                                     <span>{{ product.user?.sellerProfile?.deliveredOrders || 0 }}
-                                                        Sales</span>
+                                                        {{ t('productDetails.sales') }}</span>
                                                 </div>
                                                 <div class="flex items-center text-sm text-gray-600">
                                                     <Users class="w-4 h-4 mr-1" />
                                                     <span>{{ product.user?.sellerProfile?.followers?.length || 0 }}
-                                                        Followers</span>
+                                                        {{ t('productDetails.followers') }}</span>
                                                 </div>
                                             </div>
 
@@ -969,7 +964,7 @@
                                                 <span class="text-sm text-gray-600">
                                                     {{ product.user?.sellerProfile?.averageRating?.toFixed(1) || '0.0'
                                                     }}
-                                                    ({{ product.user?.sellerProfile?.reviews?.length || 0 }} reviews)
+                                                    ({{ product.user?.sellerProfile?.reviews?.length || 0 }} {{ t('productDetails.reviews') }})
                                                 </span>
                                             </div>
                                         </div>
@@ -977,7 +972,7 @@
 
                                     <!-- Show message if no seller info -->
                                     <div v-else class="text-gray-500 text-center py-4">
-                                        Seller information not available
+                                        {{ t('productDetails.sellerInfoUnavailable') }}
                                     </div>
                                 </div>
 
@@ -985,15 +980,15 @@
                                 <div v-if="!isLoading && product?.user?.sellerProfile"
                                     class="p-4 grid grid-cols-3 gap-4">
                                     <div class="text-center">
-                                        <span class="text-sm font-medium text-gray-900">Response Rate</span>
+                                        <span class="text-sm font-medium text-gray-900">{{ t('productDetails.responseRate') }}</span>
                                         <p class="text-2xl font-bold text-[#24a3b5]">98%</p>
                                     </div>
                                     <div class="text-center">
-                                        <span class="text-sm font-medium text-gray-900">Ship On Time</span>
+                                        <span class="text-sm font-medium text-gray-900">{{ t('productDetails.shipOnTime') }}</span>
                                         <p class="text-2xl font-bold text-[#24a3b5]">95%</p>
                                     </div>
                                     <div class="text-center">
-                                        <span class="text-sm font-medium text-gray-900">Products</span>
+                                        <span class="text-sm font-medium text-gray-900">{{ t('productDetails.products') }}</span>
                                         <p class="text-2xl font-bold text-[#24a3b5]">
                                             {{ product.user?.sellerProfile?.products?.length || 0 }}
                                         </p>
@@ -1008,7 +1003,7 @@
                                                 ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                                 : 'bg-[#24a3b5] text-white hover:bg-[#1f8f9e]'
                                         ]">
-                                        {{ isFollowing ? 'Unfollow Store' : 'Follow Store' }}
+                                        {{ isFollowing ? t('productDetails.unfollowStore') : t('productDetails.followStore') }}
                                     </button>
                                     <button @click="messageStore"
                                         class="flex items-center justify-center w-12 h-10 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
@@ -1022,11 +1017,11 @@
                         <AlertDialog v-model:open="showReviewModal">
                             <AlertDialogContent>
                                 <AlertDialogHeader>
-                                    <AlertDialogTitle>Write a Review</AlertDialogTitle>
+                                    <AlertDialogTitle>{{ t('productDetails.writeReview') }}</AlertDialogTitle>
                                     <AlertDialogDescription>
                                         <div class="space-y-4">
                                             <div>
-                                                <label class="block text-sm font-medium text-gray-700">Rating</label>
+                                                <label class="block text-sm font-medium text-gray-700">{{ t('categoryPage.rating') }}</label>
                                                 <div class="flex items-center">
                                                     <Star v-for="star in 5" :key="star" @click="newReview.rating = star"
                                                         :class="['w-6 h-6 cursor-pointer', star <= newReview.rating ? 'text-yellow-400' : 'text-gray-300']" />
@@ -1034,7 +1029,7 @@
                                             </div>
                                             <div>
                                                 <label for="review"
-                                                    class="block text-sm font-medium text-gray-700">Review</label>
+                                                    class="block text-sm font-medium text-gray-700">{{ t('productDetails.review') }}</label>
                                                 <textarea id="review" v-model="newReview.review" rows="6"
                                                     class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
                                             </div>
@@ -1042,8 +1037,8 @@
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                    <AlertDialogCancel @click="closeReviewModal">Cancel</AlertDialogCancel>
-                                    <AlertDialogAction @click="submitReview">Submit Review</AlertDialogAction>
+                                    <AlertDialogCancel @click="closeReviewModal">{{ t('common.cancel') }}</AlertDialogCancel>
+                                    <AlertDialogAction @click="submitReview">{{ t('productDetails.submitReview') }}</AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>
@@ -1059,6 +1054,7 @@
 
 <script>
 import { ref, onMounted, onUnmounted, computed, watch, reactive } from 'vue';
+import { useI18n } from 'vue-i18n';
 import apiClient from '../api/axios';
 import { useUserStore } from '../store/user.js';
 import { useAddressStore } from '../store/addressStore.js';
@@ -1149,6 +1145,7 @@ export default {
         },
     },
     setup(props) {
+        const { t } = useI18n();
         console.log("Product ID from props:", props.id);
 
         const router = useRouter();
@@ -1159,9 +1156,18 @@ export default {
         const hoveredImage = ref(null);
         const sizes = ref(['XS', 'S', 'M', 'L', 'XL', '10-12 Years']);
         const socialProof = ref([
-            { label: "In the basket of <span class='text-[#ff5e62]'>5,027 people</span>, buy it before it runs out!", icon: ShoppingCart },
-            { label: `Popular product! <span class='text-[#ff5e62]'>3,579 people</span> viewed in the last 24 hours!`, icon: Eye },
-            { label: "Favorite product! <span class='text-[#ff5e62]'>112K people</span> favored!", icon: Heart }
+            {
+                label: t('productDetails.socialProof.inBasket', { count: '5,027' }),
+                icon: ShoppingCart
+            },
+            {
+                label: t('productDetails.socialProof.popular', { count: '3,579' }),
+                icon: Eye
+            },
+            {
+                label: t('productDetails.socialProof.favorite', { count: '112K' }),
+                icon: Heart
+            }
         ]);
 
         const userStore = useUserStore();
@@ -1449,13 +1455,13 @@ export default {
         const followSeller = async () => {
             try {
                 if (!userStore.isLoggedIn) {
-                    toast.error('Please log in to follow this store');
+                    toast.error(t('productDetails.loginToFollow'));
                     return;
                 }
 
                 const sellerId = product.value?.user?.sellerProfile?._id;
                 if (!sellerId) {
-                    toast.error('Seller information not available');
+                    toast.error(t('productDetails.sellerInfoUnavailable'));
                     return;
                 }
 
@@ -1477,16 +1483,16 @@ export default {
                 }
             } catch (error) {
                 console.error('Error following store:', error);
-                toast.error('Failed to update follow status');
+                toast.error(t('productDetails.failedFollow'));
             }
         };
 
         const messageStore = () => {
             if (!userStore.isLoggedIn) {
-                toast.error('Please log in to message the store');
+                toast.error(t('productDetails.loginToMessage'));
                 return;
             }
-            toast.info('Messaging feature coming soon');
+            toast.info(t('productDetails.messagingSoon'));
         };
 
         const selectSize = (sizeOption) => {
@@ -1607,7 +1613,7 @@ export default {
 
         const toggleWishlist = async () => {
             if (!userStore.isLoggedIn) {
-                toast.error('Please log in to add items to your wishlist');
+                toast.error(t('productDetails.loginToWishlist'));
                 return;
             }
 
@@ -1623,25 +1629,25 @@ export default {
                 if (isInWishlist.value) {
                     await wishlistStore.removeFromWishlist(wishlist._id, props.id);
                     isInWishlist.value = false;
-                    toast.success('Removed from wishlist');
+                    toast.success(t('productCard.removeFromWishlist'));
                 } else {
                     await wishlistStore.addToWishlist(wishlist._id, props.id);
                     isInWishlist.value = true;
-                    toast.success('Added to wishlist');
+                    toast.success(t('productCard.addToWishlist'));
                 }
             } catch (error) {
                 console.error('Error toggling wishlist:', error);
-                toast.error('Failed to update wishlist');
+                toast.error(t('productCard.failedWishlist'));
             }
         };
 
         const featuredFeatures = computed(() => [
-            `This product is sold by <span class="text-[#ff5e62]">${product.value?.user?.username || 'the seller'}</span>`,
-            `More than <span class="text-[#ff5e62]">${product.value?.stock || 'Zero'}</span> stocks available`,
-            "Seller determines the price",
-            `More than <span class="text-[#ff5e62]">${product.value?.variants?.[0]?.stock || 'Zero'}</span> variants have been offered to be sold at the campaign price.`,
-            "The seller determines the sales price of the product you have examined.",
-            "A product can be sold by multiple vendors. The sellers of the products offered for sale by more than one seller are listed according to the price they determine for the product, the seller points, delivery status, promotions on the products, whether the cargo is free and whether the products can be delivered with fast delivery, the stock and categories of the products.",
+            t('productDetails.featureSoldBy', { seller: product.value?.user?.username || 'the seller' }),
+            t('productDetails.featureStocksAvailable', { count: product.value?.stock || 'Zero' }),
+            t('productDetails.featureSellerDeterminesPrice'),
+            t('productDetails.featureVariantsCampaign', { count: product.value?.variants?.[0]?.stock || 'Zero' }),
+            t('productDetails.featureSalesPrice'),
+            t('productDetails.featureMultipleVendors'),
         ]);
 
         const randomAvatarUrl = computed(() => {
@@ -1677,7 +1683,7 @@ export default {
         });
 
         const getSelectedColorName = computed(() => {
-            return previewColorName.value || selectedColorName.value || 'Default';
+            return previewColorName.value || selectedColorName.value || t('productDetails.defaultColor');
         });
 
         const selectVariantColor = (variant) => {
@@ -1793,7 +1799,7 @@ export default {
                 showStockAlert.value = product.value.stock < 10;
             } catch (error) {
                 console.error('Error fetching product details:', error);
-                toast.error('Failed to load product details');
+                toast.error(t('productDetails.failedLoadProduct'));
             }
             finally {
                 isLoading.value = false;
@@ -1802,13 +1808,13 @@ export default {
 
         const visitSellerStore = async () => {
             if (!product.value) {
-                toast.error('Product details not available');
+                toast.error(t('productDetails.productUnavailable'));
                 return;
             }
 
             const sellerId = product.value.user?.sellerProfile?._id;
             if (!sellerId) {
-                toast.error('Seller store not available.');
+                toast.error(t('productDetails.sellerStoreUnavailable'));
                 return;
             }
 
@@ -1817,7 +1823,7 @@ export default {
                 router.push({ name: 'SellerProducts', params: { id: sellerId } });
             } catch (error) {
                 console.error('Error fetching seller profile:', error);
-                toast.error('Failed to load seller profile');
+                toast.error(t('productDetails.failedLoadSeller'));
             }
         };
 
@@ -1905,11 +1911,11 @@ export default {
 
         const addToCart = async () => {
             if (!selectedColor.value) {
-                toast.error('Please select a color before adding to cart');
+                toast.error(t('productDetails.selectColor'));
                 return;
             }
             if (!selectedSize.value) {
-                toast.error('Please select a size before adding to cart');
+                toast.error(t('productDetails.selectSize'));
                 return;
             }
 
@@ -1932,12 +1938,12 @@ export default {
             });
 
             if (!currentVariant) {
-                toast.error('Selected combination is not available');
+                toast.error(t('productDetails.selectedCombinationUnavailable'));
                 return;
             }
 
             if (!currentVariant.stock) {
-                toast.error('Selected variant is out of stock');
+                toast.error(t('productDetails.selectedVariantOutOfStock'));
                 return;
             }
 
@@ -1963,12 +1969,12 @@ export default {
                 });
 
                 await cartStore.fetchCart();
-                toast.success(`Added ${addedQuantity} item(s) to cart`);
+                toast.success(t('productDetails.addedItemsToCart', { count: addedQuantity }));
                 quantity.value = 1;
 
             } catch (error) {
                 console.error('Error adding to cart:', error);
-                toast.error('Failed to add item to cart, Please login');
+                toast.error(t('productDetails.failedAddToCartLogin'));
             }
         };
 
@@ -1986,7 +1992,7 @@ export default {
                 }
             } catch (error) {
                 console.error('Error fetching related products:', error);
-                toast.error('Failed to load related products');
+                toast.error(t('productDetails.failedLoadRelated'));
             }
         };
 
@@ -2004,7 +2010,7 @@ export default {
                 reviews.value = response.data;
             } catch (error) {
                 console.error('Error fetching reviews:', error);
-                toast.error('Failed to load reviews');
+                toast.error(t('productDetails.failedLoadReviews'));
             }
         };
 
@@ -2045,16 +2051,16 @@ export default {
 
         const openReviewModal = () => {
             if (!userStore.isLoggedIn) {
-                toast.error('Please log in to write a review');
+                toast.error(t('productDetails.loginToReview'));
                 return;
             }
             if (canReview.value) {
                 showReviewModal.value = true;
             } else {
                 if (reviews.value.some(review => review.user._id === userStore.user._id)) {
-                    toast.error('You have already reviewed this product');
+                    toast.error(t('productDetails.alreadyReviewed'));
                 } else {
-                    toast.error('You can only review products you have purchased and received');
+                    toast.error(t('productDetails.reviewEligibility'));
                 }
             }
         };
@@ -2069,7 +2075,7 @@ export default {
                 await productStore.rateProduct(props.id, newReview.value.rating, newReview.value.review);
                 await orderStore.updateProductRatedStatus(props.id);
 
-                toast.success('Review submitted successfully');
+                toast.success(t('productDetails.reviewSubmitted'));
                 closeReviewModal();
                 fetchReviews();
                 canReview.value = false;
@@ -2078,7 +2084,7 @@ export default {
 
             } catch (error) {
                 console.error('Error submitting review:', error);
-                toast.error('Failed to submit review');
+                toast.error(t('productDetails.failedSubmitReview'));
             }
         };
 
@@ -2192,6 +2198,7 @@ export default {
         };
 
         return {
+            t,
             product,
             mainImage,
             hoveredImage,

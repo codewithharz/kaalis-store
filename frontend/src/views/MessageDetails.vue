@@ -14,7 +14,7 @@
                     <button @click="goBack" class="absolute left-4 text-white hover:text-gray-200 transition-colors">
                         <ArrowLeft class="w-6 h-6" />
                     </button>
-                    <h1 class="text-4xl font-bold mb-4">Message Details</h1>
+                    <h1 class="text-4xl font-bold mb-4">{{ t('messageDetailsPage.title') }}</h1>
                 </div>
             </div>
         </div>
@@ -59,7 +59,7 @@
                                     </h3>
                                     <span v-if="message.isSellerMessage"
                                         class="px-2 py-1 text-xs bg-indigo-500/10 text-indigo-600 rounded-full">
-                                        Seller
+                                        {{ t('messageDetailsPage.sellerBadge') }}
                                     </span>
                                 </div>
                                 <p class="text-sm text-gray-500">{{ formatDate(message.createdAt) }}</p>
@@ -72,7 +72,7 @@
                         <!-- Reply Context -->
                         <div v-if="message.parentMessage" class="mb-6 p-6 bg-gray-50 rounded-lg border border-gray-100">
                             <div class="text-sm text-gray-500 mb-2">
-                                Replying to message from {{ formatDate(message.parentMessage.createdAt) }}:
+                                {{ t('messageDetailsPage.replyingToMessageFrom', { date: formatDate(message.parentMessage.createdAt) }) }}
                             </div>
                             <div class="space-y-1">
                                 <p class="font-medium text-gray-900">{{ stripRePrefix(message.parentMessage.subject) }}
@@ -103,7 +103,7 @@
                                                     }}</span>
                                                 <span v-if="msg.isSellerMessage"
                                                     class="ml-2 px-2 py-1 text-xs bg-indigo-500/10 text-indigo-600 rounded-full">
-                                                    Seller
+                                                    {{ t('messageDetailsPage.sellerBadge') }}
                                                 </span>
                                             </div>
                                             <span class="text-sm text-gray-500">{{ formatDate(msg.createdAt) }}</span>
@@ -111,7 +111,7 @@
 
                                         <div class="mt-2">
                                             <h3 class="text-lg font-medium text-gray-900">
-                                                {{ msg.parentMessage ? 'Re: ' : '' }}{{ stripRePrefix(msg.subject || '')
+                                                {{ msg.parentMessage ? t('messageDetailsPage.replyPrefix') : '' }}{{ stripRePrefix(msg.subject || '')
                                                 }}
                                             </h3>
                                             <p class="mt-2 text-gray-700 whitespace-pre-wrap">{{ msg.message }}</p>
@@ -125,12 +125,12 @@
                         <div class="mt-8 flex justify-end gap-4">
                             <button @click="goBack" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 
                                            hover:bg-gray-50 transition-colors">
-                                Back
+                                {{ t('messageDetailsPage.back') }}
                             </button>
                             <button v-if="canReplyToMessage" @click="replyToMessage" class="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 
                                            hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg 
                                            shadow-lg transition-all duration-300">
-                                Reply
+                                {{ t('messageDetailsPage.reply') }}
                             </button>
                         </div>
                     </div>
@@ -171,32 +171,32 @@
         <Dialog :open="showReplyModal" @close="closeReplyModal">
             <DialogContent class="sm:max-w-lg p-8">
                 <DialogHeader>
-                    <DialogTitle class="text-2xl font-bold text-gray-900">Reply to Message</DialogTitle>
+                    <DialogTitle class="text-2xl font-bold text-gray-900">{{ t('messageDetailsPage.replyToMessage') }}</DialogTitle>
                 </DialogHeader>
 
                 <div class="mt-6 space-y-6">
                     <div class="space-y-2">
-                        <Label for="subject" class="text-sm font-medium text-gray-700">Subject</Label>
+                        <Label for="subject" class="text-sm font-medium text-gray-700">{{ t('messageDetailsPage.subject') }}</Label>
                         <Input id="subject" v-model="replyForm.subject"
                             class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                            placeholder="Re: Original Subject" />
+                            :placeholder="t('messageDetailsPage.subjectPlaceholder')" />
                     </div>
                     <div class="space-y-2">
-                        <Label for="message" class="text-sm font-medium text-gray-700">Message</Label>
+                        <Label for="message" class="text-sm font-medium text-gray-700">{{ t('messageDetailsPage.message') }}</Label>
                         <Textarea id="message" v-model="replyForm.message" rows="4"
                             class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                            placeholder="Type your reply..." />
+                            :placeholder="t('messageDetailsPage.messagePlaceholder')" />
                     </div>
                 </div>
 
                 <DialogFooter class="mt-8">
                     <Button variant="outline" @click="closeReplyModal" class="mr-3">
-                        Cancel
+                        {{ t('messageDetailsPage.cancel') }}
                     </Button>
                     <Button type="submit" @click="sendReply" :disabled="isSending"
                         class="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600">
                         <Loader2 v-if="isSending" class="w-4 h-4 mr-2 animate-spin" />
-                        {{ isSending ? 'Sending...' : 'Send Reply' }}
+                        {{ isSending ? t('messageDetailsPage.sending') : t('messageDetailsPage.sendReply') }}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -207,6 +207,7 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { User, XCircle, ArrowLeft, Loader2 } from 'lucide-vue-next';
 import { format } from 'date-fns';
 import { useNotificationStore } from '../store/notificationStore';
@@ -220,6 +221,7 @@ import { Button } from '@/components/ui/button';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 const notificationStore = useNotificationStore();
 const userStore = useUserStore();
 const message = ref(null);
@@ -248,20 +250,20 @@ const canReplyToMessage = computed(() => {
 });
 
 const formatDate = (date) => {
-    if (!date) return 'Date not available';
+    if (!date) return t('messageDetailsPage.dateNotAvailable');
 
     try {
         // Check if it's a valid date
         const dateObj = new Date(date);
         if (isNaN(dateObj.getTime())) {
-            return 'Invalid date';
+            return t('messageDetailsPage.invalidDate');
         }
 
         // Format the date using date-fns
         return format(dateObj, 'PPP p');
     } catch (error) {
         console.error('Error formatting date:', error);
-        return 'Invalid date';
+        return t('messageDetailsPage.invalidDate');
     }
 };
 
@@ -287,10 +289,10 @@ const replyToMessage = () => {
     if (message.value?.sender?._id) {
         // Strip any existing Re: prefixes and add just one
         const baseSubject = stripRePrefix(message.value.subject);
-        replyForm.value.subject = `Re: ${baseSubject}`;
+        replyForm.value.subject = `${t('messageDetailsPage.replyPrefix')}${baseSubject}`;
         showReplyModal.value = true;
     } else {
-        toast.error('Cannot reply to this message');
+        toast.error(t('messageDetailsPage.toasts.cannotReply'));
     }
 };
 
@@ -304,7 +306,7 @@ const closeReplyModal = () => {
 
 const sendReply = async () => {
     if (!replyForm.value.message.trim()) {
-        toast.error('Please enter a message');
+        toast.error(t('messageDetailsPage.toasts.enterMessage'));
         return;
     }
 
@@ -318,14 +320,14 @@ const sendReply = async () => {
             relatedSeller: message.value.relatedSeller?._id
         });
 
-        toast.success('Reply sent successfully');
+        toast.success(t('messageDetailsPage.toasts.replySent'));
         closeReplyModal();
 
         // Reload the message to show the update
         await loadMessage(message.value._id);
     } catch (error) {
         console.error('Error sending reply:', error);
-        toast.error('Failed to send reply');
+        toast.error(t('messageDetailsPage.toasts.replyFailed'));
     } finally {
         isSending.value = false;
     }
@@ -345,8 +347,8 @@ const loadMessage = async (messageId) => {
 
     } catch (err) {
         console.error('Error loading message:', err);
-        error.value = 'Failed to load message details';
-        toast.error('Failed to load message');
+        error.value = t('messageDetailsPage.toasts.loadFailed');
+        toast.error(t('messageDetailsPage.toasts.loadFailed'));
     } finally {
         isLoading.value = false;
     }

@@ -1,7 +1,7 @@
 // backend/seeders/adminSeeder.js
 const AdminUser = require("../models/adminUserModels");
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
+const { sendAdminCreatedEmail } = require("../services/emailService");
 
 const createInitialAdmin = async () => {
   try {
@@ -76,42 +76,12 @@ const createInitialAdmin = async () => {
 
     console.log("[ADMIN SETUP] Attempting to send credentials email...");
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.EMAIL_PASSWORD,
-      },
-    });
-
-    const mailOptions = {
+    await sendAdminCreatedEmail({
       to: email,
-      from: process.env.EMAIL,
-      subject: "Admin Account Created",
-      html: `
-       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-         <div style="background: linear-gradient(to right, #ff934b, #ff5e62); padding: 20px; border-radius: 8px;">
-           <h1 style="color: white; margin: 0;">Admin Account Created</h1>
-         </div>
-         
-         <div style="padding: 20px; background: #f8f9fa; border-radius: 8px; margin-top: 20px;">
-           <p style="font-size: 16px;">Your admin account has been created.</p>
-           
-           <div style="background: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0;">
-             <p style="margin: 0; font-size: 15px;">Your credentials:</p>
-             <p style="font-family: monospace; font-size: 16px; margin: 10px 0;">Username: ${username}</p>
-             <p style="font-family: monospace; font-size: 16px; margin: 10px 0;">Password: ${generatedPassword}</p>
-           </div>
-           
-           <div style="background: #fff3cd; padding: 15px; border-radius: 5px;">
-             <p style="margin: 0; color: #856404;">⚠️ Change your password immediately after first login</p>
-           </div>
-         </div>
-       </div>
-     `,
-    };
-
-    await transporter.sendMail(mailOptions);
+      username,
+      tempPassword: generatedPassword,
+      locale: "en",
+    });
     console.log(
       "[ADMIN SETUP] ✅ Credentials email sent successfully to:",
       email

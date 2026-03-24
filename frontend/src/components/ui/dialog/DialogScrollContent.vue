@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { type HTMLAttributes, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
   DialogClose,
   DialogContent,
@@ -14,6 +15,7 @@ import { cn } from '@/lib/utils'
 
 const props = defineProps<DialogContentProps & { class?: HTMLAttributes['class'] }>()
 const emits = defineEmits<DialogContentEmits>()
+const { t } = useI18n()
 
 const delegatedProps = computed(() => {
   const { class: _, ...delegated } = props
@@ -51,7 +53,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
           class="absolute top-3 right-3 p-0.5 transition-colors rounded-md hover:bg-secondary"
         >
           <X class="w-4 h-4" />
-          <span class="sr-only">Close</span>
+          <span class="sr-only">{{ t('sharedUi.close') }}</span>
         </DialogClose>
       </DialogContent>
     </DialogOverlay>

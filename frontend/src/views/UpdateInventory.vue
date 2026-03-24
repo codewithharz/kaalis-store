@@ -1,6 +1,6 @@
 <template>
     <div class="container mx-auto px-4 py-8 bg-gray-50 rounded-lg shadow-lg">
-        <h1 class="text-3xl font-bold mb-8 text-gray-800">Update Inventory</h1>
+        <h1 class="text-3xl font-bold mb-8 text-gray-800">{{ t('updateInventoryPage.title') }}</h1>
 
         <!-- Category Selection and Search -->
         <div class="mb-6 flex flex-wrap gap-4">
@@ -8,21 +8,21 @@
                 <select v-model="selectedCategory"
                     class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
                     @change="loadProductsForCategory">
-                    <option value="">Select Category</option>
+                    <option value="">{{ t('updateInventoryPage.selectCategory') }}</option>
                     <option v-for="category in flattenedCategories" :key="category._id" :value="category._id">
-                        {{ category.name }}
+                        {{ category.displayName || category.name }}
                     </option>
                 </select>
                 <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                     <ChevronDown class="w-5 h-5 text-gray-400" />
                 </div>
             </div>
-            <input v-model="searchTerm" placeholder="Search products..."
+            <input v-model="searchTerm" :placeholder="t('updateInventoryPage.searchProducts')"
                 class="p-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 @input="filterProducts" />
             <button @click="applyFilters"
                 class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-300 ease-in-out">
-                Apply Filters
+                {{ t('updateInventoryPage.applyFilters') }}
             </button>
         </div>
 
@@ -35,20 +35,16 @@
                             <input type="checkbox" v-model="selectAll" @change="toggleSelectAll"
                                 class="rounded text-blue-600 focus:ring-blue-500" />
                         </th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{{ t('updateInventoryPage.columns.product') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{{ t('updateInventoryPage.columns.variants') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{{ t('updateInventoryPage.columns.price') }}</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                            Product</th>
+                            {{ t('updateInventoryPage.columns.originalPrice') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{{ t('updateInventoryPage.columns.stock') }}</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                            Variants</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Price
-                        </th>
+                            {{ t('updateInventoryPage.columns.discount') }}</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                            Original Price</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Stock
-                        </th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                            Discount</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                            Actions</th>
+                            {{ t('updateInventoryPage.columns.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -71,7 +67,7 @@
                                 </div>
                             </td>
                             <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ product.variants?.length || 0 }} variants
+                                {{ t('updateInventoryPage.variantCount', { count: product.variants?.length || 0 }) }}
                             </td>
                             <td class="px-4 py-4 whitespace-nowrap">
                                 <input v-model.number="product.price" type="number"
@@ -85,7 +81,7 @@
                                 <input v-model.number="product.stock" type="number" min="0"
                                     class="p-1 border rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     :disabled="product.variants?.length > 0"
-                                    :title="product.variants?.length > 0 ? 'Stock is managed per variant' : ''" />
+                                    :title="product.variants?.length > 0 ? t('updateInventoryPage.stockManagedPerVariant') : ''" />
                             </td>
                             <td class="px-4 py-4 whitespace-nowrap">
                                 <input v-model.number="product.discount" type="number" min="0" max="100"
@@ -94,11 +90,11 @@
                             <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
                                 <button @click="updateProduct(product)"
                                     class="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600 mr-2 transition duration-300 ease-in-out">
-                                    Update
+                                    {{ t('updateInventoryPage.update') }}
                                 </button>
                                 <button @click="editProduct(product)"
                                     class="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition duration-300 ease-in-out">
-                                    Edit
+                                    {{ t('updateInventoryPage.edit') }}
                                 </button>
                             </td>
                         </tr>
@@ -108,23 +104,23 @@
                                 <div class="border rounded-lg bg-white p-4 shadow-inner">
                                     <h4 class="font-bold text-sm mb-3 flex items-center gap-2">
                                         <Shirt class="w-4 h-4 text-blue-500" />
-                                        Variants for {{ product.name }}
+                                        {{ t('updateInventoryPage.variantsFor', { name: product.name }) }}
                                     </h4>
                                     <table class="min-w-full divide-y divide-gray-200">
                                         <thead>
                                             <tr>
                                                 <th
                                                     class="px-2 py-2 text-left text-xs font-semibold text-gray-500 uppercase">
-                                                    Attributes</th>
+                                                    {{ t('updateInventoryPage.columns.attributes') }}</th>
                                                 <th
                                                     class="px-2 py-2 text-left text-xs font-semibold text-gray-500 uppercase">
-                                                    Color</th>
+                                                    {{ t('updateInventoryPage.columns.color') }}</th>
                                                 <th
                                                     class="px-2 py-2 text-left text-xs font-semibold text-gray-500 uppercase">
-                                                    Price</th>
+                                                    {{ t('updateInventoryPage.columns.price') }}</th>
                                                 <th
                                                     class="px-2 py-2 text-left text-xs font-semibold text-gray-500 uppercase">
-                                                    Stock</th>
+                                                    {{ t('updateInventoryPage.columns.stock') }}</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-gray-100">
@@ -139,7 +135,7 @@
                                                     <div v-if="variant.color?.hexCode"
                                                         class="w-4 h-4 rounded-full border border-gray-200"
                                                         :style="{ backgroundColor: variant.color.hexCode }"></div>
-                                                    {{ variant.color?.name || 'N/A' }}
+                                                    {{ variant.color?.name || t('updateInventoryPage.notAvailable') }}
                                                 </td>
                                                 <td class="px-2 py-2">
                                                     <input v-model.number="variant.price" type="number"
@@ -161,22 +157,22 @@
             </table>
         </div>
         <div v-else-if="selectedCategory" class="text-center py-4 text-gray-600">
-            No products found in this category
+            {{ t('updateInventoryPage.noProductsInCategory') }}
         </div>
         <div v-else class="text-center py-4 text-gray-600">
-            Please select a category to view products
+            {{ t('updateInventoryPage.selectCategoryPrompt') }}
         </div>
 
         <!-- Bulk Update Section -->
         <div class="mt-12 bg-white p-6 rounded-lg shadow">
-            <h2 class="text-2xl font-semibold mb-6 text-gray-800">Bulk Update Selected Products</h2>
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800">{{ t('updateInventoryPage.bulkUpdateTitle') }}</h2>
             <div class="flex flex-col sm:flex-row items-center gap-4">
                 <div class="relative">
                     <select v-model="bulkUpdateAction"
                         class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent">
-                        <option value="increase">Increase Stock</option>
-                        <option value="decrease">Decrease Stock</option>
-                        <option value="set">Set Stock</option>
+                        <option value="increase">{{ t('updateInventoryPage.bulkActions.increase') }}</option>
+                        <option value="decrease">{{ t('updateInventoryPage.bulkActions.decrease') }}</option>
+                        <option value="set">{{ t('updateInventoryPage.bulkActions.set') }}</option>
                     </select>
                     <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                         <ChevronDown class="w-5 h-5 text-gray-400" />
@@ -184,10 +180,10 @@
                 </div>
                 <input v-model.number="bulkUpdateValue" type="number" min="0"
                     class="p-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-24"
-                    placeholder="Amount" />
+                    :placeholder="t('updateInventoryPage.amount')" />
                 <button @click="applyBulkUpdate"
                     class="bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700 transition duration-300 ease-in-out w-full sm:w-auto">
-                    Apply Bulk Update
+                    {{ t('updateInventoryPage.applyBulkUpdate') }}
                 </button>
             </div>
         </div>
@@ -196,11 +192,11 @@
         <div class="mt-8 flex flex-col sm:flex-row gap-4">
             <button @click="exportCSV"
                 class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition duration-300 ease-in-out w-full sm:w-auto">
-                Export CSV
+                {{ t('updateInventoryPage.exportCsv') }}
             </button>
             <label
                 class="bg-orange-500 text-white px-6 py-2 rounded-md hover:bg-orange-600 cursor-pointer text-center w-full sm:w-auto transition duration-300 ease-in-out">
-                Import CSV
+                {{ t('updateInventoryPage.importCsv') }}
                 <input type="file" @change="importCSV" accept=".csv" class="hidden" />
             </label>
         </div>
@@ -209,6 +205,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useProductStore } from '../store/productStore';
 import { storeToRefs } from 'pinia';
 import { ChevronDown, Shirt } from 'lucide-vue-next';
@@ -218,6 +215,7 @@ export default {
     name: 'UpdateInventory',
     components: { ChevronDown },
     setup() {
+        const { t, locale } = useI18n();
         const productStore = useProductStore();
         const { flattenedCategories } = storeToRefs(productStore);
 
@@ -253,7 +251,7 @@ export default {
                     filterProducts();
                 } catch (error) {
                     console.error('Error fetching products:', error);
-                    toast.error('Failed to fetch products for this category');
+                    toast.error(t('updateInventoryPage.toasts.fetchProductsFailed'));
                     products.value = [];
                 }
             } else {
@@ -273,7 +271,8 @@ export default {
         };
 
         const formatPrice = (price) => {
-            return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(price);
+            const activeLocale = locale.value === 'fr' ? 'fr-FR' : 'en-NG';
+            return new Intl.NumberFormat(activeLocale, { style: 'currency', currency: 'NGN' }).format(price);
         };
 
         const toggleSelectAll = () => {
@@ -294,10 +293,10 @@ export default {
                     discount: product.discount,
                     variants: product.variants
                 });
-                toast.success('Product updated successfully');
+                toast.success(t('updateInventoryPage.toasts.productUpdated'));
             } catch (error) {
                 console.error('Error updating product:', error);
-                toast.error('Failed to update product');
+                toast.error(t('updateInventoryPage.toasts.productUpdateFailed'));
             }
         };
 
@@ -322,19 +321,25 @@ export default {
                         product.stock = newStock;
                     }
                 }
-                toast.success('Bulk update completed');
+                toast.success(t('updateInventoryPage.toasts.bulkUpdateCompleted'));
                 selectedProducts.value = [];
                 selectAll.value = false;
             } catch (error) {
                 console.error('Error applying bulk update:', error);
-                toast.error('Failed to apply bulk update');
+                toast.error(t('updateInventoryPage.toasts.bulkUpdateFailed'));
             }
         };
 
         const exportCSV = () => {
             const selectedProductsData = products.value.filter(p => selectedProducts.value.includes(p._id));
             const csvContent = [
-                ['Product ID', 'Name', 'Price', 'Stock', 'Discount'],
+                [
+                    t('updateInventoryPage.csvHeaders.productId'),
+                    t('updateInventoryPage.csvHeaders.name'),
+                    t('updateInventoryPage.csvHeaders.price'),
+                    t('updateInventoryPage.csvHeaders.stock'),
+                    t('updateInventoryPage.csvHeaders.discount')
+                ],
                 ...selectedProductsData.map(product => [
                     product._id,
                     product.name,
@@ -349,7 +354,7 @@ export default {
             if (link.download !== undefined) {
                 const url = URL.createObjectURL(blob);
                 link.setAttribute('href', url);
-                link.setAttribute('download', 'inventory.csv');
+                link.setAttribute('download', t('updateInventoryPage.inventoryFilename'));
                 link.style.visibility = 'hidden';
                 document.body.appendChild(link);
                 link.click();
@@ -374,7 +379,7 @@ export default {
                     }
                 }
                 await loadProductsForCategory();
-                toast.success('CSV import completed');
+                toast.success(t('updateInventoryPage.toasts.csvImportCompleted'));
             };
             reader.readAsText(file);
         };
@@ -384,11 +389,12 @@ export default {
                 await productStore.fetchCategories();
             } catch (error) {
                 console.error('Error fetching categories:', error);
-                toast.error('Failed to fetch categories');
+                toast.error(t('updateInventoryPage.toasts.fetchCategoriesFailed'));
             }
         });
 
         return {
+            t,
             selectedCategory,
             searchTerm,
             products,

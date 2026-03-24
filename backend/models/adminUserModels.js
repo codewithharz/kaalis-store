@@ -7,6 +7,11 @@ const adminUserSchema = new mongoose.Schema(
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     email: { type: String, required: true, unique: true },
+    preferredLanguage: {
+      type: String,
+      enum: ["en", "fr"],
+      default: "en",
+    },
     role: {
       type: String,
       enum: ["SuperAdmin", "Admin", "Moderator"],

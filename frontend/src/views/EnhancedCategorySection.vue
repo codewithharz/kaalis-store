@@ -1,19 +1,19 @@
 <template>
     <div class="mb-4">
         <label class="block text-gray-700 text-sm font-bold mb-2" for="category">
-            Category
+            {{ t('enhancedCategorySection.category') }}
         </label>
         <div class="relative">
             <input v-model="categorySearch" @input="searchCategories"
                 class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                type="text" placeholder="Search or select a category">
+                type="text" :placeholder="t('enhancedCategorySection.searchPlaceholder')">
             <div v-if="filteredCategories.length > 0"
                 class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg">
                 <div v-for="category in filteredCategories" :key="category._id"
                     class="p-2 hover:bg-gray-100 cursor-pointer flex items-center" @click="selectCategory(category)">
                     <span v-if="category.icon" class="mr-2" v-html="category.icon"></span>
-                    {{ category.name }}
-                    <span v-if="category.description" class="text-xs text-gray-500 ml-2">{{ category.description
+                    {{ category.displayName || category.name }}
+                    <span v-if="category.displayDescription || category.description" class="text-xs text-gray-500 ml-2">{{ category.displayDescription || category.description
                         }}</span>
                 </div>
             </div>
@@ -21,36 +21,37 @@
         <div v-if="selectedCategories.length > 0" class="mt-2">
             <span v-for="cat in selectedCategories" :key="cat._id"
                 class="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">
-                {{ cat.name }}
+                {{ cat.displayName || cat.name }}
                 <button @click="removeCategory(cat)" class="ml-1 text-red-500">&times;</button>
             </span>
         </div>
         <button @click="showNewCategoryModal = true"
             class="mt-2 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-            Create New Category
+            {{ t('enhancedCategorySection.createNewCategory') }}
         </button>
     </div>
 
     <!-- Modal for creating new category -->
     <div v-if="showNewCategoryModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
         <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <h3 class="text-lg font-bold mb-4">Create New Category</h3>
+            <h3 class="text-lg font-bold mb-4">{{ t('enhancedCategorySection.createNewCategory') }}</h3>
             <input v-model="newCategory.name"
                 class="mb-2 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                type="text" placeholder="Category Name">
+                type="text" :placeholder="t('enhancedCategorySection.categoryName')">
             <input v-model="newCategory.description"
                 class="mb-2 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                type="text" placeholder="Category Description">
+                type="text" :placeholder="t('enhancedCategorySection.categoryDescription')">
             <button @click="createNewCategory"
-                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Create</button>
+                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">{{ t('enhancedCategorySection.create') }}</button>
             <button @click="showNewCategoryModal = false"
-                class="ml-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Cancel</button>
+                class="ml-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">{{ t('enhancedCategorySection.cancel') }}</button>
         </div>
     </div>
 </template>
 
 <script>
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 export default {
     props: {
@@ -61,6 +62,7 @@ export default {
     },
     emits: ['update:category'],
     setup(props, { emit }) {
+        const { t } = useI18n();
         const categorySearch = ref('');
         const selectedCategories = ref([]);
         const showNewCategoryModal = ref(false);
@@ -69,7 +71,7 @@ export default {
         const filteredCategories = computed(() => {
             if (categorySearch.value === '') return props.categories;
             return props.categories.filter(category =>
-                category.name.toLowerCase().includes(categorySearch.value.toLowerCase())
+                (category.displayName || category.name).toLowerCase().includes(categorySearch.value.toLowerCase())
             );
         });
 
@@ -114,7 +116,8 @@ export default {
             searchCategories,
             selectCategory,
             removeCategory,
-            createNewCategory
+            createNewCategory,
+            t
         };
     }
 };

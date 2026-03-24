@@ -26,7 +26,10 @@ export const useProductStore = defineStore("product", {
       }
       const flatten = (cats, prefix = "") =>
         cats.reduce((acc, cat) => {
-          const newCat = { ...cat, name: prefix + cat.name };
+          const newCat = {
+            ...cat,
+            name: prefix + (cat.displayName || cat.name),
+          };
           return acc.concat(
             newCat,
             flatten(cat.children || [], prefix + "-- ")
@@ -105,7 +108,9 @@ export const useProductStore = defineStore("product", {
       try {
         const userStore = useUserStore();
         const token = userStore.token || localStorage.getItem("token");
+        const locale = localStorage.getItem("locale") || "en";
         const response = await apiClient.get("/categories", {
+          params: { locale },
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -331,10 +336,12 @@ export const useProductStore = defineStore("product", {
       try {
         const userStore = useUserStore();
         const token = userStore.token || localStorage.getItem("token");
+        const locale = localStorage.getItem("locale") || "en";
         console.log(`Fetching products for category slug: ${categorySlug}`);
         const response = await apiClient.get(
           `/categories/slug/${categorySlug}/products`,
           {
+            params: { locale },
             headers: {
               Authorization: `Bearer ${token}`,
             },

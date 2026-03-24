@@ -97,7 +97,7 @@
                         <div v-if="viewMode !== 'list'" class="space-y-1 sm:space-y-2">
                             <!-- Ratings and Sold Count Row -->
                             <div class="flex items-center justify-between text-xs">
-                                <span class="text-gray-500">{{ formatSoldCount(product.soldCount) }} sold</span>
+                                <span class="text-gray-500">{{ formatSoldCount(product.soldCount) }} {{ t('productCard.soldSuffix') }}</span>
 
                                 <!-- Ratings -->
                                 <div class="flex items-center gap-1">
@@ -113,7 +113,7 @@
                             <!-- Stock and Cart Row -->
                             <div class="flex items-center justify-between">
                                 <span v-if="product.isAvailable" class="text-[10px] sm:text-[11px] text-gray-600">
-                                    <span class="hidden sm:inline">In stock: </span>{{ product.stock }}
+                                    <span class="hidden sm:inline">{{ t('productCard.inStock') }} </span>{{ product.stock }}
                                 </span>
 
                                 <!-- Cart Button -->
@@ -128,11 +128,11 @@
                             <div class="flex flex-wrap items-center gap-1 sm:gap-2">
                                 <span v-if="product.bulkPricing?.length"
                                     class="text-[10px] sm:text-[11px] text-gray-600 bg-gray-100 px-1 rounded">
-                                    Bulk
+                                    {{ t('productCard.bulk') }}
                                 </span>
                                 <span v-if="product.variants?.length"
                                     class="text-[10px] sm:text-[11px] text-gray-600 bg-gray-100 px-1 rounded">
-                                    {{ product.variants.length }} variants
+                                    {{ t('productCard.variantsCount', { count: product.variants.length }) }}
                                 </span>
                             </div>
                         </div>
@@ -142,7 +142,7 @@
                     <div v-if="viewMode === 'list'"
                         class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-6 w-full sm:w-auto">
                         <span class="text-xs sm:text-sm text-gray-500">{{ formatSoldCount(product.soldCount) }}
-                            sold</span>
+                            {{ t('productCard.soldSuffix') }}</span>
 
                         <!-- Ratings -->
                         <div class="flex items-center gap-1 sm:gap-2">
@@ -156,7 +156,7 @@
 
                         <!-- Stock -->
                         <span v-if="product.isAvailable" class="text-xs sm:text-sm text-gray-600">
-                            <span class="hidden sm:inline">Stock: </span>{{ product.stock }}
+                            <span class="hidden sm:inline">{{ t('productCard.stock') }} </span>{{ product.stock }}
                         </span>
 
                         <!-- Cart Button -->
@@ -177,21 +177,19 @@
                 class="bg-white rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md p-6 sm:p-8 transform transition-all">
                 <div class="text-center">
                     <AlertCircle class="w-10 h-10 sm:w-12 sm:h-12 text-red-500 mx-auto mb-3 sm:mb-4" />
-                    <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">Delete Product</h3>
-                    <p class="text-sm sm:text-base text-gray-500">Are you sure you want to delete this product? This
-                        action
-                        cannot be undone.</p>
+                    <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">{{ t('productCard.deleteProduct') }}</h3>
+                    <p class="text-sm sm:text-base text-gray-500">{{ t('productCard.deleteProductConfirm') }}</p>
                 </div>
 
                 <div class="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 mt-6 sm:mt-8">
                     <button @click="closeDeleteModal"
                         class="px-4 sm:px-6 py-2.5 text-gray-700 font-medium hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors order-2 sm:order-1">
-                        Cancel
+                        {{ t('common.cancel') }}
                     </button>
                     <button @click="confirmDelete" :disabled="isDeleting"
                         class="px-4 sm:px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium shadow-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 order-1 sm:order-2">
                         <Loader2 v-if="isDeleting" class="w-4 h-4 animate-spin" />
-                        <span class="text-sm sm:text-base">{{ isDeleting ? 'Deleting...' : 'Delete Product' }}</span>
+                        <span class="text-sm sm:text-base">{{ isDeleting ? t('productCard.deleting') : t('productCard.deleteProduct') }}</span>
                     </button>
                 </div>
             </div>
@@ -201,6 +199,7 @@
 
 <script>
 import { onMounted, ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useProductStore } from '../store/productStore';
 import { useWishlistStore } from '../store/wishlistStore';
 import { useUserStore } from '../store/user';
@@ -307,6 +306,7 @@ export default {
     },
 
     setup(props, { emit }) {
+        const { t } = useI18n();
         const productStore = useProductStore();
         const wishlistStore = useWishlistStore();
         const userStore = useUserStore();
@@ -360,7 +360,7 @@ export default {
                         const wishlist = wishlistStore.wishlists[0];
                         await wishlistStore.addToWishlist(wishlist._id, props.product._id);  // Use props.product._id
                         isHeartFilled.value = true;  // Use .value
-                        toast.success('Added to wishlist');
+                        toast.success(t('productCard.addToWishlist'));
                     } else {
                         // Create new wishlist if none exists
                         const newWishlist = await wishlistStore.createWishlist({
@@ -369,7 +369,7 @@ export default {
                         });
                         await wishlistStore.addToWishlist(newWishlist._id, props.product._id);  // Use props.product._id
                         isHeartFilled.value = true;  // Use .value
-                        toast.success('Added to wishlist');
+                        toast.success(t('productCard.addToWishlist'));
                     }
                 } else {
                     // Remove from wishlist
@@ -377,12 +377,12 @@ export default {
                         const wishlist = wishlistStore.wishlists[0];
                         await wishlistStore.removeFromWishlist(wishlist._id, props.product._id);  // Use props.product._id
                         isHeartFilled.value = false;  // Use .value
-                        toast.success('Removed from wishlist');
+                        toast.success(t('productCard.removeFromWishlist'));
                     }
                 }
             } catch (err) {
                 console.error('Error toggling wishlist:', err);
-                toast.error('Failed to update wishlist');
+                toast.error(t('productCard.failedWishlist'));
             }
         };
 
@@ -417,7 +417,7 @@ export default {
         const addToCart = async () => {
             try {
                 if (!userStore.isLoggedIn) {
-                    toast.error('Please log in to add items to cart');
+                    toast.error(t('productCard.loginToAddToCart'));
                     return;
                 }
 
@@ -429,7 +429,7 @@ export default {
 
                 // If product has variants but none are available, show error
                 if (props.product.variants?.length > 0 && !selectedVariant) {
-                    toast.error('No variants available');
+                    toast.error(t('productCard.noVariantsAvailable'));
                     return;
                 }
 
@@ -439,7 +439,7 @@ export default {
                     // Update quantity if already in cart
                     const cartItem = cartStore.items.find(item => item.product._id === props.product._id);
                     await cartStore.updateQuantity(props.product._id, cartItem.quantity + 1);
-                    toast.success('Updated quantity in cart');
+                    toast.success(t('productCard.updatedQuantity'));
                 } else {
                     // Create payload for adding to cart
                     const payload = {
@@ -465,11 +465,11 @@ export default {
 
                     await cartStore.addToCart(payload, 1, variantDetails);
                     await cartStore.fetchCart();
-                    toast.success('Added to cart');
+                    toast.success(t('productCard.addedToCart'));
                 }
             } catch (error) {
                 console.error('Error adding to cart:', error);
-                toast.error('Failed to add item to cart');
+                toast.error(t('productCard.failedAddToCart'));
             }
         }
 
@@ -510,7 +510,7 @@ export default {
                 showDeleteModal.value = false;
             } catch (error) {
                 console.error('Error deleting product:', error);
-                toast.error('Failed to delete product. Please try again.');
+                toast.error(t('productCard.failedDeleteProduct'));
             } finally {
                 isDeleting.value = false;
             }
@@ -537,6 +537,7 @@ export default {
         });
 
         return {
+            t,
             productLink,
             handleDeleteProduct,
             fetchProductDetails,

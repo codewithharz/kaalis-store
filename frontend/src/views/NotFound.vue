@@ -2,22 +2,28 @@
     <div class="not-found-container min-h-[calc(100vh-96px)]">
         <div class="not-found-content">
             <h1>404</h1>
-            <p>Oops! It looks like you've hit a dead end.</p>
-            <p>Maybe our cat misplaced the page you were looking for.</p>
+            <p>{{ t('notFoundPage.line1') }}</p>
+            <p>{{ t('notFoundPage.line2') }}</p>
             <router-link to="/">
-                <button class="home-button">Take me home</button>
+                <button class="home-button">{{ t('notFoundPage.button') }}</button>
             </router-link>
         </div>
         <div class="not-found-image">
             <img src="https://img.freepik.com/premium-photo/image-cat-wearing-hoodie-generative-ai_97167-1329.jpg"
-                alt="Lost cat image" />
+                :alt="t('notFoundPage.imageAlt')" />
         </div>
     </div>
 </template>
 
 <script>
+import { useI18n } from 'vue-i18n';
+
 export default {
     name: "NotFound",
+    setup() {
+        const { t } = useI18n();
+        return { t };
+    }
 };
 </script>
 

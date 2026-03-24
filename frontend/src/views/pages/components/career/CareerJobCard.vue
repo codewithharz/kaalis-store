@@ -18,11 +18,11 @@
 
         <div class="flex justify-between items-center">
             <button class="text-[#24a6bb] hover:text-[#1a7f8f] font-medium flex items-center">
-                Learn More
+                {{ t('pageComponents.learnMore') }}
                 <ArrowRight class="w-4 h-4 ml-2" />
             </button>
             <button class="bg-[#24a6bb] text-white px-4 py-2 rounded-lg hover:bg-[#1a7f8f] transition duration-300">
-                Apply Now
+                {{ t('pageComponents.applyNow') }}
             </button>
         </div>
     </div>
@@ -30,6 +30,9 @@
 
 <script setup>
 import { MapPin, ArrowRight } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 defineProps({
     title: {

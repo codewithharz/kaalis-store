@@ -4,19 +4,19 @@
     <div class="bg-gray-100 min-h-screen mx-auto p-4">
         <!-- Header with Search and Sort -->
         <div class="flex justify-between items-center mb-8">
-            <h1 class="text-2xl font-bold">My Favourite Stores</h1>
+            <h1 class="text-2xl font-bold">{{ t('favoritesPage.title') }}</h1>
             <div class="flex gap-4">
                 <div class="relative">
-                    <input type="text" placeholder="Search stores..." v-model="searchQuery"
+                    <input type="text" :placeholder="t('favoritesPage.searchStores')" v-model="searchQuery"
                         class="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 pr-10 w-64 focus:outline-none focus:ring-2 focus:ring-[#ff934b] focus:border-transparent" />
                     <Search class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 </div>
                 <div class="relative">
                     <select v-model="sortOption"
                         class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-[#ff934b] focus:border-transparent">
-                        <option value="">Recently Added</option>
-                        <option value="rating">Highest Rated</option>
-                        <option value="products">Most Products</option>
+                        <option value="">{{ t('favoritesPage.sortRecent') }}</option>
+                        <option value="rating">{{ t('favoritesPage.sortHighestRated') }}</option>
+                        <option value="products">{{ t('favoritesPage.sortMostProducts') }}</option>
                     </select>
                     <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                         <ChevronDown class="w-5 h-5 text-gray-400" />
@@ -35,10 +35,10 @@
                         <Store class="size-6 sm:size-7" />
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-xs sm:text-sm text-gray-700">Total Favorite Stores</p>
+                        <p class="text-xs sm:text-sm text-gray-700">{{ t('favoritesPage.totalFavoriteStores') }}</p>
                         <p class="text-lg sm:text-xl font-semibold break-words">{{ totalStores }}</p>
                         <p class="text-xs sm:text-sm text-gray-600 mt-1">
-                            Active stores you follow
+                            {{ t('favoritesPage.activeStoresFollow') }}
                         </p>
                     </div>
                 </div>
@@ -51,10 +51,10 @@
                         <Box class="size-6 sm:size-7" />
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-xs sm:text-sm text-gray-700">Active Orders</p>
+                        <p class="text-xs sm:text-sm text-gray-700">{{ t('favoritesPage.activeOrders') }}</p>
                         <p class="text-lg sm:text-xl font-semibold break-words">{{ activeOrders }}</p>
                         <p class="text-xs sm:text-sm text-gray-600 mt-1">
-                            Currently processing
+                            {{ t('favoritesPage.currentlyProcessing') }}
                         </p>
                     </div>
                 </div>
@@ -67,10 +67,10 @@
                         <Bell class="size-6 sm:size-7" />
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-xs sm:text-sm text-gray-700">New Updates</p>
+                        <p class="text-xs sm:text-sm text-gray-700">{{ t('favoritesPage.newUpdates') }}</p>
                         <p class="text-lg sm:text-xl font-semibold break-words">{{ newUpdates }}</p>
                         <p class="text-xs sm:text-sm text-gray-600 mt-1">
-                            In the last 7 days
+                            {{ t('favoritesPage.last7Days') }}
                         </p>
                     </div>
                 </div>
@@ -83,10 +83,10 @@
                         <Package class="size-6 sm:size-7" />
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-xs sm:text-sm text-gray-700">Total Products</p>
+                        <p class="text-xs sm:text-sm text-gray-700">{{ t('favoritesPage.totalProducts') }}</p>
                         <p class="text-lg sm:text-xl font-semibold break-words">{{ totalProducts }}</p>
                         <p class="text-xs sm:text-sm text-gray-600 mt-1">
-                            From all stores
+                            {{ t('favoritesPage.fromAllStores') }}
                         </p>
                     </div>
                 </div>
@@ -111,7 +111,7 @@
                     <button @click.stop="unfollowStore(store._id)" class="absolute top-4 right-4 px-4 py-1.5 rounded-full text-sm 
                        bg-white/95 hover:bg-white text-[#ff934b] font-medium 
                        shadow-sm transition-all duration-300 hover:shadow">
-                        Following
+                        {{ t('favoritesPage.following') }}
                     </button>
 
                     <!-- Store Profile -->
@@ -134,7 +134,7 @@
                                 <span class="font-medium">{{ formatRating(store.averageRating) }}</span>
                             </div>
                             <div class="px-2 py-0.5 bg-blue-50 rounded-full text-blue-700">
-                                {{ store.totalProducts }} Products
+                                {{ store.totalProducts }} {{ t('favoritesPage.products') }}
                             </div>
                         </div>
                         <p class="text-sm text-gray-500">{{ truncateText(store.storeDescription
@@ -146,7 +146,7 @@
                         <div v-if="store.isVacationMode" class="mt-4 bg-amber-50 px-3 py-2 rounded-lg">
                             <div class="flex items-center text-sm text-amber-800">
                                 <Clock class="w-4 h-4 mr-2" />
-                                <span>On Vacation Mode</span>
+                                <span>{{ t('favoritesPage.onVacationMode') }}</span>
                             </div>
                         </div>
                     </div>
@@ -154,11 +154,11 @@
                     <!-- Store Stats -->
                     <div class="mt-4 grid grid-cols-2 gap-3">
                         <div class="bg-gray-50 px-3 py-2 rounded-lg">
-                            <p class="text-xs text-gray-500">Orders</p>
+                            <p class="text-xs text-gray-500">{{ t('favoritesPage.orders') }}</p>
                             <p class="text-lg font-semibold text-gray-900">{{ store.deliveredOrders || 0 }}</p>
                         </div>
                         <div class="bg-gray-50 px-3 py-2 rounded-lg">
-                            <p class="text-xs text-gray-500">Reviews</p>
+                            <p class="text-xs text-gray-500">{{ t('favoritesPage.reviews') }}</p>
                             <p class="text-lg font-semibold text-gray-900">{{ store.totalReviews || 0 }}</p>
                         </div>
                     </div>
@@ -167,11 +167,11 @@
                     <div class="mt-auto pt-6 flex gap-3">
                         <button @click="viewStore(store._id)" class="flex-1 px-4 py-2 bg-[#ff934b] text-white rounded-lg 
                    hover:bg-[#ff8331] hover:shadow-md transition-all duration-300">
-                            Visit Store
+                            {{ t('favoritesPage.visitStore') }}
                         </button>
                         <button @click="viewStoreProducts(store._id)" class="px-4 py-2 border border-gray-200 rounded-lg text-gray-700
                    hover:bg-gray-50 hover:border-gray-300 transition-all duration-300">
-                            Products
+                            {{ t('favoritesPage.viewProducts') }}
                         </button>
                     </div>
                 </div>
@@ -181,13 +181,14 @@
         <!-- Loading State -->
         <div v-else class="text-center py-12">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ff934b] mx-auto mb-4"></div>
-            <p class="text-gray-600">Loading your favorite stores...</p>
+            <p class="text-gray-600">{{ t('favoritesPage.loading') }}</p>
         </div>
     </div>
 </template>
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { Store, Box, Bell, Star, Search, Clock, ChevronDown, Package } from 'lucide-vue-next';
 import { useSellerStore } from '../store/sellerStore';
@@ -208,6 +209,7 @@ export default {
         Package
     },
     setup() {
+        const { t } = useI18n();
         const router = useRouter();
         const sellerStore = useSellerStore();
         const orderStore = useOrderStore();
@@ -282,7 +284,7 @@ export default {
 
             } catch (error) {
                 console.error('Error fetching data:', error);
-                toast.error('Failed to load favorite stores');
+                toast.error(t('favoritesPage.failedLoad'));
             } finally {
                 loading.value = false;
             }
@@ -293,10 +295,10 @@ export default {
                 await sellerStore.unfollowStore(storeId);
                 stores.value = stores.value.filter(store => store._id !== storeId);
                 totalStores.value = stores.value.length;
-                toast.success('Store unfollowed successfully');
+                toast.success(t('favoritesPage.unfollowed'));
             } catch (error) {
                 console.error('Error unfollowing store:', error);
-                toast.error('Failed to unfollow store');
+                toast.error(t('favoritesPage.failedUnfollow'));
             }
         };
 
@@ -331,6 +333,7 @@ export default {
         });
 
         return {
+            t,
             bgImage,
             // randomAvatarUrl,
             getRandomAvatarUrl,

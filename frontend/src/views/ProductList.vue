@@ -12,16 +12,16 @@
             <div class="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-indigo-500 mb-2 sm:mb-3">
             </div>
             <p class="text-xs sm:text-sm text-gray-500 animate-pulse">
-                <span class="hidden sm:inline">Loading more products...</span>
-                <span class="sm:hidden">Loading...</span>
+                <span class="hidden sm:inline">{{ t('productList.loadingMoreProducts') }}</span>
+                <span class="sm:hidden">{{ t('productList.loadingShort') }}</span>
             </p>
         </div>
 
         <!-- No more products indicator -->
         <div v-if="!hasMore && products.length > 0 && !loading" class="text-center py-6 sm:py-8">
             <p class="text-sm sm:text-base text-gray-500">
-                <span class="hidden sm:inline">You've reached the end of our product catalog</span>
-                <span class="sm:hidden">No more products</span>
+                <span class="hidden sm:inline">{{ t('productList.endOfCatalog') }}</span>
+                <span class="sm:hidden">{{ t('productList.noMoreProducts') }}</span>
             </p>
         </div>
 
@@ -33,24 +33,24 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>
-                <h3 class="text-lg sm:text-xl font-medium text-gray-900 mb-2">No products found</h3>
+                <h3 class="text-lg sm:text-xl font-medium text-gray-900 mb-2">{{ t('productList.noProductsFound') }}</h3>
                 <p class="text-sm sm:text-base text-gray-500 max-w-sm mx-auto">
-                    <span class="hidden sm:inline">We couldn't find any products at the moment. Please try again
-                        later.</span>
-                    <span class="sm:hidden">No products available right now.</span>
+                    <span class="hidden sm:inline">{{ t('productList.noProductsFoundBody') }}</span>
+                    <span class="sm:hidden">{{ t('productList.noProductsAvailableNow') }}</span>
                 </p>
             </div>
         </div>
 
         <!-- Mobile pull-to-refresh hint (visual only) -->
         <div class="sm:hidden text-center py-4 border-t border-gray-100 mt-4" v-if="products.length > 0">
-            <p class="text-xs text-gray-400">Scroll down for more products</p>
+            <p class="text-xs text-gray-400">{{ t('productList.scrollForMore') }}</p>
         </div>
     </div>
 </template>
 
 <script>
 import { ref, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import ProductCard from './ProductCard.vue';
 import apiClient from '../api/axios';
 
@@ -60,6 +60,7 @@ export default {
         ProductCard,
     },
     setup() {
+        const { t } = useI18n();
         const products = ref([]);
         const loading = ref(false);
         const page = ref(1);
@@ -133,6 +134,7 @@ export default {
         };
 
         return {
+            t,
             products,
             loading,
             hasMore,

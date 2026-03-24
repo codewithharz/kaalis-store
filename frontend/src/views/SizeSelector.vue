@@ -3,7 +3,7 @@
         <!-- Header with Size Guide -->
         <div class="flex justify-start items-center mb-2">
             <h2 class="font-medium text-gray-700 capitalize">
-                {{ measurementType || 'Size' }}:
+                {{ measurementType || $t('sizeSelector.size') }}:
             </h2>
 
             <!-- Size Buttons -->
@@ -21,14 +21,14 @@
                     <!-- Low Stock Indicator -->
                     <span v-if="sizeOption.stock <= lowStockThreshold && sizeOption.stock > 0"
                         class="absolute -top-2 -right-2 px-1.5 py-0.5 bg-red-500 text-white text-[10px] rounded-full whitespace-nowrap">
-                        {{ sizeOption.stock }} left
+                        {{ $t('sizeSelector.leftCount', { count: sizeOption.stock }) }}
                     </span>
                 </button>
             </div>
 
             <!-- Stock Info -->
             <div v-if="selectedSize && getSelectedVariantStock !== null" class="mt-1 text-xs text-gray-500">
-                {{ getSelectedVariantStock }} in stock
+                {{ $t('sizeSelector.inStockCount', { count: getSelectedVariantStock }) }}
             </div>
             <!-- <button v-if="product?.category" @click="showSizeGuide = true"
                 class="text-blue-500 text-sm hover:text-blue-600">
@@ -116,7 +116,7 @@
 
         <!-- Stock Info -->
         <div v-if="selectedSize && getSelectedVariantStock !== null" class="mt-1 text-xs text-gray-500">
-            {{ getSelectedVariantStock }} in stock
+            {{ $t('sizeSelector.inStockCount', { count: getSelectedVariantStock }) }}
         </div>
 
         <!-- Size Guide Modal -->

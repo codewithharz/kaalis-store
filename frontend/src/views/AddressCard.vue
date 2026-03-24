@@ -39,7 +39,7 @@
                         {{ address.houseNo }}, {{ address.street }}<br>
                         {{ address.city }}, {{ address.state }}<br>
                         {{ address.country }}
-                        <span v-if="address.post" class="block mt-1 text-gray-500">Post Code: {{ address.post }}</span>
+                        <span v-if="address.post" class="block mt-1 text-gray-500">{{ t('addressCard.postCode', { code: address.post }) }}</span>
                     </span>
                 </p>
             </div>
@@ -49,12 +49,12 @@
                 <button @click="editAddress"
                     class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
                     <Edit3 class="w-4 h-4" />
-                    Edit
+                    {{ t('addressCard.edit') }}
                 </button>
                 <button @click="deleteAddress"
                     class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                     <Trash2 class="w-4 h-4" />
-                    Delete
+                    {{ t('addressCard.delete') }}
                 </button>
             </div>
         </div>
@@ -62,6 +62,7 @@
 </template>
 
 <script>
+import { useI18n } from 'vue-i18n';
 import { Edit3, Trash2, MapPin, Phone } from 'lucide-vue-next';
 
 export default {
@@ -77,6 +78,10 @@ export default {
             type: Object,
             required: true
         }
+    },
+    setup() {
+        const { t } = useI18n();
+        return { t };
     },
     methods: {
         editAddress() {

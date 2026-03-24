@@ -9,7 +9,7 @@
         <p class="text-gray-600 mb-4">{{ description }}</p>
 
         <button class="text-[#24a6bb] hover:text-[#1a7f8f] font-medium flex items-center" @click="$emit('learnMore')">
-            Learn More
+            {{ t('pageComponents.learnMore') }}
             <ArrowRight class="w-4 h-4 ml-1" />
         </button>
     </div>
@@ -17,7 +17,10 @@
 
 <script setup>
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Gift, MessageSquare, Truck, ArrowRight } from 'lucide-vue-next';
+
+const { t } = useI18n();
 
 const props = defineProps({
     icon: {

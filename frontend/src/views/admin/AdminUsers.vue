@@ -2,10 +2,10 @@
 <template>
     <div>
         <div class="px-8 py-4 bg-white flex justify-between items-center">
-            <h3 class="text-2xl font-semibold text-gray-800">User Management</h3>
+            <h3 class="text-2xl font-semibold text-gray-800">{{ t('adminUsers.title') }}</h3>
             <button @click="showCreateModal = true"
                 class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                Add New User
+                {{ t('adminUsers.addNewUser') }}
             </button>
         </div>
 
@@ -17,19 +17,19 @@
                         activeTab === 'admins' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
                         'w-1/3 py-4 px-1 text-center border-b-2 font-medium text-sm'
                     ]">
-                        Admin Users
+                        {{ t('adminUsers.tabs.admins') }}
                     </button>
                     <button @click="activeTab = 'users'" :class="[
                         activeTab === 'users' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
                         'w-1/3 py-4 px-1 text-center border-b-2 font-medium text-sm'
                     ]">
-                        Regular Users
+                        {{ t('adminUsers.tabs.users') }}
                     </button>
                     <button @click="activeTab = 'sellers'" :class="[
                         activeTab === 'sellers' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
                         'w-1/3 py-4 px-1 text-center border-b-2 font-medium text-sm'
                     ]">
-                        Seller Users
+                        {{ t('adminUsers.tabs.sellers') }}
                     </button>
                 </nav>
             </div>
@@ -44,35 +44,35 @@
                         <tr>
                             <th
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
-                                User</th>
+                                {{ t('adminUsers.table.user') }}</th>
                             <th
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
-                                Email</th>
+                                {{ t('adminUsers.table.email') }}</th>
                             <template v-if="activeTab === 'sellers'">
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
-                                    Store Name</th>
+                                    {{ t('adminUsers.table.storeName') }}</th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                                    Verification</th>
+                                    {{ t('adminUsers.table.verification') }}</th>
                             </template>
                             <template v-else>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                                    Role</th>
+                                    {{ t('adminUsers.table.role') }}</th>
                             </template>
                             <th
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
-                                Last Login</th>
+                                {{ t('adminUsers.table.lastLogin') }}</th>
                             <th
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                                2FA</th>
+                                {{ t('adminUsers.table.twoFactor') }}</th>
                             <th
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                                Status</th>
+                                {{ t('adminUsers.table.status') }}</th>
                             <th
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                                Actions</th>
+                                {{ t('adminUsers.table.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -96,7 +96,7 @@
                                             'bg-gray-100 text-gray-800': !user.verificationStatus || user.verificationStatus === 'rejected'
                                         }
                                     ]">
-                                        {{ user.verificationStatus || 'Not Verified' }}
+                                        {{ user.verificationStatus || t('adminUsers.status.notVerified') }}
                                     </span>
                                 </td>
                             </template>
@@ -106,14 +106,14 @@
                                 </td>
                             </template>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never' }}
+                                {{ user.lastLogin ? new Date(user.lastLogin).toLocaleString() : t('adminUsers.status.never') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span :class="[
                                     'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
                                     user.twoFactorEnabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                                 ]">
-                                    {{ user.twoFactorEnabled ? 'Enabled' : 'Disabled' }}
+                                    {{ user.twoFactorEnabled ? t('adminUsers.status.enabled') : t('adminUsers.status.disabled') }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -127,7 +127,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div class="flex items-center justify-end space-x-3">
                                     <button @click="editUser(user)" class="text-indigo-600 hover:text-indigo-900">
-                                        Edit
+                                        {{ t('adminUsers.actions.edit') }}
                                     </button>
                                     <div class="relative">
                                         <button @click="toggleDropdown(user._id)"
@@ -139,38 +139,37 @@
                                             class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-gray-200 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                                             <button @click="resetPassword(user._id)"
                                                 class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
-                                                Reset Password
+                                                {{ t('adminUsers.actions.resetPassword') }}
                                             </button>
                                             <button @click="toggle2FA(user._id)"
                                                 class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
-                                                {{ user.twoFactorEnabled ? 'Disable' : 'Enable' }} 2FA
+                                                {{ user.twoFactorEnabled ? t('adminUsers.actions.disable') : t('adminUsers.actions.enable') }} 2FA
                                             </button>
                                             <button @click="toggleBlockStatus(user._id)"
                                                 class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
-                                                {{ user.isBlocked ? 'Unblock' : 'Block' }} User
+                                                {{ user.isBlocked ? t('adminUsers.actions.unblockUser') : t('adminUsers.actions.blockUser') }}
                                             </button>
                                             <template v-if="activeTab === 'sellers'">
                                                 <button @click="toggleVerification(user._id)"
                                                     class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
-                                                    {{ user.verificationStatus === 'approved' ? 'Revoke' : 'Approve' }}
-                                                    Verification
+                                                    {{ user.verificationStatus === 'approved' ? t('adminUsers.actions.revokeVerification') : t('adminUsers.actions.approveVerification') }}
                                                 </button>
                                             </template>
                                             <button @click="viewActivityLog(user._id)"
                                                 class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
-                                                View Activity Log
+                                                {{ t('adminUsers.actions.viewActivityLog') }}
                                             </button>
                                             <button @click="managePermissions(user._id)"
                                                 class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
-                                                Manage Permissions
+                                                {{ t('adminUsers.actions.managePermissions') }}
                                             </button>
                                             <button @click="forceLogout(user._id)"
                                                 class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
-                                                Force Logout
+                                                {{ t('adminUsers.actions.forceLogout') }}
                                             </button>
                                             <button @click="deleteUser(user._id)"
                                                 class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50">
-                                                Delete
+                                                {{ t('adminUsers.actions.delete') }}
                                             </button>
                                         </div>
                                     </div>
@@ -186,57 +185,57 @@
         <div v-if="showCreateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <div class="bg-white p-6 rounded-lg w-full max-w-md">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">
-                    {{ selectedUser ? 'Edit User' : 'Create New User' }}
+                    {{ selectedUser ? t('adminUsers.editUser') : t('adminUsers.createNewUser') }}
                 </h3>
                 <form @submit.prevent="handleSubmit">
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Username</label>
+                            <label class="block text-sm font-medium text-gray-700">{{ t('adminUsers.form.username') }}</label>
                             <input v-model="formData.username" type="text"
                                 class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Email</label>
+                            <label class="block text-sm font-medium text-gray-700">{{ t('adminUsers.form.email') }}</label>
                             <input v-model="formData.email" type="email"
                                 class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">User Type</label>
+                            <label class="block text-sm font-medium text-gray-700">{{ t('adminUsers.form.userType') }}</label>
                             <select v-model="activeTab"
                                 class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                                 @change="updateFormDataRole">
-                                <option value="admins">Admin</option>
-                                <option value="users">Regular User</option>
-                                <option value="sellers">Seller</option>
+                                <option value="admins">{{ t('adminUsers.tabs.admins') }}</option>
+                                <option value="users">{{ t('adminUsers.tabs.users') }}</option>
+                                <option value="sellers">{{ t('adminUsers.tabs.sellers') }}</option>
                             </select>
                         </div>
                         <template v-if="activeTab === 'admins'">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Role</label>
+                                <label class="block text-sm font-medium text-gray-700">{{ t('adminUsers.form.role') }}</label>
                                 <select v-model="formData.role"
                                     class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-                                    <option value="User">User</option>
-                                    <option value="Admin">Admin</option>
-                                    <option value="Moderator">Moderator</option>
+                                    <option value="User">{{ t('adminUsers.roles.user') }}</option>
+                                    <option value="Admin">{{ t('adminUsers.roles.admin') }}</option>
+                                    <option value="Moderator">{{ t('adminUsers.roles.moderator') }}</option>
                                 </select>
                             </div>
                         </template>
                         <template v-if="activeTab === 'sellers'">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Store Name</label>
+                                <label class="block text-sm font-medium text-gray-700">{{ t('adminUsers.form.storeName') }}</label>
                                 <input v-model="formData.storeName" type="text"
                                     class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                                     required />
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Store Description</label>
+                                <label class="block text-sm font-medium text-gray-700">{{ t('adminUsers.form.storeDescription') }}</label>
                                 <textarea v-model="formData.storeDescription"
                                     class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                                     rows="3"></textarea>
                             </div>
                         </template>
                         <div v-if="!selectedUser">
-                            <label class="block text-sm font-medium text-gray-700">Password</label>
+                            <label class="block text-sm font-medium text-gray-700">{{ t('adminUsers.form.password') }}</label>
                             <input v-model="formData.password" type="password"
                                 class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required />
                         </div>
@@ -244,10 +243,10 @@
                     <div class="mt-6 flex justify-end space-x-3">
                         <button type="button" @click="showCreateModal = false"
                             class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md">
-                            Cancel
+                            {{ t('adminUsers.form.cancel') }}
                         </button>
                         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md">
-                            {{ selectedUser ? 'Update' : 'Create' }}
+                            {{ selectedUser ? t('adminUsers.form.update') : t('adminUsers.form.create') }}
                         </button>
                     </div>
                 </form>
@@ -258,7 +257,7 @@
         <div v-if="showActivityModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <div class="bg-white p-6 rounded-lg w-full max-w-4xl max-h-[80vh] overflow-y-auto">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-medium text-gray-900">User Activity Log</h3>
+                    <h3 class="text-lg font-medium text-gray-900">{{ t('adminUsers.activityLog.title') }}</h3>
                     <button @click="showActivityModal = false" class="text-gray-400 hover:text-gray-500">
                         <XIcon class="h-6 w-6" />
                     </button>
@@ -272,7 +271,7 @@
                                 <p class="text-sm text-gray-500">{{ activity.formattedDate }}</p>
                             </div>
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100">
-                                {{ activity.ip || 'N/A' }}
+                                {{ activity.ip || t('adminUsers.activityLog.notAvailable') }}
                             </span>
                         </div>
                         <div v-if="activity.details" class="mt-2">
@@ -284,7 +283,7 @@
                 <div class="mt-6 flex justify-end">
                     <button type="button" @click="showActivityModal = false"
                         class="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200">
-                        Close
+                        {{ t('adminUsers.form.close') }}
                     </button>
                 </div>
             </div>
@@ -294,6 +293,7 @@
 
 <script>
 import { ref, onMounted, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { MoreVertical as DotsVerticalIcon, X as XIcon, ChevronDown } from 'lucide-vue-next'
 import { useAdminStore } from '../../store/admin.js'
 import apiClient from '@/api/axios'
@@ -307,6 +307,7 @@ export default {
         ChevronDown
     },
     setup() {
+        const { t } = useI18n()
         const adminStore = useAdminStore();
         const adminUsers = ref([])
         const regularUsers = ref([])
@@ -386,9 +387,9 @@ export default {
 
                     sellerUsers.value = response.data.sellers.map(seller => ({
                         _id: seller._id,
-                        username: seller.user?.username || 'Unknown',
-                        email: seller.user?.email || 'N/A',
-                        storeName: seller.storeName || 'Unnamed Store',
+                        username: seller.user?.username || t('adminUsers.defaults.unknown'),
+                        email: seller.user?.email || t('adminUsers.activityLog.notAvailable'),
+                        storeName: seller.storeName || t('adminUsers.defaults.unnamedStore'),
                         storeDescription: seller.storeDescription || '',
                         verificationStatus: seller.verificationStatus || 'not_submitted',
                         lastLogin: seller.user?.lastLogin,
@@ -400,13 +401,13 @@ export default {
                         averageRating: seller.averageRating || 0,
                         createdAt: seller.createdAt,
                         updatedAt: seller.updatedAt,
-                        status: seller.user?.isBlocked ? 'Blocked' : (seller.isVacationMode ? 'Vacation' : 'Active'),
-                        role: 'Seller'
+                        status: seller.user?.isBlocked ? t('adminUsers.status.blocked') : (seller.isVacationMode ? t('adminUsers.status.vacation') : t('adminUsers.status.active')),
+                        role: t('adminUsers.roles.seller')
                     }))
                 }
             } catch (error) {
                 console.error(`Error fetching ${activeTab.value}:`, error)
-                toast.error(`Failed to fetch ${activeTab.value}`)
+                toast.error(t('adminUsers.toasts.fetchFailed', { tab: activeTab.value }))
             }
         }
 
@@ -420,7 +421,7 @@ export default {
                             : `/admin/regular-users/${selectedUser.value._id}`
 
                     await apiClient.put(endpoint, formData.value)
-                    toast.success('User updated successfully')
+                    toast.success(t('adminUsers.toasts.updated'))
                 } else {
                     if (activeTab.value === 'sellers') {
                         await apiClient.post('/admin/sellers', formData.value)
@@ -429,7 +430,7 @@ export default {
                     } else {
                         await apiClient.post('/admin/regular-users', formData.value)
                     }
-                    toast.success('User created successfully')
+                    toast.success(t('adminUsers.toasts.created'))
                 }
 
                 await fetchUsers()
@@ -437,7 +438,7 @@ export default {
                 resetForm()
             } catch (error) {
                 console.error('Error submitting form:', error)
-                toast.error(error.response?.data?.message || 'Operation failed')
+                toast.error(error.response?.data?.message || t('adminUsers.toasts.operationFailed'))
             }
         }
 
@@ -455,7 +456,7 @@ export default {
         }
 
         const deleteUser = async (userId) => {
-            if (!confirm('Are you sure you want to delete this user?')) return;
+            if (!confirm(t('adminUsers.confirmDelete'))) return;
             try {
                 const endpoint = activeTab.value === 'admins'
                     ? `/admin/users/${userId}`
@@ -465,10 +466,10 @@ export default {
 
                 await apiClient.delete(endpoint);
                 await fetchUsers();
-                toast.success('User deleted successfully');
+                toast.success(t('adminUsers.toasts.deleted'));
             } catch (error) {
                 console.error('Delete user error:', error);
-                toast.error(error.response?.data?.message || 'Failed to delete user');
+                toast.error(error.response?.data?.message || t('adminUsers.toasts.deleteFailed'));
             }
         };
 
@@ -479,7 +480,7 @@ export default {
                     toast.success(response.message);
                 }
             } catch (error) {
-                toast.error(error.response?.data?.message || 'Failed to reset password');
+                toast.error(error.response?.data?.message || t('adminUsers.toasts.resetPasswordFailed'));
             }
         };
 
@@ -508,7 +509,7 @@ export default {
                     // await fetchUsers();
                 }
             } catch (error) {
-                toast.error(error.response?.data?.message || 'Failed to toggle 2FA');
+                toast.error(error.response?.data?.message || t('adminUsers.toasts.toggle2faFailed'));
             }
         };
 
@@ -538,7 +539,7 @@ export default {
                     toast.success(response.message);
                 }
             } catch (error) {
-                toast.error(error.response?.data?.message || 'Failed to toggle block status');
+                toast.error(error.response?.data?.message || t('adminUsers.toasts.toggleBlockFailed'));
             }
         };
 
@@ -551,18 +552,18 @@ export default {
                     closeDropdown();
 
                     if (activityLog.value.length === 0) {
-                        toast.info('No activity records found for this user');
+                        toast.info(t('adminUsers.toasts.noActivity'));
                     }
                 }
             } catch (error) {
                 console.error('Activity log error:', error);
-                toast.error(error.response?.data?.message || 'Failed to fetch activity log');
+                toast.error(error.response?.data?.message || t('adminUsers.toasts.activityFetchFailed'));
             }
         };
 
         const managePermissions = (userId) => {
             // Implementation pending
-            toast.info('Permission management coming soon');
+            toast.info(t('adminUsers.toasts.permissionsSoon'));
         };
 
         const forceLogout = async (userId) => {
@@ -573,7 +574,7 @@ export default {
                     await fetchUsers();
                 }
             } catch (error) {
-                toast.error(error.response?.data?.message || 'Failed to force logout');
+                toast.error(error.response?.data?.message || t('adminUsers.toasts.forceLogoutFailed'));
             }
         };
 
@@ -584,11 +585,11 @@ export default {
                 })
                 if (response.success) {
                     await fetchUsers()
-                    toast.success('Verification status updated successfully')
+                    toast.success(t('adminUsers.toasts.verificationUpdated'))
                 }
             } catch (error) {
                 console.error('Error toggling verification:', error)
-                toast.error('Failed to update verification status')
+                toast.error(t('adminUsers.toasts.verificationUpdateFailed'))
             }
         }
 
@@ -639,21 +640,21 @@ export default {
 
         const getStatusText = (user) => {
             if (activeTab.value === 'sellers') {
-                if (user.isBlocked) return 'Blocked'
-                if (user.verificationStatus === 'approved') return 'Verified'
-                return 'Pending Verification'
+                if (user.isBlocked) return t('adminUsers.status.blocked')
+                if (user.verificationStatus === 'approved') return t('adminUsers.status.verified')
+                return t('adminUsers.status.pendingVerification')
             }
 
             if (activeTab.value === 'admins') {
-                if (user.isBlocked) return 'Blocked'
-                if (!user.lastLogin) return 'Never Logged In'
+                if (user.isBlocked) return t('adminUsers.status.blocked')
+                if (!user.lastLogin) return t('adminUsers.status.neverLoggedIn')
                 return Date.now() - new Date(user.lastLogin) < 3600000
-                    ? 'Online'
-                    : 'Offline'
+                    ? t('adminUsers.status.online')
+                    : t('adminUsers.status.offline')
             }
 
-            if (user.isBlocked) return 'Blocked'
-            return user.isSeller ? 'Seller' : 'Customer'
+            if (user.isBlocked) return t('adminUsers.status.blocked')
+            return user.isSeller ? t('adminUsers.roles.seller') : t('adminUsers.status.customer')
         }
 
         watch(activeTab, () => {
@@ -690,7 +691,8 @@ export default {
             closeDropdown,
             showActivityModal,
             activityLog,
-            updateFormDataRole
+            updateFormDataRole,
+            t
         }
     }
 }

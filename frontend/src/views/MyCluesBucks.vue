@@ -6,23 +6,23 @@
             <div class="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-500">Available Balance</p>
+                        <p class="text-sm text-gray-500">{{ t('myCluesBucksPage.availableBalance') }}</p>
                         <p class="text-2xl font-bold text-gray-900">{{ stats.currentBalance }}</p>
                     </div>
                     <Coins class="w-8 h-8 text-amber-500" />
                 </div>
-                <p class="text-xs text-gray-500 mt-2">Current Points Balance</p>
+                <p class="text-xs text-gray-500 mt-2">{{ t('myCluesBucksPage.currentPointsBalance') }}</p>
             </div>
 
             <div class="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-500">Lifetime Points</p>
+                        <p class="text-sm text-gray-500">{{ t('myCluesBucksPage.lifetimePoints') }}</p>
                         <p class="text-2xl font-bold text-gray-900">{{ stats.lifetimePoints }}</p>
                     </div>
                     <Award class="w-8 h-8 text-green-500" />
                 </div>
-                <p class="text-xs text-gray-500 mt-2">Total Points Earned</p>
+                <p class="text-xs text-gray-500 mt-2">{{ t('myCluesBucksPage.totalPointsEarned') }}</p>
             </div>
 
 
@@ -31,32 +31,32 @@
             <div class="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-500">Special Offers</p>
+                        <p class="text-sm text-gray-500">{{ t('myCluesBucksPage.specialOffers') }}</p>
                         <p class="text-2xl font-bold text-gray-900">
-                            <span v-if="hasValidOfferAccess" class="text-amber-600">Active</span>
-                            <span v-else class="text-gray-400">Inactive</span>
+                            <span v-if="hasValidOfferAccess" class="text-amber-600">{{ t('myCluesBucksPage.active') }}</span>
+                            <span v-else class="text-gray-400">{{ t('myCluesBucksPage.inactive') }}</span>
                         </p>
                     </div>
                     <Tag class="w-8 h-8" :class="hasValidOfferAccess ? 'text-amber-500' : 'text-gray-400'" />
                 </div>
                 <div class="mt-2 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-gray-700">Access Status</span>
+                        <span class="text-sm font-medium text-gray-700">{{ t('myCluesBucksPage.accessStatus') }}</span>
                         <span class="px-2 py-1 text-xs font-medium rounded-full"
                             :class="hasValidOfferAccess ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-500'">
-                            {{ hasValidOfferAccess ? 'Active' : 'Inactive' }}
+                            {{ hasValidOfferAccess ? t('myCluesBucksPage.active') : t('myCluesBucksPage.inactive') }}
                         </span>
                     </div>
                     <div class="flex items-center gap-2 text-xs text-gray-600">
-                        <span>Total Redeemed: {{ getSpecialOfferStats().totalRedeemed }}</span>
+                        <span>{{ t('myCluesBucksPage.totalRedeemed', { count: getSpecialOfferStats().totalRedeemed }) }}</span>
                     </div>
                     <div class="flex items-center justify-between text-xs text-gray-500">
-                        <span>Total Used: {{ getSpecialOfferStats().totalRedeemed }}</span>
-                        <span>Points Used: {{ getSpecialOfferStats().pointsUsed }}</span>
+                        <span>{{ t('myCluesBucksPage.totalUsed', { count: getSpecialOfferStats().totalRedeemed }) }}</span>
+                        <span>{{ t('myCluesBucksPage.pointsUsed', { count: getSpecialOfferStats().pointsUsed }) }}</span>
                     </div>
                 </div>
                 <p v-if="!hasValidOfferAccess" class="text-xs text-gray-500 mt-2">
-                    Redeem 500 pts to unlock deals
+                    {{ t('myCluesBucksPage.specialOfferHint') }}
                 </p>
             </div>
 
@@ -65,7 +65,7 @@
             <div class="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-500">Store Credit</p>
+                        <p class="text-sm text-gray-500">{{ t('myCluesBucksPage.storeCredit') }}</p>
                         <p class="text-2xl font-bold text-gray-900">
                             {{ getStoreCreditStats().totalRedeemed ? '₦2000' : '0' }}
                         </p>
@@ -75,21 +75,21 @@
                 </div>
                 <div class="mt-2 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-gray-700">Credit Status</span>
+                        <span class="text-sm font-medium text-gray-700">{{ t('myCluesBucksPage.creditStatus') }}</span>
                         <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
-                            {{ getStoreCreditStats().isActive ? 'active' : 'inactive' }}
+                            {{ getStoreCreditStats().isActive ? t('myCluesBucksPage.activeLower') : t('myCluesBucksPage.inactiveLower') }}
                         </span>
                     </div>
                     <div class="flex items-center gap-2 text-xs text-gray-600">
-                        <span>Total Store Credits: {{ getStoreCreditStats().totalRedeemed }}</span>
+                        <span>{{ t('myCluesBucksPage.totalStoreCredits', { count: getStoreCreditStats().totalRedeemed }) }}</span>
                     </div>
                     <div class="flex items-center justify-between text-xs text-gray-500">
-                        <span>Total Used: {{ getStoreCreditStats().totalUsed }}</span>
-                        <span>Points Used: {{ getStoreCreditStats().pointsUsed }}</span>
+                        <span>{{ t('myCluesBucksPage.totalUsed', { count: getStoreCreditStats().totalUsed }) }}</span>
+                        <span>{{ t('myCluesBucksPage.pointsUsed', { count: getStoreCreditStats().pointsUsed }) }}</span>
                     </div>
                 </div>
                 <p v-if="!getStoreCreditStats().totalRedeemed" class="text-xs text-gray-500 mt-2">
-                    Redeem 2000 pts for store credit
+                    {{ t('myCluesBucksPage.storeCreditHint') }}
                 </p>
             </div>
 
@@ -98,7 +98,7 @@
             <div class="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-500">Discount Coupon</p>
+                        <p class="text-sm text-gray-500">{{ t('myCluesBucksPage.discountCoupon') }}</p>
                         <p class="text-2xl font-bold text-gray-900">
                             {{ getCouponTransactions().length ? '₦1000' : '0' }}
                         </p>
@@ -108,21 +108,21 @@
                 </div>
                 <div v-if="getLatestCoupon()" class="mt-2 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-gray-700">Code: {{ getLatestCoupon().code }}</span>
+                        <span class="text-sm font-medium text-gray-700">{{ t('myCluesBucksPage.code', { code: getLatestCoupon().code }) }}</span>
                         <span class="px-2 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-800">
-                            spent
+                            {{ t('myCluesBucksPage.spent') }}
                         </span>
                     </div>
                     <div class="flex items-center gap-2 text-xs text-gray-600">
-                        <span>Total Redeemed Coupons: {{ getCouponTransactions().length }}</span>
+                        <span>{{ t('myCluesBucksPage.totalRedeemedCoupons', { count: getCouponTransactions().length }) }}</span>
                     </div>
                     <div class="flex items-center justify-between text-xs text-gray-500">
-                        <span>Total Used: {{ getCouponTransactions().length }}</span>
-                        <span>Points Used: {{ getCouponTransactions().length * 1000 }}</span>
+                        <span>{{ t('myCluesBucksPage.totalUsed', { count: getCouponTransactions().length }) }}</span>
+                        <span>{{ t('myCluesBucksPage.pointsUsed', { count: getCouponTransactions().length * 1000 }) }}</span>
                     </div>
                 </div>
                 <p v-else class="text-xs text-gray-500 mt-2">
-                    Redeem 1000 pts for ₦1000 off
+                    {{ t('myCluesBucksPage.couponHint') }}
                 </p>
             </div>
 
@@ -131,12 +131,12 @@
             <div class="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-500">Expiring Soon</p>
+                        <p class="text-sm text-gray-500">{{ t('myCluesBucksPage.expiringSoon') }}</p>
                         <p class="text-2xl font-bold text-gray-900">{{ stats.pointsExpiringSoon }}</p>
                     </div>
                     <Clock class="w-8 h-8 text-red-500" />
                 </div>
-                <p class="text-xs text-gray-500 mt-2">Use before they expire</p>
+                <p class="text-xs text-gray-500 mt-2">{{ t('myCluesBucksPage.useBeforeExpire') }}</p>
             </div>
         </div>
 
@@ -146,28 +146,28 @@
             <div class="bg-white rounded-lg shadow p-6">
                 <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
                     <Target class="w-5 h-5 text-amber-500" />
-                    Ways to Earn
+                    {{ t('myCluesBucksPage.waysToEarn') }}
                 </h3>
                 <div class="space-y-4">
                     <div class="flex items-start gap-3">
                         <ShoppingBag class="w-5 h-5 text-gray-400" />
                         <div>
-                            <p class="font-medium">Make a Purchase</p>
-                            <p class="text-sm text-gray-600">Earn 1 point for every ₦100 spent</p>
+                            <p class="font-medium">{{ t('myCluesBucksPage.earn.purchaseTitle') }}</p>
+                            <p class="text-sm text-gray-600">{{ t('myCluesBucksPage.earn.purchaseDescription') }}</p>
                         </div>
                     </div>
                     <div class="flex items-start gap-3">
                         <Star class="w-5 h-5 text-gray-400" />
                         <div>
-                            <p class="font-medium">Write Reviews</p>
-                            <p class="text-sm text-gray-600">50 points per verified review</p>
+                            <p class="font-medium">{{ t('myCluesBucksPage.earn.reviewsTitle') }}</p>
+                            <p class="text-sm text-gray-600">{{ t('myCluesBucksPage.earn.reviewsDescription') }}</p>
                         </div>
                     </div>
                     <div class="flex items-start gap-3">
                         <Users class="w-5 h-5 text-gray-400" />
                         <div>
-                            <p class="font-medium">Refer Friends</p>
-                            <p class="text-sm text-gray-600">100 points per successful referral</p>
+                            <p class="font-medium">{{ t('myCluesBucksPage.earn.referralsTitle') }}</p>
+                            <p class="text-sm text-gray-600">{{ t('myCluesBucksPage.earn.referralsDescription') }}</p>
                         </div>
                     </div>
                 </div>
@@ -177,7 +177,7 @@
             <div class="bg-white rounded-lg shadow p-6">
                 <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
                     <Gift class="w-5 h-5 text-amber-500" />
-                    Redeem Points
+                    {{ t('myCluesBucksPage.redeemPoints') }}
                 </h3>
                 <div class="space-y-4">
                     <button v-for="option in redemptionOptions" :key="option.id" @click="handleRedeem(option)"
@@ -187,8 +187,8 @@
                         <div class="flex items-center gap-3">
                             <component :is="getIconComponent(option.type)" class="w-5 h-5 text-gray-400" />
                             <div>
-                                <p class="font-medium">{{ option.title }}</p>
-                                <p class="text-sm text-gray-600">{{ option.description }}</p>
+                                <p class="font-medium">{{ getOptionText(option).title }}</p>
+                                <p class="text-sm text-gray-600">{{ getOptionText(option).description }}</p>
                             </div>
                         </div>
                         <span class="text-amber-600 font-medium">{{ option.points }} pts</span>
@@ -233,7 +233,7 @@
         <div v-if="hasValidOfferAccess" class="bg-white rounded-lg shadow p-6 mb-3">
             <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
                 <Tag class="w-5 h-5 text-amber-500" />
-                Active Special Offers
+                {{ t('myCluesBucksPage.activeSpecialOffers') }}
             </h3>
             <div class="grid gap-4 md:grid-cols-2">
                 <div v-for="offer in activeSpecialOffers" :key="offer._id"
@@ -244,7 +244,7 @@
                             <p class="text-sm text-gray-600">{{ offer.description }}</p>
                             <div class="flex items-center gap-2">
                                 <span class="px-2 py-1 bg-green-100 text-green-800 text-sm font-medium rounded">
-                                    {{ offer.discount }}% off
+                                    {{ t('myCluesBucksPage.percentOff', { count: offer.discount }) }}
                                 </span>
                                 <!-- Add category badge -->
                                 <span class="px-2 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded">
@@ -253,18 +253,18 @@
                             </div>
                             <div class="flex items-center justify-between text-sm text-gray-500">
                                 <span>
-                                    Expires {{ formatDate(offer.endDate) }}
+                                    {{ t('myCluesBucksPage.expiresDate', { date: formatDate(offer.endDate) }) }}
                                 </span>
                                 <!-- Add minimum purchase if exists -->
                                 <span v-if="offer.minimumPurchase > 0">
-                                    Min: ₦{{ offer.minimumPurchase }}
+                                    {{ t('myCluesBucksPage.minimumPurchase', { amount: offer.minimumPurchase }) }}
                                 </span>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div v-if="!activeSpecialOffers.length" class="col-span-2 text-center py-8 text-gray-500">
-                    No active special offers available
+                    {{ t('myCluesBucksPage.noActiveOffers') }}
                 </div>
             </div>
         </div>
@@ -274,20 +274,20 @@
         <!-- Transaction History -->
         <div class="bg-white rounded-lg shadow">
             <div class="p-4 border-b">
-                <h3 class="text-lg font-semibold">Transaction History</h3>
+                <h3 class="text-lg font-semibold">{{ t('myCluesBucksPage.transactionHistory') }}</h3>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Date</th>
+                                {{ t('myCluesBucksPage.table.date') }}</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Type</th>
+                                {{ t('myCluesBucksPage.table.type') }}</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Description</th>
+                                {{ t('myCluesBucksPage.table.description') }}</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Points</th>
+                                {{ t('myCluesBucksPage.table.points') }}</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -301,7 +301,7 @@
                                     transaction.type === 'earned' ? 'bg-green-100 text-green-800' :
                                         'bg-amber-100 text-amber-800'
                                 ]">
-                                    {{ transaction.type }}
+                                    {{ getTransactionTypeLabel(transaction.type) }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900">
@@ -314,7 +314,7 @@
                         </tr>
                         <tr v-if="!sortedTransactions.length">
                             <td colspan="4" class="px-6 py-4 text-center text-gray-500">
-                                No transactions found
+                                {{ t('myCluesBucksPage.noTransactions') }}
                             </td>
                         </tr>
                     </tbody>
@@ -326,22 +326,22 @@
         <Dialog :open="showRedeemModal" @update:open="showRedeemModal = $event">
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Confirm Redemption</DialogTitle>
+                    <DialogTitle>{{ t('myCluesBucksPage.confirmRedemptionTitle') }}</DialogTitle>
                     <p id="dialogDescription" class="text-sm text-gray-500">
-                        Please confirm your points redemption
+                        {{ t('myCluesBucksPage.confirmRedemptionDescription') }}
                     </p>
                 </DialogHeader>
                 <div class="space-y-4">
-                    <p>Are you sure you want to redeem {{ selectedOption?.points }} points for:</p>
-                    <p class="font-medium">{{ selectedOption?.title }}</p>
-                    <p class="text-sm text-gray-600">{{ selectedOption?.description }}</p>
+                    <p>{{ t('myCluesBucksPage.confirmRedeemText', { points: selectedOption?.points || 0 }) }}</p>
+                    <p class="font-medium">{{ selectedOption ? getOptionText(selectedOption).title : '' }}</p>
+                    <p class="text-sm text-gray-600">{{ selectedOption ? getOptionText(selectedOption).description : '' }}</p>
                 </div>
                 <DialogFooter>
                     <Button variant="outline" @click="showRedeemModal = false">
-                        Cancel
+                        {{ t('myCluesBucksPage.cancel') }}
                     </Button>
                     <Button @click="confirmRedeem" :disabled="isLoading">
-                        {{ isLoading ? 'Processing...' : 'Confirm' }}
+                        {{ isLoading ? t('myCluesBucksPage.processing') : t('myCluesBucksPage.confirm') }}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -351,6 +351,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import { useCluesBucksStore } from '../store/cluesBucksStore';
 import { useProductStore } from '../store/productStore.js';
@@ -361,6 +362,7 @@ import {
     Star, Users, Gift, Ticket, CreditCard, Tag
 } from 'lucide-vue-next';
 
+const { t, locale } = useI18n();
 const store = useCluesBucksStore();
 const productStore = useProductStore();
 
@@ -410,8 +412,37 @@ const getIconComponent = (type) => {
     return iconMap[type] || Gift;
 };
 
+const getOptionText = (option) => {
+    const optionMap = {
+        coupon: {
+            title: t('myCluesBucksPage.redemptionOptions.coupon.title'),
+            description: t('myCluesBucksPage.redemptionOptions.coupon.description')
+        },
+        credit: {
+            title: t('myCluesBucksPage.redemptionOptions.credit.title'),
+            description: t('myCluesBucksPage.redemptionOptions.credit.description')
+        },
+        offer: {
+            title: t('myCluesBucksPage.redemptionOptions.offer.title'),
+            description: t('myCluesBucksPage.redemptionOptions.offer.description')
+        }
+    };
+
+    return optionMap[option.type] || {
+        title: option.title,
+        description: option.description
+    };
+};
+
+const getTransactionTypeLabel = (type) => {
+    return type === 'earned'
+        ? t('myCluesBucksPage.transactionTypes.earned')
+        : t('myCluesBucksPage.transactionTypes.spent');
+};
+
 const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
+    const activeLocale = locale.value === 'fr' ? 'fr-FR' : 'en-US';
+    return new Date(date).toLocaleDateString(activeLocale, {
         year: 'numeric',
         month: 'short',
         day: 'numeric'

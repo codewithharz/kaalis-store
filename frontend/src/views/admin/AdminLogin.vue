@@ -3,25 +3,28 @@
     <div class="flex min-h-screen bg-gray-100">
         <div class="m-auto w-full max-w-md">
             <div class="bg-white p-8 rounded-lg shadow-md">
-                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Admin Login</h2>
+                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">{{ t('adminLogin.title') }}</h2>
                 <form @submit.prevent="handleLogin">
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Email or Username</label>
+                            <label class="block text-sm font-medium text-gray-700">{{ t('adminLogin.identifierLabel') }}</label>
                             <input v-model="identifier" type="text"
                                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+                                :placeholder="t('adminLogin.identifierPlaceholder')"
                                 required />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Password</label>
+                            <label class="block text-sm font-medium text-gray-700">{{ t('adminLogin.passwordLabel') }}</label>
                             <input v-model="password" type="password"
                                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+                                :placeholder="t('adminLogin.passwordPlaceholder')"
                                 required />
                         </div>
                         <div>
                             <button type="submit"
-                                class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">
-                                Login
+                                class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+                                :disabled="isLoading">
+                                {{ isLoading ? t('adminLogin.loggingIn') : t('adminLogin.loginButton') }}
                             </button>
                         </div>
                     </div>
@@ -35,11 +38,13 @@
 <script>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAdminStore } from '../../store/admin'
 
 export default {
     setup() {
         const router = useRouter()
+        const { t } = useI18n()
         const adminStore = useAdminStore()
         const identifier = ref('')
         const password = ref('')
@@ -60,7 +65,7 @@ export default {
                 const redirectPath = router.currentRoute.value.query.redirect || '/admin/dashboard'
                 router.push(redirectPath)
             } catch (err) {
-                error.value = err.response?.data?.message || 'Login failed. Please check your credentials.'
+                error.value = err.response?.data?.message || t('adminLogin.loginFailed')
             } finally {
                 isLoading.value = false
             }
@@ -79,7 +84,9 @@ export default {
             identifier,
             password,
             error,
-            handleLogin
+            handleLogin,
+            isLoading,
+            t
         }
     }
 }

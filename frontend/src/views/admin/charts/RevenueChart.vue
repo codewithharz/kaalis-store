@@ -7,9 +7,9 @@
                     <select v-model="selectedPeriod"
                         class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
                         :disabled="isLoading">
-                        <option value="7">Last 7 days</option>
-                        <option value="30">Last 30 days</option>
-                        <option value="90">Last 90 days</option>
+                        <option value="7">{{ t('adminRevenueChart.periods.last7Days') }}</option>
+                        <option value="30">{{ t('adminRevenueChart.periods.last30Days') }}</option>
+                        <option value="90">{{ t('adminRevenueChart.periods.last90Days') }}</option>
                     </select>
                     <div class="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
                         <ChevronDown class="w-5 h-5 text-gray-400" />
@@ -22,7 +22,7 @@
             {{ chartError }}
         </div>
         <div v-else-if="isLoading" class="h-64 flex items-center justify-center text-gray-500">
-            Loading chart data...
+            {{ t('adminRevenueChart.loading') }}
         </div>
         <div v-else class="h-64 relative">
             <Line v-if="chartData.labels.length" :data="chartData" :options="chartOptions" />
@@ -32,6 +32,7 @@
 
 <script>
 import { ref, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useAdminStore } from '@/store/admin';
 import { ChevronDown } from 'lucide-vue-next';
 import {
@@ -63,6 +64,7 @@ export default {
     name: 'RevenueChart',
     components: { Line, ChevronDown },
     setup() {
+        const { t, locale } = useI18n();
         const adminStore = useAdminStore();
         const selectedPeriod = ref('30');
         const isLoading = ref(false);
@@ -70,7 +72,7 @@ export default {
         const chartData = ref({
             labels: [],
             datasets: [{
-                label: 'Revenue',
+                label: t('adminRevenueChart.datasetLabel'),
                 data: [],
                 borderColor: '#3b82f6',
                 backgroundColor: '#3b82f680',
@@ -153,7 +155,9 @@ export default {
                     borderColor: '#e2e8f0',
                     borderWidth: 1,
                     callbacks: {
-                        label: (context) => `Revenue: ${formatAmount(context.raw)}`
+                        label: (context) => t('adminRevenueChart.tooltipLabel', {
+                            value: formatAmount(context.raw)
+                        })
                     }
                 }
             }
@@ -183,7 +187,7 @@ export default {
 
             return {
                 labels: processedData.map(item =>
-                    item.date.toLocaleDateString('en-NG', {
+                    item.date.toLocaleDateString(locale.value === 'fr' ? 'fr-FR' : 'en-NG', {
                         month: 'short',
                         day: 'numeric'
                     })
@@ -205,7 +209,7 @@ export default {
                     const { labels, values } = processData(response.revenueData);
 
                     if (labels.length === 0) {
-                        chartError.value = 'No valid revenue data available';
+                        chartError.value = t('adminRevenueChart.errors.noValidData');
                         return;
                     }
 
@@ -213,15 +217,16 @@ export default {
                         labels,
                         datasets: [{
                             ...chartData.value.datasets[0],
+                            label: t('adminRevenueChart.datasetLabel'),
                             data: values
                         }]
                     };
                 } else {
-                    chartError.value = 'No revenue data available for the selected period';
+                    chartError.value = t('adminRevenueChart.errors.noDataForPeriod');
                 }
             } catch (error) {
                 console.error('Error fetching revenue data:', error);
-                chartError.value = 'Failed to load revenue data';
+                chartError.value = t('adminRevenueChart.errors.loadFailed');
             } finally {
                 isLoading.value = false;
             }
@@ -240,7 +245,8 @@ export default {
             chartData,
             chartOptions,
             isLoading,
-            chartError
+            chartError,
+            t
         };
     }
 };

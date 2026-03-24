@@ -11,7 +11,7 @@
                     <div class="h-4 bg-gray-300 rounded w-48 mx-auto mb-2"></div>
                     <div class="h-3 bg-gray-300 rounded w-32 mx-auto"></div>
                 </div>
-                <p class="text-lg sm:text-xl text-gray-600 mt-4">Loading seller profile...</p>
+                <p class="text-lg sm:text-xl text-gray-600 mt-4">{{ t('sellerProfilePage.loading') }}</p>
             </div>
 
             <!-- Error State -->
@@ -27,7 +27,7 @@
                     <p class="text-lg sm:text-xl text-red-600 font-semibold">{{ error }}</p>
                     <button @click="$router.go(-1)"
                         class="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
-                        Go Back
+                        {{ t('sellerProfilePage.goBack') }}
                     </button>
                 </div>
             </div>
@@ -44,8 +44,7 @@
                         <div class="text-white min-w-0 flex-1">
                             <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold truncate">{{ sellerProfile.storeName ||
                                 sellerProfile.username }}</h1>
-                            <p class="text-indigo-200 text-sm sm:text-base">{{ sellerProfile.tagline || `Seller on our
-                                platform` }}</p>
+                            <p class="text-indigo-200 text-sm sm:text-base">{{ sellerProfile.tagline || t('sellerProfilePage.defaultTagline') }}</p>
                         </div>
                     </div>
 
@@ -55,7 +54,7 @@
                             'bg-yellow-500': sellerProfile.isVacationMode,
                             'bg-green-500': !sellerProfile.isVacationMode
                         }" class="px-2 py-1 sm:px-3 sm:py-1 rounded-full text-white text-xs sm:text-sm font-semibold">
-                            {{ sellerProfile.isVacationMode ? 'On Vacation' : 'Open' }}
+                            {{ sellerProfile.isVacationMode ? t('sellerProfilePage.onVacation') : t('sellerProfilePage.open') }}
                         </span>
                     </div>
                 </div>
@@ -76,10 +75,10 @@
                             <section>
                                 <h2
                                     class="text-lg sm:text-xl lg:text-2xl font-semibold mb-2 sm:mb-3 lg:mb-4 text-gray-800">
-                                    About the Store</h2>
+                                    {{ t('sellerProfilePage.aboutStore') }}</h2>
                                 <div class="bg-gray-50 p-3 sm:p-4 rounded-lg">
                                     <p class="text-gray-600 text-sm sm:text-base leading-relaxed">
-                                        {{ sellerProfile.storeDescription || 'No description available.' }}
+                                        {{ sellerProfile.storeDescription || t('sellerProfilePage.noDescription') }}
                                     </p>
                                 </div>
                             </section>
@@ -88,7 +87,7 @@
                             <section>
                                 <h2
                                     class="text-lg sm:text-xl lg:text-2xl font-semibold mb-2 sm:mb-3 lg:mb-4 text-gray-800">
-                                    Contact Information</h2>
+                                    {{ t('sellerProfilePage.contactInformation') }}</h2>
                                 <div class="bg-gray-50 p-3 sm:p-4 rounded-lg">
                                     <ul class="space-y-3">
                                         <li v-if="sellerProfile.email" class="flex items-start sm:items-center">
@@ -114,7 +113,7 @@
                                         </li>
                                         <li v-if="!sellerProfile.email && !sellerProfile.phone && !sellerProfile.address"
                                             class="text-sm sm:text-base text-gray-500 italic">
-                                            No contact information available.
+                                            {{ t('sellerProfilePage.noContactInformation') }}
                                         </li>
                                     </ul>
                                 </div>
@@ -124,14 +123,13 @@
                             <section>
                                 <h2
                                     class="text-lg sm:text-xl lg:text-2xl font-semibold mb-2 sm:mb-3 lg:mb-4 text-gray-800">
-                                    Store Policies</h2>
+                                    {{ t('sellerProfilePage.storePolicies') }}</h2>
                                 <div class="bg-gray-50 p-3 sm:p-4 rounded-lg">
                                     <p v-if="sellerProfile.storePolicies"
                                         class="text-sm sm:text-base text-gray-600 leading-relaxed">
                                         {{ sellerProfile.storePolicies }}
                                     </p>
-                                    <p v-else class="text-sm sm:text-base text-gray-500 italic">No store policies have
-                                        been set.</p>
+                                    <p v-else class="text-sm sm:text-base text-gray-500 italic">{{ t('sellerProfilePage.noStorePolicies') }}</p>
                                 </div>
                             </section>
                         </div>
@@ -140,7 +138,7 @@
                         <div class="xl:col-span-1">
                             <section
                                 class="bg-gradient-to-br from-blue-50 to-indigo-50 shadow-sm rounded-lg p-3 sm:p-4 lg:p-6 mb-4 sm:mb-6">
-                                <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-800">Store Statistics
+                                <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-800">{{ t('sellerProfilePage.storeStatistics') }}
                                 </h2>
                                 <div class="grid grid-cols-2 gap-3 sm:gap-4">
                                     <div
@@ -148,14 +146,14 @@
                                         <span class="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600 block">
                                             {{ sellerProfile.totalProducts || 0 }}
                                         </span>
-                                        <p class="text-xs sm:text-sm text-blue-500 mt-1">Total Products</p>
+                                        <p class="text-xs sm:text-sm text-blue-500 mt-1">{{ t('sellerProfilePage.totalProducts') }}</p>
                                     </div>
                                     <div
                                         class="bg-white p-3 sm:p-4 rounded-lg text-center shadow-sm border border-green-100">
                                         <span class="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 block">
                                             {{ totalSales }}
                                         </span>
-                                        <p class="text-xs sm:text-sm text-green-500 mt-1">Total Sales</p>
+                                        <p class="text-xs sm:text-sm text-green-500 mt-1">{{ t('sellerProfilePage.totalSales') }}</p>
                                     </div>
                                     <div
                                         class="bg-white p-3 sm:p-4 rounded-lg text-center shadow-sm border border-yellow-100">
@@ -163,14 +161,14 @@
                                             {{ sellerProfile.averageRating ? sellerProfile.averageRating.toFixed(1) :
                                                 '—' }}
                                         </span>
-                                        <p class="text-xs sm:text-sm text-yellow-500 mt-1">Average Rating</p>
+                                        <p class="text-xs sm:text-sm text-yellow-500 mt-1">{{ t('sellerProfilePage.averageRating') }}</p>
                                     </div>
                                     <div
                                         class="bg-white p-3 sm:p-4 rounded-lg text-center shadow-sm border border-purple-100">
                                         <span class="text-lg sm:text-xl lg:text-2xl font-bold text-purple-600 block">
                                             {{ formatDate(sellerProfile.createdAt) }}
                                         </span>
-                                        <p class="text-xs sm:text-sm text-purple-500 mt-1">Member Since</p>
+                                        <p class="text-xs sm:text-sm text-purple-500 mt-1">{{ t('sellerProfilePage.memberSince') }}</p>
                                     </div>
                                 </div>
                             </section>
@@ -179,8 +177,7 @@
 
                     <!-- Featured Products -->
                     <section class="mt-6 sm:mt-8">
-                        <h2 class="text-lg sm:text-xl lg:text-2xl font-semibold mb-3 sm:mb-4 text-gray-800">Featured
-                            Products</h2>
+                        <h2 class="text-lg sm:text-xl lg:text-2xl font-semibold mb-3 sm:mb-4 text-gray-800">{{ t('sellerProfilePage.featuredProducts') }}</h2>
                         <div class="flex justify-center">
                             <div v-if="featuredProducts.length > 0"
                                 class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 w-full">
@@ -195,15 +192,14 @@
                                             d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                                     </svg>
                                 </div>
-                                <p class="text-gray-500 text-sm sm:text-base">No featured products available.</p>
+                                <p class="text-gray-500 text-sm sm:text-base">{{ t('sellerProfilePage.noFeaturedProducts') }}</p>
                             </div>
                         </div>
                     </section>
 
                     <!-- Ratings and Reviews -->
                     <section class="mt-6 sm:mt-8">
-                        <h2 class="text-lg sm:text-xl lg:text-2xl font-semibold mb-3 sm:mb-4 text-gray-800">Recent
-                            Product Reviews</h2>
+                        <h2 class="text-lg sm:text-xl lg:text-2xl font-semibold mb-3 sm:mb-4 text-gray-800">{{ t('sellerProfilePage.recentProductReviews') }}</h2>
                         <div v-if="Object.keys(productReviews).length > 0" class="space-y-4">
                             <div v-for="(reviews, productId) in productReviews" :key="productId"
                                 class="bg-gray-50 p-3 sm:p-4 rounded-lg border border-gray-200">
@@ -221,13 +217,12 @@
                                     <p class="text-gray-700 text-sm sm:text-base leading-relaxed mb-2">{{ review.review
                                         }}</p>
                                     <p class="text-xs sm:text-sm text-gray-500">
-                                        By <span class="font-medium">{{ review.user.username }}</span> on {{
-                                            formatDate(review.createdAt) }}
+                                        {{ t('sellerProfilePage.reviewBy', { user: review.user.username }) }} {{ formatDate(review.createdAt) }}
                                     </p>
                                 </div>
                                 <button @click="navigateToProduct(productId)"
                                     class="text-indigo-600 hover:text-indigo-800 font-semibold text-sm sm:text-base underline-offset-2 hover:underline transition-colors">
-                                    View All Reviews for This Product
+                                    {{ t('sellerProfilePage.viewAllReviews') }}
                                 </button>
                             </div>
                         </div>
@@ -240,7 +235,7 @@
                                     </path>
                                 </svg>
                             </div>
-                            <p class="text-gray-500 text-sm sm:text-base">No product reviews available.</p>
+                            <p class="text-gray-500 text-sm sm:text-base">{{ t('sellerProfilePage.noProductReviews') }}</p>
                         </div>
                     </section>
                 </div>
@@ -251,6 +246,7 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { useSellerStore } from '../store/sellerStore';
 import { useProductStore } from '../store/productStore';
@@ -273,6 +269,7 @@ export default {
         ProductCard
     },
     setup() {
+        const { t, locale } = useI18n();
         const route = useRoute();
         const router = useRouter();
         const sellerStore = useSellerStore();
@@ -306,20 +303,20 @@ export default {
         const storeStatusMessage = computed(() => {
             if (!sellerProfile.value) return '';
             return sellerProfile.value.isVacationMode
-                ? 'Seller is currently on vacation'
-                : 'Store is open';
+                ? t('sellerProfilePage.statusMessageVacation')
+                : t('sellerProfilePage.statusMessageOpen');
         });
 
         const storeStatusDescription = computed(() => {
             if (!sellerProfile.value) return '';
             return sellerProfile.value.isVacationMode
-                ? 'New orders may be delayed. Please check back later or contact the seller for more information.'
-                : 'Feel free to browse and place orders.';
+                ? t('sellerProfilePage.statusDescriptionVacation')
+                : t('sellerProfilePage.statusDescriptionOpen');
         });
 
         const getProductName = (productId) => {
             const product = featuredProducts.value.find(p => p._id === productId);
-            return product ? product.name : 'Unknown Product';
+            return product ? product.name : t('sellerProfilePage.unknownProduct');
         };
 
         const loadSellerData = async (sellerId) => {
@@ -330,7 +327,7 @@ export default {
                 // Fetch seller profile which includes delivery stats
                 const profile = await sellerStore.fetchSellerProfile(sellerId);
                 if (!profile) {
-                    throw new Error("Failed to load seller profile");
+                    throw new Error(t('sellerProfilePage.loadFailed'));
                 }
 
                 // Fetch all orders for this seller to count delivered ones
@@ -354,7 +351,7 @@ export default {
 
             } catch (err) {
                 console.error('Failed to load seller profile:', err);
-                error.value = "Error loading seller profile";
+                error.value = t('sellerProfilePage.loadFailed');
             } finally {
                 isLoading.value = false;
             }
@@ -370,7 +367,7 @@ export default {
                     // First fetch seller profile
                     const profile = await sellerStore.fetchSellerProfile(sellerId);
                     if (!profile) {
-                        throw new Error("Failed to load seller profile");
+                        throw new Error(t('sellerProfilePage.loadFailed'));
                     }
 
                     sellerProfile.value = {
@@ -386,7 +383,7 @@ export default {
 
                 } catch (err) {
                     console.error('Failed to load seller profile:', err);
-                    error.value = "Error loading seller profile";
+                    error.value = t('sellerProfilePage.loadFailed');
                 } finally {
                     isLoading.value = false;
                 }
@@ -438,7 +435,8 @@ export default {
         };
 
         const formatDate = (dateString) => {
-            return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            const activeLocale = locale.value === 'fr' ? 'fr-FR' : 'en-US';
+            return new Date(dateString).toLocaleDateString(activeLocale, { year: 'numeric', month: 'long', day: 'numeric' });
         };
 
         const formatRating = (rating) => {
@@ -458,6 +456,7 @@ export default {
         };
 
         return {
+            t,
             sellerProfile,
             featuredProducts,
             productReviews,

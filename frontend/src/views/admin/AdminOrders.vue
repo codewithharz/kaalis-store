@@ -3,7 +3,7 @@
     <div>
         <!-- Header -->
         <div class="flex justify-between mb-3 px-8 py-4 bg-white">
-            <h2 class="text-2xl font-bold text-gray-800">Orders Management</h2>
+            <h2 class="text-2xl font-bold text-gray-800">{{ t('adminOrders.title') }}</h2>
             <!-- Time Period Toggle -->
             <div class="flex space-x-2">
                 <button v-for="period in ['Today', 'Week', 'Month', 'Year']" :key="period"
@@ -13,7 +13,7 @@
                             ? 'bg-blue-600 text-white'
                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     ]">
-                    {{ period }}
+                    {{ t(`adminOrders.periods.${period.toLowerCase()}`) }}
                 </button>
             </div>
         </div>
@@ -34,7 +34,7 @@
 
                     <div class="ml-4">
                         <p class="text-gray-500 text-sm">
-                            {{ filters.status ? `${filters.status} Revenue` : 'Total Revenue' }}
+                            {{ filters.status ? t('adminOrders.summary.filteredRevenue', { status: formatStatus(filters.status) }) : t('adminOrders.summary.totalRevenue') }}
                         </p>
                         <p class="text-2xl font-semibold">{{ totalRevenueFormatted }}</p>
                     </div>
@@ -48,7 +48,7 @@
                         <DollarSign class="h-6 w-6 text-green-600" />
                     </div>
                     <div class="ml-4">
-                        <p class="text-gray-500 text-sm">{{ selectedPeriod }} Revenue</p>
+                        <p class="text-gray-500 text-sm">{{ t('adminOrders.summary.periodRevenue', { period: t(`adminOrders.periods.${selectedPeriod.toLowerCase()}`) }) }}</p>
                         <p class="text-2xl font-semibold">{{ filteredRevenue }}</p>
                     </div>
                 </div>
@@ -61,7 +61,7 @@
                         <CalendarClock class="h-6 w-6 text-purple-600" />
                     </div>
                     <div class="ml-4">
-                        <p class="text-gray-500 text-sm">Orders Today</p>
+                        <p class="text-gray-500 text-sm">{{ t('adminOrders.summary.ordersToday') }}</p>
                         <p class="text-2xl font-semibold">{{ todayOrders }}</p>
                     </div>
                 </div>
@@ -76,7 +76,7 @@
                     <div class="ml-4">
                         <!-- <p class="text-gray-500 text-sm">Total Orders</p> -->
                         <p class="text-gray-500 text-sm">
-                            {{ filters.status ? `${filters.status} Orders` : 'Total Orders' }}
+                            {{ filters.status ? t('adminOrders.summary.filteredOrders', { status: formatStatus(filters.status) }) : t('adminOrders.summary.totalOrders') }}
                         </p>
                         <p class="text-2xl font-semibold">{{ orderSummary.total }}</p>
                     </div>
@@ -91,7 +91,7 @@
                     </div>
                     <div class="ml-4">
                         <p class="text-gray-500 text-sm">
-                            {{ selectedPeriod }} Orders
+                            {{ t('adminOrders.summary.periodOrders', { period: t(`adminOrders.periods.${selectedPeriod.toLowerCase()}`) }) }}
                         </p>
                         <p class="text-2xl font-semibold">{{ filteredOrders }}</p>
                     </div>
@@ -105,7 +105,7 @@
                         <Clock class="h-6 w-6 text-blue-600" />
                     </div>
                     <div class="ml-4">
-                        <p class="text-gray-500 text-sm">Processing Today</p>
+                        <p class="text-gray-500 text-sm">{{ t('adminOrders.summary.processingToday') }}</p>
                         <p class="text-2xl font-semibold">{{ processingToday }}</p>
                     </div>
                 </div>
@@ -116,7 +116,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
             <!-- Payment Methods Chart -->
             <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Payment Methods Distribution</h3>
+                <h3 class="text-lg font-medium text-gray-900 mb-4">{{ t('adminOrders.charts.paymentMethodsDistribution') }}</h3>
                 <div class="h-44">
                     <Doughnut v-if="paymentMethodChartData.labels.length" :data="paymentMethodChartData"
                         :options="chartOptions" />
@@ -125,18 +125,18 @@
 
             <!-- Platform Fee Summary -->
             <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Platform Performance</h3>
+                <h3 class="text-lg font-medium text-gray-900 mb-4">{{ t('adminOrders.charts.platformPerformance') }}</h3>
                 <div class="space-y-4">
                     <div class="flex justify-between items-center">
-                        <span class="text-gray-600">Total Platform Fees</span>
+                        <span class="text-gray-600">{{ t('adminOrders.charts.totalPlatformFees') }}</span>
                         <span class="font-semibold">{{ totalPlatformFeesFormatted }}</span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="text-gray-600">Average Order Value</span>
+                        <span class="text-gray-600">{{ t('adminOrders.charts.averageOrderValue') }}</span>
                         <span class="font-semibold">{{ totalAverageOrderValue }}</span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="text-gray-600">Total Shipping Fees</span>
+                        <span class="text-gray-600">{{ t('adminOrders.charts.totalShippingFees') }}</span>
                         <span class="font-semibold">{{ totalShippingFees }}</span>
                     </div>
                 </div>
@@ -148,19 +148,19 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <!-- Search -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-                    <input type="text" v-model="filters.search" placeholder="Order ID, Customer..."
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('adminOrders.filters.search') }}</label>
+                    <input type="text" v-model="filters.search" :placeholder="t('adminOrders.filters.searchPlaceholder')"
                         class="w-full p-2 border rounded-md" @input="handleSearch">
                 </div>
 
                 <!-- Status Filter -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('adminOrders.filters.status') }}</label>
                     <div class="relative">
                         <select v-model="filters.status"
                             class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
                             @change="fetchOrders">
-                            <option value="">All Status</option>
+                            <option value="">{{ t('adminOrders.filters.allStatus') }}</option>
                             <option v-for="status in orderStatuses" :key="status" :value="status">
                                 {{ formatStatus(status) }}
                             </option>
@@ -173,13 +173,13 @@
 
                 <!-- Date Range -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('adminOrders.filters.fromDate') }}</label>
                     <input type="date" v-model="filters.dateFrom" class="w-full p-2 border rounded-md"
                         @change="fetchOrders">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('adminOrders.filters.toDate') }}</label>
                     <input type="date" v-model="filters.dateTo" class="w-full p-2 border rounded-md"
                         @change="fetchOrders">
                 </div>
@@ -193,24 +193,24 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                Order ID</th>
+                                {{ t('adminOrders.table.orderId') }}</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                Customer</th>
+                                {{ t('adminOrders.table.customer') }}</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                Payment Method</th>
+                                {{ t('adminOrders.table.paymentMethod') }}</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                Platform Fee</th>
+                                {{ t('adminOrders.table.platformFee') }}</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                Vendor Amount</th>
+                                {{ t('adminOrders.table.vendorAmount') }}</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                Date</th>
+                                {{ t('adminOrders.table.date') }}</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                Total
+                                {{ t('adminOrders.table.total') }}
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                Status</th>
+                                {{ t('adminOrders.table.status') }}</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                Actions</th>
+                                {{ t('adminOrders.table.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -232,7 +232,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-gray-900">
-                                        {{ order.user?.username || 'Unknown' }}
+                                        {{ order.user?.username || t('adminOrders.unknown') }}
                                     </div>
                                     <div class="text-sm text-gray-500">
                                         {{ order.user?.email }}
@@ -260,17 +260,17 @@
                                         'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
                                         getStatusClass(order.status)
                                     ]">
-                                        {{ order.status }}
+                                        {{ formatStatus(order.status) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <button @click="viewOrderDetails(order)"
                                         class="text-blue-600 hover:text-blue-900 mr-3">
-                                        View
+                                        {{ t('adminOrders.actions.view') }}
                                     </button>
                                     <button @click="showUpdateStatus(order)"
                                         class="text-indigo-600 hover:text-indigo-900">
-                                        Update
+                                        {{ t('adminOrders.actions.update') }}
                                     </button>
                                 </td>
                             </tr>
@@ -285,24 +285,24 @@
                     <button @click="prevPage" :disabled="currentPage === 1"
                         class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                         :class="{ 'opacity-50 cursor-not-allowed': currentPage === 1 }">
-                        Previous
+                        {{ t('adminOrders.pagination.previous') }}
                     </button>
                     <button @click="nextPage" :disabled="currentPage === totalPages"
                         class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                         :class="{ 'opacity-50 cursor-not-allowed': currentPage === totalPages }">
-                        Next
+                        {{ t('adminOrders.pagination.next') }}
                     </button>
                 </div>
                 <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                     <div>
                         <p class="text-sm text-gray-700">
-                            Showing
+                            {{ t('adminOrders.pagination.showing') }}
                             <span class="font-medium">{{ startItem }}</span>
-                            to
+                            {{ t('adminOrders.pagination.to') }}
                             <span class="font-medium">{{ endItem }}</span>
-                            of
+                            {{ t('adminOrders.pagination.of') }}
                             <span class="font-medium">{{ totalItems }}</span>
-                            results
+                            {{ t('adminOrders.pagination.results') }}
                         </p>
                     </div>
                     <div>
@@ -310,12 +310,12 @@
                             <button @click="prevPage" :disabled="currentPage === 1"
                                 class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 :class="{ 'opacity-50 cursor-not-allowed': currentPage === 1 }">
-                                Previous
+                                {{ t('adminOrders.pagination.previous') }}
                             </button>
                             <button @click="nextPage" :disabled="currentPage === totalPages"
                                 class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 :class="{ 'opacity-50 cursor-not-allowed': currentPage === totalPages }">
-                                Next
+                                {{ t('adminOrders.pagination.next') }}
                             </button>
                         </nav>
                     </div>
@@ -327,12 +327,12 @@
         <div v-if="showStatusModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
             <div class="bg-white rounded-lg p-6 max-w-md w-full">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">
-                    Update Order Status
+                    {{ t('adminOrders.updateStatus.title') }}
                 </h3>
                 <form @submit.prevent="updateOrderStatus">
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                            New Status
+                            {{ t('adminOrders.updateStatus.newStatus') }}
                         </label>
                         <div class="relative">
                             <select v-model="newStatus"
@@ -349,18 +349,18 @@
 
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Note (optional)
+                            {{ t('adminOrders.updateStatus.noteOptional') }}
                         </label>
-                        <textarea v-model="statusNote" rows="3" class="w-full p-2 border rounded-md"></textarea>
+                        <textarea v-model="statusNote" rows="3" class="w-full p-2 border rounded-md" :placeholder="t('adminOrders.updateStatus.notePlaceholder')"></textarea>
                     </div>
 
                     <div class="flex justify-end space-x-3">
                         <button type="button" @click="closeStatusModal"
                             class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
-                            Cancel
+                            {{ t('adminOrders.actions.cancel') }}
                         </button>
                         <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                            Update Status
+                            {{ t('adminOrders.updateStatus.submit') }}
                         </button>
                     </div>
                 </form>
@@ -372,6 +372,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useAdminStore } from '@/store/admin';
 import { useProductStore } from '@/store/productStore';
 import OrderDetailsModal from './components/OrderDetailsModal.vue'
@@ -425,6 +426,7 @@ export default {
     },
 
     setup() {
+        const { t, locale } = useI18n();
         // State
         const adminStore = useAdminStore();
         const productStore = useProductStore();
@@ -655,7 +657,7 @@ export default {
                                 return {
                                     ...item,
                                     product: details || {
-                                        name: 'Product not found',
+                                        name: t('adminOrders.productNotFound'),
                                         images: []
                                     }
                                 };
@@ -664,7 +666,7 @@ export default {
                                 return {
                                     ...item,
                                     product: {
-                                        name: 'Product not found',
+                                        name: t('adminOrders.productNotFound'),
                                         images: []
                                     }
                                 };
@@ -683,7 +685,7 @@ export default {
                 showDetailsModal.value = true;
             } catch (error) {
                 console.error('Error showing order details:', error);
-                toast.error('Failed to load order details');
+                toast.error(t('adminOrders.toasts.loadDetailsFailed'));
             } finally {
                 loading.value = false;
             }
@@ -766,7 +768,7 @@ export default {
                 }
             } catch (error) {
                 console.error('Error in fetchOrders:', error);
-                toast.error('Failed to fetch orders');
+                toast.error(t('adminOrders.toasts.fetchFailed'));
             } finally {
                 loading.value = false;
             }
@@ -828,7 +830,7 @@ export default {
 
         // Helper functions
         const formatDate = (date) => {
-            return new Date(date).toLocaleDateString('en-US', {
+            return new Date(date).toLocaleDateString(locale.value === 'fr' ? 'fr-FR' : 'en-US', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -838,7 +840,7 @@ export default {
         };
 
         const formatStatus = (status) => {
-            return status.charAt(0).toUpperCase() + status.slice(1);
+            return t(`adminOrders.statuses.${status?.toLowerCase?.()}`, status);
         };
 
         const getStatusClass = (status) => {
@@ -919,7 +921,8 @@ export default {
             showDetailsModal,
             selectedPeriod,
             filteredOrders,
-            filteredRevenue
+            filteredRevenue,
+            t
         };
     }
 };

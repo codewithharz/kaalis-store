@@ -8,7 +8,7 @@
                 class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-lg bg-white/80 border border-white/20">
                 <div class="flex items-center justify-between">
                     <div class="min-w-0 flex-1">
-                        <p class="text-xs sm:text-sm text-gray-500">Pending Payout</p>
+                        <p class="text-xs sm:text-sm text-gray-500">{{ t('vendorPaymentSetupPage.stats.pendingPayout') }}</p>
                         <p class="text-base sm:text-lg font-medium text-gray-900 break-words">
                             {{ formatCurrency(vendorPayoutStore.pendingAmount) }}
                         </p>
@@ -25,9 +25,9 @@
                 class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-lg bg-white/80 border border-white/20">
                 <div class="flex items-center justify-between">
                     <div class="min-w-0 flex-1">
-                        <p class="text-xs sm:text-sm text-gray-500">Next Payout</p>
+                        <p class="text-xs sm:text-sm text-gray-500">{{ t('vendorPaymentSetupPage.stats.nextPayout') }}</p>
                         <p class="text-base sm:text-lg font-medium text-gray-900 break-words">
-                            {{ formatDate(vendorPayoutStore.nextPayoutDate) || 'Not scheduled' }}
+                            {{ formatDate(vendorPayoutStore.nextPayoutDate) || t('vendorPaymentSetupPage.notScheduled') }}
                         </p>
                     </div>
                     <div
@@ -42,7 +42,7 @@
                 class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-lg bg-white/80 border border-white/20 sm:col-span-2 lg:col-span-1">
                 <div class="flex items-center justify-between">
                     <div class="min-w-0 flex-1">
-                        <p class="text-xs sm:text-sm text-gray-500">Platform Fee</p>
+                        <p class="text-xs sm:text-sm text-gray-500">{{ t('vendorPaymentSetupPage.stats.platformFee') }}</p>
                         <p class="text-base sm:text-lg font-medium text-gray-900">8%</p>
                     </div>
                     <div
@@ -58,13 +58,13 @@
             <div class="p-4 sm:p-6 lg:p-8 border-b border-gray-100">
                 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                     <div>
-                        <h3 class="text-xl sm:text-2xl font-semibold text-gray-900">Payment Setup</h3>
-                        <p class="text-xs sm:text-sm text-gray-500 mt-1">Configure your payout method</p>
+                        <h3 class="text-xl sm:text-2xl font-semibold text-gray-900">{{ t('vendorPaymentSetupPage.title') }}</h3>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-1">{{ t('vendorPaymentSetupPage.subtitle') }}</p>
                     </div>
                     <button v-if="!hasPaystackSetup" @click="redirectToBankSetup"
                         class="group w-full sm:w-auto px-4 sm:px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2 hover:shadow-indigo-500/25 text-sm sm:text-base">
-                        <span class="hidden sm:inline">Setup Bank Account</span>
-                        <span class="sm:hidden">Setup Account</span>
+                        <span class="hidden sm:inline">{{ t('vendorPaymentSetupPage.setupBankAccount') }}</span>
+                        <span class="sm:hidden">{{ t('vendorPaymentSetupPage.setupAccount') }}</span>
                     </button>
                 </div>
 
@@ -76,11 +76,11 @@
                             <CreditCard class="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600" />
                         </div>
                         <div class="min-w-0 flex-1">
-                            <p class="font-medium text-gray-900 text-sm sm:text-base">Bank Account Connected</p>
+                            <p class="font-medium text-gray-900 text-sm sm:text-base">{{ t('vendorPaymentSetupPage.bankAccountConnected') }}</p>
                             <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1.5">
                                 <div class="flex items-center gap-1.5 text-xs sm:text-sm text-gray-500">
                                     <Building2 class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                                    <span class="truncate">{{ userStore.user?.paystack?.bankName || 'Bank Account'
+                                    <span class="truncate">{{ userStore.user?.paystack?.bankName || t('vendorPaymentSetupPage.bankAccount')
                                     }}</span>
                                     <span>•••• {{ userStore.user?.paystack?.accountNumber?.slice(-4) }}</span>
                                 </div>
@@ -98,13 +98,13 @@
             <!-- Payout History with Modern Design -->
             <div class="p-4 sm:p-6 lg:p-8">
                 <div class="flex items-center justify-between mb-4 sm:mb-6">
-                    <h4 class="text-xl sm:text-2xl font-semibold text-gray-900">Recent Payouts</h4>
+                    <h4 class="text-xl sm:text-2xl font-semibold text-gray-900">{{ t('vendorPaymentSetupPage.recentPayouts') }}</h4>
                 </div>
 
                 <!-- Loading State -->
                 <div v-if="vendorPayoutStore.isLoading" class="text-center py-8 sm:py-12">
                     <Loader2 class="w-8 h-8 sm:w-10 sm:h-10 animate-spin mx-auto text-indigo-600 mb-3 sm:mb-4" />
-                    <p class="text-gray-500 text-sm sm:text-base">Loading your payouts...</p>
+                    <p class="text-gray-500 text-sm sm:text-base">{{ t('vendorPaymentSetupPage.loadingPayouts') }}</p>
                 </div>
 
                 <!-- Payouts Table -->
@@ -114,15 +114,15 @@
                             <thead>
                                 <tr class="text-left">
                                     <th scope="col"
-                                        class="px-4 sm:px-6 py-3 text-xs sm:text-sm font-medium text-gray-500">Date</th>
+                                        class="px-4 sm:px-6 py-3 text-xs sm:text-sm font-medium text-gray-500">{{ t('vendorPaymentSetupPage.columns.date') }}</th>
                                     <th scope="col"
-                                        class="px-4 sm:px-6 py-3 text-xs sm:text-sm font-medium text-gray-500">Amount
+                                        class="px-4 sm:px-6 py-3 text-xs sm:text-sm font-medium text-gray-500">{{ t('vendorPaymentSetupPage.columns.amount') }}
                                     </th>
                                     <th scope="col"
-                                        class="px-4 sm:px-6 py-3 text-xs sm:text-sm font-medium text-gray-500">Status
+                                        class="px-4 sm:px-6 py-3 text-xs sm:text-sm font-medium text-gray-500">{{ t('vendorPaymentSetupPage.columns.status') }}
                                     </th>
                                     <th scope="col"
-                                        class="px-4 sm:px-6 py-3 text-xs sm:text-sm font-medium text-gray-500">Reference
+                                        class="px-4 sm:px-6 py-3 text-xs sm:text-sm font-medium text-gray-500">{{ t('vendorPaymentSetupPage.columns.reference') }}
                                     </th>
                                 </tr>
                             </thead>
@@ -146,7 +146,7 @@
                                                 'bg-green-400': payout.status.toLowerCase() === 'processed',
                                                 'bg-red-400': payout.status.toLowerCase() === 'failed'
                                             }"></span>
-                                            {{ payout.status.charAt(0).toUpperCase() + payout.status.slice(1) }}
+                                            {{ t(`vendorPaymentSetupPage.statuses.${payout.status.toLowerCase()}`) }}
                                         </span>
                                     </td>
                                     <td
@@ -162,8 +162,8 @@
                 <!-- Empty State -->
                 <div v-else class="text-center py-8 sm:py-12">
                     <History class="w-10 h-10 sm:w-12 sm:h-12 text-gray-300 mx-auto mb-3 sm:mb-4" />
-                    <h3 class="text-base sm:text-lg font-medium text-gray-900 mb-2">No Payouts Yet</h3>
-                    <p class="text-gray-500 text-sm sm:text-base">Your payout history will appear here</p>
+                    <h3 class="text-base sm:text-lg font-medium text-gray-900 mb-2">{{ t('vendorPaymentSetupPage.empty.title') }}</h3>
+                    <p class="text-gray-500 text-sm sm:text-base">{{ t('vendorPaymentSetupPage.empty.subtitle') }}</p>
                 </div>
             </div>
         </div>
@@ -173,6 +173,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import {
     CircleDollarSign,
     Calendar,
@@ -180,6 +181,7 @@ import {
     CreditCard,
     Building2,
     UserCheckIcon,
+    History,
     Loader2,
 } from 'lucide-vue-next';
 import { useVendorPayoutStore } from '../store/vendorPayoutStore';
@@ -187,6 +189,7 @@ import { useUserStore } from '../store/user';
 import { toast } from 'vue-sonner';
 
 const router = useRouter();
+const { t, locale } = useI18n();
 const vendorPayoutStore = useVendorPayoutStore();
 const userStore = useUserStore();
 
@@ -199,7 +202,7 @@ onMounted(async () => {
         await vendorPayoutStore.fetchPayoutHistory();
     } catch (error) {
         console.error('Failed to fetch payout history:', error);
-        toast.error('Failed to load payout data');
+        toast.error(t('vendorPaymentSetupPage.toasts.loadFailed'));
     }
 });
 
@@ -209,7 +212,7 @@ const redirectToBankSetup = () => {
 
 const formatDate = (date) => {
     if (!date) return '';
-    return new Date(date).toLocaleDateString('en-US', {
+    return new Date(date).toLocaleDateString(locale.value === 'fr' ? 'fr-FR' : 'en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
@@ -217,7 +220,7 @@ const formatDate = (date) => {
 };
 
 const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-NG', {
+    return new Intl.NumberFormat(locale.value === 'fr' ? 'fr-FR' : 'en-NG', {
         style: 'currency',
         currency: 'NGN'
     }).format(amount || 0);

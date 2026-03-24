@@ -1,8 +1,8 @@
 export const profileItems = [
-  { label: "My Profile", link: "/account/profile/" },
-  { label: "My Address Book", link: "/account/profile/address-book" },
-  { label: "Bank Details", link: "/account/profile/bank-details" },
-  { label: "Change Password", link: "/account/profile/change-password" },
-  { label: "Manage Payment", link: "/account/profile/manage-payment" },
-  { label: "My Products", link: "/account/profile/my-products" },
+  { labelKey: "account.myProfile", link: "/account/profile/" },
+  { labelKey: "account.myAddressBook", link: "/account/profile/address-book" },
+  { labelKey: "account.bankDetails", link: "/account/profile/bank-details" },
+  { labelKey: "account.changePassword", link: "/account/profile/change-password" },
+  { labelKey: "account.managePayment", link: "/account/profile/manage-payment" },
+  { labelKey: "account.myProducts", link: "/account/profile/my-products" },
 ];

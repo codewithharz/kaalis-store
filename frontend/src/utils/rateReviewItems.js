@@ -1,4 +1,4 @@
 export const rateReviewItems = [
-  { label: "Your Reviews", link: "/account/rate-purchase" },
-  { label: "Pending Reviews", link: "/account/rate-purchase/pending-reviews" },
+  { labelKey: "account.yourReviews", link: "/account/rate-purchase" },
+  { labelKey: "account.pendingReviews", link: "/account/rate-purchase/pending-reviews" },
 ];

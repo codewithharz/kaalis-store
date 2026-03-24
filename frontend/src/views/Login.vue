@@ -6,20 +6,20 @@
             <div class="flex items-center justify-center py-12">
                 <div class="mx-auto grid w-[350px] gap-6">
                     <div class="grid gap-2 text-center">
-                        <h1 class="text-3xl font-bold">Login</h1>
+                        <h1 class="text-3xl font-bold">{{ t('auth.login') }}</h1>
                         <p class="text-balance text-muted-foreground text-gray-300">
-                            Enter your email below to login to your account
+                            {{ t('auth.loginSubtitle') }}
                         </p>
                     </div>
 
                     <!-- Unverified Email Warning -->
                     <div v-if="showResendOption"
                         class="bg-yellow-900 bg-opacity-50 border-l-4 border-yellow-500 text-yellow-100 p-4 rounded">
-                        <p class="font-bold">📧 Email Not Verified</p>
-                        <p class="text-sm mb-2">Please verify your email before logging in.</p>
+                        <p class="font-bold">{{ t('auth.emailNotVerified') }}</p>
+                        <p class="text-sm mb-2">{{ t('auth.verifyEmailBeforeLogin') }}</p>
                         <button @click="resendVerification" :disabled="isResending"
                             class="text-sm underline hover:no-underline disabled:opacity-50 mt-2 text-yellow-300">
-                            {{ isResending ? '📤 Sending...' : '🔄 Resend verification email' }}
+                            {{ isResending ? t('auth.sending') : t('auth.resendVerificationEmail') }}
                         </button>
                     </div>
 
@@ -27,7 +27,7 @@
                         <div class="grid gap-4">
                             <div class="grid gap-2">
                                 <label for="text" class="block text-lg font-semibold text-gray-300 mb-2 text-left">
-                                    Email or Username
+                                    {{ t('auth.emailOrUsername') }}
                                 </label>
                                 <input type="text" id="email" v-model="identifier"
                                     class="w-full text-gray-800 px-4 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -37,10 +37,10 @@
                                 <div class="flex items-center">
                                     <label for="password"
                                         class="block text-lg font-semibold text-gray-300 mb-2 text-left">
-                                        Password
+                                        {{ t('auth.password') }}
                                     </label>
                                     <a href="/request-password-reset" class="ml-auto inline-block text-sm underline">
-                                        Forgot your password?
+                                        {{ t('auth.forgotPassword') }}
                                     </a>
                                 </div>
                                 <input id="password" v-model="password" type="password"
@@ -49,14 +49,14 @@
                             </div>
                             <button type="submit"
                                 class="w-full text-white font-bold py-2 px-4 button-hover bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] rounded-r focus:outline-none mt-4">
-                                Login
+                                {{ t('auth.login') }}
                             </button>
                             <p v-if="errorMessage" class="mt-4 text-red-500 text-center">{{ errorMessage }}</p>
                         </div>
                     </form>
                     <div class="mt-4 text-center text-sm">
-                        Don't have an account?
-                        <router-link to="/register" class="underline">Sign up</router-link>
+                        {{ t('auth.dontHaveAccount') }}
+                        <router-link to="/register" class="underline">{{ t('auth.signUp') }}</router-link>
                     </div>
                 </div>
             </div>
@@ -69,14 +69,14 @@
                     class="absolute inset-0 flex items-center justify-center bg-gradient-to-r from-black via-transparent to-black">
                     <div
                         class="text-center px-8 py-4 text-white backdrop-blur-md bg-black bg-opacity-50 rounded-lg shadow-lg">
-                        <h2 class="text-5xl font-extrabold mb-4 animate-pulse">Welcome Back!</h2>
+                        <h2 class="text-5xl font-extrabold mb-4 animate-pulse">{{ t('auth.welcomeBack') }}</h2>
                         <p class="text-lg mb-4 animate-fade-in">
-                            We're glad to see you again. Please login to access your account.
+                            {{ t('auth.welcomeBackSubtitle') }}
                         </p>
-                        <p class="text-md mb-5">New here? Sign up and join us today!</p>
+                        <p class="text-md mb-5">{{ t('auth.newHere') }}</p>
                         <router-link to="/register"
                             class="text-white font-bold py-2 px-4 button-hover bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] rounded-r focus:outline-none">
-                            Sign Up
+                            {{ t('auth.signUp') }}
                         </router-link>
                     </div>
                 </div>
@@ -91,11 +91,13 @@ import { useUserStore } from '../store/user';
 import apiClient from '../api/axios';
 import { toast } from 'vue-sonner';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
 export default {
     setup() {
         const userStore = useUserStore();
         const router = useRouter();
+        const { t } = useI18n();
 
         const identifier = ref('');
         const password = ref('');
@@ -110,7 +112,7 @@ export default {
             showResendOption.value = false;
 
             if (!identifier.value || !password.value) {
-                errorMessage.value = 'Please fill in all fields';
+                errorMessage.value = t('auth.fillAllFields');
                 return;
             }
 
@@ -119,12 +121,13 @@ export default {
                 const response = await apiClient.post('/users/login', {
                     identifier: identifier.value,
                     password: password.value,
+                    locale: localStorage.getItem('locale') || 'en',
                 });
 
                 console.log('Login response:', response.data);
 
                 if (response.data.success) {
-                    toast.success("Logged in Successfully");
+                    toast.success(t('auth.loginSuccess'));
                     const userData = {
                         success: response.data.success,
                         token: response.data.token,
@@ -153,7 +156,7 @@ export default {
                 console.error('Error response:', error.response?.data);
 
                 const responseData = error.response?.data;
-                errorMessage.value = responseData?.message || 'An error occurred. Please try again.';
+                errorMessage.value = responseData?.message || t('auth.genericError');
 
                 // Show resend option if email not verified
                 if (responseData?.resendVerification) {
@@ -169,12 +172,13 @@ export default {
             isResending.value = true;
             try {
                 await apiClient.post('/users/resend-verification', {
-                    email: userEmail.value
+                    email: userEmail.value,
+                    locale: localStorage.getItem('locale') || 'en',
                 });
-                toast.success('✅ Verification email sent! Please check your inbox.');
+                toast.success(t('auth.verificationEmailSent'));
                 showResendOption.value = false;
             } catch (error) {
-                toast.error('❌ Failed to resend email. Please try again.');
+                toast.error(t('auth.verificationEmailFailed'));
             } finally {
                 isResending.value = false;
             }
@@ -184,6 +188,7 @@ export default {
             identifier,
             password,
             errorMessage,
+            t,
             showResendOption,
             isResending,
             login,

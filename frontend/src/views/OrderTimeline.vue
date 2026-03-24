@@ -121,8 +121,8 @@
                             <Truck class="w-5 h-5 sm:w-6 sm:h-6 text-white drop-shadow-sm" />
                         </div>
                         <div>
-                            <span class="text-base sm:text-lg font-bold text-orange-800 block">Estimated Delivery</span>
-                            <span class="text-xs sm:text-sm text-orange-600">Package is on the way</span>
+                            <span class="text-base sm:text-lg font-bold text-orange-800 block">{{ t('orderTimeline.estimatedDelivery') }}</span>
+                            <span class="text-xs sm:text-sm text-orange-600">{{ t('orderTimeline.packageOnTheWay') }}</span>
                         </div>
                     </div>
 
@@ -130,7 +130,7 @@
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
                             <div class="flex items-center gap-2">
                                 <div class="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
-                                <span class="text-xs sm:text-sm font-medium text-orange-700">Expected arrival:</span>
+                                <span class="text-xs sm:text-sm font-medium text-orange-700">{{ t('orderTimeline.expectedArrival') }}</span>
                             </div>
                             <span class="text-base sm:text-lg font-bold text-orange-800">
                                 {{ formatDate(estimatedDelivery) }}
@@ -146,9 +146,9 @@
                         </div>
 
                         <div class="flex justify-between mt-2 text-xs text-orange-600">
-                            <span>Order Placed</span>
+                            <span>{{ t('orderTimeline.orderPlaced') }}</span>
                             <span class="text-center">{{ getProgressText() }}</span>
-                            <span>Delivered</span>
+                            <span>{{ t('orderTimeline.delivered') }}</span>
                         </div>
                     </div>
                 </div>
@@ -163,7 +163,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <span class="font-medium">Order Successfully Completed!</span>
+                <span class="font-medium">{{ t('orderTimeline.completedBadge') }}</span>
             </div>
         </div>
     </div>
@@ -171,6 +171,7 @@
 
 <script>
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Check, Circle, Clock, Truck } from 'lucide-vue-next';
 
 export default {
@@ -188,6 +189,7 @@ export default {
         }
     },
     setup(props) {
+        const { t, locale } = useI18n();
         const statusOrder = [
             'Pending',
             'Processing',
@@ -210,11 +212,11 @@ export default {
 
         const getStatusDescription = (status) => {
             const descriptions = {
-                'Pending': 'Your order has been received and is being reviewed by our team. Payment verification in progress.',
-                'Processing': 'Order confirmed! Our warehouse team is carefully preparing your items for shipment.',
-                'Shipped': 'Great news! Your package is now in transit and on its way to your delivery address.',
-                'Delivered': 'Package delivered successfully! We hope you enjoy your purchase. Thank you for choosing us!',
-                'Cancelled': 'This order has been cancelled as requested. Refund processing has been initiated.'
+                'Pending': t('orderTimeline.descriptions.pending'),
+                'Processing': t('orderTimeline.descriptions.processing'),
+                'Shipped': t('orderTimeline.descriptions.shipped'),
+                'Delivered': t('orderTimeline.descriptions.delivered'),
+                'Cancelled': t('orderTimeline.descriptions.cancelled')
             };
             return descriptions[status] || '';
         };
@@ -223,13 +225,13 @@ export default {
             if (props.order.status === 'Cancelled') {
                 return [
                     {
-                        title: 'Order Placed',
+                        title: t('orderTimeline.orderPlaced'),
                         status: 'Pending',
                         description: getStatusDescription('Pending'),
                         timestamp: getStatusTimestamp('Pending')
                     },
                     {
-                        title: 'Order Cancelled',
+                        title: t('orderTimeline.orderCancelled'),
                         status: 'Cancelled',
                         description: getStatusDescription('Cancelled'),
                         timestamp: getStatusTimestamp('Cancelled') || props.order.updatedAt
@@ -240,7 +242,9 @@ export default {
             return statusOrder
                 .slice(0, statusOrder.indexOf('Cancelled'))
                 .map(status => ({
-                    title: status === 'Pending' ? 'Order Placed' : `Order ${status}`,
+                    title: status === 'Pending'
+                        ? t('orderTimeline.orderPlaced')
+                        : t(`orderTimeline.statusTitles.${status.toLowerCase()}`),
                     status,
                     description: getStatusDescription(status),
                     timestamp: getStatusTimestamp(status)
@@ -279,17 +283,18 @@ export default {
 
         const getProgressText = () => {
             const statusMessages = {
-                'Pending': 'Confirming...',
-                'Processing': 'Preparing...',
-                'Shipped': 'In Transit...',
-                'Delivered': 'Complete!'
+                'Pending': t('orderTimeline.progress.pending'),
+                'Processing': t('orderTimeline.progress.processing'),
+                'Shipped': t('orderTimeline.progress.shipped'),
+                'Delivered': t('orderTimeline.progress.delivered')
             };
-            return statusMessages[props.order.status] || 'Processing...';
+            return statusMessages[props.order.status] || t('orderTimeline.progress.processing');
         };
 
         const formatDate = (date) => {
-            if (!date) return 'Pending';
-            return new Date(date).toLocaleDateString('en-US', {
+            if (!date) return t('orderTimeline.pending');
+            const activeLocale = locale.value === 'fr' ? 'fr-FR' : 'en-US';
+            return new Date(date).toLocaleDateString(activeLocale, {
                 weekday: 'short',
                 year: 'numeric',
                 month: 'short',
@@ -300,6 +305,7 @@ export default {
         };
 
         return {
+            t,
             timelineItems,
             estimatedDelivery,
             isCompleted,

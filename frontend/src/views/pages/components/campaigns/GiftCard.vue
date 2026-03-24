@@ -19,12 +19,12 @@
                     <Star class="w-4 h-4 text-yellow-400 fill-yellow-400" />
                     <span class="text-sm text-gray-600 ml-1">{{ rating }}</span>
                 </div>
-                <span class="text-sm text-gray-500">({{ reviews }} reviews)</span>
+                <span class="text-sm text-gray-500">{{ t('pageComponents.reviewsCount', { count: reviews }) }}</span>
             </div>
             <div class="flex items-center justify-between">
                 <span class="text-lg font-bold text-[#24a6bb]">{{ price }}</span>
                 <button class="text-[#24a6bb] hover:text-[#1a7f8f] font-medium">
-                    Add to Cart
+                    {{ t('pageComponents.addToCart') }}
                 </button>
             </div>
         </div>
@@ -33,7 +33,10 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Heart, Star } from 'lucide-vue-next';
+
+const { t } = useI18n();
 
 const props = defineProps({
     name: {
