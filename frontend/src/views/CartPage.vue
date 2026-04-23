@@ -181,7 +181,6 @@
                             <img :src="paymentImages.googlePay" alt="Google Pay" class="h-8">
                             <img :src="paymentImages.applePay" alt="Apple Pay" class="h-8">
                             <img :src="paymentImages.paypalLogo" alt="PayPal" class="h-8">
-                            <img :src="paymentImages.orangeMoney" alt="Orange Money" class="h-8">
                         </div>
                     </div>
 
@@ -221,7 +220,6 @@ import mastercardLogo from '../assets/images/mastercard-pay.webp';
 import googlePay from '../assets/images/google-pay.png';
 import applePay from '../assets/images/apple-pay.webp';
 import paypalLogo from '../assets/images/paypal-pay.webp';
-import orangeMoney from '../assets/images/orange-p.jpeg';
 
 const router = useRouter();
 const { t } = useI18n();
@@ -243,8 +241,7 @@ const paymentImages = {
     mastercardLogo,
     googlePay,
     applePay,
-    paypalLogo,
-    orangeMoney
+    paypalLogo
 };
 
 const toggleSelectAll = () => {

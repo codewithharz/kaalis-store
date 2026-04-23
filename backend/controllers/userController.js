@@ -207,6 +207,147 @@ exports.completeUserProfile = async (req, res) => {
   }
 };
 
+const xofCountryMap = {
+  Benin: "BJ",
+  "Burkina Faso": "BF",
+  "Côte d'Ivoire": "CI",
+  "Guinea-Bissau": "GW",
+  Mali: "ML",
+  Niger: "NE",
+  Senegal: "SN",
+  Togo: "TG",
+};
+
+const countryCodeMap = {
+  Nigeria: "NG",
+  ...xofCountryMap,
+};
+
+exports.updateMarketSettings = async (req, res) => {
+  const { userId } = req.params;
+  const { country } = req.body;
+
+  if (!country) {
+    return res.status(400).json({
+      success: false,
+      message: "Country is required",
+    });
+  }
+
+  const countryCode = countryCodeMap[country] || "NG";
+  const isXofCountry = Object.prototype.hasOwnProperty.call(
+    xofCountryMap,
+    country
+  );
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        countryCode,
+        currency: isXofCountry ? "XOF" : "NGN",
+        paymentMethod: isXofCountry ? "AfriExchange" : "Paystack",
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Market settings updated successfully",
+      user,
+      market: {
+        country,
+        countryCode,
+        currency: user.currency,
+        paymentMethod: user.paymentMethod,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.linkAfriExchangeAccount = async (req, res) => {
+  const { userId } = req.params;
+  const { afriExchangeUserId, walletAddress, accountEmail, countryCode } =
+    req.body;
+
+  if (!afriExchangeUserId && !walletAddress && !accountEmail) {
+    return res.status(400).json({
+      success: false,
+      message:
+        "Provide an AfriExchange user ID, wallet address, or account email",
+    });
+  }
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        afriExchange: {
+          userId: afriExchangeUserId,
+          walletAddress,
+          accountEmail,
+          linkedAt: new Date(),
+        },
+        countryCode: countryCode || "SN",
+        currency: "XOF",
+        paymentMethod: "AfriExchange",
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "AfriExchange account linked successfully",
+      afriExchange: user.afriExchange,
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.unlinkAfriExchangeAccount = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        $unset: { afriExchange: "" },
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "AfriExchange account unlinked successfully",
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // Clear user profile fields
 exports.clearUserProfile = async (req, res) => {
   const { userId } = req.params;

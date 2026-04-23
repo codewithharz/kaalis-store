@@ -1,14 +1,15 @@
 // backend/controllers/paymentController.js - Updated with Opay support
+const axios = require("axios");
 const mongoose = require("mongoose");
 const Payment = require("../models/paymentModels");
 const Order = require("../models/orderModels");
 const PaystackService = require("../services/paystackService");
 const DemoPaystackService = require("../services/demoPaystackService");
-const PayDunyaService = require("../services/PayDunyaService");
 const OpayService = require("../services/opayService");
 const DemoOpayService = require("../services/demoOpayService");
 const Card = require("../models/cardModel");
 const User = require("../models/userModels");
+const payoutService = require("../services/payoutService");
 const logger = require("../utils/logger");
 
 // Initialize services based on environment
@@ -16,8 +17,6 @@ const paystackService =
   process.env.NODE_ENV === "development"
     ? new DemoPaystackService()
     : new PaystackService();
-
-const payDunyaService = new PayDunyaService();
 
 // Use Demo Opay service if no credentials or in development mode
 let opayService;
@@ -40,7 +39,7 @@ try {
 }
 
 class PaymentController {
-  // Initialize payment with Paystack, PayDunya, or Opay
+  // Initialize payment with Paystack or OPay
   async initializePayment(req, res) {
     try {
       const {
@@ -52,6 +51,8 @@ class PaymentController {
         metadata,
         userPhone,
       } = req.body;
+      const normalizedPaymentMethod =
+        paymentMethod === "Opay" ? "OPay" : paymentMethod;
 
       // Validate required fields
       if (!orderId || !email || !amount) {
@@ -91,7 +92,8 @@ class PaymentController {
         orderId: order._id,
         email,
         amount,
-        paymentMethod,
+        currency: order.currency || metadata?.checkoutCurrency || "NGN",
+        paymentMethod: normalizedPaymentMethod,
         metadata: {
           ...metadata,
           userId: req.user._id,
@@ -99,12 +101,12 @@ class PaymentController {
           customerName: `${req.user.firstName} ${req.user.lastName}`,
           customerPhone: customerPhone || userPhone,
         },
-        status: "Pending",
+        status: "pending",
       });
 
       let paymentResponse;
 
-      if (paymentMethod === "Paystack") {
+      if (normalizedPaymentMethod === "Paystack") {
         paymentResponse = await paystackService.initializeTransaction({
           email,
           amount: amount * 100, // Convert to kobo for Paystack
@@ -127,32 +129,7 @@ class PaymentController {
             reference: paymentResponse.data.reference,
           },
         });
-      } else if (paymentMethod === "PayDunya") {
-        if (!customerPhone) {
-          return res.status(400).json({
-            status: false,
-            message: "Customer phone number is required for PayDunya payments",
-          });
-        }
-
-        const paymentData = await payDunyaService.initializePayment(
-          order,
-          email,
-          customerPhone
-        );
-
-        // Update payment document with PayDunya token
-        payment.reference = paymentData.payment_token;
-        await payment.save();
-
-        return res.status(200).json({
-          status: true,
-          data: {
-            payment_url: paymentData.payment_url,
-            payment_token: paymentData.payment_token,
-          },
-        });
-      } else if (paymentMethod === "Opay") {
+      } else if (normalizedPaymentMethod === "OPay") {
         paymentResponse = await opayService.initializeTransaction({
           email,
           userPhone: customerPhone || userPhone,
@@ -178,6 +155,124 @@ class PaymentController {
             orderNo: paymentResponse.data.orderNo,
           },
         });
+      } else if (normalizedPaymentMethod === "AfriExchange") {
+        const baseUrl = process.env.AFRIEXCHANGE_API_URL;
+        const apiKey = process.env.AFRIEXCHANGE_KAALIS_API_KEY;
+
+        if (!baseUrl || !apiKey) {
+          return res.status(503).json({
+            status: false,
+            message:
+              "AfriExchange checkout is not configured. Set AFRIEXCHANGE_API_URL and AFRIEXCHANGE_KAALIS_API_KEY.",
+          });
+        }
+
+        const user = await User.findById(req.user._id).select("afriExchange");
+        if (
+          !user?.afriExchange?.userId &&
+          !user?.afriExchange?.walletAddress &&
+          !user?.afriExchange?.accountEmail
+        ) {
+          return res.status(400).json({
+            status: false,
+            message:
+              "Please link your AfriExchange account before paying with AfriExchange.",
+          });
+        }
+
+        const response = await axios.post(
+          `${baseUrl.replace(/\/$/, "")}/integrations/kaalis/collections`,
+          {
+            idempotencyKey: `kaalis-order-${order._id}`,
+            kaalisOrderId: order._id.toString(),
+            kaalisBuyerId: req.user._id.toString(),
+            buyerAfriExchangeUserId: user.afriExchange?.userId,
+            buyerWalletAddress: user.afriExchange?.walletAddress,
+            buyerAccountEmail: user.afriExchange?.accountEmail,
+            amount,
+            tokenType: "CT",
+            description: `Kaalis checkout payment for order ${order.orderId}`,
+            metadata: {
+              orderId: order._id.toString(),
+              userEmail: email,
+              customerName: `${req.user.firstName || ""} ${
+                req.user.lastName || ""
+              }`.trim(),
+              ...metadata,
+            },
+          },
+          {
+            headers: {
+              "x-kaalis-api-key": apiKey,
+            },
+            timeout: 15000,
+          }
+        );
+
+        const collection = response.data?.data;
+        if (!response.data?.success || !collection?.reference) {
+          throw new Error("AfriExchange collection failed");
+        }
+
+        payment.reference = collection.reference;
+        payment.status = "success";
+        payment.afriExchangeData = collection;
+        await payment.save();
+
+        const updatedOrder = await Order.findByIdAndUpdate(
+          order._id,
+          {
+            $set: {
+              status: "Processing",
+              transactionId: collection.reference,
+            },
+          },
+          { new: true, runValidators: true }
+        );
+
+        if (!updatedOrder || updatedOrder.status !== "Processing") {
+          logger.error("AfriExchange payment succeeded but order status update did not persist", {
+            orderId: order._id,
+            reference: collection.reference,
+            observedStatus: updatedOrder?.status,
+          });
+        }
+
+        let vendorPayout = null;
+        try {
+          vendorPayout = await payoutService.scheduleVendorPayout(
+            order.seller,
+            order.vendorAmount,
+            {
+              orderId: order._id,
+              kaalisOrderId: order.orderId,
+              paymentId: payment._id,
+              customerEmail: email,
+              currency: order.currency || payment.currency || "XOF",
+              paymentMethod: "AfriExchange",
+              reference: collection.reference,
+            }
+          );
+        } catch (payoutError) {
+          logger.error("AfriExchange payment succeeded but vendor payout scheduling failed", {
+            orderId: order._id,
+            reference: collection.reference,
+            error: payoutError.message,
+          });
+        }
+
+        return res.status(200).json({
+          status: true,
+          data: {
+            reference: collection.reference,
+            collectionId: collection.collectionId,
+            provider: "AfriExchange",
+            paymentStatus: collection.status,
+            orderStatus: updatedOrder?.status,
+            payoutStatus: vendorPayout?.status,
+            payoutId: vendorPayout?._id,
+          },
+        });
       } else {
         return res.status(400).json({
           status: false,
@@ -192,12 +287,14 @@ class PaymentController {
     }
   }
 
-  // Verify payment (Paystack, PayDunya, or Opay)
+  // Verify payment with Paystack or OPay
   async verifyPayment(req, res) {
     try {
       const { reference, paymentMethod } = req.params;
+      const normalizedPaymentMethod =
+        paymentMethod === "Opay" ? "OPay" : paymentMethod;
 
-      if (!paymentMethod) {
+      if (!normalizedPaymentMethod) {
         return res.status(400).json({
           status: false,
           message: "Payment method is required",
@@ -206,19 +303,13 @@ class PaymentController {
 
       let verification;
 
-      if (paymentMethod === "Paystack") {
+      if (normalizedPaymentMethod === "Paystack") {
         verification = await paystackService.verifyTransaction(reference);
         return res.status(200).json({
           status: true,
           data: verification.data,
         });
-      } else if (paymentMethod === "PayDunya") {
-        verification = await payDunyaService.verifyPayment(reference);
-        return res.status(200).json({
-          status: true,
-          data: verification,
-        });
-      } else if (paymentMethod === "Opay") {
+      } else if (normalizedPaymentMethod === "OPay") {
         verification = await opayService.verifyTransaction(reference);
         return res.status(200).json({
           status: true,
@@ -238,44 +329,6 @@ class PaymentController {
     }
   }
 
-  // Handle PayDunya callback
-  async handlePayDunyaCallback(req, res) {
-    try {
-      const { token } = req.query;
-
-      if (!token) {
-        return res
-          .status(400)
-          .json({ status: false, message: "Payment token is missing" });
-      }
-
-      const paymentDetails = await payDunyaService.verifyPayment(token);
-
-      if (paymentDetails.status === "completed") {
-        const order = await Payment.findOne({
-          orderId: paymentDetails.order_id,
-        });
-        if (order) {
-          order.status = "Processing";
-          order.paymentStatus = "Paid";
-          await order.save();
-          logger.info(`Payment completed for order ${order.orderId}`);
-        }
-      } else {
-        logger.warn(
-          `Payment not completed for token ${token}: ${paymentDetails.status}`
-        );
-      }
-
-      res.status(200).json({ status: true, message: "Callback processed" });
-    } catch (error) {
-      logger.error("Error in handlePayDunyaCallback:", error);
-      res
-        .status(500)
-        .json({ status: false, message: "Failed to process callback" });
-    }
-  }
-
   // Get user payment history
   async getUserPaymentHistory(req, res) {
     try {
@@ -289,7 +342,7 @@ class PaymentController {
         .limit(limit)
         .populate({
           path: "orderId",
-          select: "orderId totalAmount status",
+          select: "orderId totalAmount status vendorAmount platformFee currency paymentMethod",
         });
 
       const total = await Payment.countDocuments({
@@ -302,9 +355,12 @@ class PaymentController {
           id: payment._id,
           reference: payment.reference,
           amount: payment.amount,
+          currency: payment.currency,
           status: payment.status,
           paymentMethod: payment.paymentMethod,
           orderId: payment.orderId?.orderId,
+          vendorAmount: payment.orderId?.vendorAmount,
+          platformFee: payment.orderId?.platformFee,
           createdAt: payment.createdAt,
           email: payment.email,
         })),
@@ -364,7 +420,7 @@ class PaymentController {
       let response;
       const method = paymentMethod || "Paystack"; // Default to Paystack
 
-      if (method === "Opay") {
+      if (method === "OPay" || method === "Opay") {
         response = await opayService.validateBankAccount({
           accountNumber,
           bankCode,

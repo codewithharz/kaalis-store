@@ -12,7 +12,10 @@ const vendorPayoutSchema = new mongoose.Schema(
     orderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Order",
-      required: true,
+    },
+    paymentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Payment",
     },
     amount: {
       type: Number,
@@ -21,7 +24,7 @@ const vendorPayoutSchema = new mongoose.Schema(
     // Status and scheduling
     status: {
       type: String,
-      enum: ["pending", "processing", "processed", "failed"],
+      enum: ["aggregating", "pending", "processing", "processed", "failed"],
       default: "pending",
     },
     scheduledDate: {
@@ -32,6 +35,9 @@ const vendorPayoutSchema = new mongoose.Schema(
     // Transaction references
     transactionReference: String,
     transferReference: String,
+    providerPayoutId: String,
+    providerStatus: String,
+    lastStatusCheckedAt: Date,
     // Error handling
     errorMessage: String,
     retriesCount: {
@@ -41,7 +47,15 @@ const vendorPayoutSchema = new mongoose.Schema(
     // Payment details
     paymentMethod: {
       type: String,
-      enum: ["bank_transfer", "paystack"],
+      enum: [
+        "paystack",
+        "opay",
+        "afriexchange",
+        "Paystack",
+        "OPay",
+        "Opay",
+        "AfriExchange",
+      ],
       default: "paystack",
     },
     bankDetails: {

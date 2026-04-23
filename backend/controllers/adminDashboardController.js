@@ -8,6 +8,7 @@ const Product = require("../models/productModels");
 const Order = require("../models/orderModels");
 const Category = require("../models/categoryModels");
 const Payment = require("../models/paymentModels");
+const VendorPayout = require("../models/vendorPayoutModels");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const {
@@ -1288,6 +1289,375 @@ exports.processPayouts = async (req, res) => {
       success: false,
       message: "Failed to process payouts",
       error: error.message
+    });
+  }
+};
+
+exports.reconcileAfriExchangePayouts = async (req, res) => {
+  try {
+    const payoutService = require("../services/payoutService");
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 100);
+    const results = await payoutService.reconcileAfriExchangePayouts({ limit });
+
+    res.json({
+      success: true,
+      message: "AfriExchange payout reconciliation completed",
+      results,
+    });
+  } catch (error) {
+    console.error("Error reconciling AfriExchange payouts:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to reconcile AfriExchange payouts",
+      error: error.message,
+    });
+  }
+};
+
+exports.checkPayoutStatus = async (req, res) => {
+  try {
+    const payoutService = require("../services/payoutService");
+    const result = await payoutService.checkPayoutStatus(req.params.id);
+
+    res.json({
+      success: !!result.success || !!result.status,
+      result,
+    });
+  } catch (error) {
+    console.error("Error checking payout status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to check payout status",
+      error: error.message,
+    });
+  }
+};
+
+exports.simulateAfriExchangeProcessingPayout = async (req, res) => {
+  try {
+    if (
+      process.env.NODE_ENV !== "development" &&
+      process.env.NODE_ENV !== "test"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "This helper is only available in development or test",
+      });
+    }
+
+    const payoutService = require("../services/payoutService");
+    const payout = await VendorPayout.findById(req.params.id);
+
+    if (!payout) {
+      return res.status(404).json({
+        success: false,
+        message: "Payout not found",
+      });
+    }
+
+    if (!/afriexchange/i.test(payout.paymentMethod || "")) {
+      return res.status(400).json({
+        success: false,
+        message: "This helper only supports AfriExchange payouts",
+      });
+    }
+
+    if (payout.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: `Payout must be pending before simulation. Current status: ${payout.status}`,
+      });
+    }
+
+    const vendor = await User.findById(payout.vendorId).select(
+      "email afriExchange countryCode currency paymentMethod"
+    );
+
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        message: "Vendor not found for payout",
+      });
+    }
+
+    const payoutResult = await payoutService.processAfriExchangePayout(
+      vendor,
+      payout,
+      payout.currency
+    );
+
+    if (!payoutResult.success) {
+      return res.status(400).json({
+        success: false,
+        message:
+          payoutResult.message ||
+          "Failed to create AfriExchange payout for processing simulation",
+      });
+    }
+
+    payout.status = "processing";
+    payout.transferReference =
+      payoutResult.reference || payoutResult.payoutId || payout.transferReference;
+    payout.providerPayoutId = payoutResult.payoutId || payout.providerPayoutId;
+    payout.providerStatus = payoutResult.status || "completed";
+    payout.lastStatusCheckedAt = new Date();
+    payout.errorMessage = undefined;
+    payout.scheduledDate = new Date();
+    payout.metadata = {
+      ...(payout.metadata || {}),
+      devSimulation: {
+        simulatedBy: req.adminUser?.email,
+        simulatedAt: new Date(),
+        mode: "afriexchange_processing",
+      },
+    };
+
+    await payout.save();
+
+    if (payout.orderId) {
+      await Order.findByIdAndUpdate(payout.orderId, {
+        payoutStatus: "processing",
+        lastPayoutId: payout._id,
+      });
+    }
+
+    return res.json({
+      success: true,
+      message:
+        "AfriExchange payout created and Kaalis payout left in processing for reconciliation testing",
+      payout: {
+        id: payout._id,
+        status: payout.status,
+        currency: payout.currency,
+        amount: payout.amount,
+        transferReference: payout.transferReference,
+        providerPayoutId: payout.providerPayoutId,
+        providerStatus: payout.providerStatus,
+      },
+    });
+  } catch (error) {
+    console.error("Error simulating AfriExchange processing payout:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to simulate AfriExchange processing payout",
+      error: error.message,
+    });
+  }
+};
+
+exports.simulateAfriExchangeFailedPayout = async (req, res) => {
+  try {
+    if (
+      process.env.NODE_ENV !== "development" &&
+      process.env.NODE_ENV !== "test"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "This helper is only available in development or test",
+      });
+    }
+
+    const payoutService = require("../services/payoutService");
+    const payout = await VendorPayout.findById(req.params.id);
+
+    if (!payout) {
+      return res.status(404).json({
+        success: false,
+        message: "Payout not found",
+      });
+    }
+
+    if (!/afriexchange/i.test(payout.paymentMethod || "")) {
+      return res.status(400).json({
+        success: false,
+        message: "This helper only supports AfriExchange payouts",
+      });
+    }
+
+    if (payout.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: `Payout must be pending before failure simulation. Current status: ${payout.status}`,
+      });
+    }
+
+    await payoutService.handleFailedPayout(
+      payout,
+      new Error("Simulated AfriExchange payout failure for development testing")
+    );
+
+    const updatedPayout = await VendorPayout.findById(req.params.id);
+
+    if (updatedPayout) {
+      updatedPayout.providerStatus = "failed";
+      updatedPayout.lastStatusCheckedAt = new Date();
+      updatedPayout.metadata = {
+        ...(updatedPayout.metadata || {}),
+        devSimulation: {
+          simulatedBy: req.adminUser?.email,
+          simulatedAt: new Date(),
+          mode: "afriexchange_failed",
+        },
+      };
+      await updatedPayout.save();
+    }
+
+    return res.json({
+      success: true,
+      message:
+        "AfriExchange payout failure simulated. Kaalis retry/error handling has been applied.",
+      payout: updatedPayout
+        ? {
+            id: updatedPayout._id,
+            status: updatedPayout.status,
+            retriesCount: updatedPayout.retriesCount,
+            scheduledDate: updatedPayout.scheduledDate,
+            errorMessage: updatedPayout.errorMessage,
+            providerStatus: updatedPayout.providerStatus,
+          }
+        : null,
+    });
+  } catch (error) {
+    console.error("Error simulating AfriExchange failed payout:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to simulate AfriExchange failed payout",
+      error: error.message,
+    });
+  }
+};
+
+exports.getAdminPayouts = async (req, res) => {
+  try {
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
+    const status = req.query.status || "";
+    const paymentMethod = req.query.paymentMethod || "";
+    const currency = req.query.currency || "";
+    const search = (req.query.search || "").trim();
+    const now = new Date();
+
+    const query = {};
+
+    if (status === "ready") {
+      query.status = "pending";
+      query.scheduledDate = { $lte: now };
+    } else if (status === "scheduled") {
+      query.status = "pending";
+      query.scheduledDate = { $gt: now };
+    } else if (status) {
+      query.status = status;
+    }
+
+    if (paymentMethod) {
+      query.paymentMethod = paymentMethod;
+    }
+
+    if (currency) {
+      query.currency = currency;
+    }
+
+    const vendorSearchIds = [];
+    if (search) {
+      const matchingVendors = await User.find({
+        $or: [
+          { email: { $regex: search, $options: "i" } },
+          { firstName: { $regex: search, $options: "i" } },
+          { lastName: { $regex: search, $options: "i" } },
+        ],
+      })
+        .select("_id")
+        .limit(50);
+
+      vendorSearchIds.push(...matchingVendors.map((vendor) => vendor._id));
+      query.$or = [
+        { transactionReference: { $regex: search, $options: "i" } },
+        { transferReference: { $regex: search, $options: "i" } },
+        { vendorId: { $in: vendorSearchIds } },
+      ];
+    }
+
+    const [payouts, total, summary] = await Promise.all([
+      VendorPayout.find(query)
+        .populate("vendorId", "firstName lastName email afriExchange paymentMethod currency")
+        .populate("orderId", "orderId totalAmount currency status transactionId")
+        .sort({ scheduledDate: 1, createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      VendorPayout.countDocuments(query),
+      VendorPayout.aggregate([
+        {
+          $group: {
+            _id: {
+              status: "$status",
+              currency: "$currency",
+            },
+            total: { $sum: "$amount" },
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+    ]);
+
+    const summaryByStatus = summary.reduce((acc, item) => {
+      const statusKey = item._id.status || "unknown";
+      const currencyKey = item._id.currency || "NGN";
+
+      if (!acc[statusKey]) {
+        acc[statusKey] = {};
+      }
+
+      acc[statusKey][currencyKey] = {
+        amount: item.total,
+        count: item.count,
+      };
+
+      return acc;
+    }, {});
+
+    const readyCount = await VendorPayout.countDocuments({
+      status: "pending",
+      scheduledDate: { $lte: now },
+    });
+
+    res.json({
+      success: true,
+      payouts: payouts.map((payout) => ({
+        id: payout._id,
+        vendor: payout.vendorId,
+        order: payout.orderId,
+        amount: payout.amount,
+        currency: payout.currency || "NGN",
+        status: payout.status,
+        paymentMethod: payout.paymentMethod,
+        scheduledDate: payout.scheduledDate,
+        processedAt: payout.processedAt,
+        transactionReference: payout.transactionReference,
+        transferReference: payout.transferReference,
+        providerPayoutId: payout.providerPayoutId,
+        providerStatus: payout.providerStatus,
+        lastStatusCheckedAt: payout.lastStatusCheckedAt,
+        errorMessage: payout.errorMessage,
+        isReady: payout.status === "pending" && payout.scheduledDate <= now,
+        createdAt: payout.createdAt,
+      })),
+      summary: {
+        byStatus: summaryByStatus,
+        readyCount,
+      },
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching admin payouts:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch payouts",
+      error: error.message,
     });
   }
 };

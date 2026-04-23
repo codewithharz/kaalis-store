@@ -39,13 +39,7 @@ export const usePaymentStore = defineStore("payment", {
         // Determine the endpoint based on payment method
         const paymentMethod = paymentData.paymentMethod || "Paystack";
         const endpoint =
-          paymentMethod === "OrangeMoney"
-            ? "/orange-money/initialize"
-            : paymentMethod === "OPay"
-              ? "/opay/initialize" // OPay endpoint
-              : paymentMethod === "PayDunya"
-                ? "/payment/initialize"
-                : "/payment/initialize";
+          paymentMethod === "OPay" ? "/opay/initialize" : "/payment/initialize";
         // Send request
         const response = await apiClient.post(endpoint, paymentData, {
           headers: { Authorization: `Bearer ${userStore.token}` },

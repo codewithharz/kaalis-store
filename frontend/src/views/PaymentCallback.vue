@@ -109,7 +109,7 @@ onMounted(async () => {
             isProcessing.value = false;
         }
     } else {
-        // If no reference or trxref, assume Orange Money handled the redirect
+        // If no reference or trxref, the payment provider handled the redirect server-side.
         error.value = t('paymentCallbackLegacyPage.errors.serverHandled');
         isProcessing.value = false;
     }

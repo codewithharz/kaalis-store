@@ -29,16 +29,11 @@ router.post(
   vendorController.validateBankAccount
 );
 
-// PayDunya and Orange Money routes
+// AfriExchange routes for XOF vendor settlement
 router.post(
-  "/mobile/setup",
+  "/afriexchange/setup",
   sellerAuthMiddleware,
-  vendorController.setupMobileWallet
-);
-router.post(
-  "/mobile/validate",
-  sellerAuthMiddleware,
-  vendorController.validateMobileNumber
+  vendorController.setupAfriExchangeAccount
 );
 
 // Get provider options based on vendor country/currency

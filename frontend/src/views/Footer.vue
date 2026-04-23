@@ -176,7 +176,6 @@
                         <img :src="mastercardImage" alt="Mastercard" class="h-8 md:h-12 mb-2">
                         <img :src="visaImage" alt="Visa" class="h-8 md:h-12 mb-2">
                         <img :src="amexImage" alt="American Express" class="h-8 md:h-12 mb-2">
-                        <img :src="orangeImage" alt="Orange Money" class="h-8 md:h-12 mb-2">
                     </div>
                 </div>
 
@@ -223,6 +222,7 @@
 import { ChevronRight } from 'lucide-vue-next';
 import CountrySelectionModal from './CountrySelectionModal.vue';
 import { useCountryStore } from '../store/countryStore';
+import { useUserStore } from '../store/user';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
@@ -235,7 +235,6 @@ import nitdaImage from '../assets/images/NITDA-nigeria.jpeg';
 import mastercardImage from '../assets/images/footer-mastercard.png';
 import visaImage from '../assets/images/footer-visa.png';
 import amexImage from '../assets/images/footer-american-express.png';
-import orangeImage from '../assets/images/orange-p.jpeg';
 
 // Import social media images
 import facebookImage from '../assets/images/footer-facebook.png.webp';
@@ -254,6 +253,7 @@ export default {
         const { t } = useI18n();
         const router = useRouter();
         const countryStore = useCountryStore();
+        const userStore = useUserStore();
         const selectedCountry = computed(() => countryStore.selectedCountry);
 
         const navigateToBecomeSeller = () => {
@@ -275,7 +275,6 @@ export default {
             mastercardImage: new URL(mastercardImage, import.meta.url).href,
             visaImage: new URL(visaImage, import.meta.url).href,
             amexImage: new URL(amexImage, import.meta.url).href,
-            orangeImage: new URL(orangeImage, import.meta.url).href,
             // Social media images
 
             facebookImage,
@@ -283,6 +282,7 @@ export default {
             youtubeImage,
             xImage,
             navigateToBecomeSeller,
+            userStore,
         };
     },
     data() {
@@ -297,11 +297,18 @@ export default {
         closeCountryModal() {
             this.isCountryModalOpen = false;
         },
-        onCountrySelected(country) {
+        async onCountrySelected(country) {
             const countryStore = useCountryStore();
+            const userStore = useUserStore();
             countryStore.setCountry(country);
+            if (userStore.isLoggedIn) {
+                try {
+                    await userStore.updateMarketSettings(country);
+                } catch (error) {
+                    console.error('Failed to update market settings:', error);
+                }
+            }
             this.closeCountryModal();
-            // You can add any additional logic here, such as updating the store or making an API call
         }
     }
 }

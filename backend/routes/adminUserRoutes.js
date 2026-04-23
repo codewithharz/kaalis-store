@@ -79,6 +79,23 @@ router.put("/regular-users/:id/permissions", adminAuthMiddleware, isAdmin, admin
 router.get("/dashboard/stats", adminAuthMiddleware, adminDashboardController.getDashboardStats);
 router.get("/products", adminAuthMiddleware, adminDashboardController.getAdminProducts);
 router.get("/orders", adminAuthMiddleware, adminDashboardController.getAdminOrders);
+router.get("/payouts", adminAuthMiddleware, isAdmin, adminDashboardController.getAdminPayouts);
+router.post("/payouts/reconcile-afriexchange", adminAuthMiddleware, isSuperAdmin, adminDashboardController.reconcileAfriExchangePayouts);
+router.post("/payouts/:id/check-status", adminAuthMiddleware, isAdmin, adminDashboardController.checkPayoutStatus);
+if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
+  router.post(
+    "/payouts/:id/simulate-afriexchange-processing",
+    adminAuthMiddleware,
+    isSuperAdmin,
+    adminDashboardController.simulateAfriExchangeProcessingPayout
+  );
+  router.post(
+    "/payouts/:id/simulate-afriexchange-failure",
+    adminAuthMiddleware,
+    isSuperAdmin,
+    adminDashboardController.simulateAfriExchangeFailedPayout
+  );
+}
 router.get("/categories", adminAuthMiddleware, adminDashboardController.getAdminCategories);
 router.get("/revenue-stats", adminAuthMiddleware, adminDashboardController.getRevenueStats);
 

@@ -213,45 +213,25 @@
                     <div class="border-t my-4 pt-4">
                         <h3 class="font-semibold mb-3">{{ t('checkout.paymentMethod') }}</h3>
                         <div class="space-y-3">
-                            <label
+                            <label v-for="option in paymentOptions" :key="option.value"
                                 class="flex items-center cursor-pointer p-2 border rounded-lg hover:border-[#24a6bb] transition"
-                                :class="{ 'border-[#24a6bb] bg-cyan-50': paymentMethod === 'Paystack' }">
-                                <input type="radio" value="Paystack" v-model="paymentMethod"
+                                :class="{ 'border-[#24a6bb] bg-cyan-50': paymentMethod === option.value }">
+                                <input type="radio" :value="option.value" v-model="paymentMethod"
                                     class="w-4 h-4 text-[#24a6bb] focus:ring-[#24a6bb]">
                                 <div class="ml-3 flex items-center gap-2">
-                                    <img :src="paymentImages.paystackLogo" alt="Paystack" class="h-4">
-                                    <span class="text-sm font-medium">Paystack</span>
+                                    <img v-if="option.logo" :src="option.logo" :alt="option.label" class="h-4">
+                                    <span v-else class="text-xs font-semibold px-2 py-1 rounded bg-gray-900 text-white">AFX</span>
+                                    <span class="text-sm font-medium">{{ option.label }}</span>
                                 </div>
                             </label>
-
-                            <label
-                                class="flex items-center cursor-pointer p-2 border rounded-lg hover:border-[#24a6bb] transition"
-                                :class="{ 'border-[#24a6bb] bg-cyan-50': paymentMethod === 'OPay' }">
-                                <input type="radio" value="OPay" v-model="paymentMethod"
-                                    class="w-4 h-4 text-[#24a6bb] focus:ring-[#24a6bb]">
-                                <div class="ml-3 flex items-center gap-2">
-                                    <img :src="paymentImages.opayLogo" alt="OPay" class="h-4">
-                                    <span class="text-sm font-medium">OPay</span>
-                                </div>
-                            </label>
-
-                            <!-- Disabled options compacted -->
-                            <div class="flex gap-2 opacity-50 text-xs">
-                                <div class="flex items-center gap-1 border px-2 py-1 rounded">
-                                    <img :src="paymentImages.orangeMoney" class="h-3 grayscale"> Orange Money
-                                </div>
-                                <div class="flex items-center gap-1 border px-2 py-1 rounded">
-                                    <img :src="paymentImages.payDunyaLogo" class="h-3 grayscale"> PayDunya
-                                </div>
-                            </div>
                         </div>
                     </div>
 
                     <div class="border-t pt-4 flex justify-between font-bold text-lg mb-4">
                         <span>{{ t('cart.total') }}</span>
-                        <span>{{ total.toFixed(2) }} ₦</span>
+                        <span>{{ checkoutCurrencySymbol }} {{ total.toFixed(2) }}</span>
                     </div>
-                    <div class="text-right mb-4">
+                    <div v-if="checkoutCurrency === 'NGN'" class="text-right mb-4">
                         <span class="text-gray-600">US $ {{ ((Math.floor(total * exchangeRate) + Math.ceil((total *
                             exchangeRate % 1) * 100) / 100) * 1.01).toFixed(2) }}</span>
                     </div>
@@ -285,11 +265,13 @@ import { useOrderStore } from '../store/orderStore';
 import { useProductStore } from '../store/productStore.js';
 import { usePaymentStore } from '../store/paymentStore.js';
 import { useUserStore } from '../store/user.js';
+import { useCountryStore } from '../store/countryStore.js';
 import { toast } from 'vue-sonner';
 import { CreditCard, Minus, Plus } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import apiClient from '../api/axios';
 import axios from 'axios';
+import { getCurrencySymbol } from '../utils/countryCurrency.js';
 
 // Import images
 import paystackLogo from '../assets/images/paystack-p.svg';
@@ -299,8 +281,6 @@ import mastercardLogo from '../assets/images/mastercard-pay.webp';
 import applePay from '../assets/images/apple-pay.webp';
 import googlePay from '../assets/images/google-pay.png';
 import paypalLogo from '../assets/images/paypal-pay.webp';
-import orangeMoney from '../assets/images/orange-p.jpeg';
-import payDunyaLogo from '../assets/images/paydunya-logo.png'; // Add PayDunya logo (ensure this file exists)
 
 const router = useRouter();
 const { t } = useI18n();
@@ -309,10 +289,11 @@ const cartStore = useCartStore();
 const orderStore = useOrderStore();
 const productStore = useProductStore();
 const userStore = useUserStore();
+const countryStore = useCountryStore();
 
 const selectedAddress = ref(null);
 const paymentMethod = ref('Paystack');
-const customerPhone = ref(''); // Customer phone for Orange Money and PayDunya
+const customerPhone = ref('');
 const isLoading = ref(true);
 const error = ref(null);
 const shippingFee = ref(0);
@@ -322,6 +303,41 @@ const promoCode = ref('');
 
 const paymentStore = usePaymentStore();
 const isProcessingPayment = ref(false);
+
+const checkoutCurrency = computed(() => countryStore.currency || 'NGN');
+const checkoutCurrencySymbol = computed(() => getCurrencySymbol(checkoutCurrency.value));
+const paymentOptions = computed(() =>
+    checkoutCurrency.value === 'XOF'
+        ? [
+            {
+                value: 'AfriExchange',
+                label: 'AfriExchange',
+                logo: null,
+            },
+        ]
+        : [
+            {
+                value: 'Paystack',
+                label: 'Paystack',
+                logo: paymentImages.paystackLogo,
+            },
+            {
+                value: 'OPay',
+                label: 'OPay',
+                logo: paymentImages.opayLogo,
+            },
+        ]
+);
+
+watch(
+    () => checkoutCurrency.value,
+    () => {
+        if (!paymentOptions.value.some((option) => option.value === paymentMethod.value)) {
+            paymentMethod.value = paymentOptions.value[0]?.value || 'Paystack';
+        }
+    },
+    { immediate: true }
+);
 
 const cluesBucksStore = useCluesBucksStore();
 const { stats, isLoading: cluesBucksLoading } = storeToRefs(cluesBucksStore);
@@ -694,17 +710,6 @@ const placeOrder = async () => {
         return;
     }
 
-    // Validate phone number for Orange Money and PayDunya
-    if (['OrangeMoney', 'PayDunya'].includes(paymentMethod.value)) {
-        if (!customerPhone.value || !validatePhoneNumber(customerPhone.value)) {
-            toast.error(t('checkout.validPhoneForPayment', {
-                method: paymentMethod.value,
-                example: paymentMethod.value === 'OrangeMoney' ? '+221xxxxxxxxx' : '+234xxxxxxxxx'
-            }));
-            return;
-        }
-    }
-
     isProcessingPayment.value = true;
 
     try {
@@ -726,6 +731,7 @@ const placeOrder = async () => {
         const orderData = {
             address: selectedAddress.value,
             paymentMethod: paymentMethod.value,
+            currency: checkoutCurrency.value,
             seller: cartStore.items[0].product.user,
             products: preparedItems,
             subtotal: subtotalAmount,
@@ -743,7 +749,11 @@ const placeOrder = async () => {
             },
             couponDiscount: cartStore.discount || 0,
             ...(cartStore.coupon && { couponCode: cartStore.coupon.code }),
-            ...(['OrangeMoney', 'PayDunya'].includes(paymentMethod.value) && { metadata: { customerPhone: customerPhone.value } })
+            metadata: {
+                checkoutCountry: countryStore.selectedCountry,
+                checkoutCurrency: checkoutCurrency.value,
+                checkoutRail: paymentMethod.value,
+            },
         };
 
         console.log('Creating order with data:', orderData);
@@ -839,27 +849,53 @@ const placeOrder = async () => {
             } else {
                 throw new Error('OPay payment initialization failed');
             }
-        } else if (['PayDunya', 'OrangeMoney'].includes(paymentMethod.value)) {
+        } else if (paymentMethod.value === 'AfriExchange') {
             const paymentData = {
                 orderId: createdOrder._id,
-                paymentMethod: paymentMethod.value,
-                customerPhone: customerPhone.value,
-                amount: totalWithShipping, // Pass the amount in NGN
+                email: selectedAddress.value.email,
+                amount: totalWithShipping,
+                paymentMethod: 'AfriExchange',
                 metadata: {
                     orderId: createdOrder._id,
                     userId: userStore.user._id,
+                    userEmail: selectedAddress.value.email,
                     customerName: `${selectedAddress.value.firstName} ${selectedAddress.value.lastName}`,
-                    customerPhone: customerPhone.value,
+                    checkoutCountry: countryStore.selectedCountry,
+                    checkoutCurrency: checkoutCurrency.value,
                     items: preparedItems.map(item => ({
-                        productId: item.product,
+                        productId: item.productId || item.product,
                         quantity: item.quantity,
+                        price: item.price,
+                        vendorAmount: item.vendorAmount,
+                        platformFee: item.platformFee,
+                        vendorId: item.vendorId
                     })),
-                },
+                }
             };
-            const paymentResponse = await paymentStore.initializePayment(paymentData);
 
-            const redirectUrl = paymentResponse.payment_url || paymentResponse.authorization_url;
-            window.location.href = redirectUrl;
+            const afriExchangeResponse = await paymentStore.initializePayment(paymentData);
+            const reference = afriExchangeResponse.reference;
+
+            if (!reference) {
+                throw new Error('AfriExchange payment confirmation failed');
+            }
+
+            localStorage.setItem('currentTransaction', JSON.stringify({
+                orderId: createdOrder._id,
+                reference,
+                timestamp: new Date().toISOString(),
+                paymentMethod: 'AfriExchange'
+            }));
+
+            toast.success(t('checkout.paymentSuccessful'));
+
+            await router.push({
+                name: 'PaymentSuccess',
+                params: {
+                    reference,
+                    orderId: createdOrder._id
+                }
+            });
         } else {
             toast.error(t('checkout.validPaymentMethod'));
             throw new Error(t('checkout.validPaymentMethod'));
@@ -1000,8 +1036,6 @@ const paymentImages = {
     applePay,
     googlePay,
     paypalLogo,
-    orangeMoney,
-    payDunyaLogo,
     opayLogo
 };
 </script>

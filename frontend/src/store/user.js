@@ -143,6 +143,59 @@ export const useUserStore = defineStore("user", {
       }
     },
 
+    async updateMarketSettings(country) {
+      if (!this.user || !this.token) return null;
+
+      const userId = this.user.userId || this.user._id;
+      if (!userId) return null;
+
+      const response = await apiClient.put(
+        `/users/${userId}/market-settings`,
+        { country },
+        {
+          headers: { Authorization: `Bearer ${this.token}` },
+        }
+      );
+
+      this.user = { ...this.user, ...response.data.user };
+      this.saveUserToLocalStorage();
+      return response.data.market;
+    },
+
+    async linkAfriExchangeAccount(accountData) {
+      if (!this.user || !this.token) return null;
+
+      const userId = this.user.userId || this.user._id;
+      if (!userId) return null;
+
+      const response = await apiClient.put(
+        `/users/${userId}/afriexchange/link`,
+        accountData,
+        {
+          headers: { Authorization: `Bearer ${this.token}` },
+        }
+      );
+
+      this.user = { ...this.user, ...response.data.user };
+      this.saveUserToLocalStorage();
+      return response.data.afriExchange;
+    },
+
+    async unlinkAfriExchangeAccount() {
+      if (!this.user || !this.token) return null;
+
+      const userId = this.user.userId || this.user._id;
+      if (!userId) return null;
+
+      const response = await apiClient.delete(`/users/${userId}/afriexchange/link`, {
+        headers: { Authorization: `Bearer ${this.token}` },
+      });
+
+      this.user = { ...this.user, ...response.data.user };
+      this.saveUserToLocalStorage();
+      return response.data;
+    },
+
     async getUserProducts(userId) {
       // Action to fetch user products
       try {

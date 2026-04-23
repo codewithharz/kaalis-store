@@ -80,10 +80,14 @@ const orderSchema = new mongoose.Schema(
         "Bank Transfer",
         "Paystack",
         "OPay",
-        "OrangeMoney",
-        "PayDunya",
+        "AfriExchange",
       ],
       required: true,
+    },
+    currency: {
+      type: String,
+      enum: ["NGN", "XOF"],
+      default: "NGN",
     },
     orderId: {
       type: String,

@@ -2,7 +2,7 @@
 <template>
     <div class="space-y-4 sm:space-y-6 px-2 sm:px-4 md:px-8 lg:px-12">
         <!-- Stats Cards with Modern Design -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
             <!-- Pending Payout -->
             <div
                 class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-lg bg-white/80 border border-white/20">
@@ -10,7 +10,7 @@
                     <div class="min-w-0 flex-1">
                         <p class="text-xs sm:text-sm text-gray-500">{{ t('vendorPaymentSetupPage.stats.pendingPayout') }}</p>
                         <p class="text-base sm:text-lg font-medium text-gray-900 break-words">
-                            {{ formatCurrency(vendorPayoutStore.pendingAmount) }}
+                            {{ formatCurrency(vendorPayoutStore.pendingAmount, activeCurrency) }}
                         </p>
                     </div>
                     <div
@@ -20,9 +20,94 @@
                 </div>
             </div>
 
-            <!-- Next Payout -->
+            <!-- Processed Payouts -->
             <div
                 class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-lg bg-white/80 border border-white/20">
+                <div class="flex items-center justify-between">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs sm:text-sm text-gray-500">{{ t('vendorPaymentSetupPage.stats.processedPayouts') }}</p>
+                        <p class="text-base sm:text-lg font-medium text-gray-900 break-words">
+                            {{ formatCurrency(currencyStat(vendorPayoutStore.processedAmounts), activeCurrency) }}
+                        </p>
+                    </div>
+                    <div
+                        class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-50 flex items-center justify-center flex-shrink-0">
+                        <CircleDollarSign class="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Sales -->
+            <div
+                class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-lg bg-white/80 border border-white/20 sm:col-span-2 lg:col-span-1">
+                <div class="flex items-center justify-between">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs sm:text-sm text-gray-500">{{ t('vendorPaymentSetupPage.stats.totalSales') }}</p>
+                        <p class="text-base sm:text-lg font-medium text-gray-900 break-words">
+                            {{ formatCurrency(currencyStat(vendorPayoutStore.salesAmounts), activeCurrency) }}
+                        </p>
+                    </div>
+                    <div
+                        class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-cyan-50 flex items-center justify-center flex-shrink-0">
+                        <CreditCard class="w-5 h-5 sm:w-6 sm:h-6 text-cyan-600" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seller Earnings -->
+            <div
+                class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-lg bg-white/80 border border-white/20">
+                <div class="flex items-center justify-between">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs sm:text-sm text-gray-500">{{ t('vendorPaymentSetupPage.stats.sellerEarnings') }}</p>
+                        <p class="text-base sm:text-lg font-medium text-gray-900 break-words">
+                            {{ formatCurrency(currencyStat(vendorPayoutStore.vendorEarnings), activeCurrency) }}
+                        </p>
+                    </div>
+                    <div
+                        class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                        <CircleDollarSign class="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Count -->
+            <div
+                class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-lg bg-white/80 border border-white/20">
+                <div class="flex items-center justify-between">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs sm:text-sm text-gray-500">{{ t('vendorPaymentSetupPage.stats.completedOrders') }}</p>
+                        <p class="text-base sm:text-lg font-medium text-gray-900">
+                            {{ currencyStat(vendorPayoutStore.orderCounts) }}
+                        </p>
+                    </div>
+                    <div
+                        class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-50 flex items-center justify-center flex-shrink-0">
+                        <History class="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Platform Fees -->
+            <div
+                class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-lg bg-white/80 border border-white/20">
+                <div class="flex items-center justify-between">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs sm:text-sm text-gray-500">{{ t('vendorPaymentSetupPage.stats.platformFees') }}</p>
+                        <p class="text-base sm:text-lg font-medium text-gray-900 break-words">
+                            {{ formatCurrency(currencyStat(vendorPayoutStore.platformFeeAmounts), activeCurrency) }}
+                        </p>
+                    </div>
+                    <div
+                        class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                        <Percent class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Next Payout -->
+            <div
+                class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-lg bg-white/80 border border-white/20 sm:col-span-2 xl:col-span-3">
                 <div class="flex items-center justify-between">
                     <div class="min-w-0 flex-1">
                         <p class="text-xs sm:text-sm text-gray-500">{{ t('vendorPaymentSetupPage.stats.nextPayout') }}</p>
@@ -36,21 +121,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Platform Fee -->
-            <div
-                class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-lg bg-white/80 border border-white/20 sm:col-span-2 lg:col-span-1">
-                <div class="flex items-center justify-between">
-                    <div class="min-w-0 flex-1">
-                        <p class="text-xs sm:text-sm text-gray-500">{{ t('vendorPaymentSetupPage.stats.platformFee') }}</p>
-                        <p class="text-base sm:text-lg font-medium text-gray-900">8%</p>
-                    </div>
-                    <div
-                        class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-                        <Percent class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- Bank Account Setup with Modern Design -->
@@ -60,15 +130,16 @@
                     <div>
                         <h3 class="text-xl sm:text-2xl font-semibold text-gray-900">{{ t('vendorPaymentSetupPage.title') }}</h3>
                         <p class="text-xs sm:text-sm text-gray-500 mt-1">{{ t('vendorPaymentSetupPage.subtitle') }}</p>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-1">{{ t('vendorPaymentSetupPage.adminReleaseNote') }}</p>
                     </div>
-                    <button v-if="!hasPaystackSetup" @click="redirectToBankSetup"
+                    <button v-if="!hasPayoutSetup" @click="redirectToBankSetup"
                         class="group w-full sm:w-auto px-4 sm:px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2 hover:shadow-indigo-500/25 text-sm sm:text-base">
-                        <span class="hidden sm:inline">{{ t('vendorPaymentSetupPage.setupBankAccount') }}</span>
+                        <span class="hidden sm:inline">{{ setupButtonText }}</span>
                         <span class="sm:hidden">{{ t('vendorPaymentSetupPage.setupAccount') }}</span>
                     </button>
                 </div>
 
-                <div v-if="hasPaystackSetup"
+                <div v-if="hasPayoutSetup"
                     class="mt-4 sm:mt-6 p-4 sm:p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg sm:rounded-xl border border-gray-200">
                     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
                         <div
@@ -76,15 +147,19 @@
                             <CreditCard class="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600" />
                         </div>
                         <div class="min-w-0 flex-1">
-                            <p class="font-medium text-gray-900 text-sm sm:text-base">{{ t('vendorPaymentSetupPage.bankAccountConnected') }}</p>
+                            <p class="font-medium text-gray-900 text-sm sm:text-base">{{ connectedTitle }}</p>
                             <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1.5">
-                                <div class="flex items-center gap-1.5 text-xs sm:text-sm text-gray-500">
+                                <div v-if="!isAfriExchangeMode" class="flex items-center gap-1.5 text-xs sm:text-sm text-gray-500">
                                     <Building2 class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                                     <span class="truncate">{{ userStore.user?.paystack?.bankName || t('vendorPaymentSetupPage.bankAccount')
                                     }}</span>
                                     <span>•••• {{ userStore.user?.paystack?.accountNumber?.slice(-4) }}</span>
                                 </div>
-                                <div class="flex items-center gap-1.5 text-xs sm:text-sm text-gray-500">
+                                <div v-else class="flex items-center gap-1.5 text-xs sm:text-sm text-gray-500">
+                                    <Building2 class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                                    <span class="truncate">{{ afriExchangeIdentifier }}</span>
+                                </div>
+                                <div v-if="!isAfriExchangeMode" class="flex items-center gap-1.5 text-xs sm:text-sm text-gray-500">
                                     <UserCheckIcon class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                                     <span class="truncate">{{ displayAccountName(userStore.user?.paystack?.accountName)
                                     }}</span>
@@ -127,7 +202,7 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                <tr v-for="payout in vendorPayoutStore.payouts" :key="payout._id"
+                                <tr v-for="payout in paginatedPayouts" :key="payout._id"
                                     class="hover:bg-gray-50 transition-colors">
                                     <td
                                         class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">
@@ -135,7 +210,7 @@
                                     </td>
                                     <td
                                         class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 font-medium">
-                                        {{ formatCurrency(payout.amount) }}
+                                        {{ formatCurrency(payout.amount, payout.currency) }}
                                     </td>
                                     <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                                         <span :class="getStatusClass(payout.status.toLowerCase())"
@@ -146,7 +221,7 @@
                                                 'bg-green-400': payout.status.toLowerCase() === 'processed',
                                                 'bg-red-400': payout.status.toLowerCase() === 'failed'
                                             }"></span>
-                                            {{ t(`vendorPaymentSetupPage.statuses.${payout.status.toLowerCase()}`) }}
+                                            {{ getPayoutStatusLabel(payout) }}
                                         </span>
                                     </td>
                                     <td
@@ -156,6 +231,28 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+
+                    <div v-if="payoutTotalPages > 1"
+                        class="flex items-center justify-between gap-3 border-t border-gray-100 px-2 py-4 sm:px-0">
+                        <p class="text-xs sm:text-sm text-gray-500">
+                            {{ payoutPaginationStart + 1 }}-{{ payoutPaginationEnd }} of {{ vendorPayoutStore.payouts.length }}
+                        </p>
+                        <div class="flex items-center gap-2">
+                            <button @click="payoutCurrentPage--" :disabled="payoutCurrentPage === 1"
+                                class="p-2 text-gray-400 hover:text-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                aria-label="Previous payouts page">
+                                <ChevronLeft class="w-4 h-4 sm:w-5 sm:h-5" />
+                            </button>
+                            <span class="min-w-10 text-center text-xs sm:text-sm font-medium text-gray-600">
+                                {{ payoutCurrentPage }} / {{ payoutTotalPages }}
+                            </span>
+                            <button @click="payoutCurrentPage++" :disabled="payoutCurrentPage >= payoutTotalPages"
+                                class="p-2 text-gray-400 hover:text-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                aria-label="Next payouts page">
+                                <ChevronRight class="w-4 h-4 sm:w-5 sm:h-5" />
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -183,18 +280,78 @@ import {
     UserCheckIcon,
     History,
     Loader2,
+    ChevronLeft,
+    ChevronRight,
 } from 'lucide-vue-next';
 import { useVendorPayoutStore } from '../store/vendorPayoutStore';
 import { useUserStore } from '../store/user';
+import { useCountryStore } from '../store/countryStore';
 import { toast } from 'vue-sonner';
 
 const router = useRouter();
 const { t, locale } = useI18n();
 const vendorPayoutStore = useVendorPayoutStore();
 const userStore = useUserStore();
+const countryStore = useCountryStore();
+const payoutCurrentPage = ref(1);
+const payoutItemsPerPage = 5;
 
 const hasPaystackSetup = computed(() => {
     return !!userStore.user?.paystack?.recipientCode;
+});
+
+const isAfriExchangeMode = computed(() => {
+    return countryStore.isXofCountry || userStore.user?.currency === 'XOF' || userStore.user?.paymentMethod === 'AfriExchange';
+});
+
+const hasAfriExchangeSetup = computed(() => {
+    return !!(
+        userStore.user?.afriExchange?.userId ||
+        userStore.user?.afriExchange?.walletAddress ||
+        userStore.user?.afriExchange?.accountEmail
+    );
+});
+
+const hasPayoutSetup = computed(() => {
+    return isAfriExchangeMode.value ? hasAfriExchangeSetup.value : hasPaystackSetup.value;
+});
+
+const activeCurrency = computed(() => {
+    return isAfriExchangeMode.value ? 'XOF' : 'NGN';
+});
+
+const currencyStat = (statsByCurrency = {}) => {
+    return statsByCurrency?.[activeCurrency.value] || 0;
+};
+
+const payoutTotalPages = computed(() => Math.ceil(vendorPayoutStore.payouts.length / payoutItemsPerPage));
+
+const payoutPaginationStart = computed(() => (payoutCurrentPage.value - 1) * payoutItemsPerPage);
+
+const payoutPaginationEnd = computed(() => Math.min(
+    payoutPaginationStart.value + payoutItemsPerPage,
+    vendorPayoutStore.payouts.length
+));
+
+const paginatedPayouts = computed(() => {
+    return vendorPayoutStore.payouts.slice(payoutPaginationStart.value, payoutPaginationEnd.value);
+});
+
+const setupButtonText = computed(() => {
+    return isAfriExchangeMode.value ? t('vendorPaymentSetupPage.linkAfriExchange') : t('vendorPaymentSetupPage.setupBankAccount');
+});
+
+const connectedTitle = computed(() => {
+    return isAfriExchangeMode.value ? t('vendorPaymentSetupPage.afriExchangeConnected') : t('vendorPaymentSetupPage.bankAccountConnected');
+});
+
+const afriExchangeIdentifier = computed(() => {
+    return (
+        userStore.user?.afriExchange?.accountEmail ||
+        userStore.user?.afriExchange?.userId ||
+        userStore.user?.afriExchange?.walletAddress ||
+        t('vendorPaymentSetupPage.afriExchangeAccount')
+    );
 });
 
 onMounted(async () => {
@@ -219,10 +376,10 @@ const formatDate = (date) => {
     });
 };
 
-const formatCurrency = (amount) => {
+const formatCurrency = (amount, currency = activeCurrency.value) => {
     return new Intl.NumberFormat(locale.value === 'fr' ? 'fr-FR' : 'en-NG', {
         style: 'currency',
-        currency: 'NGN'
+        currency
     }).format(amount || 0);
 };
 
@@ -235,6 +392,22 @@ const getStatusClass = (status) => {
         failed: 'bg-red-100 text-red-800'
     };
     return `${baseClasses} ${statusClasses[status.toLowerCase()] || statusClasses.pending}`;
+};
+
+const isPayoutReady = (payout) => {
+    return payout.status?.toLowerCase() === 'pending' && payout.scheduledDate && new Date(payout.scheduledDate) <= new Date();
+};
+
+const getPayoutStatusLabel = (payout) => {
+    if (isPayoutReady(payout)) {
+        return t('vendorPaymentSetupPage.statuses.ready');
+    }
+
+    if (payout.status?.toLowerCase() === 'pending' && payout.scheduledDate) {
+        return t('vendorPaymentSetupPage.statuses.scheduled');
+    }
+
+    return t(`vendorPaymentSetupPage.statuses.${payout.status.toLowerCase()}`);
 };
 
 const displayAccountName = (accountName) => {

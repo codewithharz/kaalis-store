@@ -67,6 +67,33 @@ const userSchema = new mongoose.Schema(
         default: "weekly",
       },
     },
+    bankDetails: {
+      accountName: String,
+      accountNumber: String,
+      bankCode: String,
+      bankName: String,
+    },
+    afriExchange: {
+      userId: String,
+      walletAddress: String,
+      accountEmail: String,
+      linkedAt: Date,
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["Paystack", "OPay", "AfriExchange"],
+      default: "Paystack",
+    },
+    currency: {
+      type: String,
+      enum: ["NGN", "XOF"],
+      default: "NGN",
+    },
+    countryCode: {
+      type: String,
+      uppercase: true,
+      default: "NG",
+    },
   },
   {
     timestamps: true,

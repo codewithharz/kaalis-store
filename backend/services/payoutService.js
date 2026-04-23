@@ -1,10 +1,9 @@
 // backend/services/payoutService.js
+const axios = require("axios");
 const logger = require("../utils/logger");
 // Lazy load services to save resources
 // const PaystackService = require("./paystackService");
 // const OpayService = require("./opayService");
-// const PayDunyaPayoutService = require("./payDunyaPayoutService");
-// const OrangeMoneyPayoutService = require("./orangeMoneyPayoutService");
 // const MockPayoutServices = require("./mockPayoutServices");
 const CurrencyService = require("./currencyService");
 
@@ -19,8 +18,6 @@ class PayoutService {
     // Services are now lazy-loaded on demand
     this._paystackService = null;
     this._opayService = null;
-    this._payDunyaService = null;
-    this._orangeMoneyService = null;
     this._mockService = null;
 
     this.currencyService = CurrencyService;
@@ -53,20 +50,6 @@ class PayoutService {
     return this._opayService;
   }
 
-  get payDunyaService() {
-    if (!this._payDunyaService) {
-      this._payDunyaService = require("./payDunyaPayoutService");
-    }
-    return this._payDunyaService;
-  }
-
-  get orangeMoneyService() {
-    if (!this._orangeMoneyService) {
-      this._orangeMoneyService = require("./orangeMoneyPayoutService");
-    }
-    return this._orangeMoneyService;
-  }
-
   get mockService() {
     if (!this._mockService) {
       this._mockService = require("./mockPayoutServices");
@@ -78,18 +61,29 @@ class PayoutService {
    * Process all pending vendor payouts across all payment gateways
    */
   async processVendorPayouts() {
-    logger.info("Starting automated payout processing");
+    logger.info("Starting manual payout processing");
 
     try {
       const pendingPayouts = await this.getPendingPayouts();
       const vendorPayouts = this.groupPayoutsByVendor(pendingPayouts);
-      await this.processBatchPayouts(vendorPayouts);
+      const results = await this.processBatchPayouts(vendorPayouts);
       await this.cleanupOldPayouts();
 
-      logger.info("Completed payout processing");
+      const summary = {
+        readyPayouts: pendingPayouts.length,
+        vendors: Object.keys(vendorPayouts).length,
+        processed: results.reduce((sum, item) => sum + item.processed, 0),
+        failed: results.reduce((sum, item) => sum + item.failed, 0),
+        skipped: results.reduce((sum, item) => sum + item.skipped, 0),
+        batches: results,
+      };
+
+      logger.info("Completed payout processing", summary);
+      return summary;
     } catch (error) {
       logger.error("Error in payout processing:", error);
       await this.sendAdminAlert("Payout Processing Error", error.message);
+      throw error;
     }
   }
 
@@ -100,9 +94,10 @@ class PayoutService {
     const payouts = await VendorPayout.find({
       status: "pending",
       scheduledDate: { $lte: new Date() },
+      paymentMethod: { $in: ["Paystack", "paystack", "OPay", "Opay", "opay", "AfriExchange", "afriexchange"] },
     }).populate(
       "vendorId",
-      "email paystack bankDetails currency paymentMethod"
+      "email paystack bankDetails afriExchange currency paymentMethod"
     );
 
     logger.info(`Found ${payouts.length} pending payouts to process`);
@@ -116,7 +111,7 @@ class PayoutService {
     try {
       // Get vendor details
       const vendor = await User.findById(vendorId).select(
-        "email paystack bankDetails currency paymentMethod countryCode"
+        "email paystack bankDetails afriExchange currency paymentMethod countryCode"
       );
 
       if (!vendor) {
@@ -127,16 +122,22 @@ class PayoutService {
       const tierConfig = payoutConfig.schedules[vendorTier];
 
       // Determine currency and payment method
-      const currency = vendor.currency || "NGN";
+      const currency = orderData.currency || vendor.currency || "NGN";
       const paymentMethod =
-        vendor.paymentMethod || this.determinePaymentMethod(vendor);
+        orderData.paymentMethod ||
+        vendor.paymentMethod ||
+        this.determinePaymentMethod(vendor);
 
       // Calculate scheduled date based on tier and holding period
       const scheduledDate = new Date();
       scheduledDate.setDate(scheduledDate.getDate() + tierConfig.holdingPeriod);
 
       // Check if there's an existing small payout to aggregate
-      const existingPayout = await this.findExistingSmallPayout(vendorId);
+      const existingPayout = await this.findExistingSmallPayout(
+        vendorId,
+        currency,
+        paymentMethod
+      );
 
       if (existingPayout) {
         return await this.aggregateWithExistingPayout(existingPayout, amount);
@@ -146,6 +147,8 @@ class PayoutService {
       if (amount >= tierConfig.minimumAmount) {
         const payout = new VendorPayout({
           vendorId,
+          orderId: orderData.orderId,
+          paymentId: orderData.paymentId,
           amount,
           scheduledDate,
           status: "pending",
@@ -155,14 +158,20 @@ class PayoutService {
           feeStructure: payoutConfig.fees[vendorTier],
           metadata: {
             orderId: orderData.orderId,
+            kaalisOrderId: orderData.kaalisOrderId,
             customerEmail: orderData.customerEmail,
+            reference: orderData.reference,
           },
         });
 
         await payout.save();
 
         // Send notification if enabled
-        if (payoutConfig.notifications.notifyBeforePayout) {
+        if (
+          payoutConfig.notifications.notifyBeforePayout &&
+          typeof this.notificationService.sendPayoutScheduledNotification ===
+            "function"
+        ) {
           await this.notificationService.sendPayoutScheduledNotification(
             vendorId,
             {
@@ -182,7 +191,8 @@ class PayoutService {
           amount,
           tierConfig,
           currency,
-          paymentMethod
+          paymentMethod,
+          orderData
         );
       }
     } catch (error) {
@@ -194,9 +204,11 @@ class PayoutService {
   /**
    * Find existing small payout for aggregation
    */
-  async findExistingSmallPayout(vendorId) {
+  async findExistingSmallPayout(vendorId, currency, paymentMethod) {
     return await VendorPayout.findOne({
       vendorId,
+      currency,
+      paymentMethod,
       status: "aggregating",
       amount: { $lt: payoutConfig.schedules.default.minimumAmount },
     });
@@ -231,17 +243,26 @@ class PayoutService {
     amount,
     tierConfig,
     currency,
-    paymentMethod
+    paymentMethod,
+    orderData = {}
   ) {
     const payout = new VendorPayout({
       vendorId,
+      orderId: orderData.orderId,
+      paymentId: orderData.paymentId,
       amount,
       status: "aggregating",
       scheduledDate: new Date(),
       tier: await this.getVendorTier(vendorId),
       currency: currency || "NGN",
       paymentMethod: paymentMethod || "paystack",
-      feeStructure: payoutConfig.fees[tierConfig],
+      feeStructure: payoutConfig.fees[await this.getVendorTier(vendorId)],
+      metadata: {
+        orderId: orderData.orderId,
+        kaalisOrderId: orderData.kaalisOrderId,
+        customerEmail: orderData.customerEmail,
+        reference: orderData.reference,
+      },
     });
 
     return await payout.save();
@@ -258,7 +279,7 @@ class PayoutService {
         acc[vendorId] = {
           vendor: payout.vendorId,
           payouts: [],
-          tier: payout.tier,
+          tier: payout.tier || "default",
           currency: payout.currency || "NGN",
           paymentMethod: payout.paymentMethod || "paystack",
         };
@@ -273,21 +294,41 @@ class PayoutService {
    * Process batches of payouts for all vendors
    */
   async processBatchPayouts(vendorPayouts) {
+    const results = [];
+
     for (const vendorId in vendorPayouts) {
       const vendorBatch = vendorPayouts[vendorId];
-      const batchSize = payoutConfig.schedules[vendorBatch.tier].batchSize;
+      const resolvedTier =
+        vendorBatch.tier && payoutConfig.schedules[vendorBatch.tier]
+          ? vendorBatch.tier
+          : await this.getVendorTier(vendorId);
+      const tierConfig =
+        payoutConfig.schedules[resolvedTier] || payoutConfig.schedules.default;
+      const batchSize =
+        tierConfig.batchSize || payoutConfig.schedules.default.batchSize;
 
       // Split into smaller batches if needed
       for (let i = 0; i < vendorBatch.payouts.length; i += batchSize) {
         const batchPayouts = vendorBatch.payouts.slice(i, i + batchSize);
-        await this.processVendorBatch(vendorId, {
+        const result = await this.processVendorBatch(vendorId, {
           vendor: vendorBatch.vendor,
           payouts: batchPayouts,
           currency: vendorBatch.currency,
           paymentMethod: vendorBatch.paymentMethod,
         });
+
+        results.push({
+          vendorId,
+          tier: resolvedTier,
+          currency: vendorBatch.currency,
+          paymentMethod: vendorBatch.paymentMethod,
+          payoutCount: batchPayouts.length,
+          ...result,
+        });
       }
     }
+
+    return results;
   }
 
   /**
@@ -308,7 +349,11 @@ class PayoutService {
         `Vendor ${vendorId} has no valid payment setup for ${paymentMethod}. Skipping payouts.`
       );
       await this.notifyVendorForPaymentSetup(vendorId, paymentMethod);
-      return;
+      return {
+        processed: 0,
+        failed: 0,
+        skipped: payouts.length,
+      };
     }
 
     try {
@@ -364,26 +409,8 @@ class PayoutService {
         case "opay":
           return await this.processOpayPayout(vendor, payout);
 
-        case "paydunya":
-          return await this.processPayDunyaPayout(vendor, payout, currency);
-
-        case "orangemoney":
-          // Check if orange money service is disabled
-          if (this.orangeMoneyService.isDisabled) {
-            logger.warn(
-              "Orange Money service is disabled, falling back to mock service"
-            );
-            // Force using mock service for Orange Money
-            return await this.mockService.mockOrangeMoneyTransfer({
-              amount: payout.amount,
-              vendorPhone:
-                vendor.bankDetails?.mobileNumber ||
-                vendor.paystack?.phoneNumber,
-              reference: `OM-${payout._id}`,
-              currency: currency || "XOF",
-            });
-          }
-          return await this.processOrangeMoneyPayout(vendor, payout, currency);
+        case "afriexchange":
+          return await this.processAfriExchangePayout(vendor, payout, currency);
 
         default:
           throw new Error(`Unsupported payment method: ${paymentMethod}`);
@@ -513,118 +540,69 @@ class PayoutService {
   }
 
   /**
-   * Process payout via PayDunya
+   * Process payout via AfriExchange.
+   * The actual API call is added in the AfriExchange integration phase.
    */
-  async processPayDunyaPayout(vendor, payout, currency) {
+  async processAfriExchangePayout(vendor, payout, currency) {
     try {
-      // Validate vendor has phone number for PayDunya
-      if (!vendor.bankDetails?.mobileNumber && !vendor.paystack?.phoneNumber) {
-        throw new Error(`No valid phone number for vendor ${vendor._id}`);
+      if (
+        !vendor.afriExchange?.userId &&
+        !vendor.afriExchange?.walletAddress &&
+        !vendor.afriExchange?.accountEmail
+      ) {
+        throw new Error(`No linked AfriExchange account for vendor ${vendor._id}`);
       }
 
-      const vendorPhone =
-        vendor.bankDetails?.mobileNumber || vendor.paystack?.phoneNumber;
+      const baseUrl = process.env.AFRIEXCHANGE_API_URL;
+      const apiKey = process.env.AFRIEXCHANGE_KAALIS_API_KEY;
 
-      // Convert amount if needed
-      let amount = payout.amount;
-      if (currency === "NGN") {
-        amount = this.currencyService.convertNGNtoXOF(amount);
+      if (!baseUrl || !apiKey) {
+        return {
+          success: false,
+          message:
+            "AfriExchange payout API is not configured. Set AFRIEXCHANGE_API_URL and AFRIEXCHANGE_KAALIS_API_KEY.",
+        };
       }
 
-      const payoutData = {
-        amount: amount,
-        vendorPhone: vendorPhone,
-        vendorEmail: vendor.email,
-        reference: `PDW-${payout._id}`,
-        vendorName: `${vendor.firstName || ""} ${vendor.lastName || ""}`.trim(),
-        currency: "XOF",
-        description: `Vendor payout for ${payout._id}`,
-      };
-
-      // Use mock or real service based on configuration
-      const service = this.useMockServices
-        ? this.mockService
-        : this.payDunyaService;
-      const method = this.useMockServices
-        ? "mockPayDunyaWithdrawal"
-        : "initiateWithdrawal";
-
-      const withdrawal = await service[method](payoutData);
-
-      if (!withdrawal || !withdrawal.success) {
-        throw new Error(withdrawal?.message || "PayDunya withdrawal failed");
-      }
-
-      return {
-        success: true,
-        token: withdrawal.token,
-        reference: withdrawal.reference,
-        status: withdrawal.status,
-        amount: payout.amount,
-      };
-    } catch (error) {
-      logger.error(
-        `PayDunya withdrawal failed for payout ${payout._id}:`,
-        error
+      const idempotencyKey = `kaalis-payout-${payout._id}`;
+      const response = await axios.post(
+        `${baseUrl.replace(/\/$/, "")}/integrations/kaalis/payouts`,
+        {
+          idempotencyKey,
+          kaalisPayoutId: payout._id.toString(),
+          kaalisVendorId: vendor._id.toString(),
+          vendorAfriExchangeUserId: vendor.afriExchange?.userId,
+          vendorWalletAddress: vendor.afriExchange?.walletAddress,
+          vendorAccountEmail: vendor.afriExchange?.accountEmail,
+          amount: payout.amount,
+          tokenType: "CT",
+          country: vendor.countryCode,
+          description: `Kaalis vendor settlement for payout ${payout._id}`,
+          metadata: {
+            orderId: payout.orderId?.toString(),
+            currency: currency || payout.currency || "XOF",
+          },
+        },
+        {
+          headers: {
+            "x-kaalis-api-key": apiKey,
+          },
+          timeout: 15000,
+        }
       );
-      return {
-        success: false,
-        message: error.message,
-      };
-    }
-  }
 
-  /**
-   * Process payout via Orange Money
-   */
-  async processOrangeMoneyPayout(vendor, payout, currency) {
-    try {
-      // Validate vendor has phone number for Orange Money
-      if (!vendor.bankDetails?.mobileNumber && !vendor.paystack?.phoneNumber) {
-        throw new Error(`No valid phone number for vendor ${vendor._id}`);
-      }
-
-      const vendorPhone =
-        vendor.bankDetails?.mobileNumber || vendor.paystack?.phoneNumber;
-
-      // Convert amount if needed
-      let amount = payout.amount;
-      if (currency === "NGN") {
-        amount = this.currencyService.convertNGNtoXOF(amount);
-      }
-
-      const payoutData = {
-        amount: amount,
-        vendorPhone: vendorPhone,
-        reference: `OM-${payout._id}`,
-        currency: "XOF",
-        description: `Vendor payout for ${payout._id}`,
-      };
-
-      // Use mock or real service based on configuration
-      const service = this.useMockServices
-        ? this.mockService
-        : this.orangeMoneyService;
-      const method = this.useMockServices
-        ? "mockOrangeMoneyTransfer"
-        : "initiateTransfer";
-
-      const transfer = await service[method](payoutData);
-
-      if (!transfer || !transfer.success) {
-        throw new Error(transfer?.message || "Orange Money transfer failed");
-      }
+      const data = response.data?.data;
 
       return {
-        success: true,
-        payoutId: transfer.payoutId,
-        reference: transfer.reference,
-        status: transfer.status,
+        success: !!response.data?.success,
+        reference: data?.reference,
+        payoutId: data?.payoutId,
+        status: data?.status,
         amount: payout.amount,
       };
     } catch (error) {
       logger.error(
-        `Orange Money transfer failed for payout ${payout._id}:`,
+        `AfriExchange payout failed for payout ${payout._id}:`,
         error
       );
       return {
@@ -646,11 +624,7 @@ class PayoutService {
 
     // Determine by currency and available payment setup
     if (vendor.currency === "XOF") {
-      // For XOF, prefer PayDunya if vendor has mobile money
-      if (vendor.bankDetails?.mobileNumber) {
-        return "PayDunya";
-      }
-      return "OrangeMoney";
+      return "AfriExchange";
     }
 
     // For NGN currency, check which setup is available
@@ -659,7 +633,7 @@ class PayoutService {
     }
 
     if (vendor.bankDetails?.accountNumber && vendor.bankDetails?.bankCode) {
-      return "Opay";
+      return "OPay";
     }
 
     // Default to Paystack
@@ -732,10 +706,11 @@ class PayoutService {
           vendor.bankDetails?.accountNumber && vendor.bankDetails?.bankCode
         );
 
-      case "paydunya":
-      case "orangemoney":
+      case "afriexchange":
         return !!(
-          vendor.bankDetails?.mobileNumber || vendor.paystack?.phoneNumber
+          vendor.afriExchange?.userId ||
+          vendor.afriExchange?.walletAddress ||
+          vendor.afriExchange?.accountEmail
         );
 
       default:
@@ -749,11 +724,22 @@ class PayoutService {
   async updateSuccessfulPayout(payout, payoutResult) {
     try {
       const updateData = {
-        status: "processing",
+        status:
+          payoutResult.status === "completed" ||
+          payoutResult.status === "processed"
+            ? "processed"
+            : "processing",
         transferReference:
           payoutResult.reference || payoutResult.token || payoutResult.payoutId,
+        providerPayoutId: payoutResult.payoutId,
+        providerStatus: payoutResult.status,
         lastProcessedAt: new Date(),
+        lastStatusCheckedAt: new Date(),
       };
+
+      if (updateData.status === "processed") {
+        updateData.processedAt = new Date();
+      }
 
       if (payoutResult.transferCode) {
         updateData.transactionReference = payoutResult.transferCode;
@@ -778,6 +764,166 @@ class PayoutService {
       logger.error(`Error updating payout record ${payout._id}:`, error);
       throw error;
     }
+  }
+
+  mapProviderPayoutStatus(providerStatus) {
+    const normalized = String(providerStatus || "").toLowerCase();
+
+    if (["success", "successful", "completed", "complete", "processed"].includes(normalized)) {
+      return "processed";
+    }
+
+    if (["failed", "failure", "cancelled", "canceled", "reversed"].includes(normalized)) {
+      return "failed";
+    }
+
+    if (["processing", "in_progress", "pending_provider", "queued"].includes(normalized)) {
+      return "processing";
+    }
+
+    if (normalized === "pending") {
+      return "pending";
+    }
+
+    return normalized || "processing";
+  }
+
+  async applyAfriExchangePayoutUpdate(payload = {}) {
+    const data = payload.data || payload;
+    const eventId = payload.eventId || payload.id || data.eventId || data.id;
+    const providerStatus = data.status || payload.status;
+    const mappedStatus = this.mapProviderPayoutStatus(providerStatus);
+    const reference = data.reference || data.transferReference || data.providerReference;
+    const providerPayoutId = data.payoutId || data.providerPayoutId || data.afriExchangePayoutId;
+    const kaalisPayoutId = data.kaalisPayoutId || data.payout_id || payload.kaalisPayoutId;
+
+    const query = {};
+    if (kaalisPayoutId && VendorPayout.db.base.Types.ObjectId.isValid(kaalisPayoutId)) {
+      query._id = kaalisPayoutId;
+    } else if (reference || providerPayoutId) {
+      query.$or = [
+        reference ? { transferReference: reference } : null,
+        reference ? { transactionReference: reference } : null,
+        providerPayoutId ? { providerPayoutId } : null,
+        providerPayoutId ? { transferReference: providerPayoutId } : null,
+      ].filter(Boolean);
+    }
+
+    if (!Object.keys(query).length) {
+      return {
+        success: false,
+        message: "Webhook payload did not include a Kaalis payout id, provider reference, or provider payout id",
+      };
+    }
+
+    const payout = await VendorPayout.findOne(query);
+    if (!payout) {
+      return {
+        success: false,
+        message: "Matching Kaalis payout not found",
+      };
+    }
+
+    const seenEvents = payout.metadata?.afriExchangeWebhookEvents || [];
+    if (eventId && seenEvents.includes(eventId)) {
+      return {
+        success: true,
+        duplicate: true,
+        payoutId: payout._id,
+        status: payout.status,
+      };
+    }
+
+    const update = {
+      status: mappedStatus,
+      providerStatus,
+      lastStatusCheckedAt: new Date(),
+      metadata: {
+        ...(payout.metadata || {}),
+        lastAfriExchangeWebhook: {
+          event: payload.event || payload.type,
+          eventId,
+          receivedAt: new Date(),
+          status: providerStatus,
+          reference,
+          providerPayoutId,
+        },
+        afriExchangeWebhookEvents: eventId
+          ? [...seenEvents.slice(-19), eventId]
+          : seenEvents,
+      },
+    };
+
+    if (reference) {
+      update.transferReference = reference;
+    }
+
+    if (providerPayoutId) {
+      update.providerPayoutId = providerPayoutId;
+    }
+
+    if (mappedStatus === "processed") {
+      update.processedAt = payout.processedAt || new Date();
+      update.errorMessage = undefined;
+    }
+
+    if (mappedStatus === "failed") {
+      update.errorMessage =
+        data.errorMessage || data.failureReason || payload.errorMessage || "AfriExchange payout failed";
+    }
+
+    const updated = await VendorPayout.findByIdAndUpdate(payout._id, update, {
+      new: true,
+    });
+
+    if (updated.orderId && mappedStatus === "processed") {
+      await Order.findByIdAndUpdate(updated.orderId, {
+        payoutStatus: "processed",
+        lastPayoutDate: updated.processedAt || new Date(),
+        lastPayoutId: updated._id,
+      });
+    }
+
+    if (mappedStatus === "processed" && payout.status !== "processed") {
+      await this.updateVendorStats(updated.vendorId);
+    }
+
+    return {
+      success: true,
+      payoutId: updated._id,
+      status: updated.status,
+      providerStatus: updated.providerStatus,
+    };
+  }
+
+  async reconcileAfriExchangePayouts({ limit = 50 } = {}) {
+    const payouts = await VendorPayout.find({
+      paymentMethod: { $in: ["AfriExchange", "afriexchange"] },
+      status: { $in: ["processing"] },
+      transferReference: { $exists: true, $ne: "" },
+    })
+      .sort({ lastStatusCheckedAt: 1, updatedAt: 1 })
+      .limit(limit);
+
+    const results = [];
+
+    for (const payout of payouts) {
+      const statusResult = await this.checkPayoutStatus(payout._id);
+      results.push({
+        payoutId: payout._id,
+        reference: payout.transferReference,
+        success: !!statusResult.success,
+        status: statusResult.status || payout.status,
+        message: statusResult.message,
+      });
+    }
+
+    return {
+      checked: payouts.length,
+      updated: results.filter((item) => item.success).length,
+      failed: results.filter((item) => !item.success).length,
+      results,
+    };
   }
 
   /**
@@ -817,14 +963,23 @@ class PayoutService {
       await VendorPayout.findByIdAndUpdate(payout._id, update);
 
       if (shouldRetry && payoutConfig.notifications.notifyOnFailure) {
-        await this.notificationService.sendPayoutFailureNotification(
-          payout.vendorId,
-          {
-            amount: payout.amount,
-            nextRetry: update.scheduledDate,
-            error: error.message,
-          }
-        );
+        if (
+          typeof this.notificationService.sendPayoutFailureNotification ===
+          "function"
+        ) {
+          await this.notificationService.sendPayoutFailureNotification(
+            payout.vendorId,
+            {
+              amount: payout.amount,
+              nextRetry: update.scheduledDate,
+              error: error.message,
+            }
+          );
+        } else {
+          logger.warn(
+            "Payout failure notification skipped: NotificationService.sendPayoutFailureNotification is not implemented"
+          );
+        }
       }
 
       logger.info(`Updated failed payout ${payout._id}, retry: ${shouldRetry}`);
@@ -838,13 +993,21 @@ class PayoutService {
    */
   async notifyVendorForPaymentSetup(vendorId, paymentMethod) {
     try {
-      await this.notificationService.sendPaymentSetupReminder(
-        vendorId,
-        paymentMethod
-      );
-      logger.info(
-        `Sent ${paymentMethod} payment setup reminder to vendor ${vendorId}`
-      );
+      if (
+        typeof this.notificationService.sendPaymentSetupReminder === "function"
+      ) {
+        await this.notificationService.sendPaymentSetupReminder(
+          vendorId,
+          paymentMethod
+        );
+        logger.info(
+          `Sent ${paymentMethod} payment setup reminder to vendor ${vendorId}`
+        );
+      } else {
+        logger.warn(
+          `Payment setup reminder skipped for vendor ${vendorId}: NotificationService.sendPaymentSetupReminder is not implemented`
+        );
+      }
     } catch (error) {
       logger.error(
         `Failed to send payment setup reminder to vendor ${vendorId}:`,
@@ -892,7 +1055,13 @@ class PayoutService {
   async sendAdminAlert(subject, message) {
     try {
       logger.error(`Admin Alert - ${subject}: ${message}`);
-      await this.notificationService.sendAdminAlert(subject, message);
+      if (typeof this.notificationService.sendAdminAlert === "function") {
+        await this.notificationService.sendAdminAlert(subject, message);
+      } else {
+        logger.warn(
+          "Admin alert skipped: NotificationService.sendAdminAlert is not implemented"
+        );
+      }
     } catch (error) {
       logger.error("Failed to send admin alert:", error);
     }
@@ -969,14 +1138,8 @@ class PayoutService {
           );
           break;
 
-        case "paydunya":
-          statusResult = await this.checkPayDunyaStatus(
-            payout.transferReference
-          );
-          break;
-
-        case "orangemoney":
-          statusResult = await this.checkOrangeMoneyStatus(
+        case "afriexchange":
+          statusResult = await this.checkAfriExchangeStatus(
             payout.transferReference
           );
           break;
@@ -990,23 +1153,57 @@ class PayoutService {
       }
 
       // Update status if necessary
-      if (statusResult.success && statusResult.status !== payout.status) {
-        await VendorPayout.findByIdAndUpdate(payoutId, {
-          status:
-            statusResult.status === "success" ||
-              statusResult.status === "processed"
-              ? "processed"
-              : statusResult.status,
-          processedAt:
-            statusResult.status === "success" ||
-              statusResult.status === "processed"
-              ? new Date()
-              : undefined,
-        });
+      if (statusResult.success) {
+        const mappedStatus = this.mapProviderPayoutStatus(statusResult.status);
+        const update = {
+          providerStatus: statusResult.status,
+          lastStatusCheckedAt: new Date(),
+          metadata: {
+            ...(payout.metadata || {}),
+            lastStatusCheck: {
+              checkedAt: new Date(),
+              provider: paymentMethod,
+              status: statusResult.status,
+              reference: statusResult.reference,
+            },
+          },
+        };
+
+        if (mappedStatus !== payout.status) {
+          update.status = mappedStatus;
+        }
+
+        if (mappedStatus === "processed") {
+          update.processedAt = payout.processedAt || new Date();
+          update.errorMessage = undefined;
+        }
+
+        if (mappedStatus === "failed") {
+          update.errorMessage = statusResult.message || "Provider payout failed";
+        }
+
+        await VendorPayout.findByIdAndUpdate(payoutId, update);
+
+        if (mappedStatus === "processed" && payout.orderId) {
+          await Order.findByIdAndUpdate(payout.orderId, {
+            payoutStatus: "processed",
+            lastPayoutDate: update.processedAt || new Date(),
+            lastPayoutId: payout._id,
+          });
+        }
+
+        if (mappedStatus === "processed" && payout.status !== "processed") {
+          await this.updateVendorStats(payout.vendorId);
+        }
 
         logger.info(
-          `Updated payout ${payoutId} status to ${statusResult.status}`
+          `Checked payout ${payoutId} status: ${statusResult.status}`
         );
+      } else {
+        await VendorPayout.findByIdAndUpdate(payoutId, {
+          lastStatusCheckedAt: new Date(),
+          errorMessage: statusResult.message,
+        });
       }
 
       return statusResult;
@@ -1050,86 +1247,40 @@ class PayoutService {
   }
 
   /**
-   * Check PayDunya withdrawal status
+   * Check AfriExchange payout status
    */
-  async checkPayDunyaStatus(token) {
-    const service = this.useMockServices
-      ? this.mockService
-      : this.payDunyaService;
-    const method = this.useMockServices
-      ? "checkPayDunyaWithdrawalStatus"
-      : "checkWithdrawalStatus";
+  async checkAfriExchangeStatus(reference) {
+    const baseUrl = process.env.AFRIEXCHANGE_API_URL;
+    const apiKey = process.env.AFRIEXCHANGE_KAALIS_API_KEY;
 
-    try {
-      const result = await service[method](token);
-
-      if (result.success) {
-        // Map PayDunya status to our internal status
-        let status = "processing";
-        if (result.status === "completed") {
-          status = "processed";
-        } else if (result.status === "failed") {
-          status = "failed";
-        }
-
-        return {
-          success: true,
-          status: status,
-          reference: token,
-          details: result.data,
-        };
-      } else {
-        return {
-          success: false,
-          message: "Failed to verify withdrawal status",
-        };
-      }
-    } catch (error) {
-      logger.error(`Error checking PayDunya status for ${token}:`, error);
-      return { success: false, message: error.message };
+    if (!baseUrl || !apiKey) {
+      return {
+        success: false,
+        message:
+          "AfriExchange payout API is not configured. Set AFRIEXCHANGE_API_URL and AFRIEXCHANGE_KAALIS_API_KEY.",
+      };
     }
-  }
-
-  /**
-   * Check Orange Money transfer status
-   */
-  async checkOrangeMoneyStatus(payoutId) {
-    const service = this.useMockServices
-      ? this.mockService
-      : this.orangeMoneyService;
-    const method = this.useMockServices
-      ? "checkOrangeMoneyTransferStatus"
-      : "checkTransferStatus";
 
     try {
-      const result = await service[method](payoutId);
-
-      if (result.success) {
-        // Map Orange Money status to our internal status
-        let status = "processing";
-        if (result.status === "SUCCESS") {
-          status = "processed";
-        } else if (result.status === "FAILED") {
-          status = "failed";
+      const response = await axios.get(
+        `${baseUrl.replace(/\/$/, "")}/integrations/kaalis/payouts/${reference}`,
+        {
+          headers: {
+            "x-kaalis-api-key": apiKey,
+          },
+          timeout: 15000,
         }
-
-        return {
-          success: true,
-          status: status,
-          reference: payoutId,
-          details: result.data,
-        };
-      } else {
-        return {
-          success: false,
-          message: "Failed to verify transfer status",
-        };
-      }
-    } catch (error) {
-      logger.error(
-        `Error checking Orange Money status for ${payoutId}:`,
-        error
       );
+
+      const data = response.data?.data;
+      return {
+        success: !!response.data?.success,
+        status: data?.status === "completed" ? "processed" : data?.status,
+        reference,
+        details: data,
+      };
+    } catch (error) {
+      logger.error(`Error checking AfriExchange status for ${reference}:`, error);
       return { success: false, message: error.message };
     }
   }
@@ -1153,34 +1304,6 @@ class PayoutService {
     } catch (error) {
       logger.error("Error getting Paystack balance:", error);
       balances.paystack = { error: error.message };
-    }
-
-    // Get PayDunya balance
-    try {
-      const payDunyaService = this.useMockServices
-        ? this.mockService
-        : this.payDunyaService;
-      const payDunyaBalance = await (this.useMockServices
-        ? payDunyaService.getMockBalance("PayDunya")
-        : payDunyaService.getAccountBalance());
-      balances.paydunya = payDunyaBalance;
-    } catch (error) {
-      logger.error("Error getting PayDunya balance:", error);
-      balances.paydunya = { error: error.message };
-    }
-
-    // Get Orange Money balance
-    try {
-      const orangeMoneyService = this.useMockServices
-        ? this.mockService
-        : this.orangeMoneyService;
-      const orangeMoneyBalance = await (this.useMockServices
-        ? orangeMoneyService.getMockBalance("OrangeMoney")
-        : orangeMoneyService.getAccountBalance());
-      balances.orangemoney = orangeMoneyBalance;
-    } catch (error) {
-      logger.error("Error getting Orange Money balance:", error);
-      balances.orangemoney = { error: error.message };
     }
 
     // Get Opay balance

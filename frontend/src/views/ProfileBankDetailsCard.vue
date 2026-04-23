@@ -25,7 +25,7 @@
         </div>
 
         <!-- Demo Mode Banner -->
-        <div v-if="paymentStore.isDemoMode" class="container mx-auto px-4 mt-4 sm:mt-6">
+        <div v-if="showDemoModeBanner" class="container mx-auto px-4 mt-4 sm:mt-6">
             <div
                 class="bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-400 rounded-lg sm:rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 shadow-lg hover:shadow-xl transition-all duration-300">
                 <div class="flex items-start sm:items-center space-x-3">
@@ -45,7 +45,7 @@
         <!-- Bank Details Content -->
         <div :class="[
             'container mx-auto px-4 relative z-10',
-            paymentStore.isDemoMode ? '-mt-3 sm:-mt-5' : '-mt-20 sm:-mt-32 lg:-mt-44'
+            bankDetailsContentOffset
         ]">
             <div class="max-w-4xl mx-auto space-y-4 sm:space-y-6">
                 <!-- Main Card with Enhanced Design -->
@@ -53,7 +53,7 @@
                     class="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 backdrop-blur-lg bg-white/95">
 
                     <!-- Empty State -->
-                    <div v-if="!hasBankDetails" class="p-4 sm:p-6 lg:p-8">
+                    <div v-if="!hasPaymentDetails" class="p-4 sm:p-6 lg:p-8">
                         <div class="flex flex-col items-center py-8 sm:py-12 lg:py-16 space-y-6 sm:space-y-8">
                             <div class="relative">
                                 <div
@@ -74,7 +74,7 @@
                                 class="group w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-lg sm:rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base">
                                 <PlusCircle
                                     class="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform duration-300" />
-                                <span class="font-semibold">{{ t('bankDetailsPage.addBankDetails') }}</span>
+                                <span class="font-semibold">{{ primaryActionText }}</span>
                             </button>
                         </div>
                     </div>
@@ -95,8 +95,8 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <h2 class="text-lg sm:text-2xl font-bold text-gray-900">{{ t('bankDetailsPage.yourBankAccount') }}</h2>
-                                    <p class="text-gray-600 text-sm sm:text-base">{{ t('bankDetailsPage.verifiedReady') }}
+                                    <h2 class="text-lg sm:text-2xl font-bold text-gray-900">{{ accountSummaryTitle }}</h2>
+                                    <p class="text-gray-600 text-sm sm:text-base">{{ accountSummarySubtitle }}
                                     </p>
                                 </div>
                             </div>
@@ -104,7 +104,7 @@
                                 <button @click="handleDelete"
                                     class="group px-3 sm:px-4 py-2 sm:py-2.5 text-red-600 font-medium hover:text-white hover:bg-red-600 rounded-lg sm:rounded-xl border-2 border-red-600 transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md flex items-center justify-center gap-2 text-sm sm:text-base">
                                     <Trash2 class="w-3 h-3 sm:w-4 sm:h-4 group-hover:animate-pulse" />
-                                    <span>{{ t('bankDetailsPage.delete') }}</span>
+                                    <span>{{ deleteButtonText }}</span>
                                 </button>
                                 <button @click="handleEdit"
                                     class="group px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-600 font-medium hover:from-indigo-500 hover:to-purple-600 hover:text-white rounded-lg sm:rounded-xl border-2 border-indigo-200 hover:border-transparent transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md flex items-center justify-center gap-2 text-sm sm:text-base">
@@ -132,10 +132,10 @@
                                         </div>
                                         <p
                                             class="text-base sm:text-lg font-bold text-gray-900 ml-8 sm:ml-11 break-words">
-                                            {{ user.paystack?.accountName || t('bankDetailsPage.notAvailable') }}</p>
+                                            {{ primaryAccountName }}</p>
                                     </div>
 
-                                    <div class="group">
+                                    <div v-if="!isAfriExchangeMode" class="group">
                                         <div class="flex items-center gap-2 sm:gap-3 mb-2">
                                             <div
                                                 class="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-lg flex items-center justify-center">
@@ -161,14 +161,13 @@
                                             </div>
                                             <p
                                                 class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                                                {{ t('bankDetailsPage.accountNumber') }}</p>
+                                                {{ isAfriExchangeMode ? t('bankDetailsPage.afriExchangeIdentifier') : t('bankDetailsPage.accountNumber') }}</p>
                                         </div>
                                         <p class="text-base sm:text-lg font-bold text-gray-900 font-mono ml-8 sm:ml-11">
-                                            {{
-                                                user.paystack?.accountNumber || t('bankDetailsPage.notAvailable') }}</p>
+                                            {{ primaryAccountIdentifier }}</p>
                                     </div>
 
-                                    <div v-if="user?.isSeller" class="group">
+                                    <div v-if="user?.isSeller && !isAfriExchangeMode" class="group">
                                         <div class="flex items-center gap-2 sm:gap-3 mb-2">
                                             <div
                                                 class="w-6 h-6 sm:w-8 sm:h-8 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -225,8 +224,8 @@
                                 <Building class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                             </div>
                             <div class="min-w-0 flex-1">
-                                <h3 class="text-lg sm:text-2xl font-bold">{{ t('bankDetailsPage.addBankAccount') }}</h3>
-                                <p class="text-indigo-100 text-xs sm:text-sm mt-1 hidden sm:block">{{ t('bankDetailsPage.enterBankingDetails') }}</p>
+                                <h3 class="text-lg sm:text-2xl font-bold">{{ formTitle }}</h3>
+                                <p class="text-indigo-100 text-xs sm:text-sm mt-1 hidden sm:block">{{ formSubtitle }}</p>
                             </div>
                         </div>
                         <button @click="closeForm"
@@ -239,8 +238,13 @@
                 <!-- Enhanced Form Content -->
                 <div class="flex-1 overflow-y-auto">
                     <form @submit.prevent="saveBankDetails" class="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
+                        <div v-if="isAfriExchangeMode"
+                            class="rounded-lg sm:rounded-xl border border-cyan-100 bg-cyan-50 p-4 text-sm text-cyan-900">
+                            {{ t('bankDetailsPage.afriExchangeHelp') }}
+                        </div>
+
                         <!-- Account Name -->
-                        <div class="space-y-2 sm:space-y-3">
+                        <div v-if="!isAfriExchangeMode" class="space-y-2 sm:space-y-3">
                             <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
                                 <User class="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500" />
                                 {{ t('bankDetailsPage.accountName') }}
@@ -258,7 +262,7 @@
                         </div>
 
                         <!-- payment method selection -->
-                        <div class="space-y-2 sm:space-y-3">
+                        <div v-if="!isAfriExchangeMode" class="space-y-2 sm:space-y-3">
                             <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
                                 <CreditCard class="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500" />
                                 {{ t('bankDetailsPage.paymentMethod') }}
@@ -274,7 +278,7 @@
                         </div>
 
                         <!-- Bank Name -->
-                        <div class="space-y-2 sm:space-y-3">
+                        <div v-if="!isAfriExchangeMode" class="space-y-2 sm:space-y-3">
                             <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
                                 <Building class="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500" />
                                 {{ t('bankDetailsPage.bankName') }}
@@ -300,7 +304,7 @@
                         </div>
 
                         <!-- Account Number -->
-                        <div class="space-y-2 sm:space-y-3">
+                        <div v-if="!isAfriExchangeMode" class="space-y-2 sm:space-y-3">
                             <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
                                 <CreditCard class="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500" />
                                 {{ t('bankDetailsPage.accountNumber') }}
@@ -328,8 +332,40 @@
                             </div>
                         </div>
 
+                        <div v-if="isAfriExchangeMode" class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                            <div class="space-y-2 sm:space-y-3">
+                                <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                    <User class="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500" />
+                                    {{ t('bankDetailsPage.afriExchangeUserId') }}
+                                </label>
+                                <input type="text" v-model="afriExchangeForm.afriExchangeUserId"
+                                    class="w-full px-3 sm:px-4 py-3 sm:py-4 text-gray-700 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/20 transition-all duration-200 text-sm sm:text-base"
+                                    :placeholder="t('bankDetailsPage.afriExchangeUserIdPlaceholder')">
+                            </div>
+
+                            <div class="space-y-2 sm:space-y-3">
+                                <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                    <Wallet class="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500" />
+                                    {{ t('bankDetailsPage.walletAddress') }}
+                                </label>
+                                <input type="text" v-model="afriExchangeForm.walletAddress"
+                                    class="w-full px-3 sm:px-4 py-3 sm:py-4 text-gray-700 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/20 transition-all duration-200 text-sm sm:text-base"
+                                    :placeholder="t('bankDetailsPage.walletAddressPlaceholder')">
+                            </div>
+
+                            <div class="space-y-2 sm:space-y-3 sm:col-span-2">
+                                <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                    <CreditCard class="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500" />
+                                    {{ t('bankDetailsPage.afriExchangeEmail') }}
+                                </label>
+                                <input type="email" v-model="afriExchangeForm.accountEmail"
+                                    class="w-full px-3 sm:px-4 py-3 sm:py-4 text-gray-700 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/20 transition-all duration-200 text-sm sm:text-base"
+                                    :placeholder="t('bankDetailsPage.afriExchangeEmailPlaceholder')">
+                            </div>
+                        </div>
+
                         <!-- Payout Schedule -->
-                        <div v-if="user?.isSeller" class="space-y-2 sm:space-y-3">
+                        <div v-if="user?.isSeller && !isAfriExchangeMode" class="space-y-2 sm:space-y-3">
                             <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
                                 <Calendar class="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500" />
                                 {{ t('bankDetailsPage.payoutSchedule') }}
@@ -385,7 +421,7 @@
                         <button @click="saveBankDetails"
                             class="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-lg sm:rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 order-1 sm:order-2 text-sm sm:text-base">
                             <Wallet class="w-3 h-3 sm:w-4 sm:h-4" />
-                            <span>{{ t('bankDetailsPage.saveBankDetails') }}</span>
+                            <span>{{ saveButtonText }}</span>
                         </button>
                     </div>
                 </div>
@@ -403,9 +439,9 @@
                         class="w-12 h-12 sm:w-16 sm:h-16 bg-red-100 rounded-xl sm:rounded-2xl mx-auto mb-4 sm:mb-6 flex items-center justify-center">
                         <AlertCircle class="w-6 h-6 sm:w-8 sm:h-8 text-red-600" />
                     </div>
-                    <h3 class="text-lg sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">{{ t('bankDetailsPage.deleteBankAccount') }}</h3>
+                    <h3 class="text-lg sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">{{ deleteModalTitle }}</h3>
                     <p class="text-gray-600 leading-relaxed text-sm sm:text-base">
-                        {{ t('bankDetailsPage.deleteConfirmBody') }}
+                        {{ deleteModalBody }}
                     </p>
                 </div>
 
@@ -419,7 +455,7 @@
                         class="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white rounded-lg sm:rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 order-1 sm:order-2 text-sm sm:text-base">
                         <Loader2 v-if="isDeleting" class="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
                         <Trash2 v-else class="w-3 h-3 sm:w-4 sm:h-4" />
-                        <span>{{ isDeleting ? t('bankDetailsPage.deleting') : t('bankDetailsPage.deleteAccount') }}</span>
+                        <span>{{ isDeleting ? deletingText : deleteConfirmText }}</span>
                     </button>
                 </div>
             </div>
@@ -432,7 +468,9 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useUserStore } from '../store/user';
 import { usePaymentStore } from '../store/paymentStore.js';
-import { Landmark, PlusCircle, X, User, Building, CreditCard, Edit, Trash2, AlertCircle, Calendar, Wallet, Loader2, Check } from 'lucide-vue-next';
+import { useCountryStore } from '../store/countryStore';
+import { getCountryCode } from '../utils/countryCurrency';
+import { Landmark, PlusCircle, X, User, Building, CreditCard, Edit, Trash2, AlertCircle, Calendar, Wallet, Loader2, Check, ChevronDown } from 'lucide-vue-next';
 
 import { toast } from 'vue-sonner';
 
@@ -440,12 +478,25 @@ const { t } = useI18n();
 const userStore = useUserStore();
 const user = computed(() => userStore.user);
 const paymentStore = usePaymentStore();
-const selectedPaymentMethod = ref('Paystack');
+const countryStore = useCountryStore();
 const showForm = ref(false);
 const isEditing = ref(false);
 const availableBanks = ref([]);
 const hasBankDetails = computed(() => {
     return !!(user.value?.paystack?.accountNumber && user.value?.paystack?.bankCode);
+});
+const hasAfriExchangeDetails = computed(() => {
+    return !!(
+        user.value?.afriExchange?.userId ||
+        user.value?.afriExchange?.walletAddress ||
+        user.value?.afriExchange?.accountEmail
+    );
+});
+const isAfriExchangeMode = computed(() => {
+    return countryStore.isXofCountry || user.value?.currency === 'XOF' || user.value?.paymentMethod === 'AfriExchange';
+});
+const hasPaymentDetails = computed(() => {
+    return isAfriExchangeMode.value ? hasAfriExchangeDetails.value : hasBankDetails.value;
 });
 
 const form = ref({
@@ -456,9 +507,23 @@ const form = ref({
     paymentMethod: 'Paystack'
 });
 
+const afriExchangeForm = ref({
+    afriExchangeUserId: '',
+    walletAddress: '',
+    accountEmail: ''
+});
+
 const verifying = ref(false);
 const verifiedAccount = ref(null);
 const isDemo = computed(() => paymentStore.isDemoMode);
+const showDemoModeBanner = computed(() => paymentStore.isDemoMode && !isAfriExchangeMode.value);
+const bankDetailsContentOffset = computed(() => {
+    if (isAfriExchangeMode.value) {
+        return 'mt-4 sm:mt-6 lg:mt-8';
+    }
+
+    return showDemoModeBanner.value ? '-mt-3 sm:-mt-5' : '-mt-20 sm:-mt-32 lg:-mt-44';
+});
 const showDeleteConfirm = ref(false);
 
 // Computed properties for conditional text
@@ -473,15 +538,87 @@ const subHeaderText = computed(() => {
 });
 
 const emptyStateTitle = computed(() => {
+    if (isAfriExchangeMode.value) {
+        return t('bankDetailsPage.afriExchangeEmptyTitle');
+    }
+
     return user.value?.isSeller
         ? t('bankDetailsPage.sellerEmptyTitle')
         : t('bankDetailsPage.buyerEmptyTitle');
 });
 
 const emptyStateSubtitle = computed(() => {
+    if (isAfriExchangeMode.value) {
+        return t('bankDetailsPage.afriExchangeEmptySubtitle');
+    }
+
     return user.value?.isSeller
         ? t('bankDetailsPage.sellerEmptySubtitle')
         : t('bankDetailsPage.buyerEmptySubtitle');
+});
+
+const primaryActionText = computed(() => {
+    return isAfriExchangeMode.value ? t('bankDetailsPage.linkAfriExchange') : t('bankDetailsPage.addBankDetails');
+});
+
+const accountSummaryTitle = computed(() => {
+    return isAfriExchangeMode.value ? t('bankDetailsPage.afriExchangeAccount') : t('bankDetailsPage.yourBankAccount');
+});
+
+const accountSummarySubtitle = computed(() => {
+    return isAfriExchangeMode.value ? t('bankDetailsPage.afriExchangeLinkedReady') : t('bankDetailsPage.verifiedReady');
+});
+
+const primaryAccountName = computed(() => {
+    if (isAfriExchangeMode.value) {
+        return user.value?.afriExchange?.accountEmail || t('bankDetailsPage.notAvailable');
+    }
+
+    return user.value?.paystack?.accountName || t('bankDetailsPage.notAvailable');
+});
+
+const primaryAccountIdentifier = computed(() => {
+    if (isAfriExchangeMode.value) {
+        return (
+            user.value?.afriExchange?.userId ||
+            user.value?.afriExchange?.walletAddress ||
+            t('bankDetailsPage.notAvailable')
+        );
+    }
+
+    return user.value?.paystack?.accountNumber || t('bankDetailsPage.notAvailable');
+});
+
+const formTitle = computed(() => {
+    return isAfriExchangeMode.value ? t('bankDetailsPage.linkAfriExchange') : t('bankDetailsPage.addBankAccount');
+});
+
+const formSubtitle = computed(() => {
+    return isAfriExchangeMode.value ? t('bankDetailsPage.enterAfriExchangeDetails') : t('bankDetailsPage.enterBankingDetails');
+});
+
+const saveButtonText = computed(() => {
+    return isAfriExchangeMode.value ? t('bankDetailsPage.saveAfriExchange') : t('bankDetailsPage.saveBankDetails');
+});
+
+const deleteButtonText = computed(() => {
+    return isAfriExchangeMode.value ? t('bankDetailsPage.unlink') : t('bankDetailsPage.delete');
+});
+
+const deleteModalTitle = computed(() => {
+    return isAfriExchangeMode.value ? t('bankDetailsPage.unlinkAfriExchange') : t('bankDetailsPage.deleteBankAccount');
+});
+
+const deleteModalBody = computed(() => {
+    return isAfriExchangeMode.value ? t('bankDetailsPage.unlinkAfriExchangeBody') : t('bankDetailsPage.deleteConfirmBody');
+});
+
+const deleteConfirmText = computed(() => {
+    return isAfriExchangeMode.value ? t('bankDetailsPage.unlinkAccount') : t('bankDetailsPage.deleteAccount');
+});
+
+const deletingText = computed(() => {
+    return isAfriExchangeMode.value ? t('bankDetailsPage.unlinking') : t('bankDetailsPage.deleting');
 });
 
 const getDefaultBackground = () => {
@@ -494,8 +631,19 @@ const getBankName = (bankCode) => {
     return bank ? bank.name : (user.value?.paystack?.bankName || t('bankDetailsPage.notAvailable'));
 };
 
+const resetAfriExchangeForm = () => {
+    afriExchangeForm.value = {
+        afriExchangeUserId: user.value?.afriExchange?.userId || '',
+        walletAddress: user.value?.afriExchange?.walletAddress || '',
+        accountEmail: user.value?.afriExchange?.accountEmail || ''
+    };
+};
+
 const openForm = async () => {
-    if (hasBankDetails.value) {
+    if (isAfriExchangeMode.value) {
+        resetAfriExchangeForm();
+        isEditing.value = hasAfriExchangeDetails.value;
+    } else if (hasBankDetails.value) {
         // Pre-fill form if editing existing details
         form.value = {
             accountName: user.value.paystack?.accountName || '',
@@ -522,7 +670,9 @@ const openForm = async () => {
     showForm.value = true;
 
     // Load banks based on payment method
-    await loadBanks(form.value.paymentMethod);
+    if (!isAfriExchangeMode.value) {
+        await loadBanks(form.value.paymentMethod);
+    }
 };
 
 // Add method to load banks based on payment method
@@ -554,7 +704,9 @@ const loadBanks = async (paymentMethod) => {
 
 onMounted(async () => {
     // Initial bank load for Paystack
-    await loadBanks('Paystack');
+    if (!isAfriExchangeMode.value) {
+        await loadBanks('Paystack');
+    }
 });
 
 const closeForm = () => {
@@ -567,6 +719,11 @@ const closeForm = () => {
         accountNumber: '',
         payoutSchedule: 'weekly',
         paymentMethod: 'Paystack'
+    };
+    afriExchangeForm.value = {
+        afriExchangeUserId: '',
+        walletAddress: '',
+        accountEmail: ''
     };
     verifiedAccount.value = null;
     verifying.value = false;
@@ -636,6 +793,8 @@ watch(() => form.value.bankName, (newBank) => {
 
 // Watch for payment method changes
 watch(() => form.value.paymentMethod, async (newMethod) => {
+    if (isAfriExchangeMode.value) return;
+
     await loadBanks(newMethod);
     form.value.bankName = '';
     verifiedAccount.value = null;
@@ -650,6 +809,11 @@ const formatAccountNumber = (value) => {
 
 const saveBankDetails = async () => {
     try {
+        if (isAfriExchangeMode.value) {
+            await saveAfriExchangeAccount();
+            return;
+        }
+
         // Ensure account is verified before saving
         if (!verifiedAccount.value) {
             toast.error(t('bankDetailsPage.verifyFirst'));
@@ -699,7 +863,41 @@ const saveBankDetails = async () => {
     }
 };
 
+const saveAfriExchangeAccount = async () => {
+    const payload = {
+        afriExchangeUserId: afriExchangeForm.value.afriExchangeUserId.trim(),
+        walletAddress: afriExchangeForm.value.walletAddress.trim(),
+        accountEmail: afriExchangeForm.value.accountEmail.trim(),
+        countryCode: getCountryCode(countryStore.selectedCountry || user.value?.country || 'Senegal')
+    };
+
+    if (!payload.afriExchangeUserId && !payload.walletAddress && !payload.accountEmail) {
+        toast.error(t('bankDetailsPage.afriExchangeRequired'));
+        return;
+    }
+
+    const loadingToast = toast.loading(t('bankDetailsPage.savingAfriExchange'));
+
+    try {
+        await userStore.linkAfriExchangeAccount(payload);
+        toast.dismiss(loadingToast);
+        toast.success(t('bankDetailsPage.afriExchangeSaved'));
+        showForm.value = false;
+        await userStore.getUserProfile();
+    } catch (error) {
+        toast.dismiss(loadingToast);
+        toast.error(error.response?.data?.message || error.message || t('bankDetailsPage.afriExchangeSaveFailed'));
+    }
+};
+
 const handleEdit = () => {
+    if (isAfriExchangeMode.value) {
+        resetAfriExchangeForm();
+        isEditing.value = true;
+        showForm.value = true;
+        return;
+    }
+
     form.value = {
         accountName: user.value.paystack?.accountName || '',
         bankName: user.value.paystack?.bankCode || '',
@@ -717,16 +915,27 @@ const handleDelete = () => {
 };
 
 const confirmDelete = async () => {
-    const loadingToast = toast.loading(t('bankDetailsPage.removingBankAccount'));
+    const loadingToast = toast.loading(
+        isAfriExchangeMode.value ? t('bankDetailsPage.unlinkingAfriExchange') : t('bankDetailsPage.removingBankAccount')
+    );
     try {
-        await paymentStore.deleteBankDetails();
+        if (isAfriExchangeMode.value) {
+            await userStore.unlinkAfriExchangeAccount();
+        } else {
+            await paymentStore.deleteBankDetails();
+        }
         toast.dismiss(loadingToast);
-        toast.success(t('bankDetailsPage.bankAccountRemoved'));
+        toast.success(
+            isAfriExchangeMode.value ? t('bankDetailsPage.afriExchangeUnlinked') : t('bankDetailsPage.bankAccountRemoved')
+        );
         showDeleteConfirm.value = false;
         await userStore.getUserProfile();
     } catch (error) {
         toast.dismiss(loadingToast);
-        toast.error(error.message || t('bankDetailsPage.failedRemove'));
+        toast.error(
+            error.message ||
+            (isAfriExchangeMode.value ? t('bankDetailsPage.afriExchangeUnlinkFailed') : t('bankDetailsPage.failedRemove'))
+        );
     }
 };
 

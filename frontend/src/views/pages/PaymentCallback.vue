@@ -97,10 +97,6 @@ onMounted(async () => {
         // Determine payment method from reference format or query params
         if (reference.value.startsWith('OPAY-')) {
             paymentMethod.value = 'OPay';
-        } else if (reference.value.startsWith('PDW-')) {
-            paymentMethod.value = 'PayDunya';
-        } else if (reference.value.startsWith('OM-')) {
-            paymentMethod.value = 'OrangeMoney';
         }
 
         console.log('Detected payment method:', paymentMethod.value);

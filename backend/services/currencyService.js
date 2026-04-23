@@ -132,7 +132,7 @@ class CurrencyService {
   getPaymentGatewayForCurrency(currency) {
     const gatewayMap = {
       NGN: "Paystack",
-      XOF: "PayDunya", // Default XOF gateway, could also be OrangeMoney
+      XOF: "AfriExchange",
     };
 
     return gatewayMap[currency] || "Paystack"; // Default to Paystack

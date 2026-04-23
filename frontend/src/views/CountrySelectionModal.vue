@@ -61,9 +61,9 @@
                             <img :src="paymentImages.applePay" alt="Apple Pay" class="h-8" />
                             <img :src="paymentImages.googlePay" alt="Google Pay" class="h-8" />
                             <img :src="paymentImages.paypal" alt="PayPal" class="h-8" />
-                            <img :src="paymentImages.orangeMoney" alt="Orange Money" class="h-8" />
                             <img :src="paymentImages.paystack" alt="Paystack" class="h-8" />
                             <img :src="paymentImages.opay" alt="OPay" class="h-8" />
+                            <span class="text-xs font-semibold px-2 py-1 rounded bg-gray-900 text-white">AfriExchange</span>
                         </div>
                     </div>
                 </div>
@@ -96,7 +96,6 @@ import mastercardLogo from '../assets/images/mastercard-pay.webp';
 import applePay from '../assets/images/apple-pay.webp';
 import googlePay from '../assets/images/google-pay.png';
 import paypalLogo from '../assets/images/paypal-pay.webp';
-import orangeMoney from '../assets/images/orange-p.jpeg';
 import paystackLogo from '../assets/images/paystack-c.png';
 import opayLogo from '../assets/images/opay-logo.jpeg';
 
@@ -134,7 +133,6 @@ const paymentImages = {
     applePay: applePay,
     googlePay: googlePay,
     paypal: paypalLogo,
-    orangeMoney: orangeMoney,
     paystack: paystackLogo,
     opay: opayLogo,
 };

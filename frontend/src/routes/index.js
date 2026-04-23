@@ -111,6 +111,7 @@ import AdminProducts from "../views/admin/AdminProducts.vue";
 import AdminCategories from "../views/admin/AdminCategories.vue";
 import AdminOrders from "../views/admin/AdminOrders.vue";
 import AdminPayments from "../views/admin/AdminPayments.vue";
+import AdminPayouts from "../views/admin/AdminPayouts.vue";
 import AdminSettings from "../views/admin/AdminSettings.vue";
 import AdminPasswordReset from "../views/admin/AdminPasswordReset.vue";
 
@@ -183,6 +184,11 @@ const adminRoutes = [
         path: "payments",
         name: "AdminPayments",
         component: AdminPayments,
+      },
+      {
+        path: "payouts",
+        name: "AdminPayouts",
+        component: AdminPayouts,
       },
       {
         path: "settings",

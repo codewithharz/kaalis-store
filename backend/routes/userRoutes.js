@@ -6,6 +6,9 @@ const {
   getUserProfile,
   completeUserProfile,
   clearUserProfile,
+  updateMarketSettings,
+  linkAfriExchangeAccount,
+  unlinkAfriExchangeAccount,
   getUserProducts,
   requestPasswordReset,
   resetPassword,
@@ -34,6 +37,21 @@ router.post("/change-password", userAuthMiddleware, changePassword); // Change p
 // User profile routes
 router.get("/:userId/profile", userAuthMiddleware, getUserProfile); // Get user profile
 router.put("/:userId/profile", userAuthMiddleware, completeUserProfile); // Complete user profile
+router.put(
+  "/:userId/market-settings",
+  userAuthMiddleware,
+  updateMarketSettings
+);
+router.put(
+  "/:userId/afriexchange/link",
+  userAuthMiddleware,
+  linkAfriExchangeAccount
+);
+router.delete(
+  "/:userId/afriexchange/link",
+  userAuthMiddleware,
+  unlinkAfriExchangeAccount
+);
 router.put("/:userId/clear-profile", userAuthMiddleware, clearUserProfile); // Clear user profile
 router.get("/:userId/products", userAuthMiddleware, getUserProducts); // Get user's products
 

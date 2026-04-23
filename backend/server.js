@@ -37,10 +37,9 @@ const sellerRoutes = require("./routes/sellerRoutes");
 const shippingRulesRoutes = require("./routes/shippingRules");
 const paymentRoutes = require("./routes/paymentRoutes");
 const paystackRoutes = require("./routes/paystackRoutes");
-const orangeMoneyRoutes = require("./routes/orangeMoneyRoutes");
-const payoutTestRoutes = require("./routes/payoutTestRoutes");
 const opayRoutes = require("./routes/opayRoutes");
 const vendorPayoutRoutes = require("./routes/vendorPayoutRoutes");
+const afriExchangeWebhookRoutes = require("./routes/afriExchangeWebhookRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 // const { initPayoutCron } = require("./config/cronJobs"); // REMOVED: Cron disabled, using manual processing
 const {
@@ -131,6 +130,8 @@ const corsOptions = {
     "X-Requested-With",
     "Accept",
     "Origin",
+    "X-AfriExchange-Signature",
+    "X-AfriExchange-Timestamp",
   ],
   exposedHeaders: ["set-cookie"],
   maxAge: 86400, // 24 hours
@@ -230,7 +231,7 @@ app.use((req, res, next) => {
   );
   res.header(
     "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma"
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma, X-AfriExchange-Signature, X-AfriExchange-Timestamp"
   );
 
   // Handle preflight requests
@@ -293,7 +294,12 @@ const adminLoginLimiter = rateLimit({
 });
 
 // Basic middleware
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({
+  limit: "10mb",
+  verify: (req, res, buf) => {
+    req.rawBody = buf;
+  },
+}));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(bodyParser.json({ limit: "10mb" }));
 
@@ -355,6 +361,7 @@ app.use("/api/categories", categoryRoutes); // Category routes
 app.use("/api/activity-logs", userAuthMiddleware, activityLogRoutes); // Activity log routes
 app.use("/api/addresses", userAuthMiddleware, addressRoutes); // Address routes
 app.use("/api/admin", adminUserRoutes); // Admin user routes
+app.use("/api/afriexchange", afriExchangeWebhookRoutes); // AfriExchange webhooks
 app.use("/api/admin-notifications", adminNotificationRoutes); // Admin notification routes
 app.use("/api/audit-logs", auditLogRoutes); // Audit log routes
 app.use("/api/cart", cartRoutes); // Cart routes
@@ -374,19 +381,15 @@ app.use("/api/notifications", notificationRoutes); // Notification inventory rou
 app.use("/api/messages", messageRoutes); // Message inventory routes
 app.use("/api/seller", sellerRoutes); // seller inventory routes
 app.use("/api/shipping-rules", shippingRulesRoutes);
-app.use("/api/payment", paymentRoutes); // Includes Paystack and PayDunya routes
+app.use("/api/payment", paymentRoutes); // Paystack and OPay routes
 app.use("/api/paystack", paystackRoutes); // Paystack routes
-app.use("/api/orange-money", orangeMoneyRoutes); // Orange Money routes
 app.use("/api/opay", opayRoutes);
 app.use("/api/vendor-payout", vendorPayoutRoutes); // Vendor payout routes
 app.use("/api/upload", uploadRoutes); // Cloudinary upload routes
 
 // Only enable test routes in development or test environment
-if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
-  // Make sure all required middlewares are defined
-  app.use("/api/payout-test", payoutTestRoutes);
-  console.log("✅ Payout test routes enabled in development mode");
-}
+// Legacy multi-provider payout test routes are disabled because PayDunya and
+// Orange Money are no longer active providers for this integration phase.
 
 // Apply rate limiting to admin login
 app.use("/api/admin/login", adminLoginLimiter);

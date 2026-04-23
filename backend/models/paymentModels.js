@@ -47,26 +47,14 @@ const paymentSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: [
-        "Paystack",
-        "Bank_transfer",
-        "Cash",
-        "OrangeMoney",
-        "PayDunya",
-        "OPay",
-      ],
+      enum: ["Paystack", "Bank_transfer", "Cash", "OPay", "AfriExchange"],
       required: true,
     },
-    orangeMoneyData: {
-      type: Object,
-      select: false, // Only load when explicitly requested
-    },
-    payDunyaData: {
-      // Added PayDunya-specific data field
+    opayData: {
       type: Object,
       select: false,
     },
-    opayData: {
+    afriExchangeData: {
       type: Object,
       select: false,
     },
@@ -84,7 +72,6 @@ const paymentSchema = new mongoose.Schema(
         lowercase: true,
       },
       customerPhone: {
-        // Added for PayDunya and Orange Money
         type: String,
         trim: true,
       },
@@ -131,14 +118,6 @@ paymentSchema.index({ paymentMethod: 1 });
 paymentSchema.pre("save", function (next) {
   if (this.status !== "pending" && !this.reference) {
     throw new Error("Payment reference required for non-pending status");
-  }
-  if (
-    ["OrangeMoney", "PayDunya"].includes(this.paymentMethod) &&
-    !this.metadata.customerPhone
-  ) {
-    throw new Error(
-      `${this.paymentMethod} payments require a customer phone number`
-    );
   }
   next();
 });

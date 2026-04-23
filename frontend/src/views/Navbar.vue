@@ -592,8 +592,16 @@ export default {
             isCountryModalOpen.value = false;
         };
 
-        const onCountrySelected = (country) => {
+        const onCountrySelected = async (country) => {
             countryStore.setCountry(country);
+            if (userStore.isLoggedIn) {
+                try {
+                    await userStore.updateMarketSettings(country);
+                } catch (error) {
+                    console.error('Failed to update market settings:', error);
+                    toast.error('Country saved locally, but profile market settings could not be updated.');
+                }
+            }
             closeCountryModal();
         };
 

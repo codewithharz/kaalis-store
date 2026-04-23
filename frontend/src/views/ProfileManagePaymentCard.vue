@@ -247,7 +247,7 @@
 
                             <!-- Transactions List -->
                             <div v-if="transactions.length" class="space-y-3 sm:space-y-4">
-                                <div v-for="transaction in filteredTransactions" :key="transaction.reference"
+                                <div v-for="transaction in paginatedTransactions" :key="transaction.reference"
                                     class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
                                     <div
                                         class="flex flex-col gap-3 sm:gap-0 sm:flex-row sm:justify-between sm:items-start">
@@ -285,23 +285,47 @@
                                         <div
                                             class="text-left sm:text-right border-t sm:border-t-0 border-gray-100 pt-3 sm:pt-0 flex-shrink-0">
                                             <p class="text-lg sm:text-xl font-semibold text-gray-900">
-                                                {{ formatCurrency(transaction.amount) }}
+                                                {{ formatCurrency(transaction.amount, transaction.currency) }}
                                             </p>
                                             <div class="flex flex-col gap-1 mt-2">
                                                 <div class="text-xs sm:text-sm text-gray-600">
                                                     <span>{{ t('paymentMethodsPage.vendor') }} </span>
                                                     <span class="font-medium">{{
-                                                        formatCurrency(transaction.vendorAmount) }}</span>
+                                                        formatCurrency(transaction.vendorAmount, transaction.currency) }}</span>
                                                 </div>
                                                 <div class="text-xs sm:text-sm text-gray-600">
                                                     <span>{{ t('paymentMethodsPage.platformFee') }} </span>
-                                                    <span class="font-medium">{{ formatCurrency(transaction.platformFee)
+                                                    <span class="font-medium">{{ formatCurrency(transaction.platformFee, transaction.currency)
                                                     }}</span>
                                                 </div>
                                             </div>
                                             <p class="text-xs text-gray-400 mt-2 sm:mt-3">{{ transaction.formattedDate
                                             }}</p>
                                         </div>
+                                    </div>
+                                </div>
+
+                                <div v-if="transactionTotalPages > 1"
+                                    class="flex items-center justify-between gap-3 border-t border-gray-100 pt-4 sm:pt-6">
+                                    <p class="text-xs sm:text-sm text-gray-500">
+                                        {{ transactionPaginationStart + 1 }}-{{ transactionPaginationEnd }} of {{ filteredTransactions.length }}
+                                    </p>
+                                    <div class="flex items-center gap-2">
+                                        <button @click="transactionCurrentPage--"
+                                            :disabled="transactionCurrentPage === 1"
+                                            class="p-2 text-gray-400 hover:text-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            aria-label="Previous transactions page">
+                                            <ChevronLeft class="w-4 h-4 sm:w-5 sm:h-5" />
+                                        </button>
+                                        <span class="min-w-10 text-center text-xs sm:text-sm font-medium text-gray-600">
+                                            {{ transactionCurrentPage }} / {{ transactionTotalPages }}
+                                        </span>
+                                        <button @click="transactionCurrentPage++"
+                                            :disabled="transactionCurrentPage >= transactionTotalPages"
+                                            class="p-2 text-gray-400 hover:text-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            aria-label="Next transactions page">
+                                            <ChevronRight class="w-4 h-4 sm:w-5 sm:h-5" />
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -559,7 +583,7 @@
 
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import VendorPaymentSetup from './VendorPaymentSetup.vue';
 import {
@@ -572,7 +596,7 @@ import { usePaymentStore } from '../store/paymentStore';
 import { useOrderStore } from '../store/orderStore.js';
 import { toast } from 'vue-sonner';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 // Store initialization
 const userStore = useUserStore();
@@ -589,6 +613,8 @@ const activeTab = ref('cards');
 const searchQuery = ref('');
 const currentPage = ref(1);
 const itemsPerPage = 5;
+const transactionCurrentPage = ref(1);
+const transactionItemsPerPage = 5;
 const showAddCardModal = ref(false);
 const showDeleteModal = ref(false);
 const cardToDelete = ref(null);
@@ -627,17 +653,22 @@ const totalPages = computed(() => Math.ceil(filteredCards.value.length / itemsPe
 const paginationStart = computed(() => (currentPage.value - 1) * itemsPerPage);
 const paginationEnd = computed(() => Math.min(paginationStart.value + itemsPerPage, filteredCards.value.length));
 
-const formatCurrency = (amount) => {
+const formatCurrency = (amount, currency = 'NGN') => {
     // Convert from Naira to Kobo if needed (divide by 100 if amount is in Kobo)
     if (amount === null || amount === undefined || isNaN(amount)) {
-        return '₦0.00';
+        return new Intl.NumberFormat(locale.value === 'fr' ? 'fr-FR' : 'en-NG', {
+            style: 'currency',
+            currency,
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(0);
     }
 
     // const amountInNaira = amount / 100;  // Convert kobo to naira no need for, backend handles this already
 
-    return new Intl.NumberFormat('en-NG', {
+    return new Intl.NumberFormat(locale.value === 'fr' ? 'fr-FR' : 'en-NG', {
         style: 'currency',
-        currency: 'NGN',
+        currency,
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     }).format(amount);
@@ -661,8 +692,10 @@ const transactions = computed(() => {
 
         // Ensure all values have fallbacks
         const amount = transaction.amount || transaction.totalAmount || 0;
+        const currency = transaction.currency || order?.currency || 'NGN';
         // Calculate fees using the orderStore's method if they're not present
-        let { vendorAmount, platformFee } = order || {};
+        let vendorAmount = transaction.vendorAmount ?? order?.vendorAmount;
+        let platformFee = transaction.platformFee ?? order?.platformFee;
         if (!vendorAmount || !platformFee) {
             const calculatedFees = orderStore.calculateFees(amount);
             vendorAmount = calculatedFees.vendorAmount;
@@ -682,6 +715,7 @@ const transactions = computed(() => {
             email: transaction.email || userStore.user?.email || t('paymentMethodsPage.notAvailable'),
             status: transaction.status?.toLowerCase() || 'pending',
             amount,
+            currency,
             vendorAmount,
             platformFee,
             paymentMethod: transaction.paymentMethod ?
@@ -743,6 +777,39 @@ const filteredTransactions = computed(() => {
         transaction.email?.toLowerCase().includes(query) ||
         transaction.status?.toLowerCase().includes(query)
     );
+});
+
+const transactionTotalPages = computed(() => Math.ceil(filteredTransactions.value.length / transactionItemsPerPage));
+
+const transactionPaginationStart = computed(() => (transactionCurrentPage.value - 1) * transactionItemsPerPage);
+
+const transactionPaginationEnd = computed(() => Math.min(
+    transactionPaginationStart.value + transactionItemsPerPage,
+    filteredTransactions.value.length
+));
+
+const paginatedTransactions = computed(() => {
+    return filteredTransactions.value.slice(transactionPaginationStart.value, transactionPaginationEnd.value);
+});
+
+watch([searchQuery, activeTab], () => {
+    if (activeTab.value === 'transactions') {
+        transactionCurrentPage.value = 1;
+    } else {
+        currentPage.value = 1;
+    }
+});
+
+watch(transactionTotalPages, (totalPages) => {
+    if (transactionCurrentPage.value > totalPages) {
+        transactionCurrentPage.value = Math.max(totalPages, 1);
+    }
+});
+
+watch(totalPages, (pages) => {
+    if (currentPage.value > pages) {
+        currentPage.value = Math.max(pages, 1);
+    }
 });
 
 

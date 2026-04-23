@@ -5,7 +5,7 @@ const paymentController = require("../controllers/paymentController");
 const { validatePaymentRequest } = require("../utils/validators");
 const userAuthMiddleware = require("../middleware/userAuthMiddleware");
 
-// Payment initialization route (supports Paystack and PayDunya)
+// Payment initialization route (supports Paystack and OPay)
 router.post(
   "/initialize",
   userAuthMiddleware,
@@ -13,15 +13,12 @@ router.post(
   paymentController.initializePayment
 );
 
-// Payment verification route (supports Paystack and PayDunya)
+// Payment verification route (supports Paystack and OPay)
 router.get(
   "/verify/:paymentMethod/:reference",
   userAuthMiddleware,
   paymentController.verifyPayment
 );
-
-// PayDunya callback route
-router.get("/paydunya/callback", paymentController.handlePayDunyaCallback);
 
 // Payment history and details
 router.get(

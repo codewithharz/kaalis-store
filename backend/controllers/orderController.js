@@ -23,6 +23,8 @@ const createOrder = async (req, res) => {
       couponCode,
       couponDiscount,
       cluesBucks,
+      currency = "NGN",
+      metadata = {},
     } = req.body;
     const userId = req.user._id;
 
@@ -167,6 +169,8 @@ const createOrder = async (req, res) => {
       status: "Pending",
       address,
       paymentMethod,
+      currency,
+      metadata,
       appliedCoupon: couponCode
         ? await Coupon.findOne({ code: couponCode })
         : null,

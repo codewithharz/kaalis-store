@@ -157,6 +157,15 @@
                                             <span>{{ t('adminLayout.payments') }}</span>
                                         </router-link>
                                     </li>
+                                    <li class="relative pl-1">
+                                        <div class="absolute left-0 top-1/2 w-2 h-1 bg-[#24a3b5]"></div>
+                                        <router-link to="/admin/payouts"
+                                            class="flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-500 hover:text-[#24a3b5] transition-colors duration-300 rounded-md hover:bg-gray-50"
+                                            :class="{ 'text-[#24a3b5] bg-gray-50': isCurrentRoute('AdminPayouts') }">
+                                            <Banknote class="w-4 h-4" />
+                                            <span>{{ t('adminLayout.payouts') }}</span>
+                                        </router-link>
+                                    </li>
                                 </ul>
                             </div>
                         </li>
@@ -228,6 +237,7 @@ import {
     FolderTree,
     ScrollText,
     CreditCard,
+    Banknote,
     Sliders,
 } from 'lucide-vue-next'
 
@@ -247,6 +257,7 @@ export default {
         FolderTree,
         ScrollText,
         CreditCard,
+        Banknote,
         Sliders,
     },
     setup() {

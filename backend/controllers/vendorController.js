@@ -3,8 +3,6 @@ const VendorPayout = require("../models/vendorPayoutModels");
 const Order = require("../models/orderModels");
 const User = require("../models/userModels");
 const PaystackService = require("../services/paystackService");
-const PayDunyaPayoutService = require("../services/payDunyaPayoutService");
-const OrangeMoneyPayoutService = require("../services/orangeMoneyPayoutService");
 const CurrencyService = require("../services/currencyService");
 const payoutConfig = require("../config/payoutConfig");
 const logger = require("../utils/logger");
@@ -39,18 +37,41 @@ const vendorController = {
         .sort({ createdAt: -1 })
         .limit(50);
 
-      // Aggregate pending amount
-      const pendingAmount = await VendorPayout.aggregate([
+      const payoutTotals = await VendorPayout.aggregate([
         {
           $match: {
             vendorId: req.user._id,
-            status: { $in: ["pending", "aggregating"] },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              status: "$status",
+              currency: "$currency",
+            },
+            total: { $sum: "$amount" },
+            count: { $sum: 1 },
+          },
+        },
+      ]);
+
+      const salesTotals = await Order.aggregate([
+        {
+          $match: {
+            seller: req.user._id,
+            $or: [
+              { status: { $in: ["Processing", "Shipped", "Delivered"] } },
+              { transactionId: { $exists: true, $nin: [null, ""] } },
+            ],
           },
         },
         {
           $group: {
             _id: "$currency",
-            total: { $sum: "$amount" },
+            totalSales: { $sum: "$totalAmount" },
+            vendorEarnings: { $sum: "$vendorAmount" },
+            platformFees: { $sum: "$platformFee" },
+            orderCount: { $sum: 1 },
           },
         },
       ]);
@@ -61,16 +82,52 @@ const vendorController = {
         status: "pending",
       }).sort({ scheduledDate: 1 });
 
-      // Format the pending amounts by currency
       const pendingAmounts = {};
-      pendingAmount.forEach((item) => {
-        pendingAmounts[item._id || "NGN"] = item.total;
+      const processingAmounts = {};
+      const processedAmounts = {};
+      const failedAmounts = {};
+
+      payoutTotals.forEach((item) => {
+        const status = item._id.status;
+        const currency = item._id.currency || "NGN";
+
+        if (["pending", "aggregating"].includes(status)) {
+          pendingAmounts[currency] = (pendingAmounts[currency] || 0) + item.total;
+        } else if (status === "processing") {
+          processingAmounts[currency] =
+            (processingAmounts[currency] || 0) + item.total;
+        } else if (status === "processed") {
+          processedAmounts[currency] =
+            (processedAmounts[currency] || 0) + item.total;
+        } else if (status === "failed") {
+          failedAmounts[currency] = (failedAmounts[currency] || 0) + item.total;
+        }
+      });
+
+      const salesAmounts = {};
+      const vendorEarnings = {};
+      const platformFeeAmounts = {};
+      const orderCounts = {};
+
+      salesTotals.forEach((item) => {
+        const currency = item._id || "NGN";
+        salesAmounts[currency] = item.totalSales;
+        vendorEarnings[currency] = item.vendorEarnings;
+        platformFeeAmounts[currency] = item.platformFees;
+        orderCounts[currency] = item.orderCount;
       });
 
       res.json({
         payouts,
         stats: {
           pendingAmounts,
+          processingAmounts,
+          processedAmounts,
+          failedAmounts,
+          salesAmounts,
+          vendorEarnings,
+          platformFeeAmounts,
+          orderCounts,
           nextPayoutDate: nextPayout?.scheduledDate || null,
           platformFee: payoutConfig.fees.default.platformFee * 100,
         },
@@ -131,54 +188,44 @@ const vendorController = {
     }
   },
 
-  // Setup mobile wallet for PayDunya or Orange Money
-  async setupMobileWallet(req, res) {
+  // Link vendor to an AfriExchange account for XOF settlement
+  async setupAfriExchangeAccount(req, res) {
     try {
-      const { mobileNumber, provider, countryCode } = req.body;
+      const { afriExchangeUserId, walletAddress, accountEmail, countryCode } =
+        req.body;
 
-      if (!mobileNumber || !provider) {
+      if (!afriExchangeUserId && !walletAddress && !accountEmail) {
         return res.status(400).json({
-          message: "Mobile number and provider are required",
+          message:
+            "Provide an AfriExchange user ID, wallet address, or account email",
         });
       }
 
-      // Validate mobile number format
-      if (
-        !validatePhoneNumber(mobileNumber, countryCode || req.user.countryCode)
-      ) {
-        return res.status(400).json({
-          message: "Invalid mobile number format for your region",
-        });
-      }
-
-      // Validate provider
-      if (!["PayDunya", "OrangeMoney"].includes(provider)) {
-        return res.status(400).json({
-          message: "Invalid provider. Must be PayDunya or OrangeMoney",
-        });
-      }
-
-      // Update user's mobile wallet information
       await User.findByIdAndUpdate(req.user._id, {
-        "bankDetails.mobileNumber": mobileNumber,
-        "bankDetails.mobileProvider": provider,
-        paymentMethod: provider,
+        afriExchange: {
+          userId: afriExchangeUserId,
+          walletAddress,
+          accountEmail,
+          linkedAt: new Date(),
+        },
+        paymentMethod: "AfriExchange",
         currency: "XOF",
         countryCode: countryCode || req.user.countryCode || "SN",
       });
 
       res.json({
-        message: "Mobile wallet setup successful",
+        message: "AfriExchange account linked successfully",
         data: {
-          mobileNumber,
-          provider,
+          afriExchangeUserId,
+          walletAddress,
+          accountEmail,
           countryCode: countryCode || req.user.countryCode || "SN",
         },
       });
     } catch (error) {
-      logger.error("Error setting up mobile wallet:", error);
+      logger.error("Error linking AfriExchange account:", error);
       res.status(500).json({
-        message: "Failed to setup mobile wallet",
+        message: "Failed to link AfriExchange account",
         error: error.message,
       });
     }
@@ -225,44 +272,11 @@ const vendorController = {
     }
   },
 
-  // Validate mobile number for PayDunya or Orange Money
+  // Deprecated: XOF settlement now uses AfriExchange account linking.
   async validateMobileNumber(req, res) {
-    try {
-      const { mobileNumber, provider, countryCode } = req.body;
-
-      if (!mobileNumber || !provider) {
-        return res.status(400).json({
-          message: "Mobile number and provider are required",
-        });
-      }
-
-      // Validate mobile number format
-      if (
-        !validatePhoneNumber(mobileNumber, countryCode || req.user.countryCode)
-      ) {
-        return res.status(400).json({
-          message: "Invalid mobile number format for your region",
-        });
-      }
-
-      // For mobile validations, we just check format as there's often no API to validate
-      // For a real implementation, you might want to try a test API call if available
-
-      res.json({
-        message: "Mobile number validation successful",
-        data: {
-          isValid: true,
-          mobileNumber,
-          provider,
-        },
-      });
-    } catch (error) {
-      logger.error("Error validating mobile number:", error);
-      res.status(500).json({
-        message: "Failed to validate mobile number",
-        error: error.message,
-      });
-    }
+    return res.status(410).json({
+      message: "Mobile wallet validation is inactive. Use AfriExchange setup.",
+    });
   },
 
   // Get payout stats
@@ -414,6 +428,13 @@ const vendorController = {
               currency: "NGN",
               setupRequired: ["bankCode", "accountNumber"],
             },
+            {
+              id: "OPay",
+              name: "OPay",
+              description: "NGN bank transfers through OPay",
+              currency: "NGN",
+              setupRequired: ["bankCode", "accountNumber"],
+            },
           ];
           break;
 
@@ -424,18 +445,11 @@ const vendorController = {
         case "TG": // Togo
           providers = [
             {
-              id: "PayDunya",
-              name: "PayDunya",
-              description: "Mobile money transfers in West Africa",
+              id: "AfriExchange",
+              name: "AfriExchange",
+              description: "CT wallet settlement for XOF countries",
               currency: "XOF",
-              setupRequired: ["mobileNumber"],
-            },
-            {
-              id: "OrangeMoney",
-              name: "Orange Money",
-              description: "Orange mobile money platform",
-              currency: "XOF",
-              setupRequired: ["mobileNumber"],
+              setupRequired: ["afriExchangeUserId"],
             },
           ];
           break;
@@ -447,6 +461,13 @@ const vendorController = {
               id: "Paystack",
               name: "Paystack",
               description: "Direct bank transfers",
+              currency: "NGN",
+              setupRequired: ["bankCode", "accountNumber"],
+            },
+            {
+              id: "OPay",
+              name: "OPay",
+              description: "NGN bank transfers through OPay",
               currency: "NGN",
               setupRequired: ["bankCode", "accountNumber"],
             },
@@ -497,7 +518,7 @@ const vendorController = {
   async getPaymentSetupStatus(req, res) {
     try {
       const vendor = await User.findById(req.user._id).select(
-        "paymentMethod currency bankDetails paystack countryCode"
+        "paymentMethod currency bankDetails paystack afriExchange countryCode"
       );
 
       if (!vendor) {
@@ -521,39 +542,37 @@ const vendorController = {
               }
             : null,
         },
-        PayDunya: {
+        OPay: {
           isSetup: !!(
-            vendor.bankDetails &&
-            vendor.bankDetails.mobileNumber &&
-            vendor.bankDetails.mobileProvider === "PayDunya"
+            vendor.bankDetails?.accountNumber && vendor.bankDetails?.bankCode
           ),
-          details:
-            vendor.bankDetails &&
-            vendor.bankDetails.mobileProvider === "PayDunya"
-              ? {
-                  mobileNumber: `****${vendor.bankDetails.mobileNumber.slice(
-                    -4
-                  )}`,
-                  provider: "PayDunya",
-                }
-              : null,
+          details: vendor.bankDetails?.accountNumber
+            ? {
+                accountNumber: `****${vendor.bankDetails.accountNumber.slice(
+                  -4
+                )}`,
+                bankName: vendor.bankDetails.bankName,
+              }
+            : null,
         },
-        OrangeMoney: {
+        AfriExchange: {
           isSetup: !!(
-            vendor.bankDetails &&
-            vendor.bankDetails.mobileNumber &&
-            vendor.bankDetails.mobileProvider === "OrangeMoney"
+            vendor.afriExchange?.userId ||
+            vendor.afriExchange?.walletAddress ||
+            vendor.afriExchange?.accountEmail
           ),
-          details:
-            vendor.bankDetails &&
-            vendor.bankDetails.mobileProvider === "OrangeMoney"
-              ? {
-                  mobileNumber: `****${vendor.bankDetails.mobileNumber.slice(
-                    -4
-                  )}`,
-                  provider: "Orange Money",
-                }
-              : null,
+          details: vendor.afriExchange
+            ? {
+                userId: vendor.afriExchange.userId,
+                accountEmail: vendor.afriExchange.accountEmail,
+                walletAddress: vendor.afriExchange.walletAddress
+                  ? `${vendor.afriExchange.walletAddress.slice(
+                      0,
+                      6
+                    )}...${vendor.afriExchange.walletAddress.slice(-4)}`
+                  : null,
+              }
+            : null,
         },
       };
 
@@ -563,11 +582,11 @@ const vendorController = {
       // If nothing is set up yet, recommend based on country
       if (
         !setupStatus.Paystack.isSetup &&
-        !setupStatus.PayDunya.isSetup &&
-        !setupStatus.OrangeMoney.isSetup
+        !setupStatus.OPay.isSetup &&
+        !setupStatus.AfriExchange.isSetup
       ) {
         if (["SN", "CI", "BF", "ML", "TG"].includes(vendor.countryCode)) {
-          recommendedMethod = "PayDunya";
+          recommendedMethod = "AfriExchange";
         } else {
           recommendedMethod = "Paystack";
         }
@@ -600,25 +619,25 @@ const vendorController = {
       }
 
       // Validate payment method
-      if (!["Paystack", "PayDunya", "OrangeMoney"].includes(paymentMethod)) {
+      if (!["Paystack", "OPay", "AfriExchange"].includes(paymentMethod)) {
         return res.status(400).json({ message: "Invalid payment method" });
       }
 
       // Validate currency
       const validCurrencyForMethod = (method, curr) => {
-        if (method === "Paystack" && curr !== "NGN") return false;
-        if (["PayDunya", "OrangeMoney"].includes(method) && curr !== "XOF")
+        if (["Paystack", "OPay"].includes(method) && curr !== "NGN")
           return false;
+        if (method === "AfriExchange" && curr !== "XOF") return false;
         return true;
       };
 
       const currencyToUse =
-        currency || (paymentMethod === "Paystack" ? "NGN" : "XOF");
+        currency || (paymentMethod === "AfriExchange" ? "XOF" : "NGN");
 
       if (!validCurrencyForMethod(paymentMethod, currencyToUse)) {
         return res.status(400).json({
           message: `Invalid currency for ${paymentMethod}. Expected ${
-            paymentMethod === "Paystack" ? "NGN" : "XOF"
+            paymentMethod === "AfriExchange" ? "XOF" : "NGN"
           }`,
         });
       }
@@ -627,27 +646,30 @@ const vendorController = {
       const vendor = await User.findById(req.user._id);
 
       if (
-        paymentMethod === "Paystack" &&
+        ["Paystack", "OPay"].includes(paymentMethod) &&
         (!vendor.paystack || !vendor.paystack.recipientCode)
       ) {
         return res
           .status(400)
           .json({
             message:
-              "Paystack is not set up. Please set up your bank account first.",
+              `${paymentMethod} is not set up. Please set up your bank account first.`,
           });
       }
 
       if (
-        ["PayDunya", "OrangeMoney"].includes(paymentMethod) &&
-        (!vendor.bankDetails ||
-          !vendor.bankDetails.mobileNumber ||
-          vendor.bankDetails.mobileProvider !== paymentMethod)
+        paymentMethod === "AfriExchange" &&
+        !(
+          vendor.afriExchange?.userId ||
+          vendor.afriExchange?.walletAddress ||
+          vendor.afriExchange?.accountEmail
+        )
       ) {
         return res
           .status(400)
           .json({
-            message: `${paymentMethod} is not set up. Please set up your mobile wallet first.`,
+            message:
+              "AfriExchange is not set up. Please link your AfriExchange account first.",
           });
       }
 
