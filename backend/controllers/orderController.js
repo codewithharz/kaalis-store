@@ -23,6 +23,7 @@ const createOrder = async (req, res) => {
       couponCode,
       couponDiscount,
       cluesBucks,
+      storeCredit,
       currency = "NGN",
       metadata = {},
     } = req.body;
@@ -60,6 +61,7 @@ const createOrder = async (req, res) => {
     );
 
     console.log("Raw products from request:", products);
+    let appliedCoupon = null;
 
     // Handle coupon
     if (couponCode) {
@@ -82,23 +84,38 @@ const createOrder = async (req, res) => {
         appliedCoupon = coupon;
       }
 
-      // Increment usage count
-      coupon.usedCount += 1;
-      await coupon.save();
     }
 
     // Handle CluesBucks
-    if (cluesBucks?.pointsUsed) {
+    if (cluesBucks?.pointsUsed || storeCredit?.amountUsed) {
       const userCluesBucks = await CluesBucks.findOne({ user: userId });
-      if (!userCluesBucks || userCluesBucks.balance < cluesBucks.pointsUsed) {
+      if (!userCluesBucks) {
+        return res
+          .status(400)
+          .json({ message: "Rewards account not found" });
+      }
+
+      if (cluesBucks?.pointsUsed && userCluesBucks.balance < cluesBucks.pointsUsed) {
         return res
           .status(400)
           .json({ message: "Insufficient CluesBucks balance" });
       }
+
+      if (
+        storeCredit?.amountUsed &&
+        (userCluesBucks.storeCreditBalance || 0) < storeCredit.amountUsed
+      ) {
+        return res
+          .status(400)
+          .json({ message: "Insufficient store credit balance" });
+      }
     }
 
     const calculatedTotal =
-      subtotal - (couponDiscount || 0) - (cluesBucks?.discount || 0);
+      subtotal -
+      (couponDiscount || 0) -
+      (cluesBucks?.discount || 0) -
+      (storeCredit?.amountUsed || 0);
 
     // Verify total amount
     if (Math.abs(calculatedTotal - totalAmount) > 0.01) {
@@ -171,14 +188,15 @@ const createOrder = async (req, res) => {
       paymentMethod,
       currency,
       metadata,
-      appliedCoupon: couponCode
-        ? await Coupon.findOne({ code: couponCode })
-        : null,
+      appliedCoupon,
       discount: couponDiscount || 0,
       cluesBucks: {
         pointsEarned: cluesBucks?.pointsEarned || 0,
         pointsUsed: cluesBucks?.pointsUsed || 0,
         discount: cluesBucksDiscount,
+      },
+      storeCredit: {
+        amountUsed: storeCredit?.amountUsed || 0,
       },
     });
 
@@ -195,47 +213,15 @@ const createOrder = async (req, res) => {
     await newOrder.save();
     console.log("Order saved successfully:", newOrder._id);
 
-    // Handle CluesBucks transactions
-    if (cluesBucks?.pointsUsed || cluesBucks?.pointsEarned) {
-      await CluesBucks.findOneAndUpdate(
-        { user: userId },
-        {
-          $inc: {
-            balance:
-              (cluesBucks.pointsEarned || 0) - (cluesBucks.pointsUsed || 0),
-            lifetimePoints: cluesBucks.pointsEarned || 0,
-          },
-          $push: {
-            transactions: [
-              cluesBucks.pointsUsed && {
-                type: "spent",
-                points: cluesBucks.pointsUsed,
-                description: `Used for order #${newOrder.orderId}`,
-                source: "order_discount",
-                orderId: newOrder._id,
-              },
-              {
-                type: "earned",
-                points: cluesBucks.pointsEarned || 0,
-                description: `Earned from order #${newOrder.orderId}`,
-                source: "purchase",
-                orderId: newOrder._id,
-              },
-            ].filter(Boolean),
-          },
-        }
-      );
-    }
-
-    // Update products and clear cart
-    await Promise.all([
-      ...products.map((item) =>
+    // Reserve inventory when the order is created.
+    // Cart clearing is handled only after confirmed payment success.
+    await Promise.all(
+      products.map((item) =>
         Product.findByIdAndUpdate(item.product, {
           $inc: { quantity: -item.quantity },
         })
-      ),
-      Cart.findOneAndUpdate({ user: userId }, { $set: { products: [] } }),
-    ]);
+      )
+    );
 
     res
       .status(201)
@@ -552,6 +538,8 @@ const updateOrderStatus = async (req, res) => {
         .json({ message: "Not authorized to update this order" });
     }
 
+    const previousStatus = order.status;
+
     // Allow payment status updates for the order owner
     if (req.user._id.toString() === order.user.toString()) {
       if (status === "Processing" && transactionId) {
@@ -573,6 +561,79 @@ const updateOrderStatus = async (req, res) => {
     // Allow admins to update any status
     else if (req.user.role === "admin") {
       order.status = status;
+    }
+
+    if (
+      status === "Processing" &&
+      previousStatus !== "Processing" &&
+      (!order.metadata?.cluesBucksApplied || !order.metadata?.storeCreditApplied) &&
+      (
+        order.cluesBucks?.pointsUsed ||
+        order.cluesBucks?.pointsEarned ||
+        order.storeCredit?.amountUsed
+      )
+    ) {
+      const rewardsAccount =
+        (await CluesBucks.findOne({ user: order.user })) ||
+        new CluesBucks({ user: order.user });
+
+      if (!order.metadata?.cluesBucksApplied) {
+        rewardsAccount.balance +=
+          (order.cluesBucks?.pointsEarned || 0) -
+          (order.cluesBucks?.pointsUsed || 0);
+        rewardsAccount.lifetimePoints += order.cluesBucks?.pointsEarned || 0;
+
+        if (order.cluesBucks?.pointsUsed) {
+          rewardsAccount.transactions.push({
+            type: "spent",
+            points: order.cluesBucks.pointsUsed,
+            description: `Used for order #${order.orderId}`,
+            source: "order_discount",
+            orderId: order._id,
+            metadata: {
+              type: "points",
+            },
+          });
+        }
+
+        if (order.cluesBucks?.pointsEarned) {
+          rewardsAccount.transactions.push({
+            type: "earned",
+            points: order.cluesBucks.pointsEarned,
+            description: `Earned from order #${order.orderId}`,
+            source: "purchase",
+            orderId: order._id,
+          });
+        }
+      }
+
+      if (!order.metadata?.storeCreditApplied && order.storeCredit?.amountUsed) {
+        rewardsAccount.storeCreditBalance = Math.max(
+          0,
+          (rewardsAccount.storeCreditBalance || 0) - order.storeCredit.amountUsed
+        );
+        rewardsAccount.transactions.push({
+          type: "spent",
+          points: 0,
+          description: `Used ₦${order.storeCredit.amountUsed} store credit on order #${order.orderId}`,
+          source: "store_credit_order",
+          orderId: order._id,
+          metadata: {
+            type: "credit",
+            amount: order.storeCredit.amountUsed,
+            action: "used",
+            balanceAfter: rewardsAccount.storeCreditBalance,
+          },
+        });
+      }
+
+      await rewardsAccount.save();
+
+      order.metadata = {
+        ...(order.metadata || {}),
+        cluesBucksApplied: true,
+        storeCreditApplied: true,
+      };
     }
 
     const updatedOrder = await order.save();
@@ -685,8 +746,21 @@ const cancelOrder = async (req, res) => {
       });
     }
 
+    const restoreInventory = async (targetOrder) => {
+      if (!targetOrder?.products?.length) return;
+
+      await Promise.all(
+        targetOrder.products.map((item) =>
+          Product.findByIdAndUpdate(item.product, {
+            $inc: { quantity: item.quantity },
+          })
+        )
+      );
+    };
+
     // If it's a payment cancellation and status is Pending, delete the order
     if (order.status === "Pending" && reason === "Payment cancelled by user") {
+      await restoreInventory(order);
       const deletedOrder = await Order.findByIdAndDelete(orderId);
 
       return res.status(200).json({
@@ -697,6 +771,7 @@ const cancelOrder = async (req, res) => {
     }
 
     // Otherwise just mark as cancelled
+    await restoreInventory(order);
     const cancelledOrder = await Order.findByIdAndUpdate(
       orderId,
       {

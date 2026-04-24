@@ -137,7 +137,7 @@ specialOfferSchema.statics.findActiveOffersByCategory = async function (
     startDate: { $lte: now },
     endDate: { $gt: now },
     categoryPath: { $in: [...(category.ancestors || []), category._id] },
-    $or: [{ requiresAccess: false }, { requiresAccess: { $eq: hasAccess } }],
+    $or: [{ requiresAccess: false }, { requiresAccess: hasAccess }],
   })
     .populate("category", "name slug")
     .sort({ discount: -1 }); // Highest discount first
@@ -154,7 +154,7 @@ specialOfferSchema.statics.findActiveOffers = async function (
       status: "active",
       startDate: { $lte: now },
       endDate: { $gt: now },
-      $or: [{ requiresAccess: false }, { requiresAccess: { $eq: hasAccess } }],
+      $or: [{ requiresAccess: false }, { requiresAccess: hasAccess }],
     });
 
     // Find all active offers

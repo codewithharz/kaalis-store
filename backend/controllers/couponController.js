@@ -131,10 +131,6 @@ const applyCoupon = async (req, res) => {
       return res.status(400).json({ message: "Coupon is not valid" });
     }
 
-    // Increment the used count
-    coupon.usedCount += 1;
-    await coupon.save();
-
     res.status(200).json({
       message: "Coupon applied successfully",
       coupon: {
@@ -155,6 +151,11 @@ const invalidateCoupon = async (req, res) => {
     if (!coupon) {
       return res.status(404).json({ message: "Coupon not found" });
     }
+
+    if (!coupon.active) {
+      return res.status(400).json({ message: "Coupon is already inactive" });
+    }
+
     coupon.usedCount += 1;
     if (coupon.usedCount >= coupon.maxUsage) {
       coupon.active = false;
@@ -302,56 +303,13 @@ const removeCoupon = async (req, res) => {
       0
     );
 
-    // Find the applied coupon for this user (checking both methods)
-    const appliedCoupon = await Coupon.findOne({
-      $or: [{ appliedBy: userId }, { code: cart.couponCode }],
-    });
-
-    if (!appliedCoupon) {
-      return res.status(200).json({
-        message: "No coupon was applied to remove",
-        cart: {
-          totalAmount: cartTotal,
-          previousDiscount: 0,
-        },
-      });
-    }
-
-    // Update appliedBy array if it exists
-    if (Array.isArray(appliedCoupon.appliedBy)) {
-      appliedCoupon.appliedBy = appliedCoupon.appliedBy.filter(
-        (id) => !id.equals(userId)
-      );
-    } else {
-      appliedCoupon.appliedBy = [];
-    }
-
-    // Decrement the usedCount
-    if (appliedCoupon.usedCount > 0) {
-      appliedCoupon.usedCount -= 1;
-    }
-
-    // Remove coupon from cart
-    cart.couponCode = null;
-
-    // Save both changes
-    await Promise.all([
-      appliedCoupon.save().catch((err) => {
-        console.warn("Failed to update coupon, but continuing:", err);
-        // Continue even if coupon update fails
-      }),
-      cart.save(),
-    ]);
-
-    // Calculate the previous discount
-    const previousDiscount =
-      (cartTotal * appliedCoupon.discountPercentage) / 100;
+    await cart.save();
 
     res.status(200).json({
       message: "Coupon removed successfully",
       cart: {
         totalAmount: cartTotal,
-        previousDiscount: previousDiscount,
+        previousDiscount: 0,
       },
     });
   } catch (error) {

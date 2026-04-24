@@ -7,6 +7,7 @@ export const useCluesBucksStore = defineStore("cluesBucks", {
   state: () => ({
     stats: {
       currentBalance: 0,
+      storeCreditBalance: 0,
       lifetimePoints: 0,
       pointsExpiringSoon: 0,
     },
@@ -38,9 +39,11 @@ export const useCluesBucksStore = defineStore("cluesBucks", {
     error: null,
     appliedPoints: 0,
     pointsDiscount: 0,
+    lastRedeemedCoupon: null,
 
     specialOffers: [],
     offerAccess: null,
+    isInitialized: false,
   }),
 
   getters: {
@@ -60,11 +63,9 @@ export const useCluesBucksStore = defineStore("cluesBucks", {
       return state.transactions.some(
         (t) =>
           t.type === "spent" &&
-          ((t.metadata?.type === "offer" &&
-            t.metadata.validUntil &&
-            new Date(t.metadata.validUntil) > new Date()) ||
-            (t.metadata?.type === "credit" &&
-              t.description.includes("Convert points to store credit")))
+          t.metadata?.type === "offer" &&
+          t.metadata.validUntil &&
+          new Date(t.metadata.validUntil) > new Date()
       );
     },
 
@@ -95,7 +96,7 @@ export const useCluesBucksStore = defineStore("cluesBucks", {
   actions: {
     async initialize() {
       console.log("Initializing CluesBucks store...");
-      if (this.stats.currentBalance !== 0) return; // Already initialized
+      if (this.isInitialized) return;
 
       try {
         await Promise.all([
@@ -104,14 +105,17 @@ export const useCluesBucksStore = defineStore("cluesBucks", {
           this.fetchSpecialOffers(),
           this.checkOfferAccess(),
         ]);
+        this.isInitialized = true;
       } catch (error) {
         console.error("Failed to initialize CluesBucks store:", error);
         // Set default state
         this.stats = {
           currentBalance: 0,
+          storeCreditBalance: 0,
           lifetimePoints: 0,
           pointsExpiringSoon: 0,
         };
+        this.isInitialized = false;
       }
     },
 
@@ -122,6 +126,7 @@ export const useCluesBucksStore = defineStore("cluesBucks", {
         if (response.data) {
           this.stats = {
             currentBalance: response.data.currentBalance,
+            storeCreditBalance: response.data.storeCreditBalance || 0,
             lifetimePoints: response.data.lifetimePoints,
             pointsExpiringSoon: response.data.pointsExpiringSoon,
           };
@@ -263,7 +268,12 @@ export const useCluesBucksStore = defineStore("cluesBucks", {
             );
           }
 
-          await this.fetchTransactions();
+          await Promise.all([
+            this.fetchStats(),
+            this.fetchTransactions(),
+            this.fetchSpecialOffers(),
+            this.checkOfferAccess(),
+          ]);
           return true;
         }
         return false;
@@ -333,6 +343,7 @@ export const useCluesBucksStore = defineStore("cluesBucks", {
     resetState() {
       this.stats = {
         currentBalance: 0,
+        storeCreditBalance: 0,
         lifetimePoints: 0,
         pointsExpiringSoon: 0,
       };
@@ -342,6 +353,7 @@ export const useCluesBucksStore = defineStore("cluesBucks", {
       this.appliedPoints = 0;
       this.pointsDiscount = 0;
       this.lastRedeemedCoupon = null;
+      this.isInitialized = false;
     },
   },
 });

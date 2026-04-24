@@ -19,9 +19,69 @@ export const useCartStore = defineStore("cart", {
     cartTotal: (state) => state._cartTotal, // Keep cartTotal instead of total for consistency
     totalAfterDiscount: (state) => state.cartTotal - state.discount,
     appliedCouponCode: (state) => state.coupon?.code || null,
+    selectedItems: (state) => state.items.filter((item) => item.selected),
+    selectedCartCount: (state) =>
+      state.items
+        .filter((item) => item.selected)
+        .reduce((total, item) => total + item.quantity, 0),
+    selectedCartTotal: (state) =>
+      state.items
+        .filter((item) => item.selected)
+        .reduce((total, item) => {
+          const price = item.variant?.price || item.product?.price || 0;
+          return total + price * item.quantity;
+        }, 0),
   },
 
   actions: {
+    getCartItemKey(item) {
+      return `${item.product?._id || item.product}-${item.variant?._id || "default"}`;
+    },
+
+    getPersistedSelectionMap() {
+      try {
+        return JSON.parse(sessionStorage.getItem("cartSelection") || "{}");
+      } catch (error) {
+        console.error("Failed to read cart selection state:", error);
+        return {};
+      }
+    },
+
+    persistSelection() {
+      try {
+        const selectionMap = Object.fromEntries(
+          this.items.map((item) => [this.getCartItemKey(item), Boolean(item.selected)])
+        );
+        sessionStorage.setItem("cartSelection", JSON.stringify(selectionMap));
+      } catch (error) {
+        console.error("Failed to persist cart selection state:", error);
+      }
+    },
+
+    mergeSelectionState(nextItems = []) {
+      const persistedSelection = this.getPersistedSelectionMap();
+      const currentSelection = new Map(
+        this.items.map((item) => [
+          this.getCartItemKey(item),
+          Boolean(item.selected),
+        ])
+      );
+      const hasPersistedSelection = Object.keys(persistedSelection).length > 0;
+      const hasCurrentSelection = currentSelection.size > 0;
+
+      return nextItems.map((item) => {
+        const key = this.getCartItemKey(item);
+        return {
+          ...item,
+          selected: hasPersistedSelection
+            ? Boolean(persistedSelection[key])
+            : hasCurrentSelection
+              ? Boolean(currentSelection.get(key))
+              : true,
+        };
+      });
+    },
+
     async initialize() {
       if (this.$state) return; // Already initialized
 
@@ -97,7 +157,7 @@ export const useCartStore = defineStore("cart", {
 
         if (response.data?.products) {
           // Map the response data, ensuring variant information is preserved
-          this.items = response.data.products
+          const mappedItems = response.data.products
             .filter((item) => item.product != null)
             .map((item) => {
               console.log("Mapping cart item:", item);
@@ -111,6 +171,8 @@ export const useCartStore = defineStore("cart", {
               };
             });
 
+          this.items = this.mergeSelectionState(mappedItems);
+          this.persistSelection();
           console.log("Mapped items:", this.items);
         }
 
@@ -143,7 +205,7 @@ export const useCartStore = defineStore("cart", {
 
         console.log("Cart fetch response:", response.data);
 
-        this.items = (response.data.products || [])
+        const mappedItems = (response.data.products || [])
           .filter((item) => item.product != null)
           .map((item) => {
             console.log("Processing cart item:", item);
@@ -169,6 +231,8 @@ export const useCartStore = defineStore("cart", {
             return mappedItem;
           });
 
+        this.items = this.mergeSelectionState(mappedItems);
+        this.persistSelection();
         console.log("Final cart items:", this.items);
         this.calculateCartTotal();
         this.calculateDiscount();
@@ -203,16 +267,9 @@ export const useCartStore = defineStore("cart", {
           }
         );
 
-        if (response.data && response.data.products) {
-          this.items = response.data.products.filter(
-            (item) => item.product != null
-          );
-        } else {
-          await this.fetchCart();
-        }
-
+        await this.fetchCart();
+        this.calculateCartTotal();
         this.calculateDiscount();
-        toast.success("Cart updated");
       } catch (error) {
         console.error("Error updating cart:", error);
         this.error = "Failed to update cart";
@@ -235,18 +292,8 @@ export const useCartStore = defineStore("cart", {
           },
         });
 
-        if (
-          response.data &&
-          response.data.cart &&
-          response.data.cart.products
-        ) {
-          this.items = response.data.cart.products.filter(
-            (item) => item.product != null
-          );
-        } else {
-          await this.fetchCart();
-        }
-
+        await this.fetchCart();
+        this.calculateCartTotal();
         this.calculateDiscount();
         toast.success("Item removed from cart");
       } catch (error) {
@@ -278,14 +325,11 @@ export const useCartStore = defineStore("cart", {
         localStorage.setItem("cartCoupon", JSON.stringify(this.coupon));
         this.calculateDiscount();
 
-        // Adjust success message based on discount type
         const discountMessage = this.coupon.code.startsWith("CB")
           ? `₦${this.discount.toFixed(2)}`
           : `${this.coupon.discountPercentage}%`;
 
-        toast.success(
-          `Coupon applied successfully! You saved $${this.discount.toFixed(2)}`
-        );
+        toast.success(`Coupon applied successfully! You saved ${discountMessage}`);
 
         return response.data;
       } catch (error) {
@@ -301,11 +345,12 @@ export const useCartStore = defineStore("cart", {
     // In useCartStore.js
     async invalidateCoupon(code) {
       try {
+        const userStore = useUserStore();
         await apiClient.post(
           "/coupons/invalidate",
           { code },
           {
-            headers: { Authorization: `Bearer ${this.token}` },
+            headers: { Authorization: `Bearer ${userStore.token}` },
           }
         );
         this.coupon = null;
@@ -380,13 +425,6 @@ export const useCartStore = defineStore("cart", {
     //   const totalAfterDiscount = subtotal - this.discount;
     //   return Math.max(0, totalAfterDiscount); // Ensure the total is not negative
     // },
-    calculateCartTotal() {
-      this._cartTotal = this.items.reduce(
-        (total, item) => total + (item.product?.price || 0) * item.quantity,
-        0
-      );
-    },
-
     // async clearCart() {
     //   this.items = [];
     //   this.coupon = null;
@@ -421,6 +459,7 @@ export const useCartStore = defineStore("cart", {
         this.discount = 0;
         this._cartTotal = 0;
         localStorage.removeItem("cartCoupon");
+        sessionStorage.removeItem("cartSelection");
         this.calculateCartTotal();
         this.calculateDiscount();
         toast.success("Cart cleared successfully");
@@ -434,20 +473,58 @@ export const useCartStore = defineStore("cart", {
         this.discount = 0;
         this._cartTotal = 0;
         localStorage.removeItem("cartCoupon");
+        sessionStorage.removeItem("cartSelection");
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async removeCheckedOutItems(itemsToRemove = []) {
+      const userStore = useUserStore();
+      if (!itemsToRemove.length) return;
+
+      this.isLoading = true;
+      this.error = null;
+
+      try {
+        await Promise.all(
+          itemsToRemove.map((item) =>
+            apiClient.delete(`/cart/${item.productId}`, {
+              params: { variantId: item.variantId || null },
+              headers: {
+                Authorization: `Bearer ${userStore.token}`,
+              },
+            })
+          )
+        );
+
+        await this.fetchCart();
+        this.calculateCartTotal();
+        this.calculateDiscount();
+      } catch (error) {
+        console.error("Error removing checked out items from cart:", error);
+        this.error = "Failed to update cart after checkout";
+        throw error;
       } finally {
         this.isLoading = false;
       }
     },
 
     getOrderData() {
+      const checkoutItems = this.selectedItems.length ? this.selectedItems : this.items;
+      const selectedDiscount = this.selectedItems.length && this.cartTotal
+        ? Math.min(this.discount * (this.selectedCartTotal / this.cartTotal), this.selectedCartTotal)
+        : this.discount;
       return {
-        items: this.items.map((item) => ({
+        items: checkoutItems.map((item) => ({
           product: item.product._id,
           quantity: item.quantity,
           variant: item.variant,
         })),
         couponCode: this.appliedCouponCode,
-        totalAmount: this.totalAfterDiscount,
+        totalAmount: this.selectedItems.length
+          ? Math.max(0, this.selectedCartTotal - selectedDiscount)
+          : this.totalAfterDiscount,
       };
     },
   },

@@ -59,6 +59,9 @@ const orderSchema = new mongoose.Schema(
       pointsUsed: { type: Number, default: 0 },
       discount: { type: Number, default: 0 },
     },
+    storeCredit: {
+      amountUsed: { type: Number, default: 0 },
+    },
     totalAmount: { type: Number, required: true },
     status: {
       type: String,
@@ -130,6 +133,7 @@ orderSchema.pre("validate", async function (next) {
         this.subtotal -
         (this.discount || 0) -
         (this.cluesBucks?.discount || 0) +
+        (this.storeCredit?.amountUsed || 0) +
         (this.shippingFee || 0);
 
       // Verify total amount

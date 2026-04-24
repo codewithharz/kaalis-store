@@ -61,23 +61,24 @@
             </div>
 
 
-            <!-- Store Credit Status card -->
+            <!-- Store Credit card -->
             <div class="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500">{{ t('myCluesBucksPage.storeCredit') }}</p>
                         <p class="text-2xl font-bold text-gray-900">
-                            {{ getStoreCreditStats().totalRedeemed ? '₦2000' : '0' }}
+                            ₦{{ formatMoneyValue(stats.storeCreditBalance || 0) }}
                         </p>
                     </div>
                     <CreditCard class="w-8 h-8"
-                        :class="getStoreCreditStats().totalRedeemed ? 'text-amber-500' : 'text-gray-400'" />
+                        :class="(stats.storeCreditBalance || 0) > 0 ? 'text-amber-500' : 'text-gray-400'" />
                 </div>
                 <div class="mt-2 space-y-2">
                     <div class="flex items-center justify-between">
                         <span class="text-sm font-medium text-gray-700">{{ t('myCluesBucksPage.creditStatus') }}</span>
-                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
-                            {{ getStoreCreditStats().isActive ? t('myCluesBucksPage.activeLower') : t('myCluesBucksPage.inactiveLower') }}
+                        <span class="px-2 py-1 text-xs font-medium rounded-full"
+                            :class="(stats.storeCreditBalance || 0) > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-500'">
+                            {{ (stats.storeCreditBalance || 0) > 0 ? t('myCluesBucksPage.activeLower') : t('myCluesBucksPage.inactiveLower') }}
                         </span>
                     </div>
                     <div class="flex items-center gap-2 text-xs text-gray-600">
@@ -85,11 +86,14 @@
                     </div>
                     <div class="flex items-center justify-between text-xs text-gray-500">
                         <span>{{ t('myCluesBucksPage.totalUsed', { count: getStoreCreditStats().totalUsed }) }}</span>
-                        <span>{{ t('myCluesBucksPage.pointsUsed', { count: getStoreCreditStats().pointsUsed }) }}</span>
+                        <span>{{ t('myCluesBucksPage.storeCreditUsed', { amount: formatMoneyValue(getStoreCreditStats().amountUsed) }) }}</span>
                     </div>
                 </div>
                 <p v-if="!getStoreCreditStats().totalRedeemed" class="text-xs text-gray-500 mt-2">
                     {{ t('myCluesBucksPage.storeCreditHint') }}
+                </p>
+                <p v-else-if="getStoreCreditStats().lastRedeemedDate" class="text-xs text-gray-500 mt-2">
+                    {{ t('myCluesBucksPage.lastRedeemedDate', { date: getStoreCreditStats().lastRedeemedDate }) }}
                 </p>
             </div>
 
@@ -110,7 +114,7 @@
                     <div class="flex items-center justify-between">
                         <span class="text-sm font-medium text-gray-700">{{ t('myCluesBucksPage.code', { code: getLatestCoupon().code }) }}</span>
                         <span class="px-2 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-800">
-                            {{ t('myCluesBucksPage.spent') }}
+                            {{ t('myCluesBucksPage.redeemed') }}
                         </span>
                     </div>
                     <div class="flex items-center gap-2 text-xs text-gray-600">
@@ -367,7 +371,7 @@ const store = useCluesBucksStore();
 const productStore = useProductStore();
 
 // Update the destructuring of storeToRefs
-const { stats, sortedTransactions, isLoading, redemptionOptions, hasValidOfferAccess, activeSpecialOffers, lastRedeemedCoupon } = storeToRefs(store);
+const { stats, sortedTransactions, isLoading, redemptionOptions, hasValidOfferAccess, activeSpecialOffers } = storeToRefs(store);
 const { hasEnoughPoints } = store;
 
 const showRedeemModal = ref(false);
@@ -449,6 +453,12 @@ const formatDate = (date) => {
     });
 };
 
+const formatMoneyValue = (value) =>
+    Number(value || 0).toLocaleString(locale.value === 'fr' ? 'fr-FR' : 'en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+    });
+
 const handleRedeem = (option) => {
     selectedOption.value = option;
     showRedeemModal.value = true;
@@ -467,7 +477,7 @@ const confirmRedeem = async () => {
 const getSpecialOfferTransactions = () => {
     return sortedTransactions.value.filter(t =>
         t.type === 'spent' &&
-        t.description.includes('Special Offer Access')
+        t.metadata?.type === 'offer'
     );
 };
 
@@ -475,7 +485,7 @@ const getSpecialOfferStats = () => {
     const transactions = getSpecialOfferTransactions();
     return {
         totalRedeemed: transactions.length,
-        pointsUsed: transactions.length * 500,
+        pointsUsed: transactions.reduce((sum, transaction) => sum + Math.abs(transaction.points || 0), 0),
         isActive: hasValidOfferAccess.value
     };
 };
@@ -483,19 +493,23 @@ const getSpecialOfferStats = () => {
 const getStoreCreditTransactions = () => {
     return sortedTransactions.value.filter(t =>
         t.type === 'spent' &&
-        t.description.includes('Convert points to store credit')  // Match the exact description from redemption
+        t.metadata?.type === 'credit'
     );
 };
 
 const getStoreCreditStats = () => {
     const transactions = getStoreCreditTransactions();
-    const totalCredits = transactions.length;
+    const redemptionTransactions = transactions.filter(t => t.metadata?.action === 'redeemed');
+    const usageTransactions = transactions.filter(t => t.metadata?.action === 'used');
+    const lastTransaction = redemptionTransactions[0];
     return {
-        totalRedeemed: totalCredits,
-        totalUsed: totalCredits,
-        pointsUsed: totalCredits * 2000, // Each credit costs 2000 points
-        isActive: totalCredits > 0,
-        lastTransaction: transactions[0]
+        totalRedeemed: redemptionTransactions.length,
+        totalUsed: usageTransactions.length,
+        pointsUsed: redemptionTransactions.reduce((sum, transaction) => sum + Math.abs(transaction.points || 0), 0),
+        amountUsed: usageTransactions.reduce((sum, transaction) => sum + Math.abs(transaction.metadata?.amount || 0), 0),
+        isActive: (stats.value.storeCreditBalance || 0) > 0,
+        lastTransaction,
+        lastRedeemedDate: lastTransaction ? formatDate(lastTransaction.createdAt) : null,
     };
 };
 

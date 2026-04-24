@@ -48,8 +48,8 @@
                                 </div>
                                 <p class="text-sm text-gray-600 font-bold">
                                     {{ t('cart.saveShippingFee', {
-                                        shipping: `US ₦${shippingCost.toFixed(2)}`,
-                                        minimum: `US ₦${minimumForFreeShipping.toFixed(2)}`
+                                        shipping: formatMoney(shippingCost),
+                                        minimum: formatMoney(minimumForFreeShipping)
                                     }) }}
                                 </p>
                                 <p class="text-sm text-gray-600">{{ t('cart.lowerCarbonFootprint') }}</p>
@@ -63,14 +63,20 @@
                         <p class="text-gray-600">{{ t('cart.empty') }}</p>
                     </div>
                     <div v-else v-for="item in cartStore.items" :key="item.product?._id + (item.variant?._id || '')"
-                        class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
-                        <div class="flex items-center mb-2 sm:mb-0">
+                        class="mb-4 rounded-lg border border-gray-100 p-3 sm:p-4 lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start lg:gap-6">
+                        <div class="flex min-w-0 items-start gap-3 sm:gap-4">
+                            <input
+                                v-model="item.selected"
+                                type="checkbox"
+                                class="mt-1 custom-checkbox"
+                                @change="syncSelectAll"
+                            >
                             <img v-if="item.product?.images?.length > 0" :src="item.product.images[0]"
-                                :alt="item.product?.name || 'Product image'" class="w-16 h-16 object-cover mr-4">
-                            <div v-else class="w-16 h-16 bg-gray-200 rounded mr-4 flex items-center justify-center">
+                                :alt="item.product?.name || 'Product image'" class="h-16 w-16 flex-shrink-0 rounded object-cover sm:h-20 sm:w-20">
+                            <div v-else class="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded bg-gray-200 sm:h-20 sm:w-20">
                                 <span class="text-gray-400">{{ t('cart.noImage') }}</span>
                             </div>
-                            <div>
+                            <div class="min-w-0 flex-1">
                                 <h3 class="font-semibold" :title="item.product?.name || t('cart.productUnavailable')">
                                     {{ formatTitle(item.product?.name || t('cart.productUnavailable')) }}
                                 </h3>
@@ -102,21 +108,21 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="flex items-center mt-2 sm:mt-0">
-                            <div class="flex items-center mr-4">
-                                <button @click="decrementQuantity(item)" class="bg-gray-200 p-1 rounded-full"
+                        <div class="mt-3 flex w-full items-center justify-between gap-4 border-t border-gray-100 pt-3 sm:mt-4 lg:mt-0 lg:w-auto lg:min-w-[180px] lg:flex-col lg:items-end lg:justify-start lg:border-t-0 lg:border-l lg:border-gray-100 lg:pt-0 lg:pl-6">
+                            <div class="flex items-center rounded-full bg-gray-100 px-2 py-1">
+                                <button @click="decrementQuantity(item)" class="rounded-full bg-white p-1 shadow-sm"
                                     :disabled="loadingItems[item.product?._id]">
                                     <Minus class="w-3 h-3" />
                                 </button>
-                                <span class="mx-2">{{ item.quantity }}</span>
-                                <button @click="incrementQuantity(item)" class="bg-gray-200 p-1 rounded-full"
+                                <span class="mx-3 min-w-[24px] text-center text-sm font-medium">{{ item.quantity }}</span>
+                                <button @click="incrementQuantity(item)" class="rounded-full bg-white p-1 shadow-sm"
                                     :disabled="loadingItems[item.product?._id]">
                                     <Plus class="w-3 h-3" />
                                 </button>
                             </div>
-                            <span class="font-semibold">
+                            <span class="text-right text-base font-semibold sm:text-lg">
                                 <!-- ₦{{ item.product?.price ? (item.product.price * item.quantity).toFixed(2) : '0.00' }} -->
-                                ₦{{ getItemPrice(item) }}
+                                {{ formatMoney(getItemPrice(item)) }}
                             </span>
                         </div>
                     </div>
@@ -130,11 +136,11 @@
                     <div>
                         <div class="flex justify-between mb-2">
                             <span>{{ t('cart.subtotal') }}</span>
-                            <span>₦ {{ cartSubtotal.toFixed(2) }}</span>
+                            <span>{{ formatMoney(cartSubtotal) }}</span>
                         </div>
-                        <div v-if="cartStore.items.length > 0" class="flex justify-between mb-2">
+                        <div v-if="selectedItems.length > 0" class="flex justify-between mb-2">
                             <span>{{ t('cart.shippingFee') }}</span>
-                            <span>₦ {{ shippingCost.toFixed(2) }}</span>
+                            <span>{{ formatMoney(shippingCost) }}</span>
                         </div>
                         <div class="flex justify-between mb-4">
                             <span>{{ t('cart.promoCodes') }}</span>
@@ -151,13 +157,13 @@
                                 </button>
                             </div>
                         </div>
-                        <div v-if="cartStore.discount > 0" class="flex justify-between mb-4 text-green-600">
+                        <div v-if="selectedDiscount > 0" class="flex justify-between mb-4 text-green-600">
                             <span>{{ t('cart.discount') }}</span>
-                            <span>-₦{{ cartStore.discount.toFixed(2) }}</span>
+                            <span>-{{ formatMoney(selectedDiscount) }}</span>
                         </div>
                         <div class="flex justify-between font-bold text-lg mb-4">
                             <span>{{ t('cart.total') }}</span>
-                            <span>₦ {{ total.toFixed(2) }}</span>
+                            <span>{{ formatMoney(total) }}</span>
                         </div>
                         <div class="text-right mb-4">
                             <!-- 0.6% for the platform (1.01)-->
@@ -168,8 +174,11 @@
                         <button @click="proceedToCheckout"
                             class="w-full bg-[#24a6bb] text-white py-2 rounded-lg hover:bg-[#1c8a9e] transition duration-300"
                             :disabled="cartStore.items.length === 0">
-                            {{ t('cart.checkout', { count: cartStore.cartCount }) }}
+                            {{ t('cart.checkout', { count: selectedCount }) }}
                         </button>
+                        <p v-if="cartStore.items.length > 0 && selectedItems.length === 0" class="mt-2 text-center text-xs text-amber-700">
+                            {{ t('checkout.noSelectedItems') }}
+                        </p>
                     </div>
 
                     <!-- Payment Methods and Buyer Protection -->
@@ -210,6 +219,8 @@ import {
 } from '@/components/ui/tooltip'
 import { useCartStore } from '../store/cart.js';
 import { useProductStore } from '../store/productStore.js';
+import { useCountryStore } from '../store/countryStore.js';
+import { formatCurrencyAmount } from '../utils/countryCurrency.js';
 
 import { ChevronRight, Trash2, Heart, ShieldCheck, Plus, Minus, ShieldQuestion } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
@@ -225,15 +236,24 @@ const router = useRouter();
 const { t } = useI18n();
 const cartStore = useCartStore();
 const productStore = useProductStore();
+const countryStore = useCountryStore();
 const selectAll = ref(false);
-// const shippingCost = computed(() => cartStore.items.length > 0 ? 1.99 : 0);
-const total = computed(() => cartStore.totalAfterDiscount + shippingCost.value);
+const selectedItems = computed(() => cartStore.selectedItems);
+const selectedCount = computed(() => cartStore.selectedCartCount);
+const selectedDiscount = computed(() => {
+    if (!cartStore.discount || !cartStore.cartTotal) return 0;
+    const proportionalDiscount = cartStore.discount * (cartSubtotal.value / cartStore.cartTotal);
+    return Math.min(proportionalDiscount, cartSubtotal.value);
+});
+const total = computed(() => Math.max(0, cartSubtotal.value - selectedDiscount.value) + shippingCost.value);
 
 const minimumForFreeShipping = ref(4.99);
 const exchangeRate = ref(0.0006); // NGN to USD exchange rate
 const loadingItems = reactive({});
 const error = ref(null);
 const couponCode = ref('');
+const cartCurrency = computed(() => countryStore.currency || 'NGN');
+const formatMoney = (amount) => formatCurrencyAmount(amount, cartCurrency.value);
 
 // Make imported images available to the template
 const paymentImages = {
@@ -246,6 +266,17 @@ const paymentImages = {
 
 const toggleSelectAll = () => {
     cartStore.items.forEach(item => item.selected = selectAll.value);
+    cartStore.persistSelection();
+};
+
+const syncSelectAll = () => {
+    if (!cartStore.items.length) {
+        selectAll.value = false;
+        return;
+    }
+
+    selectAll.value = cartStore.items.every(item => item.selected);
+    cartStore.persistSelection();
 };
 
 const deleteSelectedItems = async () => {
@@ -255,6 +286,7 @@ const deleteSelectedItems = async () => {
         }
     }
     await refreshCart();
+    syncSelectAll();
 };
 
 const decrementQuantity = async (item) => {
@@ -266,7 +298,6 @@ const decrementQuantity = async (item) => {
         } else {
             await cartStore.removeFromCart(item.product._id, item.variant?._id);
         }
-        await refreshCart();
     } catch (error) {
         console.error('Error decrementing quantity:', error);
         toast.error(t('cart.failedUpdateQuantity'));
@@ -280,7 +311,6 @@ const incrementQuantity = async (item) => {
     loadingItems[item.product._id] = true;
     try {
         await cartStore.updateQuantity(item.product._id, item.quantity + 1, item.variant?._id);
-        await refreshCart();
     } catch (error) {
         console.error('Error incrementing quantity:', error);
         toast.error(t('cart.failedUpdateQuantity'));
@@ -297,7 +327,7 @@ const getItemPrice = (item) => {
         price = item.product.price;
     }
     const total = price * item.quantity;
-    return total.toFixed(2);
+    return total;
 };
 
 const formatTitle = (title) => {
@@ -350,7 +380,7 @@ const refreshCart = async () => {
 };
 
 const cartSubtotal = computed(() => {
-    return cartStore.items.reduce((total, item) => {
+    return selectedItems.value.reduce((total, item) => {
         const itemTotal = parseFloat(getItemPrice(item));
         return total + itemTotal;
     }, 0);
@@ -386,10 +416,11 @@ const removeCoupon = async () => {
 };
 
 const proceedToCheckout = () => {
-    if (cartStore.items.length === 0) {
+    if (selectedItems.value.length === 0) {
         toast.error(t('cart.emptyBeforeCheckout'));
         return;
     }
+    cartStore.persistSelection();
     router.push({ name: 'Checkout' });
 };
 
@@ -405,10 +436,10 @@ const shippingCost = computed(() => {
 
     let fee = productStore.shippingRules.baseShippingFee || 0;
 
-    if (cartStore.cartTotal > (productStore.shippingRules.freeShippingThreshold || 0)) {
+    if (cartSubtotal.value > (productStore.shippingRules.freeShippingThreshold || 0)) {
         fee = 0;
-    } else if (cartStore.items) {
-        cartStore.items.forEach(item => {
+    } else if (selectedItems.value) {
+        selectedItems.value.forEach(item => {
             if (item && item.product) {
                 const categoryFee = (productStore.shippingRules.categoryFees && item.product.category)
                     ? (productStore.shippingRules.categoryFees.get(item.product.category.toString()) || 0)
@@ -440,6 +471,7 @@ onMounted(async () => {
         refreshCart(),
         productStore.fetchProducts() // This should fetch shipping rules as well
     ]);
+    syncSelectAll();
 });
 
 // This function is not needed in <script setup>, but keeping it for clarity
@@ -522,15 +554,22 @@ onMounted(async () => {
     .product-list-container {
         overflow-y: auto;
         max-height: 100%;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
     }
 
     .summary-container {
         position: sticky;
         top: 1rem;
-        /* Adjust based on your needs */
         max-height: calc(100vh - 120px);
-        /* Adjust 120px based on your header height plus some padding */
         overflow-y: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .product-list-container::-webkit-scrollbar,
+    .summary-container::-webkit-scrollbar {
+        display: none;
     }
 }
 

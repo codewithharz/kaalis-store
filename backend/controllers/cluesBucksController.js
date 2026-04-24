@@ -4,6 +4,15 @@ const SpecialOffer = require("../models/specialOfferModel");
 const Coupon = require("../models/couponModels");
 const crypto = require("crypto");
 
+const hasValidSpecialOfferAccess = (transactions = []) =>
+  transactions.some(
+    (t) =>
+      t.type === "spent" &&
+      t.metadata?.type === "offer" &&
+      t.metadata.validUntil &&
+      new Date(t.metadata.validUntil) > new Date()
+  );
+
 exports.getCluesBucksStats = async (req, res) => {
   try {
     let cluesBucks = await CluesBucks.findOne({ user: req.user._id });
@@ -24,6 +33,7 @@ exports.getCluesBucksStats = async (req, res) => {
 
     res.json({
       currentBalance: cluesBucks.balance,
+      storeCreditBalance: cluesBucks.storeCreditBalance || 0,
       lifetimePoints: cluesBucks.lifetimePoints,
       pointsExpiringSoon,
     });
@@ -195,6 +205,8 @@ exports.redeemPoints = async (req, res) => {
       });
     } else if (type === "credit") {
       // Handle store credit redemption
+      cluesBucks.storeCreditBalance = (cluesBucks.storeCreditBalance || 0) + 2000;
+
       cluesBucks.transactions.push({
         type: "spent",
         points,
@@ -202,8 +214,9 @@ exports.redeemPoints = async (req, res) => {
         source: "redemption",
         metadata: {
           type: "credit",
-          isStoreCredit: true,
           amount: 2000,
+          action: "redeemed",
+          balanceAfter: cluesBucks.storeCreditBalance,
         },
       });
 
@@ -215,6 +228,7 @@ exports.redeemPoints = async (req, res) => {
         newBalance: cluesBucks.balance,
         storeCredit: {
           amount: 2000,
+          balance: cluesBucks.storeCreditBalance,
         },
       });
     } else {
@@ -326,11 +340,9 @@ exports.checkOfferAccess = async (req, res) => {
       .filter(
         (t) =>
           t.type === "spent" &&
-          ((t.metadata?.type === "offer" &&
-            t.metadata.validUntil &&
-            new Date(t.metadata.validUntil) > new Date()) ||
-            (t.metadata?.type === "credit" &&
-              t.description.includes("Convert points to store credit")))
+          t.metadata?.type === "offer" &&
+          t.metadata.validUntil &&
+          new Date(t.metadata.validUntil) > new Date()
       )
       .sort(
         (a, b) =>
@@ -375,34 +387,9 @@ exports.getSpecialOffers = async (req, res) => {
     // );
 
     // Check if user has valid offer access
-    const hasValidAccess = cluesBucks?.transactions.some((t) => {
-      // Check transactions with metadata
-      if (
-        t.metadata?.type === "offer" &&
-        t.metadata.validUntil &&
-        new Date(t.metadata.validUntil) > new Date()
-      ) {
-        return true;
-      }
-
-      // Check transactions with store credit
-      if (
-        t.metadata?.type === "credit" &&
-        t.description.includes("Convert points to store credit")
-      ) {
-        return true;
-      }
-
-      // Also check legacy transactions without metadata
-      if (
-        t.type === "spent" &&
-        t.description.includes("Special Offer Access")
-      ) {
-        return true;
-      }
-
-      return false;
-    });
+    const hasValidAccess = hasValidSpecialOfferAccess(
+      cluesBucks?.transactions || []
+    );
 
     // Get active special offers
     const offers = await SpecialOffer.find({
@@ -410,10 +397,7 @@ exports.getSpecialOffers = async (req, res) => {
       endDate: { $gt: new Date() },
       status: "active",
       // If requiresAccess is true, only return if user has valid access
-      $or: [
-        { requiresAccess: false },
-        { requiresAccess: { $eq: !hasValidAccess } },
-      ],
+      $or: [{ requiresAccess: false }, { requiresAccess: hasValidAccess }],
     }).sort({ startDate: -1 });
 
     console.log("Found active offers:", offers);

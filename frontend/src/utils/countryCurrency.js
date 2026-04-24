@@ -31,3 +31,14 @@ export const getPaymentRailForCountry = (country) =>
 
 export const getCurrencySymbol = (currency) =>
   currency === "XOF" ? "CFA" : "₦";
+
+export const formatCurrencyAmount = (amount, currency = "NGN") => {
+  const numericAmount = Number(amount || 0);
+  const safeAmount = Number.isFinite(numericAmount) ? numericAmount : 0;
+  const locale = currency === "XOF" ? "fr-FR" : "en-NG";
+
+  return `${getCurrencySymbol(currency)} ${new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(safeAmount)}`;
+};

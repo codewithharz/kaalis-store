@@ -4,6 +4,15 @@ const CluesBucks = require("../models/cluesBucksModel");
 const Category = require("../models/categoryModels");
 const mongoose = require("mongoose");
 
+const hasValidSpecialOfferAccess = (transactions = []) =>
+  transactions.some(
+    (t) =>
+      t.type === "spent" &&
+      t.metadata?.type === "offer" &&
+      t.metadata.validUntil &&
+      new Date(t.metadata.validUntil) > new Date()
+  );
+
 exports.createOffer = async (req, res) => {
   try {
     // Validate category exists
@@ -37,14 +46,8 @@ exports.createOffer = async (req, res) => {
 exports.getOffers = async (req, res) => {
   try {
     const cluesBucks = await CluesBucks.findOne({ user: req.user._id });
-    const hasValidAccess = cluesBucks?.transactions.some(
-      (t) =>
-        t.type === "spent" &&
-        ((t.metadata?.type === "offer" &&
-          t.metadata.validUntil &&
-          new Date(t.metadata.validUntil) > new Date()) ||
-          (t.metadata?.type === "credit" &&
-            t.description.includes("Convert points to store credit")))
+    const hasValidAccess = hasValidSpecialOfferAccess(
+      cluesBucks?.transactions || []
     );
 
     // Get all active offers - no need for additional populate calls
@@ -88,14 +91,8 @@ exports.getOffersByCategory = async (req, res) => {
     }
 
     const cluesBucks = await CluesBucks.findOne({ user: req.user._id });
-    const hasValidAccess = cluesBucks?.transactions.some(
-      (t) =>
-        t.type === "spent" &&
-        ((t.metadata?.type === "offer" &&
-          t.metadata.validUntil &&
-          new Date(t.metadata.validUntil) > new Date()) ||
-          (t.metadata?.type === "credit" &&
-            t.description.includes("Convert points to store credit")))
+    const hasValidAccess = hasValidSpecialOfferAccess(
+      cluesBucks?.transactions || []
     );
 
     const offers = await SpecialOffer.findActiveOffersByCategory(
@@ -172,14 +169,8 @@ exports.validateOffer = async (req, res) => {
     // Check if user has valid access if required
     if (offer.requiresAccess) {
       const cluesBucks = await CluesBucks.findOne({ user: req.user._id });
-      const hasValidAccess = cluesBucks?.transactions.some(
-        (t) =>
-          t.type === "spent" &&
-          ((t.metadata?.type === "offer" &&
-            t.metadata.validUntil &&
-            new Date(t.metadata.validUntil) > new Date()) ||
-            (t.metadata?.type === "credit" &&
-              t.description.includes("Convert points to store credit")))
+      const hasValidAccess = hasValidSpecialOfferAccess(
+        cluesBucks?.transactions || []
       );
 
       if (!hasValidAccess) {
@@ -330,14 +321,8 @@ exports.useOffer = async (req, res) => {
     // Check if user has valid access if required
     if (offer.requiresAccess) {
       const cluesBucks = await CluesBucks.findOne({ user: req.user._id });
-      const hasValidAccess = cluesBucks?.transactions.some(
-        (t) =>
-          t.type === "spent" &&
-          ((t.metadata?.type === "offer" &&
-            t.metadata.validUntil &&
-            new Date(t.metadata.validUntil) > new Date()) ||
-            (t.metadata?.type === "credit" &&
-              t.description.includes("Convert points to store credit")))
+      const hasValidAccess = hasValidSpecialOfferAccess(
+        cluesBucks?.transactions || []
       );
 
       if (!hasValidAccess) {

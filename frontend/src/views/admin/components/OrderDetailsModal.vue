@@ -54,7 +54,7 @@
             </div>
 
             <!-- Financial Summary -->
-            <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="grid grid-cols-4 gap-4 mb-6">
                 <div class="bg-gray-50 p-4 rounded-lg">
                     <p class="text-sm text-gray-500">{{ t('adminOrderDetailsModal.financial.platformFee') }}</p>
                     <p class="text-xl font-semibold">{{ formatCurrency(order.platformFee) }}</p>
@@ -66,6 +66,10 @@
                 <div class="bg-gray-50 p-4 rounded-lg">
                     <p class="text-sm text-gray-500">{{ t('adminOrderDetailsModal.financial.cluesBucksUsed') }}</p>
                     <p class="text-xl font-semibold">{{ order.cluesBucks?.pointsUsed || 0 }}</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-500">{{ t('adminOrderDetailsModal.financial.storeCreditUsed') }}</p>
+                    <p class="text-xl font-semibold">{{ formatCurrency(order.storeCredit?.amountUsed || 0) }}</p>
                 </div>
             </div>
 
@@ -143,6 +147,10 @@
                             <tr v-if="order.discount">
                                 <td colspan="3" class="px-6 py-3 text-right font-medium text-gray-500">{{ t('adminOrderDetailsModal.summary.discount') }}</td>
                                 <td class="px-6 py-3 text-sm text-red-600">-{{ formatCurrency(order.discount) }}</td>
+                            </tr>
+                            <tr v-if="order.storeCredit?.amountUsed">
+                                <td colspan="3" class="px-6 py-3 text-right font-medium text-gray-500">{{ t('adminOrderDetailsModal.summary.storeCredit') }}</td>
+                                <td class="px-6 py-3 text-sm text-red-600">-{{ formatCurrency(order.storeCredit.amountUsed) }}</td>
                             </tr>
                             <tr>
                                 <td colspan="3" class="px-6 py-3 text-right font-medium text-gray-500">{{ t('adminOrderDetailsModal.summary.shipping') }}</td>

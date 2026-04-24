@@ -162,8 +162,13 @@
                         <span>-{{ formatPrice(order.cluesBucks.discount) }}</span>
                     </div>
 
+                    <div v-if="order.storeCredit?.amountUsed" class="flex justify-between mb-2 text-green-600">
+                        <span>{{ t('orderConfirmationPage.storeCreditDiscount') }}</span>
+                        <span>-{{ formatPrice(order.storeCredit.amountUsed) }}</span>
+                    </div>
+
                     <!-- Show consolidated discount if no specific discounts -->
-                    <div v-if="order.discount > 0 && !order.couponDiscount && !order.cluesBucks?.discount"
+                    <div v-if="order.discount > 0 && !order.couponDiscount && !order.cluesBucks?.discount && !order.storeCredit?.amountUsed"
                         class="flex justify-between mb-2 text-green-600">
                         <span>{{ t('cart.discount') }}</span>
                         <span>-{{ formatPrice(order.discount) }}</span>

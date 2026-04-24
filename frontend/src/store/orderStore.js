@@ -21,65 +21,19 @@ export const useOrderStore = defineStore("order", {
         const userStore = useUserStore();
         const cartStore = useCartStore();
 
-        const cartData = cartStore.getOrderData();
-        const subtotal = cartStore.cartTotal;
-        const couponDiscount = cartStore.discount || 0;
-        const couponCode = cartStore.coupon?.code;
-
-        // Calculate fees
-        const platformFeePercentage = 0.08; // 8%
-        const platformFeeFactor =
-          platformFeePercentage / (1 - platformFeePercentage);
-
-        // Calculate base platform fee (8% of subtotal)
-        const basePlatformFee = Math.round(subtotal * platformFeePercentage);
-
-        // Calculate vendor amount (92% of subtotal)
-        const baseVendorAmount = Math.round(
-          subtotal * (1 - platformFeePercentage)
-        );
-
-        // Add shipping fee to platform fee if applicable
-        const totalPlatformFee = basePlatformFee + (orderData.shippingFee || 0);
-
-        // Calculate final vendor amount after discounts
-        const totalDiscount =
-          (couponDiscount || 0) + (orderData.cluesBucks?.discount || 0);
-        const finalVendorAmount = Math.max(
-          0,
-          baseVendorAmount - totalDiscount * (1 - platformFeePercentage)
-        );
-
         const completeOrderData = {
           ...orderData,
-          ...cartData,
-          items: cartStore.items.map((item) => ({
-            product: item.product._id,
-            quantity: item.quantity,
-            price: item.product.price,
-            variant: item.variant, // Include variant data
-            vendorAmount: Math.round(
-              item.product.price * item.quantity * (1 - platformFeePercentage)
-            ),
-            platformFee: Math.round(
-              item.product.price * item.quantity * platformFeePercentage
-            ),
-          })),
-          subtotal,
-          totalAmount: subtotal - totalDiscount, // Base amount before fees
-          total: subtotal - totalDiscount + (orderData.shippingFee || 0), // Final total including shipping
-          vendorAmount: finalVendorAmount,
-          platformFee: totalPlatformFee,
-          couponCode,
-          couponDiscount,
+          couponCode: orderData.couponCode ?? cartStore.coupon?.code ?? null,
+          couponDiscount: orderData.couponDiscount ?? 0,
           cluesBucks: {
             ...orderData.cluesBucks,
-            pointsEarned: Math.floor(
-              (subtotal -
-                couponDiscount -
-                (orderData.cluesBucks?.discount || 0)) /
-              100
-            ),
+            pointsEarned:
+              orderData.cluesBucks?.pointsEarned ??
+              Math.floor((orderData.totalAmount || 0) / 100),
+          },
+          storeCredit: {
+            ...(orderData.storeCredit || {}),
+            amountUsed: orderData.storeCredit?.amountUsed || 0,
           },
         };
 
@@ -90,9 +44,7 @@ export const useOrderStore = defineStore("order", {
         });
         this.currentOrder = response.data.order;
 
-        await cartStore.clearCart();
-
-        toast.success("Order placed successfully");
+        toast.success("Order created. Proceeding to payment...");
         return response.data.order;
       } catch (error) {
         console.error("Error creating order:", error);
@@ -176,6 +128,10 @@ export const useOrderStore = defineStore("order", {
             discount: orderData.cluesBucks?.discount || 0,
             pointsEarned: orderData.cluesBucks?.pointsEarned || 0,
             pointsUsed: orderData.cluesBucks?.pointsUsed || 0,
+          },
+          storeCredit: {
+            ...(orderData.storeCredit || {}),
+            amountUsed: orderData.storeCredit?.amountUsed || 0,
           },
         };
       } catch (error) {
@@ -278,6 +234,10 @@ export const useOrderStore = defineStore("order", {
             discount: orderData.cluesBucks?.discount || 0,
             pointsEarned: orderData.cluesBucks?.pointsEarned || 0,
             pointsUsed: orderData.cluesBucks?.pointsUsed || 0,
+          },
+          storeCredit: {
+            ...(orderData.storeCredit || {}),
+            amountUsed: orderData.storeCredit?.amountUsed || 0,
           },
         };
       } catch (error) {
@@ -419,8 +379,6 @@ export const useOrderStore = defineStore("order", {
           // Clean up any stored data
           localStorage.removeItem("currentTransaction");
           localStorage.removeItem(`payment_verification_${orderId}`);
-
-          toast.info("Payment cancelled. You can try again when ready.");
         } else {
           // Otherwise update the order status
           const updatedOrder = response.data.order;

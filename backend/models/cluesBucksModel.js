@@ -12,6 +12,11 @@ const cluesBucksSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    storeCreditBalance: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     transactions: [
       {
         type: {
@@ -43,7 +48,7 @@ const cluesBucksSchema = new mongoose.Schema(
         metadata: {
           type: {
             type: String,
-            enum: ["coupon", "offer", "credit"],
+            enum: ["coupon", "offer", "credit", "points"],
             required: function () {
               // Only require for new transactions
               return this.isNew && this.type === "spent";
@@ -51,6 +56,12 @@ const cluesBucksSchema = new mongoose.Schema(
           },
           validUntil: Date,
           offerAccess: Boolean,
+          amount: Number,
+          action: {
+            type: String,
+            enum: ["redeemed", "used"],
+          },
+          balanceAfter: Number,
         },
       },
     ],

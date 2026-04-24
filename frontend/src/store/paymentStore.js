@@ -70,8 +70,7 @@ export const usePaymentStore = defineStore("payment", {
       } catch (error) {
         console.error("Payment initialization error:", error);
         this.paymentError = error.response?.data?.message || error.message;
-        toast.error(this.paymentError);
-        throw error;
+        throw new Error(this.paymentError);
       } finally {
         this.isInitializing = false;
       }

@@ -87,12 +87,11 @@
                 <div v-if="product?.price" class="space-y-2">
                     <div class="flex items-baseline space-x-2">
                         <div>
-                            <span class="text-lg">₦</span>
-                            <span class="text-2xl sm:text-3xl font-bold text-gray-800">{{ product.price.toFixed(2) }}</span>
+                            <span class="text-2xl sm:text-3xl font-bold text-gray-800">{{ formatMoney(product.price) }}</span>
                             <span v-if="product.unit?.displayUnit" class="text-gray-500 text-sm ml-1">/ {{ product.unit.displayUnit }}</span>
                         </div>
                         <div class="space-x-1 text-sm text-gray-500">
-                            <span class="line-through">₦{{ calculateOriginalPrice(product).toFixed(2) }}</span>
+                            <span class="line-through">{{ formatMoney(calculateOriginalPrice(product)) }}</span>
                             <span v-if="product.discount"
                                 class="text-[#ff5e62] text-xs border border-[#ff5e62] rounded-sm px-1 font-medium">
                                 -{{ product.discount }}%
@@ -694,12 +693,11 @@
                         <div v-if="product?.price" class="space-y-2">
                             <div class="flex items-baseline space-x-2">
                                 <div>
-                                    <span class="text-lg">₦</span>
-                                    <span class="text-2xl font-bold text-gray-800">{{ product.price.toFixed(2) }}</span>
+                                    <span class="text-2xl font-bold text-gray-800">{{ formatMoney(product.price) }}</span>
                                     <span v-if="product.unit?.displayUnit" class="text-gray-500 text-base ml-1">/ {{ product.unit.displayUnit }}</span>
                                 </div>
                                 <div class="space-x-1 text-sm text-gray-500">
-                                    <span class="line-through">₦{{ calculateOriginalPrice(product).toFixed(2) }}</span>
+                                    <span class="line-through">{{ formatMoney(calculateOriginalPrice(product)) }}</span>
                                     <span v-if="product.discount"
                                         class="text-[#ff5e62] text-xs border border-[#ff5e62] rounded-sm px-1 font-medium">
                                         -{{ product.discount }}%
@@ -1098,6 +1096,8 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useCountryStore } from "../store/countryStore.js";
+import { formatCurrencyAmount } from "../utils/countryCurrency.js";
 
 export default {
     name: 'ProductDetails',
@@ -1171,6 +1171,7 @@ export default {
         ]);
 
         const userStore = useUserStore();
+        const countryStore = useCountryStore();
         const addressStore = useAddressStore();
         const sellerStore = useSellerStore();
         const wishlistStore = useWishlistStore();
@@ -2004,6 +2005,8 @@ export default {
             return product.originalPrice || (product.discount ? Math.round(product.price / (1 - product.discount / 100)) : product.price);
         };
 
+        const formatMoney = (amount) => formatCurrencyAmount(amount, countryStore.currency || 'NGN');
+
         const fetchReviews = async () => {
             try {
                 const response = await apiClient.get(`/products/${props.id}/ratings`);
@@ -2238,6 +2241,7 @@ export default {
             navigateToProduct,
             truncateDescription,
             calculateOriginalPrice,
+            formatMoney,
             reviews,
             showReviewModal,
             newReview,

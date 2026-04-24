@@ -228,6 +228,8 @@ export default {
     redeemPoints: "Echangez 1000 points contre 1000 Naira de reduction",
     cluesBucks: "CluesBucks",
     pointsDiscount: "Reduction en points",
+    storeCredit: "Credit boutique",
+    storeCreditDiscount: "Credit boutique",
     specialOffers: "Offres speciales",
     active: "Actif",
     unlock: "Debloquer (500pts)",
@@ -268,13 +270,36 @@ export default {
     cannotExceedTotal:
       "Vous ne pouvez pas appliquer plus de CluesBucks que le total de la commande",
     appliedCluesBucks: "{points} CluesBucks appliques",
+    notEnoughStoreCredit: "Credit boutique insuffisant",
+    storeCreditCannotExceedTotal:
+      "Vous ne pouvez pas appliquer plus de credit boutique que le total de la commande",
+    appliedStoreCredit: "Credit boutique de ₦{amount} applique",
+    storeCreditReset:
+      "Le credit boutique applique a ete reinitialise a cause d'un changement de solde",
     selectShippingAddress: "Veuillez selectionner une adresse de livraison",
     cartEmpty: "Votre panier est vide",
+    noSelectedItems: "Aucun article selectionne n'est pret pour le paiement. Revenez au panier et choisissez les articles a acheter.",
+    returnToCart: "Retourner au panier",
     validPhoneForPayment:
       "Veuillez saisir un numero valide pour {method} (ex. {example})",
     validPaymentMethod: "Veuillez selectionner un mode de paiement valide",
     paymentInitializationFailed:
       "L'initialisation du paiement a echoue. Veuillez reessayer.",
+    afriExchangeSetupRequiredTitle: "Configuration AfriExchange requise",
+    afriExchangeSetupRequiredBody:
+      "Pour payer avec AfriExchange, creez d'abord un compte AfriExchange ou liez ici vos informations AfriExchange existantes.",
+    afriExchangeReadyTitle: "Compte AfriExchange lie",
+    afriExchangeReadyBody:
+      "Votre compte AfriExchange est lie. Passez la commande lorsque votre portefeuille CT AfriExchange est alimente et pret.",
+    createAfriExchangeAccount: "Creer un compte AfriExchange",
+    linkAfriExchangeAccount: "Lier le compte AfriExchange",
+    updateAfriExchangeLink: "Verifier la liaison AfriExchange",
+    afriExchangeSetupRequiredToast:
+      "Veuillez creer ou lier votre compte AfriExchange avant de passer cette commande.",
+    afriExchangeCheckoutBlocked:
+      "Le bouton de commande reste desactive tant que votre compte AfriExchange n'est pas lie.",
+    afriExchangeSignupUnavailable:
+      "Le lien d'inscription AfriExchange n'est pas encore configure. Utilisez Lier le compte AfriExchange.",
     orderCancelledPaymentFailure:
       "Commande annulee a cause d'un echec de paiement",
     paymentVerificationFailed: "La verification du paiement a echoue",
@@ -1210,6 +1235,7 @@ export default {
     notAvailable: "N/D",
     couponDiscount: "Reduction coupon (₦{amount})",
     cluesBucksDiscount: "Reduction CluesBucks ({points} points)",
+    storeCreditDiscount: "Credit boutique",
     shippingHandling: "Livraison et manutention",
     grandTotal: "Total general",
     failedProductDetails:
@@ -2678,6 +2704,10 @@ export default {
     discountCoupon: "Coupon de reduction",
     code: "Code : {code}",
     spent: "utilise",
+    redeemed: "echange",
+    consumed: "consomme",
+    lastRedeemedDate: "Dernier echange : {date}",
+    storeCreditUsed: "Credit boutique utilise : ₦{amount}",
     totalRedeemedCoupons: "Total des coupons echanges : {count}",
     couponHint: "Echangez 1000 pts pour ₦1000 de reduction",
     expiringSoon: "Expiration proche",
@@ -4186,6 +4216,7 @@ export default {
       platformFee: "Frais de plateforme",
       vendorAmount: "Montant vendeur",
       cluesBucksUsed: "CluesBucks utilises",
+      storeCreditUsed: "Credit boutique utilise",
     },
     table: {
       product: "Produit",
@@ -4196,6 +4227,7 @@ export default {
     summary: {
       subtotal: "Sous-total",
       discount: "Reduction",
+      storeCredit: "Credit boutique",
       shipping: "Livraison",
       total: "Total",
     },

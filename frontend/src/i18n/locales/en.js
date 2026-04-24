@@ -219,6 +219,8 @@ export default {
     redeemPoints: "Redeem 1000 points for Naira 1000 off",
     cluesBucks: "CluesBucks",
     pointsDiscount: "Points Discount",
+    storeCredit: "Store Credit",
+    storeCreditDiscount: "Store Credit",
     specialOffers: "Special Offers",
     active: "Active",
     unlock: "Unlock (500pts)",
@@ -252,13 +254,36 @@ export default {
     notEnoughCluesBucks: "Not enough CluesBucks available",
     cannotExceedTotal: "Cannot apply more CluesBucks than order total",
     appliedCluesBucks: "Applied {points} CluesBucks",
+    notEnoughStoreCredit: "Not enough store credit available",
+    storeCreditCannotExceedTotal:
+      "Cannot apply more store credit than the order total",
+    appliedStoreCredit: "Applied ₦{amount} store credit",
+    storeCreditReset:
+      "Applied store credit has been reset due to balance change",
     selectShippingAddress: "Please select a shipping address",
     cartEmpty: "Your cart is empty",
+    noSelectedItems: "No selected items are ready for checkout. Go back to cart and choose the items you want to buy.",
+    returnToCart: "Return to cart",
     validPhoneForPayment:
       "Please enter a valid phone number for {method} (e.g., {example})",
     validPaymentMethod: "Please select a valid payment method",
     paymentInitializationFailed:
       "Payment initialization failed. Please try again.",
+    afriExchangeSetupRequiredTitle: "AfriExchange setup required",
+    afriExchangeSetupRequiredBody:
+      "To pay with AfriExchange, first create an AfriExchange account or link your existing AfriExchange details here.",
+    afriExchangeReadyTitle: "AfriExchange account linked",
+    afriExchangeReadyBody:
+      "Your AfriExchange account is linked. Place the order when your AfriExchange CT wallet is funded and ready.",
+    createAfriExchangeAccount: "Create AfriExchange account",
+    linkAfriExchangeAccount: "Link AfriExchange account",
+    updateAfriExchangeLink: "Review AfriExchange link",
+    afriExchangeSetupRequiredToast:
+      "Please create or link your AfriExchange account before placing this order.",
+    afriExchangeCheckoutBlocked:
+      "Place Order is disabled until your AfriExchange account is linked.",
+    afriExchangeSignupUnavailable:
+      "AfriExchange signup link is not configured yet. Please use Link AfriExchange Account.",
     orderCancelledPaymentFailure: "Order cancelled due to payment failure",
     paymentVerificationFailed: "Payment verification failed",
     paymentSuccessful: "Payment successful!",
@@ -1159,6 +1184,7 @@ export default {
     notAvailable: "N/A",
     couponDiscount: "Coupon Discount (₦{amount})",
     cluesBucksDiscount: "CluesBucks Discount ({points} points)",
+    storeCreditDiscount: "Store Credit",
     shippingHandling: "Shipping & Handling",
     grandTotal: "Grand Total",
     failedProductDetails: "Failed to load details for product {productId}",
@@ -2612,6 +2638,10 @@ export default {
     discountCoupon: "Discount Coupon",
     code: "Code: {code}",
     spent: "spent",
+    redeemed: "redeemed",
+    consumed: "consumed",
+    lastRedeemedDate: "Last redeemed: {date}",
+    storeCreditUsed: "Store Credit Used: ₦{amount}",
     totalRedeemedCoupons: "Total Redeemed Coupons: {count}",
     couponHint: "Redeem 1000 pts for ₦1000 off",
     expiringSoon: "Expiring Soon",
@@ -4120,6 +4150,7 @@ export default {
       platformFee: "Platform Fee",
       vendorAmount: "Vendor Amount",
       cluesBucksUsed: "CluesBucks Used",
+      storeCreditUsed: "Store Credit Used",
     },
     table: {
       product: "Product",
@@ -4130,6 +4161,7 @@ export default {
     summary: {
       subtotal: "Subtotal",
       discount: "Discount",
+      storeCredit: "Store Credit",
       shipping: "Shipping",
       total: "Total",
     },

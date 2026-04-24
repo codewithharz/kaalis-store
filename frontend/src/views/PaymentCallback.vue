@@ -40,6 +40,7 @@ import { useI18n } from 'vue-i18n';
 import { usePaymentStore } from '../store/paymentStore';
 import { useCartStore } from '../store/cart';
 import { useOrderStore } from '../store/orderStore';
+import { useCluesBucksStore } from '../store/cluesBucksStore';
 import { toast } from 'vue-sonner';
 import { XCircle } from 'lucide-vue-next';
 
@@ -49,6 +50,7 @@ const { t } = useI18n();
 const paymentStore = usePaymentStore();
 const cartStore = useCartStore();
 const orderStore = useOrderStore();
+const cluesBucksStore = useCluesBucksStore();
 
 const isProcessing = ref(true);
 const error = ref(null);
@@ -66,6 +68,7 @@ onMounted(async () => {
     if (reference && trxref) {
 
         try {
+            const currentTransaction = JSON.parse(localStorage.getItem('currentTransaction') || 'null');
             // 1. Verify payment with Paystack
             const verificationResult = await paymentStore.verifyPayment(reference);
 
@@ -83,10 +86,21 @@ onMounted(async () => {
                 transactionId: reference
             });
 
-            // 4. Clear cart and coupon
             await Promise.all([
-                cartStore.clearCart(),
-                cartStore.coupon ? cartStore.removeCoupon() : Promise.resolve()
+                cluesBucksStore.fetchStats(),
+                cluesBucksStore.fetchTransactions(),
+                cluesBucksStore.checkOfferAccess(),
+                cluesBucksStore.fetchSpecialOffers()
+            ]);
+
+            // 4. Remove only purchased cart items when available
+            await Promise.all([
+                currentTransaction?.purchasedItems?.length
+                    ? cartStore.removeCheckedOutItems(currentTransaction.purchasedItems)
+                    : cartStore.clearCart(),
+                currentTransaction?.couponCode
+                    ? cartStore.invalidateCoupon(currentTransaction.couponCode)
+                    : Promise.resolve()
             ]);
 
             // 5. Redirect to success page
