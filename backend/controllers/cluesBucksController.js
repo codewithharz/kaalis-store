@@ -13,6 +13,11 @@ const hasValidSpecialOfferAccess = (transactions = []) =>
       new Date(t.metadata.validUntil) > new Date()
   );
 
+const calculateLifetimePoints = (transactions = []) =>
+  transactions
+    .filter((t) => t.type === "earned")
+    .reduce((sum, t) => sum + Math.max(0, Number(t.points) || 0), 0);
+
 exports.getCluesBucksStats = async (req, res) => {
   try {
     let cluesBucks = await CluesBucks.findOne({ user: req.user._id });
@@ -30,11 +35,17 @@ exports.getCluesBucksStats = async (req, res) => {
     const pointsExpiringSoon = cluesBucks.transactions
       .filter((t) => t.expiryDate && new Date(t.expiryDate) > new Date())
       .reduce((sum, t) => sum + t.points, 0);
+    const lifetimePoints = calculateLifetimePoints(cluesBucks.transactions);
+
+    if (cluesBucks.lifetimePoints !== lifetimePoints) {
+      cluesBucks.lifetimePoints = lifetimePoints;
+      await cluesBucks.save();
+    }
 
     res.json({
       currentBalance: cluesBucks.balance,
       storeCreditBalance: cluesBucks.storeCreditBalance || 0,
-      lifetimePoints: cluesBucks.lifetimePoints,
+      lifetimePoints,
       pointsExpiringSoon,
     });
   } catch (error) {

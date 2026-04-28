@@ -9,6 +9,10 @@ const Order = require("../models/orderModels");
 const Category = require("../models/categoryModels");
 const Payment = require("../models/paymentModels");
 const VendorPayout = require("../models/vendorPayoutModels");
+const {
+  applyOrderRewards,
+  reverseOrderRewards,
+} = require("../services/orderRewardService");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const {
@@ -501,15 +505,35 @@ exports.updateOrderStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
   try {
-    const order = await Order.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true }
-    ).populate("user", "username email");
+    const order = await Order.findById(id).populate("user", "username email");
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
+
+    const previousStatus = order.status;
+    order.status = status;
+
+    if (status === "Processing" && previousStatus !== "Processing") {
+      await applyOrderRewards(order);
+    }
+
+    if (status === "Cancelled" && previousStatus !== "Cancelled") {
+      if (order.products?.length) {
+        await Promise.all(
+          order.products.map((item) =>
+            Product.findByIdAndUpdate(item.product, {
+              $inc: { quantity: item.quantity },
+            })
+          )
+        );
+      }
+      await reverseOrderRewards(order, "Order cancelled by admin");
+      order.cancelledAt = new Date();
+      order.cancelReason = "Cancelled by admin";
+    }
+
+    await order.save();
 
     // You might want to send notifications here
     res.json(order);

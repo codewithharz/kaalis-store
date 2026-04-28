@@ -54,7 +54,7 @@
             </div>
 
             <!-- Financial Summary -->
-            <div class="grid grid-cols-4 gap-4 mb-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div class="bg-gray-50 p-4 rounded-lg">
                     <p class="text-sm text-gray-500">{{ t('adminOrderDetailsModal.financial.platformFee') }}</p>
                     <p class="text-xl font-semibold">{{ formatCurrency(order.platformFee) }}</p>
@@ -70,6 +70,28 @@
                 <div class="bg-gray-50 p-4 rounded-lg">
                     <p class="text-sm text-gray-500">{{ t('adminOrderDetailsModal.financial.storeCreditUsed') }}</p>
                     <p class="text-xl font-semibold">{{ formatCurrency(order.storeCredit?.amountUsed || 0) }}</p>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                <h4 class="font-medium text-gray-900 mb-3">{{ t('adminOrderDetailsModal.sections.rewardBreakdown') }}</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500">{{ t('adminOrderDetailsModal.summary.couponDiscount') }}</span>
+                        <span class="font-medium text-gray-900">-{{ formatCurrency(rewardBreakdown.coupon) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500">{{ t('adminOrderDetailsModal.summary.specialOfferDiscount') }}</span>
+                        <span class="font-medium text-gray-900">-{{ formatCurrency(rewardBreakdown.specialOffer) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500">{{ t('adminOrderDetailsModal.summary.cluesBucksDiscount') }}</span>
+                        <span class="font-medium text-gray-900">-{{ formatCurrency(rewardBreakdown.cluesBucks) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500">{{ t('adminOrderDetailsModal.summary.storeCredit') }}</span>
+                        <span class="font-medium text-gray-900">-{{ formatCurrency(rewardBreakdown.storeCredit) }}</span>
+                    </div>
                 </div>
             </div>
 
@@ -144,13 +166,21 @@
                                 <td colspan="3" class="px-6 py-3 text-right font-medium text-gray-500">{{ t('adminOrderDetailsModal.summary.subtotal') }}</td>
                                 <td class="px-6 py-3 text-sm text-gray-900">{{ formatCurrency(order.subtotal) }}</td>
                             </tr>
-                            <tr v-if="order.discount">
-                                <td colspan="3" class="px-6 py-3 text-right font-medium text-gray-500">{{ t('adminOrderDetailsModal.summary.discount') }}</td>
-                                <td class="px-6 py-3 text-sm text-red-600">-{{ formatCurrency(order.discount) }}</td>
+                            <tr v-if="rewardBreakdown.coupon">
+                                <td colspan="3" class="px-6 py-3 text-right font-medium text-gray-500">{{ t('adminOrderDetailsModal.summary.couponDiscount') }}</td>
+                                <td class="px-6 py-3 text-sm text-red-600">-{{ formatCurrency(rewardBreakdown.coupon) }}</td>
                             </tr>
-                            <tr v-if="order.storeCredit?.amountUsed">
+                            <tr v-if="rewardBreakdown.specialOffer">
+                                <td colspan="3" class="px-6 py-3 text-right font-medium text-gray-500">{{ t('adminOrderDetailsModal.summary.specialOfferDiscount') }}</td>
+                                <td class="px-6 py-3 text-sm text-red-600">-{{ formatCurrency(rewardBreakdown.specialOffer) }}</td>
+                            </tr>
+                            <tr v-if="rewardBreakdown.cluesBucks">
+                                <td colspan="3" class="px-6 py-3 text-right font-medium text-gray-500">{{ t('adminOrderDetailsModal.summary.cluesBucksDiscount') }}</td>
+                                <td class="px-6 py-3 text-sm text-red-600">-{{ formatCurrency(rewardBreakdown.cluesBucks) }}</td>
+                            </tr>
+                            <tr v-if="rewardBreakdown.storeCredit">
                                 <td colspan="3" class="px-6 py-3 text-right font-medium text-gray-500">{{ t('adminOrderDetailsModal.summary.storeCredit') }}</td>
-                                <td class="px-6 py-3 text-sm text-red-600">-{{ formatCurrency(order.storeCredit.amountUsed) }}</td>
+                                <td class="px-6 py-3 text-sm text-red-600">-{{ formatCurrency(rewardBreakdown.storeCredit) }}</td>
                             </tr>
                             <tr>
                                 <td colspan="3" class="px-6 py-3 text-right font-medium text-gray-500">{{ t('adminOrderDetailsModal.summary.shipping') }}</td>
@@ -290,6 +320,22 @@ export default {
             return events
         })
 
+        const rewardBreakdown = computed(() => ({
+            coupon: props.order?.discountBreakdown?.coupon || props.order?.discount || 0,
+            specialOffer:
+                props.order?.discountBreakdown?.specialOffer ||
+                props.order?.metadata?.specialOfferDiscount ||
+                0,
+            cluesBucks:
+                props.order?.discountBreakdown?.cluesBucks ||
+                props.order?.cluesBucks?.discount ||
+                0,
+            storeCredit:
+                props.order?.discountBreakdown?.storeCredit ||
+                props.order?.storeCredit?.amountUsed ||
+                0,
+        }))
+
         const loadProductDetails = async () => {
             try {
                 if (props.order?.products && props.order.products.length > 0) {
@@ -391,6 +437,7 @@ export default {
         return {
             t,
             timeline,
+            rewardBreakdown,
             formatDate,
             formatStatus,
             formatCurrency,

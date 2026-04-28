@@ -151,24 +151,29 @@
                     </div>
 
                     <!-- Show coupon discount if exists -->
-                    <div v-if="order.discount > 0" class="flex justify-between mb-2 text-green-600">
-                        <span>{{ t('orderConfirmationPage.couponDiscount', { amount: order.discount }) }}</span>
-                        <span>-{{ formatPrice(order.discount) }}</span>
+                    <div v-if="rewardBreakdown.coupon > 0" class="flex justify-between mb-2 text-green-600">
+                        <span>{{ t('orderConfirmationPage.couponDiscount', { amount: rewardBreakdown.coupon }) }}</span>
+                        <span>-{{ formatPrice(rewardBreakdown.coupon) }}</span>
+                    </div>
+
+                    <div v-if="rewardBreakdown.specialOffer > 0" class="flex justify-between mb-2 text-green-600">
+                        <span>{{ t('orderConfirmationPage.specialOfferDiscount') }}</span>
+                        <span>-{{ formatPrice(rewardBreakdown.specialOffer) }}</span>
                     </div>
 
                     <!-- Show CluesBucks discount if used -->
                     <div v-if="order.cluesBucks?.pointsUsed" class="flex justify-between mb-2 text-green-600">
                         <span>{{ t('orderConfirmationPage.cluesBucksDiscount', { points: order.cluesBucks.pointsUsed }) }}</span>
-                        <span>-{{ formatPrice(order.cluesBucks.discount) }}</span>
+                        <span>-{{ formatPrice(rewardBreakdown.cluesBucks) }}</span>
                     </div>
 
-                    <div v-if="order.storeCredit?.amountUsed" class="flex justify-between mb-2 text-green-600">
+                    <div v-if="rewardBreakdown.storeCredit > 0" class="flex justify-between mb-2 text-green-600">
                         <span>{{ t('orderConfirmationPage.storeCreditDiscount') }}</span>
-                        <span>-{{ formatPrice(order.storeCredit.amountUsed) }}</span>
+                        <span>-{{ formatPrice(rewardBreakdown.storeCredit) }}</span>
                     </div>
 
                     <!-- Show consolidated discount if no specific discounts -->
-                    <div v-if="order.discount > 0 && !order.couponDiscount && !order.cluesBucks?.discount && !order.storeCredit?.amountUsed"
+                    <div v-if="order.discount > 0 && !rewardBreakdown.coupon && !rewardBreakdown.specialOffer && !rewardBreakdown.cluesBucks && !rewardBreakdown.storeCredit"
                         class="flex justify-between mb-2 text-green-600">
                         <span>{{ t('cart.discount') }}</span>
                         <span>-{{ formatPrice(order.discount) }}</span>
@@ -181,7 +186,7 @@
 
                     <div class="flex justify-between font-semibold">
                         <span>{{ t('orderConfirmationPage.grandTotal') }}</span>
-                        <span>{{ formatPrice(order.total) }}</span>
+                        <span>{{ formatPrice(order.total || order.totalAmount) }}</span>
                     </div>
                 </div>
             </div>
@@ -227,6 +232,13 @@ const earnedPoints = computed(() => {
     if (!order.value?.cluesBucks) return 0;
     return order.value.cluesBucks.pointsEarned;
 });
+
+const rewardBreakdown = computed(() => ({
+    coupon: order.value?.discountBreakdown?.coupon || order.value?.discount || 0,
+    specialOffer: order.value?.discountBreakdown?.specialOffer || order.value?.metadata?.specialOfferDiscount || 0,
+    cluesBucks: order.value?.discountBreakdown?.cluesBucks || order.value?.cluesBucks?.discount || 0,
+    storeCredit: order.value?.discountBreakdown?.storeCredit || order.value?.storeCredit?.amountUsed || 0,
+}));
 
 const formatDate = (dateString) => {
     const activeLocale = locale.value === 'fr' ? 'fr-FR' : 'en-US';
@@ -360,11 +372,6 @@ onMounted(async () => {
             // Fetch all product details
             loadProductDetails()
         ]);
-
-        // Calculate any derived values
-        if (order.value.cluesBucks?.pointsEarned) {
-            earnedPoints.value = order.value.cluesBucks.pointsEarned;
-        }
 
         isLoading.value = false;
 

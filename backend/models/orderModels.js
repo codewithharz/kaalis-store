@@ -59,6 +59,12 @@ const orderSchema = new mongoose.Schema(
       pointsUsed: { type: Number, default: 0 },
       discount: { type: Number, default: 0 },
     },
+    discountBreakdown: {
+      coupon: { type: Number, default: 0 },
+      specialOffer: { type: Number, default: 0 },
+      cluesBucks: { type: Number, default: 0 },
+      storeCredit: { type: Number, default: 0 },
+    },
     storeCredit: {
       amountUsed: { type: Number, default: 0 },
     },
@@ -100,6 +106,8 @@ const orderSchema = new mongoose.Schema(
     transactionId: { type: String },
     appliedCoupon: { type: mongoose.Schema.Types.ObjectId, ref: "Coupon" },
     discount: { type: Number, default: 0 },
+    cancelReason: { type: String },
+    cancelledAt: { type: Date },
     metadata: { type: mongoose.Schema.Types.Mixed, default: {} }, // Add metadata field
   },
   {
@@ -129,11 +137,24 @@ orderSchema.pre("validate", async function (next) {
       }
 
       // Calculate total amount
+      const couponDiscount = this.discountBreakdown?.coupon ?? this.discount ?? 0;
+      const specialOfferDiscount =
+        this.discountBreakdown?.specialOffer ??
+        this.metadata?.specialOfferDiscount ??
+        0;
+      const cluesBucksDiscount =
+        this.discountBreakdown?.cluesBucks ?? this.cluesBucks?.discount ?? 0;
+      const storeCreditDiscount =
+        this.discountBreakdown?.storeCredit ??
+        this.storeCredit?.amountUsed ??
+        0;
+
       const calculatedTotal =
         this.subtotal -
-        (this.discount || 0) -
-        (this.cluesBucks?.discount || 0) +
-        (this.storeCredit?.amountUsed || 0) +
+        couponDiscount -
+        specialOfferDiscount -
+        cluesBucksDiscount -
+        storeCreditDiscount +
         (this.shippingFee || 0);
 
       // Verify total amount

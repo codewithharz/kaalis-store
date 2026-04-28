@@ -927,7 +927,8 @@ const placeOrder = async () => {
             storeCredit: {
                 amountUsed: storeCreditAmount,
             },
-            couponDiscount: (discount.value || 0) + offerDiscount,
+            couponDiscount: discount.value || 0,
+            specialOfferDiscount: offerDiscount,
             ...(cartStore.coupon && { couponCode: cartStore.coupon.code }),
             metadata: {
                 checkoutCountry: countryStore.selectedCountry,

@@ -73,6 +73,36 @@
                                     amountInWords(order.total) }}</p>
                             </div>
 
+                            <div class="p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border border-gray-100 shadow-sm">
+                                <h4 class="font-semibold text-gray-900 text-sm sm:text-base mb-3">{{ t('orderDetailsModal.rewardBreakdown') }}</h4>
+                                <div class="space-y-2 text-xs sm:text-sm">
+                                    <div class="flex justify-between gap-3">
+                                        <span class="text-gray-600">{{ t('orderDetailsModal.subtotalLabel') }}</span>
+                                        <span class="font-medium text-gray-900">₦{{ formatCurrency(order.subtotal || order.total) }}</span>
+                                    </div>
+                                    <div v-if="rewardBreakdown.coupon > 0" class="flex justify-between gap-3 text-green-600">
+                                        <span>{{ t('orderDetailsModal.couponDiscount') }}</span>
+                                        <span>-₦{{ formatCurrency(rewardBreakdown.coupon) }}</span>
+                                    </div>
+                                    <div v-if="rewardBreakdown.specialOffer > 0" class="flex justify-between gap-3 text-green-600">
+                                        <span>{{ t('orderDetailsModal.specialOfferDiscount') }}</span>
+                                        <span>-₦{{ formatCurrency(rewardBreakdown.specialOffer) }}</span>
+                                    </div>
+                                    <div v-if="rewardBreakdown.cluesBucks > 0" class="flex justify-between gap-3 text-green-600">
+                                        <span>{{ t('orderDetailsModal.cluesBucksDiscount') }}</span>
+                                        <span>-₦{{ formatCurrency(rewardBreakdown.cluesBucks) }}</span>
+                                    </div>
+                                    <div v-if="rewardBreakdown.storeCredit > 0" class="flex justify-between gap-3 text-green-600">
+                                        <span>{{ t('orderDetailsModal.storeCreditDiscount') }}</span>
+                                        <span>-₦{{ formatCurrency(rewardBreakdown.storeCredit) }}</span>
+                                    </div>
+                                    <div class="flex justify-between gap-3 border-t pt-2">
+                                        <span class="text-gray-600">{{ t('orderDetailsModal.shippingFee') }}</span>
+                                        <span class="font-medium text-gray-900">₦{{ formatCurrency(order.shippingFee || 0) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                 <div
                                     class="p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border border-gray-100 shadow-sm">
@@ -289,6 +319,7 @@
 </template>
 
 <script>
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSellerStore } from '../store/sellerStore';
 import {
@@ -346,6 +377,22 @@ export default {
             };
             return colors[status] || 'gray';
         };
+
+        const rewardBreakdown = computed(() => ({
+            coupon: props.order?.discountBreakdown?.coupon || props.order?.discount || 0,
+            specialOffer:
+                props.order?.discountBreakdown?.specialOffer ||
+                props.order?.metadata?.specialOfferDiscount ||
+                0,
+            cluesBucks:
+                props.order?.discountBreakdown?.cluesBucks ||
+                props.order?.cluesBucks?.discount ||
+                0,
+            storeCredit:
+                props.order?.discountBreakdown?.storeCredit ||
+                props.order?.storeCredit?.amountUsed ||
+                0,
+        }));
 
         function numberToWords(num) {
             if (num === 0) return "Zero Naira";
@@ -407,7 +454,8 @@ export default {
             formatDate,
             formatCurrency,
             getStatusColor,
-            amountInWords
+            amountInWords,
+            rewardBreakdown
         };
     }
 };

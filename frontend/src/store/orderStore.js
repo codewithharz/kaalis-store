@@ -25,6 +25,7 @@ export const useOrderStore = defineStore("order", {
           ...orderData,
           couponCode: orderData.couponCode ?? cartStore.coupon?.code ?? null,
           couponDiscount: orderData.couponDiscount ?? 0,
+          specialOfferDiscount: orderData.specialOfferDiscount ?? 0,
           cluesBucks: {
             ...orderData.cluesBucks,
             pointsEarned:
@@ -122,6 +123,21 @@ export const useOrderStore = defineStore("order", {
           total: orderData.total || orderData.totalAmount || 0,
           discount: orderData.discount || 0,
           couponDiscount: orderData.couponDiscount || 0,
+          discountBreakdown: {
+            coupon: orderData.discountBreakdown?.coupon || orderData.discount || 0,
+            specialOffer:
+              orderData.discountBreakdown?.specialOffer ||
+              orderData.metadata?.specialOfferDiscount ||
+              0,
+            cluesBucks:
+              orderData.discountBreakdown?.cluesBucks ||
+              orderData.cluesBucks?.discount ||
+              0,
+            storeCredit:
+              orderData.discountBreakdown?.storeCredit ||
+              orderData.storeCredit?.amountUsed ||
+              0,
+          },
           shippingFee: orderData.shippingFee || 0,
           cluesBucks: {
             ...(orderData.cluesBucks || {}),
@@ -225,6 +241,21 @@ export const useOrderStore = defineStore("order", {
           total: orderData.total || orderData.totalAmount || 0,
           discount: orderData.discount || 0,
           couponDiscount: orderData.couponDiscount || 0,
+          discountBreakdown: {
+            coupon: orderData.discountBreakdown?.coupon || orderData.discount || 0,
+            specialOffer:
+              orderData.discountBreakdown?.specialOffer ||
+              orderData.metadata?.specialOfferDiscount ||
+              0,
+            cluesBucks:
+              orderData.discountBreakdown?.cluesBucks ||
+              orderData.cluesBucks?.discount ||
+              0,
+            storeCredit:
+              orderData.discountBreakdown?.storeCredit ||
+              orderData.storeCredit?.amountUsed ||
+              0,
+          },
           vendorAmount,
           platformFee,
           // platformFee: orderData.platformFee || 0,

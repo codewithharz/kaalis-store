@@ -493,17 +493,20 @@
                                     <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.variants.dimensions') }}</label>
                                     <div class="grid grid-cols-3 gap-4">
                                         <div class="space-y-2">
-                                            <input type="number" v-model.number="variant.dimensions.length"
+                                            <input type="number" :value="variant.dimensions?.length ?? 0"
+                                                @input="updateDimension(variant, 'length', $event.target.value)"
                                                 class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                                                 :placeholder="t('addProductPage.unitCategories.length')" step="0.01" />
                                         </div>
                                         <div class="space-y-2">
-                                            <input type="number" v-model.number="variant.dimensions.width"
+                                            <input type="number" :value="variant.dimensions?.width ?? 0"
+                                                @input="updateDimension(variant, 'width', $event.target.value)"
                                                 class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                                                 :placeholder="t('addProductPage.variants.width')" step="0.01" />
                                         </div>
                                         <div class="space-y-2">
-                                            <input type="number" v-model.number="variant.dimensions.height"
+                                            <input type="number" :value="variant.dimensions?.height ?? 0"
+                                                @input="updateDimension(variant, 'height', $event.target.value)"
                                                 class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                                                 :placeholder="t('addProductPage.variants.height')" step="0.01" />
                                         </div>
@@ -714,49 +717,59 @@ export default {
         const isCustomColor = ref(false);
         const tagsInput = ref('');
 
-        // Initialize the editing product with default values
-        const editingProduct = reactive({
-            ...props.localEditingProduct,
-            // Provide default values and handle potentially undefined properties
-            // name: '', // use this when wishlist link not working
-            name: props.localEditingProduct.name || '',
-            description: props.localEditingProduct.description || '',
-            price: props.localEditingProduct.price || 0,
-            originalPrice: props.localEditingProduct.originalPrice || 0,
-            stock: props.localEditingProduct.stock || 0,
-            brand: props.localEditingProduct.brand || '',
-            discount: props.localEditingProduct.discount || 0,
-            color: props.localEditingProduct.color || '#000000',
-            availableColors: props.localEditingProduct.availableColors || [],
-            category: props.localEditingProduct.category || '',
-            variants: (props.localEditingProduct.variants || []).map(variant => ({
-                ...variant,
-                attributes: variant.attributes?.length ? variant.attributes : [
-                    { name: 'Color', value: variant.color?.hexCode || props.localEditingProduct.color || '#000000' }
-                ],
-                sku: variant.sku || '',
-                price: variant.price || 0,
-                stock: variant.stock || 0,
-                weight: variant.weight || 0,
-                images: variant.images || []
-            })),
-            unit: {
-                category: props.localEditingProduct.unit?.category || '',
-                baseUnit: props.localEditingProduct.unit?.baseUnit || '',
-                conversionFactor: props.localEditingProduct.unit?.conversionFactor || 1,
-                value: props.localEditingProduct.unit?.value || 1,
-                displayUnit: props.localEditingProduct.unit?.displayUnit || '',
-                packagingUnit: props.localEditingProduct.unit?.packagingUnit || '',
-                precision: props.localEditingProduct.unit?.precision || 2,
-                compoundUnit: props.localEditingProduct.unit?.compoundUnit || {},
+        const normalizeVariantForEdit = (variant = {}, fallbackColor = '#000000') => ({
+            ...variant,
+            attributes: variant.attributes?.length ? variant.attributes : [
+                { name: 'Color', value: variant.color?.hexCode || fallbackColor }
+            ],
+            sku: variant.sku || '',
+            price: variant.price || 0,
+            stock: variant.stock || 0,
+            weight: variant.weight || 0,
+            dimensions: {
+                length: Number(variant.dimensions?.length || 0),
+                width: Number(variant.dimensions?.width || 0),
+                height: Number(variant.dimensions?.height || 0)
             },
-            bulkPricing: props.localEditingProduct.bulkPricing || [],
-            metaTitle: props.localEditingProduct.metaTitle || '',
-            metaDescription: props.localEditingProduct.metaDescription || '',
-            images: props.localEditingProduct.images || [],
-            isAvailable: props.localEditingProduct.isAvailable ?? true,
-            isNew: props.localEditingProduct.isNew ?? false,
+            images: variant.images || []
         });
+
+        const normalizeProductForEdit = (product = {}) => ({
+            ...product,
+            name: product.name || '',
+            description: product.description || '',
+            price: product.price || 0,
+            originalPrice: product.originalPrice || 0,
+            stock: product.stock || 0,
+            brand: product.brand || '',
+            discount: product.discount || 0,
+            color: product.color || '#000000',
+            availableColors: product.availableColors || [],
+            category: product.category || '',
+            variants: (product.variants || []).map((variant) =>
+                normalizeVariantForEdit(variant, product.color || '#000000')
+            ),
+            unit: {
+                category: product.unit?.category || '',
+                baseUnit: product.unit?.baseUnit || '',
+                conversionFactor: product.unit?.conversionFactor || 1,
+                value: product.unit?.value || 1,
+                displayUnit: product.unit?.displayUnit || '',
+                packagingUnit: product.unit?.packagingUnit || '',
+                precision: product.unit?.precision || 2,
+                compoundUnit: product.unit?.compoundUnit || {},
+                regionSpecificDisplay: product.unit?.regionSpecificDisplay || {},
+            },
+            bulkPricing: product.bulkPricing || [],
+            metaTitle: product.metaTitle || '',
+            metaDescription: product.metaDescription || '',
+            images: product.images || [],
+            isAvailable: product.isAvailable ?? true,
+            isNew: product.isNew ?? false,
+        });
+
+        // Initialize the editing product with default values
+        const editingProduct = reactive(normalizeProductForEdit(props.localEditingProduct));
 
         const selectColorPreset = (color, variantIndex = null) => {
             if (variantIndex !== null) {
@@ -1303,7 +1316,7 @@ export default {
 
         watch(() => props.localEditingProduct, (newProduct) => {
             if (newProduct) {
-                Object.assign(editingProduct, newProduct);
+                Object.assign(editingProduct, normalizeProductForEdit(newProduct));
                 tagsInput.value = newProduct.tags?.join(', ') || '';
 
                 // Initialize color selection state

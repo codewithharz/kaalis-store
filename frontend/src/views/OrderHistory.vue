@@ -28,6 +28,24 @@
                         </div>
                     </div>
                 </div>
+                <div class="mt-4 space-y-1 text-sm text-right">
+                    <p>{{ t('orderHistoryPage.subtotal', { amount: order.subtotal || order.totalAmount }) }}</p>
+                    <p v-if="getRewardBreakdown(order).coupon > 0" class="text-green-600">
+                        {{ t('orderHistoryPage.couponDiscount', { amount: getRewardBreakdown(order).coupon }) }}
+                    </p>
+                    <p v-if="getRewardBreakdown(order).specialOffer > 0" class="text-green-600">
+                        {{ t('orderHistoryPage.specialOfferDiscount', { amount: getRewardBreakdown(order).specialOffer }) }}
+                    </p>
+                    <p v-if="getRewardBreakdown(order).cluesBucks > 0" class="text-green-600">
+                        {{ t('orderHistoryPage.cluesBucksDiscount', { amount: getRewardBreakdown(order).cluesBucks }) }}
+                    </p>
+                    <p v-if="getRewardBreakdown(order).storeCredit > 0" class="text-green-600">
+                        {{ t('orderHistoryPage.storeCreditDiscount', { amount: getRewardBreakdown(order).storeCredit }) }}
+                    </p>
+                    <p v-if="order.shippingFee" class="text-gray-600">
+                        {{ t('orderHistoryPage.shippingFee', { amount: order.shippingFee }) }}
+                    </p>
+                </div>
                 <div class="mt-4 text-right">
                     <p class="font-semibold">{{ t('orderHistoryPage.total', { amount: order.totalAmount }) }}</p>
                 </div>
@@ -97,6 +115,22 @@ export default {
             });
         };
 
+        const getRewardBreakdown = (order) => ({
+            coupon: order?.discountBreakdown?.coupon || order?.discount || 0,
+            specialOffer:
+                order?.discountBreakdown?.specialOffer ||
+                order?.metadata?.specialOfferDiscount ||
+                0,
+            cluesBucks:
+                order?.discountBreakdown?.cluesBucks ||
+                order?.cluesBucks?.discount ||
+                0,
+            storeCredit:
+                order?.discountBreakdown?.storeCredit ||
+                order?.storeCredit?.amountUsed ||
+                0,
+        });
+
         const openRatingModal = (orderId, product) => {
             currentOrderId.value = orderId;
             currentProduct.value = product;
@@ -136,6 +170,7 @@ export default {
             t,
             orders,
             formatDate,
+            getRewardBreakdown,
             showRatingModal,
             currentProduct,
             rating,

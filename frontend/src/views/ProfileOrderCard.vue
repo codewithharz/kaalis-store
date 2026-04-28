@@ -356,6 +356,26 @@
           <h4 class="font-bold text-gray-900 mb-3 text-sm sm:text-base">{{ t('orderCard.orderSummary') }}</h4>
           <div class="space-y-2">
             <div class="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-sm gap-1">
+              <span class="text-gray-600">{{ t('orderCard.subtotal') }}</span>
+              <span class="font-semibold bg-white px-2 py-1 rounded-md self-start sm:self-auto">₦{{ formatAmount(currentOrder.subtotal || currentOrder.totalAmount) }}</span>
+            </div>
+            <div v-if="rewardBreakdown.coupon > 0" class="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-sm gap-1 text-green-600">
+              <span>{{ t('orderCard.couponDiscount') }}</span>
+              <span>-₦{{ formatAmount(rewardBreakdown.coupon) }}</span>
+            </div>
+            <div v-if="rewardBreakdown.specialOffer > 0" class="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-sm gap-1 text-green-600">
+              <span>{{ t('orderCard.specialOfferDiscount') }}</span>
+              <span>-₦{{ formatAmount(rewardBreakdown.specialOffer) }}</span>
+            </div>
+            <div v-if="rewardBreakdown.cluesBucks > 0" class="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-sm gap-1 text-green-600">
+              <span>{{ t('orderCard.cluesBucksDiscount') }}</span>
+              <span>-₦{{ formatAmount(rewardBreakdown.cluesBucks) }}</span>
+            </div>
+            <div v-if="rewardBreakdown.storeCredit > 0" class="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-sm gap-1 text-green-600">
+              <span>{{ t('orderCard.storeCreditDiscount') }}</span>
+              <span>-₦{{ formatAmount(rewardBreakdown.storeCredit) }}</span>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-sm gap-1">
               <span class="text-gray-600">{{ t('orderCard.paymentMethodPlain') }}</span>
               <span class="font-semibold bg-white px-2 py-1 rounded-md self-start sm:self-auto">{{
                 currentOrder.paymentMethod }}</span>
@@ -756,7 +776,25 @@
 
         <!-- Enhanced Totals Section -->
         <div class="bg-gray-50 p-4 sm:p-6 rounded-lg border border-gray-200 mb-6 sm:mb-8">
-          <div class="flex justify-between items-center text-lg sm:text-xl font-bold">
+          <div class="space-y-2 mb-4 text-sm">
+            <div v-if="rewardBreakdown.coupon > 0" class="flex justify-between items-center text-green-600">
+              <span>{{ t('orderCard.couponDiscount') }}</span>
+              <span>-₦{{ formatAmount(rewardBreakdown.coupon) }}</span>
+            </div>
+            <div v-if="rewardBreakdown.specialOffer > 0" class="flex justify-between items-center text-green-600">
+              <span>{{ t('orderCard.specialOfferDiscount') }}</span>
+              <span>-₦{{ formatAmount(rewardBreakdown.specialOffer) }}</span>
+            </div>
+            <div v-if="rewardBreakdown.cluesBucks > 0" class="flex justify-between items-center text-green-600">
+              <span>{{ t('orderCard.cluesBucksDiscount') }}</span>
+              <span>-₦{{ formatAmount(rewardBreakdown.cluesBucks) }}</span>
+            </div>
+            <div v-if="rewardBreakdown.storeCredit > 0" class="flex justify-between items-center text-green-600">
+              <span>{{ t('orderCard.storeCreditDiscount') }}</span>
+              <span>-₦{{ formatAmount(rewardBreakdown.storeCredit) }}</span>
+            </div>
+          </div>
+          <div class="flex justify-between items-center text-lg sm:text-xl font-bold border-t pt-3">
             <span class="text-gray-800">{{ t('orderCard.totalAmount') }}</span>
             <span class="text-green-600">₦{{ formatAmount(currentOrder.totalAmount) }}</span>
           </div>
@@ -1091,6 +1129,22 @@ export default {
       console.log('Full order data:', JSON.stringify(props.order, null, 2));
       return props.order;
     });
+
+    const rewardBreakdown = computed(() => ({
+      coupon: currentOrder.value?.discountBreakdown?.coupon || currentOrder.value?.discount || 0,
+      specialOffer:
+        currentOrder.value?.discountBreakdown?.specialOffer ||
+        currentOrder.value?.metadata?.specialOfferDiscount ||
+        0,
+      cluesBucks:
+        currentOrder.value?.discountBreakdown?.cluesBucks ||
+        currentOrder.value?.cluesBucks?.discount ||
+        0,
+      storeCredit:
+        currentOrder.value?.discountBreakdown?.storeCredit ||
+        currentOrder.value?.storeCredit?.amountUsed ||
+        0,
+    }));
 
     const getFirstProduct = computed(async () => {
       if (!currentOrder.value?.products?.length) {
@@ -1476,6 +1530,7 @@ export default {
       t,
       productDetails,
       currentOrder,
+      rewardBreakdown,
       getFirstProduct,
       user: computed(() => userStore.user),
       canModifyOrder,

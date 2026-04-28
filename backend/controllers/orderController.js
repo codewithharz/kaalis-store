@@ -6,6 +6,10 @@ const CluesBucks = require("../models/cluesBucksModel");
 const Coupon = require("../models/couponModels");
 const Cart = require("../models/cartModels");
 const mongoose = require("mongoose");
+const {
+  applyOrderRewards,
+  reverseOrderRewards,
+} = require("../services/orderRewardService");
 
 const createOrder = async (req, res) => {
   try {
@@ -22,6 +26,7 @@ const createOrder = async (req, res) => {
       platformFee,
       couponCode,
       couponDiscount,
+      specialOfferDiscount = 0,
       cluesBucks,
       storeCredit,
       currency = "NGN",
@@ -111,11 +116,18 @@ const createOrder = async (req, res) => {
       }
     }
 
+    const couponDiscountValue = Number(couponDiscount || 0);
+    const specialOfferDiscountValue = Number(
+      specialOfferDiscount || metadata?.specialOfferDiscount || 0
+    );
+    const cluesBucksDiscount = Number(cluesBucks?.discount || 0);
+    const storeCreditAmount = Number(storeCredit?.amountUsed || 0);
     const calculatedTotal =
       subtotal -
-      (couponDiscount || 0) -
-      (cluesBucks?.discount || 0) -
-      (storeCredit?.amountUsed || 0);
+      couponDiscountValue -
+      specialOfferDiscountValue -
+      cluesBucksDiscount -
+      storeCreditAmount;
 
     // Verify total amount
     if (Math.abs(calculatedTotal - totalAmount) > 0.01) {
@@ -162,10 +174,6 @@ const createOrder = async (req, res) => {
     }
 
     // Calculate final amount
-    const cluesBucksDiscount = cluesBucks?.discount || 0;
-    const totalDiscount = (couponDiscount || 0) + cluesBucksDiscount;
-    const finalAmount = subtotal - totalDiscount;
-
     // Create order
     const newOrder = new Order({
       user: userId,
@@ -189,14 +197,20 @@ const createOrder = async (req, res) => {
       currency,
       metadata,
       appliedCoupon,
-      discount: couponDiscount || 0,
+      discount: couponDiscountValue,
+      discountBreakdown: {
+        coupon: couponDiscountValue,
+        specialOffer: specialOfferDiscountValue,
+        cluesBucks: cluesBucksDiscount,
+        storeCredit: storeCreditAmount,
+      },
       cluesBucks: {
         pointsEarned: cluesBucks?.pointsEarned || 0,
         pointsUsed: cluesBucks?.pointsUsed || 0,
         discount: cluesBucksDiscount,
       },
       storeCredit: {
-        amountUsed: storeCredit?.amountUsed || 0,
+        amountUsed: storeCreditAmount,
       },
     });
 
@@ -563,77 +577,12 @@ const updateOrderStatus = async (req, res) => {
       order.status = status;
     }
 
-    if (
-      status === "Processing" &&
-      previousStatus !== "Processing" &&
-      (!order.metadata?.cluesBucksApplied || !order.metadata?.storeCreditApplied) &&
-      (
-        order.cluesBucks?.pointsUsed ||
-        order.cluesBucks?.pointsEarned ||
-        order.storeCredit?.amountUsed
-      )
-    ) {
-      const rewardsAccount =
-        (await CluesBucks.findOne({ user: order.user })) ||
-        new CluesBucks({ user: order.user });
+    if (status === "Processing" && previousStatus !== "Processing") {
+      await applyOrderRewards(order);
+    }
 
-      if (!order.metadata?.cluesBucksApplied) {
-        rewardsAccount.balance +=
-          (order.cluesBucks?.pointsEarned || 0) -
-          (order.cluesBucks?.pointsUsed || 0);
-        rewardsAccount.lifetimePoints += order.cluesBucks?.pointsEarned || 0;
-
-        if (order.cluesBucks?.pointsUsed) {
-          rewardsAccount.transactions.push({
-            type: "spent",
-            points: order.cluesBucks.pointsUsed,
-            description: `Used for order #${order.orderId}`,
-            source: "order_discount",
-            orderId: order._id,
-            metadata: {
-              type: "points",
-            },
-          });
-        }
-
-        if (order.cluesBucks?.pointsEarned) {
-          rewardsAccount.transactions.push({
-            type: "earned",
-            points: order.cluesBucks.pointsEarned,
-            description: `Earned from order #${order.orderId}`,
-            source: "purchase",
-            orderId: order._id,
-          });
-        }
-      }
-
-      if (!order.metadata?.storeCreditApplied && order.storeCredit?.amountUsed) {
-        rewardsAccount.storeCreditBalance = Math.max(
-          0,
-          (rewardsAccount.storeCreditBalance || 0) - order.storeCredit.amountUsed
-        );
-        rewardsAccount.transactions.push({
-          type: "spent",
-          points: 0,
-          description: `Used ₦${order.storeCredit.amountUsed} store credit on order #${order.orderId}`,
-          source: "store_credit_order",
-          orderId: order._id,
-          metadata: {
-            type: "credit",
-            amount: order.storeCredit.amountUsed,
-            action: "used",
-            balanceAfter: rewardsAccount.storeCreditBalance,
-          },
-        });
-      }
-
-      await rewardsAccount.save();
-
-      order.metadata = {
-        ...(order.metadata || {}),
-        cluesBucksApplied: true,
-        storeCreditApplied: true,
-      };
+    if (status === "Cancelled" && previousStatus !== "Cancelled") {
+      await reverseOrderRewards(order, "Order cancelled");
     }
 
     const updatedOrder = await order.save();
@@ -672,6 +621,7 @@ const updatePaymentStatus = async (req, res) => {
     // Update payment-related fields
     order.status = "Processing"; // Move from Pending to Processing
     order.transactionId = transactionId;
+    await applyOrderRewards(order);
     await order.save();
 
     res.json({ message: "Payment status updated", order });
@@ -770,17 +720,16 @@ const cancelOrder = async (req, res) => {
       });
     }
 
+    if (order.status === "Processing") {
+      await reverseOrderRewards(order, reason || "Order cancelled");
+    }
+
     // Otherwise just mark as cancelled
     await restoreInventory(order);
-    const cancelledOrder = await Order.findByIdAndUpdate(
-      orderId,
-      {
-        status: "Cancelled",
-        cancelReason: reason || "Cancelled by user",
-        cancelledAt: new Date(),
-      },
-      { new: true }
-    );
+    order.status = "Cancelled";
+    order.cancelReason = reason || "Cancelled by user";
+    order.cancelledAt = new Date();
+    const cancelledOrder = await order.save();
 
     res.status(200).json({
       status: true,

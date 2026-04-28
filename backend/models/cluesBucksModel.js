@@ -59,7 +59,7 @@ const cluesBucksSchema = new mongoose.Schema(
           amount: Number,
           action: {
             type: String,
-            enum: ["redeemed", "used"],
+            enum: ["redeemed", "used", "restored"],
           },
           balanceAfter: Number,
         },
