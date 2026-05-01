@@ -14,6 +14,12 @@ const {
 
 const JWT_SECRET = process.env.JWT_SECRET; // Use environment variable
 
+const resolveFrontendUrl = (req) =>
+  process.env.FRONTEND_URL ||
+  process.env.VITE_FRONTEND_URL ||
+  req?.get?.("origin") ||
+  "http://localhost:5173";
+
 exports.registerUser = async (req, res) => {
   const { username, email, password, gender, locale } = req.body;
 
@@ -414,7 +420,7 @@ exports.requestPasswordReset = async (req, res) => {
     user.preferredLanguage = normalizeLocale(locale || user.preferredLanguage);
     await user.save();
 
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const frontendUrl = resolveFrontendUrl(req);
     const resetLink = `${frontendUrl}/reset-password/${token}`;
     await sendPasswordResetRequestEmail({
       to: user.email,
@@ -468,7 +474,7 @@ const sendVerificationEmail = async (user, req) => {
   user.emailVerificationExpires = Date.now() + 15 * 60 * 1000; // 15 mins
   await user.save();
 
-  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+  const frontendUrl = resolveFrontendUrl(req);
   const verificationLink = `${frontendUrl}/verify-email/${token}`;
 
   await sendVerificationEmailMessage({
@@ -481,7 +487,7 @@ const sendVerificationEmail = async (user, req) => {
 
 // Helper function to send welcome email after successful verification
 const sendWelcomeEmail = async (user) => {
-  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+  const frontendUrl = resolveFrontendUrl();
   try {
     await sendWelcomeEmailMessage({
       to: user.email,

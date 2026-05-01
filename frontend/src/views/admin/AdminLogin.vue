@@ -57,7 +57,7 @@ export default {
 
             try {
                 await adminStore.loginAdmin({
-                    identifier: identifier.value,
+                    identifier: identifier.value.trim(),
                     password: password.value
                 })
 
@@ -72,10 +72,15 @@ export default {
         }
 
         // Redirect to dashboard if already logged in
-        onMounted(() => {
-            if (adminStore.isAdminLoggedIn) {
+        onMounted(async () => {
+            if (!adminStore.isAdminLoggedIn) return
+
+            try {
+                await adminStore.fetchDashboardStats()
                 const redirectPath = router.currentRoute.value.query.redirect || '/admin/dashboard'
                 router.push(redirectPath)
+            } catch (err) {
+                await adminStore.logoutAdmin()
             }
         })
 

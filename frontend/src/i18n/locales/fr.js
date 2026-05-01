@@ -4445,10 +4445,17 @@ export default {
       search: "Recherche",
       searchPlaceholder: "Rechercher des produits...",
       category: "Categorie",
+      seller: "Vendeur",
+      createdDate: "Date de creation",
+      createdFrom: "Cree a partir du",
+      createdTo: "Cree jusqu'au",
       allCategories: "Toutes les categories",
+      allSellers: "Tous les vendeurs",
       stockStatus: "Etat du stock",
       status: "Statut",
       all: "Tous",
+      clear: "Effacer les filtres",
+      dateHint: "Affichage des produits crees dans la plage de dates selectionnee.",
     },
     stockStatuses: {
       inStock: "En stock",
@@ -4461,14 +4468,18 @@ export default {
     },
     table: {
       product: "Produit",
+      seller: "Vendeur",
       category: "Categorie",
       price: "Prix",
       stock: "Stock",
       status: "Statut",
+      created: "Creation",
+      noEmail: "Aucun e-mail",
       actions: "Actions",
     },
     actions: {
       edit: "Modifier",
+      view: "Voir",
       delete: "Supprimer",
       cancel: "Annuler",
       update: "Mettre a jour",
@@ -4486,6 +4497,10 @@ export default {
       editTitle: "Modifier le produit",
       addTitle: "Ajouter un nouveau produit",
     },
+    createPageSubtitle:
+      "Creez un produit pour un vendeur avec le formulaire catalogue complet.",
+    editPageSubtitle:
+      "Mettez a jour ce produit vendeur avec le meme formulaire catalogue complet.",
     form: {
       name: "Nom",
       description: "Description",
@@ -4493,6 +4508,11 @@ export default {
       stock: "Stock",
       category: "Categorie",
       status: "Statut",
+      seller: "Vendeur",
+      selectSeller: "Selectionnez un vendeur",
+      unknownSeller: "Vendeur inconnu",
+      imageUrl: "URL de l'image principale",
+      imageUrlPlaceholder: "https://example.com/image-produit.jpg",
     },
     deleteModal: {
       title: "Confirmer la suppression",
@@ -4501,6 +4521,8 @@ export default {
     toasts: {
       fetchProductsFailed: "Impossible de recuperer les produits",
       fetchCategoriesFailed: "Impossible de recuperer les categories",
+      fetchSellersFailed: "Impossible de recuperer les vendeurs",
+      selectSeller: "Veuillez selectionner un vendeur avant de creer le produit",
       updated: "Produit mis a jour avec succes",
       created: "Produit cree avec succes",
       saveFailed: "Impossible d'enregistrer le produit",

@@ -10,20 +10,26 @@ const {
   normalizeLocale,
 } = require("../services/emailService");
 
+const escapeRegex = (value) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 exports.createAdminUser = async (req, res) => {
   const { username, password, email, role } = req.body;
   try {
+    const normalizedEmail = email?.trim().toLowerCase();
+    const normalizedUsername = username?.trim();
+
     const existingUser = await AdminUser.findOne({
-      $or: [{ email }, { username }],
+      $or: [{ email: normalizedEmail }, { username: normalizedUsername }],
     });
     if (existingUser) {
       return res.status(400).json({ message: "Admin user already exists" });
     }
 
     const newAdminUser = new AdminUser({
-      username,
+      username: normalizedUsername,
       password,
-      email,
+      email: normalizedEmail,
       role,
       createdAt: new Date(),
       lastLogin: null,
@@ -44,8 +50,21 @@ exports.createAdminUser = async (req, res) => {
 exports.loginAdminUser = async (req, res) => {
   const { identifier, password } = req.body;
   try {
+    const normalizedIdentifier = typeof identifier === "string"
+      ? identifier.trim()
+      : "";
+
+    if (!normalizedIdentifier || !password) {
+      return res
+        .status(400)
+        .json({ message: "Email/username and password are required" });
+    }
+
     const adminUser = await AdminUser.findOne({
-      $or: [{ email: identifier }, { username: identifier }],
+      $or: [
+        { email: new RegExp(`^${escapeRegex(normalizedIdentifier)}$`, "i") },
+        { username: normalizedIdentifier },
+      ],
     });
 
     if (!adminUser) {

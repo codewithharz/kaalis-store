@@ -100,6 +100,7 @@ router.get("/categories", adminAuthMiddleware, adminDashboardController.getAdmin
 router.get("/revenue-stats", adminAuthMiddleware, adminDashboardController.getRevenueStats);
 
 // Product Management Routes
+router.post("/products", adminAuthMiddleware, isAdmin, adminDashboardController.createAdminProduct);
 router.put("/products/:id", adminAuthMiddleware, adminDashboardController.updateProduct);
 router.delete("/products/:id", adminAuthMiddleware, adminDashboardController.deleteProduct);
 

@@ -42,5 +42,11 @@ unset ADMIN_RESET_PASSWORD
 
 
 Email: harzkane@gmail.com
-Username: admin_382261b6
-Temporary password: kXuJL7m26br5=Vp9f+
+Password: kXuJL7m26br5=Vp9f+
+Username: admin_33f72467
+Role: SuperAdmin
+
+Email: harzkane93@gmail.com
+Password: kXuJL7m26br5=Vp9f+
+Username: admin_3c655b0e
+Role: SuperAdmin

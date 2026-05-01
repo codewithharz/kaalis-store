@@ -1,216 +1,133 @@
 <!-- frontend/src/views/admin/layout/AdminLayout.vue -->
 <template>
-    <div class="flex flex-col min-h-screen bg-gray-300">
-        <!-- Breadcrumb Navigation -->
-        <div class=" shadow-sm">
-            <div class="px-8 py-4">
-                <div class="flex justify-between items-center">
-                    <p class="py- text-gray-600 text-sm ml-4">
-                        {{ t('adminLayout.breadcrumbPrefix') }} > {{ currentSection }}
-                    </p>
-                    <!-- Admin Header Actions -->
-                    <div class="flex items-center space-x-6">
-                        <!-- Notifications -->
-                        <div class="relative">
-                            <Bell
-                                class="w-6 h-6 text-gray-500 hover:text-[#24a3b5] cursor-pointer transition-colors duration-300"
-                                @click="toggleNotifications" />
-                            <span v-if="unreadNotifications > 0"
-                                class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                                {{ unreadNotifications }}
-                            </span>
-                        </div>
+    <div class="min-h-screen bg-slate-100">
+        <div class="flex min-h-screen">
+            <Transition name="admin-fade">
+                <div
+                    v-if="isMobileNavOpen"
+                    class="fixed inset-0 z-40 bg-slate-950/45 lg:hidden"
+                    @click="closeMobileNav"
+                ></div>
+            </Transition>
 
-                        <!-- Admin Profile -->
-                        <div class="flex items-center space-x-3">
-                            <div class="w-8 h-8 rounded-full bg-[#24a3b5] text-white flex items-center justify-center">
-                                <span class="text-sm font-medium">{{ adminInitials }}</span>
-                            </div>
-                            <span class="text-gray-700 font-medium">{{ adminName }}</span>
-                        </div>
-
-                        <!-- Logout Button -->
-                        <button @click="handleLogout"
-                            class="text-red-600 hover:text-red-800 flex items-center space-x-1">
-                            <LogOut class="w-5 h-5" />
-                            <span>{{ t('adminLayout.logout') }}</span>
-                        </button>
+            <aside
+                class="fixed inset-y-0 left-0 z-50 flex w-[280px] max-w-[85vw] flex-col border-r border-slate-200 bg-white shadow-xl transition-transform duration-300 lg:static lg:z-auto lg:w-72 lg:max-w-none lg:translate-x-0 lg:shadow-none"
+                :class="isMobileNavOpen ? 'translate-x-0' : '-translate-x-full'"
+                @click.stop
+            >
+                <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4 lg:px-6">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#24a3b5]">
+                            {{ t('adminLayout.breadcrumbPrefix') }}
+                        </p>
+                        <h1 class="mt-1 text-xl font-semibold text-slate-900">
+                            {{ t('adminLayout.panelTitle') }}
+                        </h1>
                     </div>
+                    <button
+                        type="button"
+                        class="rounded-md p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 lg:hidden"
+                        @click.stop="closeMobileNav"
+                    >
+                        <X class="h-5 w-5" />
+                    </button>
                 </div>
-            </div>
-        </div>
 
-        <!-- Main Content -->
-        <div class="flex flex-col lg:flex-row lg:flex-1 overflow-hidden">
-            <!-- Sidebar Navigation -->
-            <nav class="w-full lg:w-64 bg-white shadow-sm">
-                <div class="px-5 pt-5 pb-0 mb-2 border-b-0 border-gray-100">
-                    <h1 class="text-2xl font-semibold">{{ t('adminLayout.panelTitle') }}</h1>
-                </div>
-                <div class="p-4">
-                    <ul class="flex flex-col space-y-4">
-                        <!-- Dashboard -->
+                <div class="flex-1 overflow-y-auto px-4 py-5 lg:px-5">
+                    <ul class="space-y-5">
                         <li>
-                            <router-link to="/admin/dashboard"
-                                class="flex items-center space-x-2 px-2 py-1.5 rounded-md text-gray-500 hover:text-white hover:bg-[#24a3b5] transition-all duration-300 ease-in-out"
-                                :class="{ 'bg-[#24a3b5] text-white': isCurrentRoute('AdminDashboard') }">
-                                <LayoutDashboard class="w-5 h-5" />
-                                <span class="font-medium text-sm">{{ t('adminLayout.dashboard') }}</span>
+                            <router-link
+                                to="/admin/dashboard"
+                                class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors"
+                                :class="linkClass('AdminDashboard')"
+                                @click="closeMobileNav"
+                            >
+                                <LayoutDashboard class="h-5 w-5" />
+                                <span>{{ t('adminLayout.dashboard') }}</span>
                             </router-link>
                         </li>
 
-                        <!-- User Management -->
-                        <li class="space-y-2">
-                            <div class="relative">
-                                <div class="flex items-center space-x-2 px-2 py-1.5">
-                                    <Users class="w-5 h-5 text-gray-500" />
-                                    <span class="font-medium text-sm text-gray-500">{{ t('adminLayout.userManagement') }}</span>
-                                </div>
-                                <div class="absolute left-4 h-full w-px bg-[#24a3b5]"></div>
+                        <li v-for="group in navGroups" :key="group.titleKey" class="space-y-2">
+                            <div class="flex items-center gap-3 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                <component :is="group.icon" class="h-4 w-4" />
+                                <span>{{ t(group.titleKey) }}</span>
                             </div>
-                            <div class="relative ml-7">
-                                <div class="absolute left-0 top-0 h-full w-px bg-[#24a3b5]"></div>
-                                <ul class="space-y-1">
-                                    <li class="relative pl-1">
-                                        <div class="absolute -left-3 top-1/2 w-3 h-1 bg-[#24a3b5]"></div>
-                                        <router-link to="/admin/users"
-                                            class="flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-500 hover:text-[#24a3b5] transition-colors duration-300 rounded-md hover:bg-gray-50"
-                                            :class="{ 'text-[#24a3b5] bg-gray-50': isCurrentRoute('AdminUsers') }">
-                                            <UserCircle class="w-4 h-4" />
-                                            <span>{{ t('adminLayout.allUsers') }}</span>
-                                        </router-link>
-                                    </li>
-                                    <li class="relative pl-1">
-                                        <div class="absolute left-0 top-1/2 w-2 h-1 bg-[#24a3b5]"></div>
-                                        <router-link to="/admin/sellers"
-                                            class="flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-500 hover:text-[#24a3b5] transition-colors duration-300 rounded-md hover:bg-gray-50"
-                                            :class="{ 'text-[#24a3b5] bg-gray-50': isCurrentRoute('AdminSellers') }">
-                                            <Store class="w-4 h-4" />
-                                            <span>{{ t('adminLayout.sellers') }}</span>
-                                        </router-link>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-
-                        <!-- Product Management -->
-                        <li class="space-y-2">
-                            <div class="relative">
-                                <div class="flex items-center space-x-2 px-2 py-1.5">
-                                    <Package class="w-5 h-5 text-gray-500" />
-                                    <span class="font-medium text-sm text-gray-500">{{ t('adminLayout.products') }}</span>
-                                </div>
-                                <div class="absolute left-4 h-full w-px bg-[#24a3b5]"></div>
-                            </div>
-                            <div class="relative ml-7">
-                                <div class="absolute left-0 top-0 h-full w-px bg-[#24a3b5]"></div>
-                                <ul class="space-y-1">
-                                    <li class="relative pl-1">
-                                        <div class="absolute -left-3 top-1/2 w-3 h-1 bg-[#24a3b5]"></div>
-                                        <router-link to="/admin/products"
-                                            class="flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-500 hover:text-[#24a3b5] transition-colors duration-300 rounded-md hover:bg-gray-50"
-                                            :class="{ 'text-[#24a3b5] bg-gray-50': isCurrentRoute('AdminProducts') }">
-                                            <Boxes class="w-4 h-4" />
-                                            <span>{{ t('adminLayout.allProducts') }}</span>
-                                        </router-link>
-                                    </li>
-                                    <li class="relative pl-1">
-                                        <div class="absolute left-0 top-1/2 w-2 h-1 bg-[#24a3b5]"></div>
-                                        <router-link to="/admin/categories"
-                                            class="flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-500 hover:text-[#24a3b5] transition-colors duration-300 rounded-md hover:bg-gray-50"
-                                            :class="{ 'text-[#24a3b5] bg-gray-50': isCurrentRoute('AdminCategories') }">
-                                            <FolderTree class="w-4 h-4" />
-                                            <span>{{ t('adminLayout.categories') }}</span>
-                                        </router-link>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-
-                        <!-- Orders -->
-                        <li class="space-y-2">
-                            <div class="relative">
-                                <div class="flex items-center space-x-2 px-2 py-1.5">
-                                    <ShoppingCart class="w-5 h-5 text-gray-500" />
-                                    <span class="font-medium text-sm text-gray-500">{{ t('adminLayout.orders') }}</span>
-                                </div>
-                                <div class="absolute left-4 h-full w-px bg-[#24a3b5]"></div>
-                            </div>
-                            <div class="relative ml-7">
-                                <div class="absolute left-0 top-0 h-full w-px bg-[#24a3b5]"></div>
-                                <ul class="space-y-1">
-                                    <li class="relative pl-1">
-                                        <div class="absolute -left-3 top-1/2 w-3 h-1 bg-[#24a3b5]"></div>
-                                        <router-link to="/admin/orders"
-                                            class="flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-500 hover:text-[#24a3b5] transition-colors duration-300 rounded-md hover:bg-gray-50"
-                                            :class="{ 'text-[#24a3b5] bg-gray-50': isCurrentRoute('AdminOrders') }">
-                                            <ScrollText class="w-4 h-4" />
-                                            <span>{{ t('adminLayout.allOrders') }}</span>
-                                        </router-link>
-                                    </li>
-                                    <li class="relative pl-1">
-                                        <div class="absolute left-0 top-1/2 w-2 h-1 bg-[#24a3b5]"></div>
-                                        <router-link to="/admin/payments"
-                                            class="flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-500 hover:text-[#24a3b5] transition-colors duration-300 rounded-md hover:bg-gray-50"
-                                            :class="{ 'text-[#24a3b5] bg-gray-50': isCurrentRoute('AdminPayments') }">
-                                            <CreditCard class="w-4 h-4" />
-                                            <span>{{ t('adminLayout.payments') }}</span>
-                                        </router-link>
-                                    </li>
-                                    <li class="relative pl-1">
-                                        <div class="absolute left-0 top-1/2 w-2 h-1 bg-[#24a3b5]"></div>
-                                        <router-link to="/admin/payouts"
-                                            class="flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-500 hover:text-[#24a3b5] transition-colors duration-300 rounded-md hover:bg-gray-50"
-                                            :class="{ 'text-[#24a3b5] bg-gray-50': isCurrentRoute('AdminPayouts') }">
-                                            <Banknote class="w-4 h-4" />
-                                            <span>{{ t('adminLayout.payouts') }}</span>
-                                        </router-link>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-
-                        <!-- Settings -->
-                        <li class="space-y-2">
-                            <div class="relative">
-                                <div class="flex items-center space-x-2 px-2 py-1.5">
-                                    <Settings class="w-5 h-5 text-gray-500" />
-                                    <span class="font-medium text-sm text-gray-500">{{ t('adminLayout.settings') }}</span>
-                                </div>
-                                <div class="absolute left-4 h-full w-px bg-[#24a3b5]"></div>
-                            </div>
-                            <div class="relative ml-7">
-                                <div class="absolute left-0 top-0 h-full w-px bg-[#24a3b5]"></div>
-                                <ul class="space-y-1">
-                                    <li class="relative pl-1">
-                                        <div class="absolute -left-3 top-1/2 w-3 h-1 bg-[#24a3b5]"></div>
-                                        <router-link to="/admin/settings"
-                                            class="flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-500 hover:text-[#24a3b5] transition-colors duration-300 rounded-md hover:bg-gray-50"
-                                            :class="{ 'text-[#24a3b5] bg-gray-50': isCurrentRoute('AdminSettings') }">
-                                            <Sliders class="w-4 h-4" />
-                                            <span>{{ t('adminLayout.platformSettings') }}</span>
-                                        </router-link>
-                                    </li>
-
-                                    <li class="relative pl-1">
-                                        <div class="absolute left-0 top-1/2 w-2 h-1 bg-[#24a3b5]"></div>
-                                        <router-link to="/admin/password-reset"
-                                            class="flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-500 hover:text-[#24a3b5] transition-colors duration-300 rounded-md hover:bg-gray-50"
-                                            :class="{ 'text-[#24a3b5] bg-gray-50': isCurrentRoute('AdminPayments') }">
-                                            <CreditCard class="w-4 h-4" />
-                                            <span>{{ t('adminLayout.changePassword') }}</span>
-                                        </router-link>
-                                    </li>
-                                </ul>
-                            </div>
+                            <ul class="space-y-1">
+                                <li v-for="item in group.items" :key="item.routeName">
+                                    <router-link
+                                        :to="item.to"
+                                        class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors"
+                                        :class="linkClass(item.routeName)"
+                                        @click="closeMobileNav"
+                                    >
+                                        <component :is="item.icon" class="h-4 w-4" />
+                                        <span>{{ t(item.labelKey) }}</span>
+                                    </router-link>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
                 </div>
-            </nav>
+            </aside>
 
-            <!-- Main Content Area -->
-            <div class="flex-1 flex flex-col">
-                <main class="flex-1 overflow-y-auto px-4 pb-4">
+            <div class="flex min-h-screen min-w-0 flex-1 flex-col">
+                <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+                    <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+                        <div class="flex min-w-0 items-center gap-3">
+                            <button
+                                type="button"
+                                class="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 lg:hidden"
+                                @click="toggleMobileNav"
+                            >
+                                <Menu class="h-5 w-5" />
+                            </button>
+                            <div class="min-w-0">
+                                <p class="truncate text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                                    {{ t('adminLayout.breadcrumbPrefix') }}
+                                </p>
+                                <p class="truncate text-base font-semibold text-slate-900 sm:text-lg">
+                                    {{ currentSection }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 sm:gap-4">
+                            <button
+                                type="button"
+                                class="relative rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-[#24a3b5]"
+                                @click="toggleNotifications"
+                            >
+                                <Bell class="h-5 w-5" />
+                                <span
+                                    v-if="unreadNotifications > 0"
+                                    class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white"
+                                >
+                                    {{ unreadNotifications }}
+                                </span>
+                            </button>
+
+                            <div class="hidden items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 sm:flex">
+                                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-[#24a3b5] text-white">
+                                    <span class="text-sm font-medium">{{ adminInitials }}</span>
+                                </div>
+                                <span class="max-w-[140px] truncate text-sm font-medium text-slate-700">
+                                    {{ adminName }}
+                                </span>
+                            </div>
+
+                            <button
+                                type="button"
+                                @click="handleLogout"
+                                class="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100"
+                            >
+                                <LogOut class="h-4 w-4" />
+                                <span class="hidden sm:inline">{{ t('adminLayout.logout') }}</span>
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <main class="flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:px-8">
                     <router-view></router-view>
                 </main>
             </div>
@@ -239,6 +156,9 @@ import {
     CreditCard,
     Banknote,
     Sliders,
+    Menu,
+    X,
+    KeyRound,
 } from 'lucide-vue-next'
 
 export default {
@@ -259,6 +179,9 @@ export default {
         CreditCard,
         Banknote,
         Sliders,
+        Menu,
+        X,
+        KeyRound,
     },
     setup() {
         const router = useRouter()
@@ -266,6 +189,43 @@ export default {
         const { t } = useI18n()
         const adminStore = useAdminStore()
         const unreadNotifications = ref(0)
+        const isMobileNavOpen = ref(false)
+
+        const navGroups = [
+            {
+                titleKey: 'adminLayout.userManagement',
+                icon: Users,
+                items: [
+                    { routeName: 'AdminUsers', to: '/admin/users', icon: UserCircle, labelKey: 'adminLayout.allUsers' },
+                    { routeName: 'AdminSellers', to: '/admin/sellers', icon: Store, labelKey: 'adminLayout.sellers' },
+                ],
+            },
+            {
+                titleKey: 'adminLayout.products',
+                icon: Package,
+                items: [
+                    { routeName: 'AdminProducts', to: '/admin/products', icon: Boxes, labelKey: 'adminLayout.allProducts' },
+                    { routeName: 'AdminCategories', to: '/admin/categories', icon: FolderTree, labelKey: 'adminLayout.categories' },
+                ],
+            },
+            {
+                titleKey: 'adminLayout.orders',
+                icon: ShoppingCart,
+                items: [
+                    { routeName: 'AdminOrders', to: '/admin/orders', icon: ScrollText, labelKey: 'adminLayout.allOrders' },
+                    { routeName: 'AdminPayments', to: '/admin/payments', icon: CreditCard, labelKey: 'adminLayout.payments' },
+                    { routeName: 'AdminPayouts', to: '/admin/payouts', icon: Banknote, labelKey: 'adminLayout.payouts' },
+                ],
+            },
+            {
+                titleKey: 'adminLayout.settings',
+                icon: Settings,
+                items: [
+                    { routeName: 'AdminSettings', to: '/admin/settings', icon: Sliders, labelKey: 'adminLayout.platformSettings' },
+                    { routeName: 'AdminPasswordReset', to: '/admin/password-reset', icon: KeyRound, labelKey: 'adminLayout.changePassword' },
+                ],
+            },
+        ]
 
         onMounted(async () => {
             if (!adminStore.isAdminLoggedIn) {
@@ -301,12 +261,25 @@ export default {
         }
 
         const toggleNotifications = () => {
-            // Implement notifications panel toggle
             console.log('Toggle notifications')
         }
 
         const isCurrentRoute = (routeName) => {
             return route.name === routeName
+        }
+
+        const linkClass = (routeName) => {
+            return isCurrentRoute(routeName)
+                ? 'bg-[#24a3b5] text-white shadow-sm'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+        }
+
+        const closeMobileNav = () => {
+            isMobileNavOpen.value = false
+        }
+
+        const toggleMobileNav = () => {
+            isMobileNavOpen.value = !isMobileNavOpen.value
         }
 
         watch(
@@ -318,6 +291,13 @@ export default {
             }
         )
 
+        watch(
+            () => route.fullPath,
+            () => {
+                closeMobileNav()
+            }
+        )
+
         return {
             currentSection,
             unreadNotifications,
@@ -326,8 +306,25 @@ export default {
             handleLogout,
             toggleNotifications,
             isCurrentRoute,
+            navGroups,
+            linkClass,
+            isMobileNavOpen,
+            toggleMobileNav,
+            closeMobileNav,
             t
         }
     }
 }
 </script>
+
+<style scoped>
+.admin-fade-enter-active,
+.admin-fade-leave-active {
+    transition: opacity 0.2s ease;
+}
+
+.admin-fade-enter-from,
+.admin-fade-leave-to {
+    opacity: 0;
+}
+</style>

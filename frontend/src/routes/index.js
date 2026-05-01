@@ -171,6 +171,22 @@ const adminRoutes = [
         component: AdminProducts,
       },
       {
+        path: "products/new",
+        name: "AdminAddProduct",
+        component: AddProduct,
+        props: {
+          adminMode: true,
+        },
+      },
+      {
+        path: "products/:id/edit",
+        name: "AdminEditProduct",
+        component: AddProduct,
+        props: {
+          adminMode: true,
+        },
+      },
+      {
         path: "categories",
         name: "AdminCategories",
         component: AdminCategories,

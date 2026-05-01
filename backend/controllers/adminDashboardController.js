@@ -18,6 +18,7 @@ const bcrypt = require("bcrypt");
 const {
   sendAdminTriggeredPasswordResetEmail,
 } = require("../services/emailService");
+const mongoose = require("mongoose");
 
 // backend/controllers/adminDashboardController.js
 exports.getDashboardStats = async (req, res) => {
@@ -311,32 +312,123 @@ exports.getDashboardStats = async (req, res) => {
 
 exports.getAdminProducts = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, category } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      category,
+      seller,
+      createdFrom,
+      createdTo,
+      stock,
+      status,
+    } = req.query;
 
-    let query = {};
+    const parsedPage = parseInt(page, 10) || 1;
+    const parsedLimit = parseInt(limit, 10) || 10;
+
+    const query = {};
+
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: "i" } },
         { description: { $regex: search, $options: "i" } },
+        { slug: { $regex: search, $options: "i" } },
       ];
     }
-    if (category) query.category = category;
+
+    if (category) {
+      query.category = category;
+    }
+
+    if (seller) {
+      const sellerDoc = await Seller.findById(seller).select("_id user").lean();
+      if (!sellerDoc) {
+        return res.json({
+          products: [],
+          pagination: {
+            total: 0,
+            pages: 0,
+            currentPage: parsedPage,
+            limit: parsedLimit,
+          },
+        });
+      }
+
+      const sellerMatch = {
+        $or: [{ seller: sellerDoc._id }, { user: sellerDoc.user }],
+      };
+
+      if (query.$or) {
+        const existingSearchOr = query.$or;
+        delete query.$or;
+        query.$and = [{ $or: existingSearchOr }, sellerMatch];
+      } else {
+        query.$or = sellerMatch.$or;
+      }
+    }
+
+    if (status === "active") {
+      query.isAvailable = true;
+    } else if (status === "inactive") {
+      query.isAvailable = false;
+    }
+
+    if (stock === "in_stock") {
+      query.stock = { $gt: 10 };
+    } else if (stock === "low_stock") {
+      query.stock = { $gt: 0, $lte: 10 };
+    } else if (stock === "out_of_stock") {
+      query.stock = { $lte: 0 };
+    }
+
+    if (createdFrom || createdTo) {
+      const createdAt = {};
+
+      if (createdFrom) {
+        const fromDate = new Date(createdFrom);
+        if (!Number.isNaN(fromDate.getTime())) {
+          fromDate.setHours(0, 0, 0, 0);
+          createdAt.$gte = fromDate;
+        }
+      }
+
+      if (createdTo) {
+        const toDate = new Date(createdTo);
+        if (!Number.isNaN(toDate.getTime())) {
+          toDate.setHours(23, 59, 59, 999);
+          createdAt.$lte = toDate;
+        }
+      }
+
+      if (Object.keys(createdAt).length > 0) {
+        query.createdAt = createdAt;
+      }
+    }
 
     const products = await Product.find(query)
       .populate("category")
+      .populate("seller", "storeName")
+      .populate("user", "username email")
       .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit));
+      .skip((parsedPage - 1) * parsedLimit)
+      .limit(parsedLimit)
+      .lean();
 
     const total = await Product.countDocuments(query);
 
+    const normalizedProducts = products.map((product) => ({
+      ...product,
+      status: product.isAvailable ? "active" : "inactive",
+    }));
+
     res.json({
-      products,
+      products: normalizedProducts,
       pagination: {
         total,
-        pages: Math.ceil(total / limit),
-        currentPage: parseInt(page),
-        limit: parseInt(limit),
+        pages: Math.ceil(total / parsedLimit),
+        currentPage: parsedPage,
+        limit: parsedLimit,
       },
     });
   } catch (error) {
@@ -346,16 +438,181 @@ exports.getAdminProducts = async (req, res) => {
   }
 };
 
+exports.createAdminProduct = async (req, res) => {
+  try {
+    const {
+      sellerId,
+      imageUrl,
+      status = "active",
+      ...productData
+    } = req.body;
+
+    if (!sellerId) {
+      return res.status(400).json({ message: "Seller is required" });
+    }
+
+    const seller = await Seller.findById(sellerId).populate("user", "_id isSeller sellerProfile");
+    if (!seller || !seller.user?._id) {
+      return res.status(404).json({ message: "Seller not found" });
+    }
+
+    if (!productData.name?.trim()) {
+      return res.status(400).json({ message: "Product name is required" });
+    }
+
+    if (!productData.description?.trim()) {
+      return res.status(400).json({ message: "Product description is required" });
+    }
+
+    if (!productData.category) {
+      return res.status(400).json({ message: "Category is required" });
+    }
+
+    if (!productData.images || !Array.isArray(productData.images)) {
+      productData.images = [];
+    }
+
+    const normalizedImages = [
+      ...new Set(
+        [...productData.images, imageUrl]
+          .filter((value) => typeof value === "string")
+          .map((value) => value.trim())
+          .filter(Boolean)
+      ),
+    ];
+
+    if (normalizedImages.length === 0) {
+      return res.status(400).json({ message: "At least one product image is required" });
+    }
+
+    productData.images = normalizedImages;
+
+    if (productData.color && typeof productData.color === "string") {
+      if (!/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(productData.color)) {
+        return res.status(400).json({ message: "Invalid main color hex code" });
+      }
+    }
+
+    if (productData.availableColors && Array.isArray(productData.availableColors)) {
+      for (const color of productData.availableColors) {
+        if (!color.name || !color.hexCode) {
+          return res.status(400).json({ message: "Each color must have both name and hex code" });
+        }
+        if (!/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color.hexCode)) {
+          return res.status(400).json({ message: `Invalid hex code for color: ${color.name}` });
+        }
+      }
+    }
+
+    if (productData.variants && Array.isArray(productData.variants)) {
+      for (const variant of productData.variants) {
+        if (variant.color) {
+          if (!variant.color.name || !variant.color.hexCode) {
+            return res.status(400).json({
+              message: "Each variant color must have both name and hex code",
+            });
+          }
+          if (!/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(variant.color.hexCode)) {
+            return res.status(400).json({
+              message: `Invalid hex code for variant color: ${variant.color.name}`,
+            });
+          }
+        }
+      }
+    }
+
+    let categoryId;
+    if (mongoose.Types.ObjectId.isValid(productData.category)) {
+      categoryId = new mongoose.Types.ObjectId(productData.category);
+    } else {
+      let existingCategory = await Category.findOne({
+        name: productData.category,
+      });
+      if (!existingCategory) {
+        const newCategory = new Category({
+          name: productData.category,
+          slug: productData.category.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        });
+        existingCategory = await newCategory.save();
+      }
+      categoryId = existingCategory._id;
+    }
+
+    const baseSlug = productData.name
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "product";
+    const slug = `${baseSlug}-${Date.now()}`;
+
+    const product = new Product({
+      ...productData,
+      name: productData.name.trim(),
+      description: productData.description.trim(),
+      category: categoryId,
+      images: productData.images,
+      slug,
+      user: seller.user._id,
+      seller: seller._id,
+      isAvailable: status === "active",
+    });
+
+    const savedProduct = await product.save();
+
+    await User.findByIdAndUpdate(seller.user._id, {
+      $addToSet: { products: savedProduct._id },
+    });
+
+    await Seller.findByIdAndUpdate(seller._id, {
+      $addToSet: { products: savedProduct._id },
+    });
+
+    const populatedProduct = await Product.findById(savedProduct._id)
+      .populate("category")
+      .lean();
+
+    res.status(201).json({
+      ...populatedProduct,
+      status: populatedProduct.isAvailable ? "active" : "inactive",
+    });
+  } catch (error) {
+    console.error("Error creating admin product:", error);
+    res
+      .status(500)
+      .json({ message: "Error creating product", error: error.message });
+  }
+};
+
 exports.updateProduct = async (req, res) => {
   const { id } = req.params;
   try {
-    const product = await Product.findByIdAndUpdate(id, req.body, {
+    const updatePayload = { ...req.body };
+
+    if (Object.prototype.hasOwnProperty.call(updatePayload, "status")) {
+      updatePayload.isAvailable = updatePayload.status === "active";
+      delete updatePayload.status;
+    }
+
+    if (typeof updatePayload.imageUrl === "string") {
+      const normalizedImageUrl = updatePayload.imageUrl.trim();
+      if (normalizedImageUrl) {
+        updatePayload.images = [normalizedImageUrl];
+      }
+      delete updatePayload.imageUrl;
+    }
+
+    delete updatePayload.sellerId;
+
+    const product = await Product.findByIdAndUpdate(id, updatePayload, {
       new: true,
     });
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-    res.json(product);
+    res.json({
+      ...product.toObject(),
+      status: product.isAvailable ? "active" : "inactive",
+    });
   } catch (error) {
     res
       .status(500)

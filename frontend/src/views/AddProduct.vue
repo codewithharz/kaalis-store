@@ -11,8 +11,8 @@
 
             <div class="container mx-auto px-4 py-16 relative">
                 <div class="max-w-3xl mx-auto text-center">
-                    <h1 class="text-4xl font-bold mb-4">{{ t('addProductPage.title') }}</h1>
-                    <p class="text-lg mb-8 text-white/90">{{ t('addProductPage.subtitle') }}</p>
+                    <h1 class="text-4xl font-bold mb-4">{{ pageTitle }}</h1>
+                    <p class="text-lg mb-8 text-white/90">{{ pageSubtitle }}</p>
                 </div>
             </div>
         </div>
@@ -30,6 +30,20 @@
                                 v-model:selectedCategories="selectedCategories"
                                 @update:selectedCategories="updateSelectedCategories"
                                 class="focus:ring-2 focus:ring-indigo-500/20" />
+                        </div>
+
+                        <div v-if="adminMode" class="space-y-2">
+                            <label class="text-sm font-medium text-gray-700">{{ t('adminProducts.form.seller') }}</label>
+                            <select
+                                v-model="selectedSellerId"
+                                class="w-full rounded-lg border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                                required
+                            >
+                                <option value="">{{ t('adminProducts.form.selectSeller') }}</option>
+                                <option v-for="seller in sellers" :key="seller._id" :value="seller._id">
+                                    {{ seller.storeName }} - {{ seller.user?.email || seller.user?.username || t('adminProducts.form.unknownSeller') }}
+                                </option>
+                            </select>
                         </div>
 
                         <!-- Basic Information Section -->
@@ -649,7 +663,7 @@
                             </button>
                             <button type="submit"
                                 class="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg font-medium shadow-lg transition-all duration-300">
-                                {{ t('addProductPage.submit') }}
+                                {{ submitLabel }}
                             </button>
                         </div>
 
@@ -662,10 +676,11 @@
 
 <script>
 import { ref, reactive, onMounted, watch, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useProductStore } from '../store/productStore.js';
 import { useUserStore } from '../store/user.js';
+import apiClient from '../api/axios';
 import uploadService from '../services/uploadService';
 import { toast } from 'vue-sonner';
 import { Trash2, UploadCloud, ChevronDown, ChevronRight, Sparkles, Settings2, Plus } from 'lucide-vue-next';
@@ -681,14 +696,23 @@ export default {
         fromDashboard: {
             type: Boolean,
             default: false
+        },
+        adminMode: {
+            type: Boolean,
+            default: false
         }
     },
     setup(props) {
         const { t } = useI18n();
+        const route = useRoute();
         const router = useRouter();
         const productStore = useProductStore();
         const userStore = useUserStore();
         const categories = ref([]);
+        const sellers = ref([]);
+        const selectedSellerId = ref('');
+        const isEditing = ref(false);
+        const editingProductId = ref('');
         const product = reactive({
             name: '',
             description: '',
@@ -727,6 +751,28 @@ export default {
 
         const availableStock = computed(() => {
             return (product.stock || 0) - (product.reservedStock || 0);
+        });
+
+        const pageTitle = computed(() => {
+            if (props.adminMode && isEditing.value) return t('adminProducts.modal.editTitle');
+            if (props.adminMode) return t('adminProducts.modal.addTitle');
+            return t('addProductPage.title');
+        });
+
+        const pageSubtitle = computed(() => {
+            if (props.adminMode && isEditing.value) {
+                return t('adminProducts.editPageSubtitle');
+            }
+            if (props.adminMode) {
+                return t('adminProducts.createPageSubtitle');
+            }
+            return t('addProductPage.subtitle');
+        });
+
+        const submitLabel = computed(() => {
+            if (props.adminMode && isEditing.value) return t('adminProducts.actions.update');
+            if (props.adminMode) return t('adminProducts.actions.create');
+            return t('addProductPage.submit');
         });
 
         // Watchers for automatic discount calculation
@@ -813,9 +859,62 @@ export default {
             if (seoAutoMode.value) updateSeo();
         });
 
+        const hydrateProductForm = (fetchedProduct) => {
+            product.name = fetchedProduct.name || '';
+            product.description = fetchedProduct.description || '';
+            product.price = fetchedProduct.price || 0;
+            product.originalPrice = fetchedProduct.originalPrice || 0;
+            product.stock = fetchedProduct.stock || 0;
+            product.reservedStock = fetchedProduct.reservedStock || 0;
+            product.category = fetchedProduct.category?._id || fetchedProduct.category || null;
+            product.tags = Array.isArray(fetchedProduct.tags) ? [...fetchedProduct.tags] : [];
+            product.images = Array.isArray(fetchedProduct.images) ? [...fetchedProduct.images] : [];
+            product.brand = fetchedProduct.brand || '';
+            product.discount = fetchedProduct.discount || 0;
+            product.isAvailable = fetchedProduct.isAvailable !== false;
+            product.unit = fetchedProduct.unit ? JSON.parse(JSON.stringify(fetchedProduct.unit)) : {
+                category: '',
+                baseUnit: '',
+                conversionFactor: 1,
+                value: 1,
+                displayUnit: '',
+                packagingUnit: '',
+                precision: 2,
+                compoundUnit: { numerator: '', denominator: '' },
+            };
+            product.color = fetchedProduct.color || '#000000';
+            product.availableColors = Array.isArray(fetchedProduct.availableColors)
+                ? JSON.parse(JSON.stringify(fetchedProduct.availableColors))
+                : [];
+            product.variants = Array.isArray(fetchedProduct.variants)
+                ? JSON.parse(JSON.stringify(fetchedProduct.variants))
+                : [];
+            product.bulkPricing = Array.isArray(fetchedProduct.bulkPricing)
+                ? JSON.parse(JSON.stringify(fetchedProduct.bulkPricing))
+                : [];
+            product.metaTitle = fetchedProduct.metaTitle || '';
+            product.metaDescription = fetchedProduct.metaDescription || '';
+
+            tagsInput.value = product.tags.join(', ');
+            imagePreviews.value = [...product.images];
+            selectedCategories.value = fetchedProduct.category ? [fetchedProduct.category] : [];
+            selectedSellerId.value = fetchedProduct.seller || fetchedProduct.user?.sellerProfile?._id || '';
+        };
+
         onMounted(async () => {
             try {
                 categories.value = await productStore.fetchCategories();
+                if (props.adminMode) {
+                    const { data } = await apiClient.get('/admin/sellers?limit=200');
+                    sellers.value = data.sellers || [];
+                }
+
+                if (props.adminMode && route.params.id) {
+                    isEditing.value = true;
+                    editingProductId.value = route.params.id;
+                    const fetchedProduct = await productStore.fetchProductById(route.params.id);
+                    hydrateProductForm(fetchedProduct);
+                }
 
                 // Initialize color selection state based on current product color
                 const lowerColor = product.color?.toLowerCase();
@@ -1062,7 +1161,9 @@ export default {
         //     router.push('/account/profile/my-products');
         // };
         const cancelAddProduct = () => {
-            if (props.fromDashboard) {
+            if (props.adminMode) {
+                router.push('/admin/products');
+            } else if (props.fromDashboard) {
                 router.push('/account/profile/');
             } else {
                 router.push('/account/profile/my-products');
@@ -1072,6 +1173,11 @@ export default {
 
         const handleSubmit = async () => {
             try {
+                if (props.adminMode && !selectedSellerId.value) {
+                    toast.error(t('adminProducts.toasts.selectSeller'));
+                    return;
+                }
+
                 if (!product.category) {
                     toast.error(t('addProductPage.toasts.selectCategory'));
                     return;
@@ -1261,7 +1367,18 @@ export default {
 
                 // Send to API
                 console.log('Sending product data to API:', productData);
-                const newProduct = await productStore.createProduct(productData);
+                const newProduct = props.adminMode
+                    ? await (isEditing.value
+                        ? apiClient.put(`/admin/products/${editingProductId.value}`, {
+                            ...productData,
+                            status: productData.isAvailable ? 'active' : 'inactive',
+                        })
+                        : apiClient.post('/admin/products', {
+                            ...productData,
+                            sellerId: selectedSellerId.value,
+                            status: productData.isAvailable ? 'active' : 'inactive',
+                        })).then((response) => response.data)
+                    : await productStore.createProduct(productData);
 
                 // Validate response
                 console.log('API Response - New product:', newProduct);
@@ -1271,7 +1388,7 @@ export default {
                     toast.warning(t('addProductPage.toasts.savedImagesWarning'));
                 } else {
                     toast.success(t('addProductPage.toasts.productAdded'));
-                    router.push('/account/my-products');
+                    router.push(props.adminMode ? '/admin/products' : '/account/my-products');
                 }
             } catch (error) {
                 console.error('Error adding product:', error);
@@ -1287,6 +1404,12 @@ export default {
             tagsInput,
             selectedCategories,
             categories,
+            sellers,
+            selectedSellerId,
+            adminMode: props.adminMode,
+            pageTitle,
+            pageSubtitle,
+            submitLabel,
             handleImageUpload,
             handleVariantImageUpload,
             handleSubmit,

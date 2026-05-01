@@ -2,16 +2,22 @@
 <template>
     <div>
         <!-- Header & Actions -->
-        <div class="flex justify-between items-center mb-3 px-8 py-4 bg-white">
+        <div class="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-3 px-4 sm:px-8 py-4 bg-white">
             <h2 class="text-2xl font-bold text-gray-800">{{ t('adminProducts.title') }}</h2>
-            <button @click="showAddModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                {{ t('adminProducts.addNewProduct') }}
-            </button>
+            <div class="flex flex-col items-start sm:items-end gap-2">
+                <button
+                    type="button"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                    @click="goToCreateProduct"
+                >
+                    {{ t('adminProducts.addNewProduct') }}
+                </button>
+            </div>
         </div>
 
         <!-- Filters -->
         <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4">
                 <!-- Search -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('adminProducts.filters.search') }}</label>
@@ -25,7 +31,7 @@
                     <div class="relative">
                         <select v-model="filters.category"
                             class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
-                            @change="fetchProducts">
+                            @change="applyFilters">
                             <option value="">{{ t('adminProducts.filters.allCategories') }}</option>
                             <option v-for="category in categories" :key="category._id" :value="category._id">
                                 {{ category.name }}
@@ -43,11 +49,29 @@
                     <div class="relative">
                         <select v-model="filters.stock"
                             class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
-                            @change="fetchProducts">
+                            @change="applyFilters">
                             <option value="">{{ t('adminProducts.filters.all') }}</option>
                             <option value="in_stock">{{ t('adminProducts.stockStatuses.inStock') }}</option>
                             <option value="low_stock">{{ t('adminProducts.stockStatuses.lowStock') }}</option>
                             <option value="out_of_stock">{{ t('adminProducts.stockStatuses.outOfStock') }}</option>
+                        </select>
+                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <ChevronDown class="w-5 h-5 text-gray-400" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seller Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('adminProducts.filters.seller') }}</label>
+                    <div class="relative">
+                        <select v-model="filters.seller"
+                            class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
+                            @change="applyFilters">
+                            <option value="">{{ t('adminProducts.filters.allSellers') }}</option>
+                            <option v-for="seller in sellers" :key="seller._id" :value="seller._id">
+                                {{ seller.storeName }}
+                            </option>
                         </select>
                         <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                             <ChevronDown class="w-5 h-5 text-gray-400" />
@@ -61,7 +85,7 @@
                     <div class="relative">
                         <select v-model="filters.status"
                             class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
-                            @change="fetchProducts">
+                            @change="applyFilters">
                             <option value="">{{ t('adminProducts.filters.all') }}</option>
                             <option value="active">{{ t('adminProducts.statuses.active') }}</option>
                             <option value="inactive">{{ t('adminProducts.statuses.inactive') }}</option>
@@ -71,64 +95,218 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Created Date Range -->
+                <div class="sm:col-span-2 xl:col-span-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('adminProducts.filters.createdDate') }}</label>
+                    <div class="grid grid-cols-1 gap-2">
+                        <input
+                            v-model="filters.createdFrom"
+                            type="date"
+                            class="w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
+                            :aria-label="t('adminProducts.filters.createdFrom')"
+                            @change="applyFilters"
+                        >
+                        <input
+                            v-model="filters.createdTo"
+                            type="date"
+                            class="w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
+                            :aria-label="t('adminProducts.filters.createdTo')"
+                            @change="applyFilters"
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+                <button
+                    type="button"
+                    class="inline-flex items-center rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    @click="clearFilters"
+                >
+                    {{ t('adminProducts.filters.clear') }}
+                </button>
+                <span
+                    v-if="filters.createdFrom || filters.createdTo"
+                    class="text-sm text-gray-500"
+                >
+                    {{ t('adminProducts.filters.dateHint') }}
+                </span>
             </div>
         </div>
 
         <!-- Products Table -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div class="min-w-full">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+            <div class="md:hidden divide-y divide-gray-200">
+                <div
+                    v-for="product in products"
+                    :key="`${product._id}-mobile`"
+                    class="p-4 space-y-4"
+                >
+                    <div class="flex items-start gap-3">
+                        <div class="h-14 w-14 rounded-lg bg-gray-200 flex-shrink-0 overflow-hidden">
+                            <img
+                                v-if="product.images?.length"
+                                :src="product.images[0]"
+                                :alt="product.name"
+                                class="h-full w-full object-cover"
+                            >
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="text-sm font-semibold text-gray-900 break-words">
+                                {{ product.name }}
+                            </div>
+                            <div class="text-xs text-gray-500 break-all">
+                                {{ t('adminProducts.sku', { value: product.sku }) }}
+                            </div>
+                            <div class="mt-2 text-sm font-medium text-gray-900">
+                                {{ formatPrice(product.price) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div class="min-w-0">
+                            <div class="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                {{ t('adminProducts.table.seller') }}
+                            </div>
+                            <div class="mt-1 text-gray-900 break-words">
+                                {{ product.seller?.storeName || product.user?.username || t('adminProducts.form.unknownSeller') }}
+                            </div>
+                            <div class="text-xs text-gray-500 break-all">
+                                {{ product.user?.email || t('adminProducts.table.noEmail') }}
+                            </div>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                {{ t('adminProducts.table.category') }}
+                            </div>
+                            <div class="mt-1 text-gray-900 break-words">
+                                {{ product.category?.name || t('adminProducts.uncategorized') }}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                {{ t('adminProducts.table.stock') }}
+                            </div>
+                            <span :class="[
+                                'mt-1 inline-flex px-2 py-1 text-xs font-semibold rounded-full',
+                                getStockStatusClass(product.stock)
+                            ]">
+                                {{ t('adminProducts.stockCount', { count: product.stock }) }}
+                            </span>
+                        </div>
+                        <div>
+                            <div class="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                {{ t('adminProducts.table.status') }}
+                            </div>
+                            <span :class="[
+                                'mt-1 inline-flex px-2 py-1 text-xs font-semibold rounded-full',
+                                product.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            ]">
+                                {{ t(`adminProducts.statuses.${product.status}`) }}
+                            </span>
+                        </div>
+                        <div class="col-span-2">
+                            <div class="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                {{ t('adminProducts.table.created') }}
+                            </div>
+                            <div class="mt-1 text-gray-600">
+                                {{ formatDate(product.createdAt) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 border-t border-gray-100 pt-3">
+                        <button
+                            @click="goToEditProduct(product)"
+                            class="inline-flex items-center rounded-md bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100"
+                        >
+                            {{ t('adminProducts.actions.edit') }}
+                        </button>
+                        <button
+                            @click="viewProduct(product)"
+                            class="inline-flex items-center rounded-md bg-sky-50 px-3 py-2 text-sm font-medium text-sky-700 hover:bg-sky-100"
+                        >
+                            {{ t('adminProducts.actions.view') }}
+                        </button>
+                        <button
+                            @click="confirmDelete(product)"
+                            class="inline-flex items-center rounded-md bg-red-50 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100"
+                        >
+                            {{ t('adminProducts.actions.delete') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hidden md:block max-h-[70vh] overflow-auto">
+                <table class="min-w-[1100px] w-full divide-y divide-gray-200 table-fixed">
+                    <thead class="sticky top-0 z-10 bg-gray-50 shadow-sm">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="w-[26%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 {{ t('adminProducts.table.product') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="w-[20%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {{ t('adminProducts.table.seller') }}
+                            </th>
+                            <th class="w-[14%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 {{ t('adminProducts.table.category') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 {{ t('adminProducts.table.price') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 {{ t('adminProducts.table.stock') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="w-[8%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 {{ t('adminProducts.table.status') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="w-[12%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {{ t('adminProducts.table.created') }}
+                            </th>
+                            <th class="w-[14%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 {{ t('adminProducts.table.actions') }}
                             </th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         <tr v-for="product in products" :key="product._id">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
+                            <td class="px-6 py-4 align-top">
+                                <div class="flex items-center min-w-0">
                                     <div class="h-10 w-10 rounded-lg bg-gray-200 flex-shrink-0">
                                         <img v-if="product.images?.length" :src="product.images[0]" :alt="product.name"
                                             class="h-10 w-10 rounded-lg object-cover">
                                     </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900">
+                                    <div class="ml-4 min-w-0">
+                                        <div class="text-sm font-medium text-gray-900 break-words">
                                             {{ product.name }}
                                         </div>
-                                        <div class="text-sm text-gray-500">
+                                        <div class="text-sm text-gray-500 break-all">
                                             {{ t('adminProducts.sku', { value: product.sku }) }}
                                         </div>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="text-sm text-gray-900">
+                            <td class="px-6 py-4 align-top">
+                                <div class="text-sm text-gray-900 break-words">
+                                    {{ product.seller?.storeName || product.user?.username || t('adminProducts.form.unknownSeller') }}
+                                </div>
+                                <div class="text-xs text-gray-500 break-all">
+                                    {{ product.user?.email || t('adminProducts.table.noEmail') }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 align-top">
+                                <span class="text-sm text-gray-900 break-words">
                                     {{ product.category?.name || t('adminProducts.uncategorized') }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-6 py-4 align-top whitespace-nowrap">
                                 <span class="text-sm font-medium text-gray-900">
-                                    ${{ product.price.toFixed(2) }}
+                                    {{ formatPrice(product.price) }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-6 py-4 align-top whitespace-nowrap">
                                 <span :class="[
                                     'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
                                     getStockStatusClass(product.stock)
@@ -136,7 +314,7 @@
                                     {{ t('adminProducts.stockCount', { count: product.stock }) }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-6 py-4 align-top whitespace-nowrap">
                                 <span :class="[
                                     'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
                                     product.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -144,14 +322,27 @@
                                     {{ t(`adminProducts.statuses.${product.status}`) }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <button @click="editProduct(product)"
-                                    class="text-indigo-600 hover:text-indigo-900 mr-3">
+                            <td class="px-6 py-4 align-top whitespace-nowrap">
+                                <span class="text-sm text-gray-600">
+                                    {{ formatDate(product.createdAt) }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 align-top">
+                                <div class="flex flex-wrap gap-x-3 gap-y-2 text-sm font-medium">
+                                <button @click="goToEditProduct(product)"
+                                    class="text-indigo-600 hover:text-indigo-900">
                                     {{ t('adminProducts.actions.edit') }}
+                                </button>
+                                <button
+                                    @click="viewProduct(product)"
+                                    class="text-sky-600 hover:text-sky-800"
+                                >
+                                    {{ t('adminProducts.actions.view') }}
                                 </button>
                                 <button @click="confirmDelete(product)" class="text-red-600 hover:text-red-900">
                                     {{ t('adminProducts.actions.delete') }}
                                 </button>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -202,73 +393,6 @@
             </div>
         </div>
 
-        <!-- Add/Edit Product Modal -->
-        <div v-if="showAddModal || selectedProduct"
-            class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-            <div class="bg-white rounded-lg p-6 w-full max-w-2xl">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">
-                    {{ selectedProduct ? t('adminProducts.modal.editTitle') : t('adminProducts.modal.addTitle') }}
-                </h3>
-                <form @submit.prevent="handleSubmit">
-                    <!-- Form fields -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="col-span-2">
-                            <label class="block text-sm font-medium text-gray-700">{{ t('adminProducts.form.name') }}</label>
-                            <input type="text" v-model="formData.name"
-                                class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3" required>
-                        </div>
-
-                        <div class="col-span-2">
-                            <label class="block text-sm font-medium text-gray-700">{{ t('adminProducts.form.description') }}</label>
-                            <textarea v-model="formData.description"
-                                class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3" rows="3"></textarea>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">{{ t('adminProducts.form.price') }}</label>
-                            <input type="number" v-model="formData.price"
-                                class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3" step="0.01" required>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">{{ t('adminProducts.form.stock') }}</label>
-                            <input type="number" v-model="formData.stock"
-                                class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3" required>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">{{ t('adminProducts.form.category') }}</label>
-                            <select v-model="formData.category"
-                                class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
-                                <option v-for="category in categories" :key="category._id" :value="category._id">
-                                    {{ category.name }}
-                                </option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">{{ t('adminProducts.form.status') }}</label>
-                            <select v-model="formData.status"
-                                class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
-                                <option value="active">{{ t('adminProducts.statuses.active') }}</option>
-                                <option value="inactive">{{ t('adminProducts.statuses.inactive') }}</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mt-6 flex justify-end space-x-3">
-                        <button type="button" @click="closeModal"
-                            class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300">
-                            {{ t('adminProducts.actions.cancel') }}
-                        </button>
-                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                            {{ selectedProduct ? t('adminProducts.actions.update') : t('adminProducts.actions.create') }}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
         <!-- Delete Confirmation Modal -->
         <div v-if="showDeleteModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
             <div class="bg-white rounded-lg p-6 max-w-md w-full">
@@ -299,6 +423,8 @@ import { useRouter } from 'vue-router';
 import { toast } from 'vue-sonner';
 import { ChevronDown } from 'lucide-vue-next';
 import { debounce } from 'lodash';
+import apiClient from '../../api/axios';
+import { formatCurrencyAmount } from '../../utils/countryCurrency';
 
 export default {
     name: 'AdminProducts',
@@ -312,8 +438,7 @@ export default {
         const router = useRouter();
         const products = ref([]);
         const categories = ref([]);
-        const selectedProduct = ref(null);
-        const showAddModal = ref(false);
+        const sellers = ref([]);
         const showDeleteModal = ref(false);
         const productToDelete = ref(null);
 
@@ -327,19 +452,17 @@ export default {
         const filters = ref({
             search: '',
             category: '',
+            seller: '',
+            createdFrom: '',
+            createdTo: '',
             stock: '',
             status: ''
         });
 
-        // Form data
-        const formData = ref({
-            name: '',
-            description: '',
-            price: 0,
-            stock: 0,
-            category: '',
-            status: 'active'
-        });
+        const getErrorMessage = (error, fallbackKey) =>
+            error?.response?.data?.message ||
+            error?.message ||
+            t(fallbackKey);
 
         // Computed
         const startItem = computed(() => ((currentPage.value - 1) * itemsPerPage.value) + 1);
@@ -354,64 +477,43 @@ export default {
                     ...filters.value
                 });
 
-                const response = await fetch(`/api/admin/products?${queryParams}`);
-                const data = await response.json();
+                const { data } = await apiClient.get(`/admin/products?${queryParams.toString()}`);
 
                 products.value = data.products;
                 totalItems.value = data.pagination.total;
             } catch (error) {
                 console.error('Error fetching products:', error);
-                toast.error(t('adminProducts.toasts.fetchProductsFailed'));
+                toast.error(getErrorMessage(error, 'adminProducts.toasts.fetchProductsFailed'));
             }
+        };
+
+        const applyFilters = () => {
+            currentPage.value = 1;
+            fetchProducts();
         };
 
         const fetchCategories = async () => {
             try {
-                const response = await fetch('/api/admin/categories');
-                const data = await response.json();
+                const { data } = await apiClient.get('/admin/categories');
                 categories.value = data;
             } catch (error) {
                 console.error('Error fetching categories:', error);
-                toast.error(t('adminProducts.toasts.fetchCategoriesFailed'));
+                toast.error(getErrorMessage(error, 'adminProducts.toasts.fetchCategoriesFailed'));
             }
         };
 
-        const handleSubmit = async () => {
+        const fetchSellers = async () => {
             try {
-                if (selectedProduct.value) {
-                    await fetch(`/api/admin/products/${selectedProduct.value._id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(formData.value)
-                    });
-                    toast.success(t('adminProducts.toasts.updated'));
-                } else {
-                    await fetch('/api/admin/products', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(formData.value)
-                    });
-                    toast.success(t('adminProducts.toasts.created'));
-                }
-                closeModal();
-                fetchProducts();
+                const { data } = await apiClient.get('/admin/sellers?limit=200');
+                sellers.value = data.sellers || [];
             } catch (error) {
-                console.error('Error submitting product:', error);
-                toast.error(t('adminProducts.toasts.saveFailed'));
+                console.error('Error fetching sellers:', error);
+                toast.error(getErrorMessage(error, 'adminProducts.toasts.fetchSellersFailed'));
             }
         };
 
-        const editProduct = (product) => {
-            selectedProduct.value = product;
-            formData.value = {
-                name: product.name,
-                description: product.description,
-                price: product.price,
-                stock: product.stock,
-                category: product.category?._id,
-                status: product.status
-            };
-            showAddModal.value = true;
+        const goToEditProduct = (product) => {
+            router.push(`/admin/products/${product._id}/edit`);
         };
 
         const confirmDelete = (product) => {
@@ -421,36 +523,38 @@ export default {
 
         const deleteProduct = async () => {
             try {
-                await fetch(`/api/admin/products/${productToDelete.value._id}`, {
-                    method: 'DELETE'
-                });
+                await apiClient.delete(`/admin/products/${productToDelete.value._id}`);
                 toast.success(t('adminProducts.toasts.deleted'));
                 showDeleteModal.value = false;
                 productToDelete.value = null;
                 fetchProducts();
             } catch (error) {
                 console.error('Error deleting product:', error);
-                toast.error(t('adminProducts.toasts.deleteFailed'));
+                toast.error(getErrorMessage(error, 'adminProducts.toasts.deleteFailed'));
             }
         };
 
         // Use debounce from lodash directly
         const handleSearch = debounce(() => {
-            currentPage.value = 1;
-            fetchProducts();
+            applyFilters();
         }, 300);
 
-        const closeModal = () => {
-            showAddModal.value = false;
-            selectedProduct.value = null;
-            formData.value = {
-                name: '',
-                description: '',
-                price: 0,
-                stock: 0,
+        const clearFilters = () => {
+            filters.value = {
+                search: '',
                 category: '',
-                status: 'active'
+                seller: '',
+                createdFrom: '',
+                createdTo: '',
+                stock: '',
+                status: ''
             };
+            currentPage.value = 1;
+            fetchProducts();
+        };
+
+        const goToCreateProduct = () => {
+            router.push('/admin/products/new');
         };
 
         const prevPage = () => {
@@ -473,33 +577,50 @@ export default {
             return 'bg-green-100 text-green-800';
         };
 
+        const formatPrice = (price) => formatCurrencyAmount(price, 'NGN');
+        const formatDate = (value) => {
+            if (!value) return '—';
+            try {
+                return new Date(value).toLocaleDateString();
+            } catch (_) {
+                return '—';
+            }
+        };
+
+        const viewProduct = (product) => {
+            router.push(`/product/${product._id}`);
+        };
+
         // Lifecycle hooks
         onMounted(() => {
             fetchProducts();
             fetchCategories();
+            fetchSellers();
         });
 
         return {
             products,
             categories,
-            selectedProduct,
-            showAddModal,
+            sellers,
             showDeleteModal,
-            formData,
             filters,
             currentPage,
             totalItems,
             totalPages,
             startItem,
             endItem,
-            handleSubmit,
-            editProduct,
+            formatPrice,
+            formatDate,
+            goToEditProduct,
+            viewProduct,
             confirmDelete,
             deleteProduct,
             handleSearch,
-            closeModal,
+            goToCreateProduct,
             prevPage,
             nextPage,
+            applyFilters,
+            clearFilters,
             getStockStatusClass,
             fetchProducts,
             t

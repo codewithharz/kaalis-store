@@ -4379,10 +4379,17 @@ export default {
       search: "Search",
       searchPlaceholder: "Search products...",
       category: "Category",
+      seller: "Seller",
+      createdDate: "Created Date",
+      createdFrom: "Created from",
+      createdTo: "Created to",
       allCategories: "All Categories",
+      allSellers: "All Sellers",
       stockStatus: "Stock Status",
       status: "Status",
       all: "All",
+      clear: "Clear Filters",
+      dateHint: "Showing products created within the selected date range.",
     },
     stockStatuses: {
       inStock: "In Stock",
@@ -4395,14 +4402,18 @@ export default {
     },
     table: {
       product: "Product",
+      seller: "Seller",
       category: "Category",
       price: "Price",
       stock: "Stock",
       status: "Status",
+      created: "Created",
+      noEmail: "No email",
       actions: "Actions",
     },
     actions: {
       edit: "Edit",
+      view: "View",
       delete: "Delete",
       cancel: "Cancel",
       update: "Update",
@@ -4420,6 +4431,10 @@ export default {
       editTitle: "Edit Product",
       addTitle: "Add New Product",
     },
+    createPageSubtitle:
+      "Create a product for a seller using the full catalog form.",
+    editPageSubtitle:
+      "Update this seller product using the same full catalog form.",
     form: {
       name: "Name",
       description: "Description",
@@ -4427,6 +4442,11 @@ export default {
       stock: "Stock",
       category: "Category",
       status: "Status",
+      seller: "Seller",
+      selectSeller: "Select a seller",
+      unknownSeller: "Unknown seller",
+      imageUrl: "Primary Image URL",
+      imageUrlPlaceholder: "https://example.com/product-image.jpg",
     },
     deleteModal: {
       title: "Confirm Delete",
@@ -4435,6 +4455,8 @@ export default {
     toasts: {
       fetchProductsFailed: "Failed to fetch products",
       fetchCategoriesFailed: "Failed to fetch categories",
+      fetchSellersFailed: "Failed to fetch sellers",
+      selectSeller: "Please select a seller before creating the product",
       updated: "Product updated successfully",
       created: "Product created successfully",
       saveFailed: "Failed to save product",

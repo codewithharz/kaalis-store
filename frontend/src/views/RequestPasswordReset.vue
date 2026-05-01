@@ -48,6 +48,7 @@ export default {
                 });
                 this.message = this.t('passwordRecovery.requestSuccess');
                 this.error = false;
+                this.email = '';
                 toast.success(this.message);
             } catch (error) {
                 console.error('Error requesting password reset:', error);
