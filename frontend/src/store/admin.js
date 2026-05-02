@@ -375,6 +375,7 @@ export const useAdminStore = defineStore("admin", {
           page: params.page || 1,
           limit: params.limit || 10,
           status: params.status || "", // Will be one of: Pending, Processing, Shipped, Delivered, Cancelled
+          currency: params.currency || "",
           search: params.search || "",
           dateFrom: params.dateFrom || "",
           dateTo: params.dateTo || "",
@@ -446,48 +447,38 @@ export const useAdminStore = defineStore("admin", {
 
         const response = await apiClient.get(`/admin/sellers?${queryParams}`);
 
-        // Debug raw response data
-        console.log(
-          "Raw seller data from API:",
-          response.data.sellers.map((s) => ({
-            id: s._id,
-            verificationStatus: s.verificationStatus,
-            isVerified: s.isVerified, // Log the raw isVerified value
-          }))
-        );
-
         this.sellers = response.data.sellers.map((sellerData) => {
-          // Log before transformation
-          console.log("Pre-transform seller data:", {
-            id: sellerData._id,
-            isVerified: sellerData.isVerified,
-            verificationStatus: sellerData.verificationStatus,
-          });
-
-          const transformedData = {
+          return {
             ...sellerData,
             username: sellerData.user?.username || "Unknown User",
             email: sellerData.user?.email || "No Email",
-            productCount: sellerData.products?.length || 0,
-            orderCount: sellerData.orders?.length || 0,
+            productCount:
+              sellerData.productCount ?? sellerData.products?.length ?? 0,
+            orderCount: sellerData.orderCount || 0,
+            cancelledOrders: sellerData.cancelledOrders || 0,
+            cancellationRate: sellerData.cancellationRate || 0,
             totalSales: sellerData.totalSales || 0,
-            rating: sellerData.averageRating || 0,
+            salesTotalsByCurrency: sellerData.salesTotalsByCurrency || {},
+            sellerReviewAverageRating:
+              sellerData.sellerReviewAverageRating ??
+              sellerData.averageRating ??
+              0,
+            sellerReviewCount: sellerData.sellerReviewCount || 0,
+            portfolioAverageRating: sellerData.portfolioAverageRating || 0,
+            portfolioRatingsCount: sellerData.portfolioRatingsCount || 0,
+            rating:
+              (sellerData.portfolioRatingsCount || 0) > 0
+                ? sellerData.portfolioAverageRating || 0
+                : sellerData.sellerReviewAverageRating ??
+                  sellerData.averageRating ??
+                  0,
             storeName: sellerData.storeName || "Unnamed Store",
             isVacationMode: sellerData.isVacationMode || false,
-            // Keep original isVerified without default value
             isVerified: sellerData.isVerified,
             verificationStatus:
               sellerData.verificationStatus || "not_submitted",
+            statusNote: sellerData.statusNote || "",
           };
-
-          // Log after transformation
-          console.log("Post-transform seller data:", {
-            id: transformedData._id,
-            isVerified: transformedData.isVerified,
-            verificationStatus: transformedData.verificationStatus,
-          });
-
-          return transformedData;
         });
 
         this.pagination = {
@@ -496,15 +487,6 @@ export const useAdminStore = defineStore("admin", {
           itemsPerPage: response.data.pagination.limit,
         };
 
-        // Log final state
-        console.log(
-          "Final sellers state:",
-          this.sellers.map((s) => ({
-            id: s._id,
-            verificationStatus: s.verificationStatus,
-            isVerified: s.isVerified,
-          }))
-        );
         return this.sellers;
       } catch (error) {
         console.error("Error fetching sellers:", error);
@@ -534,9 +516,38 @@ export const useAdminStore = defineStore("admin", {
         const reviewsResponse = await apiClient.get(
           `/admin/sellers/${sellerId}/reviews`
         );
+        const activityResponse = await apiClient.get(
+          `/admin/sellers/${sellerId}/activity`
+        );
         const sellerWithReviews = {
           ...response.data,
+          username: response.data.user?.username || "Unknown User",
+          email: response.data.user?.email || "No Email",
+          productCount:
+            response.data.productCount ?? response.data.products?.length ?? 0,
+          storeName: response.data.storeName || "Unnamed Store",
+          isVacationMode: response.data.isVacationMode || false,
+          salesTotalsByCurrency: response.data.salesTotalsByCurrency || {},
+          totalSales: response.data.totalSales || 0,
+          orderCount: response.data.orderCount || 0,
+          cancelledOrders: response.data.cancelledOrders || 0,
+          cancellationRate: response.data.cancellationRate || 0,
+          sellerReviewAverageRating:
+            response.data.sellerReviewAverageRating ??
+            response.data.averageRating ??
+            0,
+          sellerReviewCount: response.data.sellerReviewCount || 0,
+          portfolioAverageRating: response.data.portfolioAverageRating || 0,
+          portfolioRatingsCount: response.data.portfolioRatingsCount || 0,
+          rating:
+            (response.data.portfolioRatingsCount || 0) > 0
+              ? response.data.portfolioAverageRating || 0
+              : response.data.sellerReviewAverageRating ??
+                response.data.averageRating ??
+                0,
+          statusNote: response.data.statusNote || "",
           recentReviews: reviewsResponse.data.reviews,
+          recentActivity: activityResponse.data.activities || [],
         };
 
         this.selectedSeller = sellerWithReviews;

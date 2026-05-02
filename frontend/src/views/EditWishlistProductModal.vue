@@ -152,6 +152,7 @@
                                         class="w-full px-4 py-3 text-gray-700 bg-transparent border-none focus:outline-none"
                                         step="0.01" min="0" required />
                                 </div>
+                                <p class="text-xs text-gray-500">{{ formatPricePreview(editingProduct.price) }}</p>
                             </div>
 
                             <!-- Original Price -->
@@ -163,6 +164,7 @@
                                         class="w-full px-4 py-3 text-gray-700 bg-transparent border-none focus:outline-none"
                                         step="0.01" min="0" />
                                 </div>
+                                <p class="text-xs text-gray-500">{{ formatPricePreview(editingProduct.originalPrice) }}</p>
                             </div>
 
                             <!-- Discount -->
@@ -473,6 +475,7 @@
                                         <input type="number" v-model.number="variant.price"
                                             class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                                             :placeholder="t('addProductPage.price')" min="0" step="0.01" />
+                                        <p class="text-xs text-gray-500">{{ formatPricePreview(variant.price) }}</p>
                                     </div>
                                     <div class="space-y-2">
                                         <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.stock') }}</label>
@@ -534,8 +537,8 @@
                                             class="relative w-24 h-24">
                                             <img :src="img" :alt="`Variant ${index + 1} image ${imgIndex + 1}`"
                                                 class="w-full h-full object-cover rounded-lg" />
-                                            <button @click="removeVariantImage(index, imgIndex)"
-                                                class="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors">
+                                            <button @click.stop.prevent="removeVariantImage(index, imgIndex)" type="button"
+                                                class="absolute -top-2 -right-2 z-10 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-sm">
                                                 <X class="w-4 h-4" />
                                             </button>
                                         </div>
@@ -582,13 +585,14 @@
 
                         <div v-show="showSections.bulkPricing" class="space-y-4 pt-2">
                             <div v-for="(pricing, index) in editingProduct.bulkPricing" :key="index"
-                                class="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                                class="flex flex-wrap items-center gap-4 p-4 bg-gray-50 rounded-lg">
                                 <input type="number" v-model.number="pricing.quantity" :placeholder="t('addProductPage.bulkPricing.minQuantityPlaceholder')"
                                     class="flex-1 px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all font-mono"
                                     min="0" />
                                 <input type="number" v-model.number="pricing.price" :placeholder="t('addProductPage.bulkPricing.pricePerUnitPlaceholder')"
                                     class="flex-1 px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all font-mono"
                                     step="0.01" min="0" />
+                                <p class="basis-full text-xs text-gray-500 -mt-2">{{ formatPricePreview(pricing.price) }}</p>
                                 <button @click="removeBulkPricing(index)" type="button"
                                     class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                                     <Trash2 class="w-5 h-5" />
@@ -684,6 +688,7 @@ import { useProductStore } from '../store/productStore.js';
 import { useUserStore } from '../store/user.js';
 import { toast } from 'vue-sonner';
 import { parseColorValue, getColorName, getAllColors } from '../utils/colorUtils.js';
+import { formatCurrencyAmount, getCurrencyForCountry } from '../utils/countryCurrency.js';
 import uploadService from '../services/uploadService';
 import { X, UploadCloud, Trash2, ChevronDown, ChevronRight, Sparkles, Plus } from 'lucide-vue-next';
 import HierarchicalCategorySelector from './HierarchicalCategorySelector.vue';
@@ -716,6 +721,8 @@ export default {
         const allColors = getAllColors();
         const isCustomColor = ref(false);
         const tagsInput = ref('');
+        const activeFormCurrency = computed(() => getCurrencyForCountry(userStore.user?.country || 'Nigeria'));
+        const formatPricePreview = (value) => formatCurrencyAmount(value, activeFormCurrency.value);
 
         const normalizeVariantForEdit = (variant = {}, fallbackColor = '#000000') => ({
             ...variant,
@@ -1072,7 +1079,9 @@ export default {
 
         const removeVariantImage = (variantIndex, imageIndex) => {
             if (editingProduct.variants[variantIndex]?.images) {
-                editingProduct.variants[variantIndex].images.splice(imageIndex, 1);
+                editingProduct.variants[variantIndex].images = editingProduct.variants[variantIndex].images.filter(
+                    (_, index) => index !== imageIndex
+                );
             }
         };
 
@@ -1360,6 +1369,7 @@ export default {
             updateDimension,
             saveProduct,
             availableStock,
+            formatPricePreview,
             tagsInput,
             showSections,
             seoAutoMode,
@@ -1370,6 +1380,7 @@ export default {
             handleImageUpload,
             removeImage,
             handleVariantImageUpload,
+            removeVariantImage,
             categories,
             selectedCategories,
             updateSelectedCategories,

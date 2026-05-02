@@ -33,6 +33,7 @@ const sellerSchema = new mongoose.Schema(
     lastVerificationRequest: { type: Date },
     verificationDate: { type: Date },
     verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    statusNote: { type: String },
   },
   {
     timestamps: true,

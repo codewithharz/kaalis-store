@@ -106,6 +106,36 @@ const addSellerReview = async (req, res) => {
       return res.status(404).json({ error: "Seller not found" });
     }
 
+    if (seller.user?.toString() === userId.toString()) {
+      return res
+        .status(400)
+        .json({ error: "You cannot review your own store" });
+    }
+
+    const existingReview = Array.isArray(seller.reviews)
+      ? seller.reviews.find(
+          (review) => review.user?.toString() === userId.toString()
+        )
+      : null;
+
+    if (existingReview) {
+      return res
+        .status(400)
+        .json({ error: "You have already reviewed this seller" });
+    }
+
+    const eligibleOrder = await Order.findOne({
+      user: userId,
+      seller: seller.user,
+      status: { $in: ["Delivered", "Completed"] },
+    }).select("_id");
+
+    if (!eligibleOrder) {
+      return res.status(400).json({
+        error: "You can only review sellers after a completed order",
+      });
+    }
+
     const newReview = {
       user: userId,
       rating,
@@ -126,6 +156,47 @@ const addSellerReview = async (req, res) => {
     res.status(201).json(newReview);
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+};
+
+const getSellerReviews = async (req, res) => {
+  try {
+    const { sellerId } = req.params;
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const itemsPerPage = Math.max(parseInt(req.query.itemsPerPage, 10) || 10, 1);
+
+    const seller = await Seller.findById(sellerId).populate({
+      path: "reviews.user",
+      select: "username avatar",
+    });
+
+    if (!seller) {
+      return res.status(404).json({ error: "Seller not found" });
+    }
+
+    const reviews = Array.isArray(seller.reviews) ? [...seller.reviews] : [];
+    reviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const totalReviews = reviews.length;
+    const averageRating = totalReviews
+      ? reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) /
+        totalReviews
+      : 0;
+
+    const startIndex = (page - 1) * itemsPerPage;
+    const paginatedReviews = reviews.slice(startIndex, startIndex + itemsPerPage);
+
+    res.status(200).json({
+      sellerName: seller.storeName,
+      reviews: paginatedReviews,
+      averageRating,
+      totalReviews,
+      currentPage: page,
+      totalPages: Math.ceil(totalReviews / itemsPerPage),
+    });
+  } catch (error) {
+    console.error("Error fetching seller reviews:", error);
+    res.status(500).json({ error: "Failed to fetch seller reviews" });
   }
 };
 
@@ -1143,6 +1214,7 @@ module.exports = {
   registerSeller,
   getSellerProfile,
   addSellerReview,
+  getSellerReviews,
   toggleVacationMode,
   updateOrderStatus,
 

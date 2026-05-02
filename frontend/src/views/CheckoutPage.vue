@@ -116,8 +116,7 @@
                                     <Plus class="w-3 h-3" />
                                 </button>
                             </div>
-                            <span class="text-right text-base font-semibold sm:text-lg">{{ formatMoney(item.product && item.product?.price ?
-                                (item.product?.price * item.quantity) : 0) }}</span>
+                            <span class="text-right text-base font-semibold sm:text-lg">{{ formatMoney(getCheckoutItemUnitPrice(item) * item.quantity) }}</span>
                         </div>
                     </div>
                 </div>
@@ -795,11 +794,22 @@ const removeCoupon = async () => {
     }
 };
 
+const getCheckoutItemUnitPrice = (item) => {
+    const variantPrice = Number(item?.variant?.price);
+    if (Number.isFinite(variantPrice) && variantPrice > 0) {
+        return variantPrice;
+    }
+
+    const productPrice = Number(item?.product?.price);
+    return Number.isFinite(productPrice) && productPrice > 0 ? productPrice : 0;
+};
+
 const prepareItemsForPayload = (items, totalDiscount, subtotalAmount) => {
     if (!subtotalAmount) return [];
     const discountRatio = totalDiscount / subtotalAmount;
     return items.map(item => {
-        const itemTotal = item.product.price * item.quantity;
+        const itemPrice = getCheckoutItemUnitPrice(item);
+        const itemTotal = itemPrice * item.quantity;
         const itemDiscount = Math.round(itemTotal * discountRatio);
         const discountedItemTotal = itemTotal - itemDiscount;
         const vendorAmount = Math.floor(discountedItemTotal * 0.92);
@@ -808,7 +818,7 @@ const prepareItemsForPayload = (items, totalDiscount, subtotalAmount) => {
             productId: item.product._id,  // Changed from 'product' to 'productId'
             product: item.product._id,     // Keep both for compatibility
             quantity: item.quantity,
-            price: item.product.price,
+            price: itemPrice,
             variant: item.variant,     // Include variant
             vendorAmount,
             platformFee,

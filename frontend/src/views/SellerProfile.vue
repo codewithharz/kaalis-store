@@ -83,6 +83,51 @@
                                 </div>
                             </section>
 
+                            <section>
+                                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-2 sm:mb-3 lg:mb-4">
+                                    <h2
+                                        class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-800">
+                                        {{ t('sellerProfilePage.storeReviews') }}
+                                    </h2>
+                                    <div class="flex flex-wrap gap-2">
+                                        <button
+                                            @click="goToSellerReviews"
+                                            class="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                        >
+                                            {{ t('sellerProfilePage.viewSellerReviews') }}
+                                        </button>
+                                        <button
+                                            v-if="canReviewSeller"
+                                            @click="showSellerReviewModal = true"
+                                            class="rounded-lg bg-[#24a3b5] px-4 py-2 text-sm font-medium text-white hover:bg-[#1f8f9e]"
+                                        >
+                                            {{ t('sellerProfilePage.writeSellerReview') }}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 p-3 sm:p-4 rounded-lg">
+                                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                        <div>
+                                            <div class="flex items-center gap-2">
+                                                <div class="flex text-yellow-400">
+                                                    <Star v-for="star in 5" :key="`seller-rating-${star}`"
+                                                        :class="['w-4 h-4 sm:w-5 sm:h-5', star <= Math.round(sellerProfile.averageRating || 0) ? 'text-yellow-400' : 'text-gray-300']" />
+                                                </div>
+                                                <span class="text-base sm:text-lg font-semibold text-gray-900">
+                                                    {{ sellerProfile.averageRating ? sellerProfile.averageRating.toFixed(1) : '0.0' }}/5
+                                                </span>
+                                            </div>
+                                            <p class="mt-1 text-sm text-gray-600">
+                                                {{ t('sellerProfilePage.basedOnSellerReviews', { count: sellerProfile.reviews?.length || 0 }) }}
+                                            </p>
+                                        </div>
+                                        <p v-if="!canReviewSeller" class="text-sm text-gray-500 max-w-md">
+                                            {{ sellerReviewStateMessage }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </section>
+
                             <!-- Contact Information -->
                             <section>
                                 <h2
@@ -241,6 +286,85 @@
                 </div>
             </div>
         </div>
+
+        <div
+            v-if="showSellerReviewModal"
+            class="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 p-4"
+            @click.self="closeSellerReviewModal"
+        >
+            <div class="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-900">{{ t('sellerProfilePage.writeSellerReview') }}</h3>
+                        <p class="mt-1 text-sm text-gray-500">
+                            {{ t('sellerProfilePage.reviewModalSubtitle', { seller: sellerProfile.storeName || sellerProfile.username }) }}
+                        </p>
+                    </div>
+                    <button @click="closeSellerReviewModal" class="text-gray-400 hover:text-gray-600">
+                        <span class="sr-only">{{ t('common.close') }}</span>
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <form class="mt-6 space-y-5" @submit.prevent="submitSellerReview">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ t('sellerProfilePage.reviewRatingLabel') }}
+                        </label>
+                        <div class="flex items-center gap-2">
+                            <button
+                                v-for="star in 5"
+                                :key="`review-star-${star}`"
+                                type="button"
+                                @click="sellerReviewForm.rating = star"
+                                class="text-left"
+                            >
+                                <Star
+                                    :class="[
+                                        'h-7 w-7 transition-colors',
+                                        star <= sellerReviewForm.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                                    ]"
+                                />
+                            </button>
+                            <span class="text-sm text-gray-500">
+                                {{ sellerReviewForm.rating }}/5
+                            </span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ t('sellerProfilePage.reviewCommentLabel') }}
+                        </label>
+                        <textarea
+                            v-model="sellerReviewForm.comment"
+                            rows="5"
+                            class="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-700 focus:border-[#24a3b5] focus:outline-none focus:ring-2 focus:ring-[#24a3b5]/20"
+                            :placeholder="t('sellerProfilePage.reviewCommentPlaceholder')"
+                        />
+                    </div>
+
+                    <div class="flex justify-end gap-3">
+                        <button
+                            type="button"
+                            @click="closeSellerReviewModal"
+                            class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        >
+                            {{ t('common.cancel') }}
+                        </button>
+                        <button
+                            type="submit"
+                            :disabled="isSubmittingSellerReview"
+                            class="rounded-lg bg-[#24a3b5] px-4 py-2 text-sm font-medium text-white hover:bg-[#1f8f9e] disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {{ isSubmittingSellerReview ? t('sellerProfilePage.submittingReview') : t('sellerProfilePage.submitSellerReview') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -250,6 +374,8 @@ import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { useSellerStore } from '../store/sellerStore';
 import { useProductStore } from '../store/productStore';
+import { useUserStore } from '../store/user';
+import { toast } from 'vue-sonner';
 import CustomImage from './CustomImage.vue';
 import {
     ShoppingCart, Star, Mail, Phone, MapPin, Camera
@@ -274,6 +400,7 @@ export default {
         const router = useRouter();
         const sellerStore = useSellerStore();
         const productStore = useProductStore();
+        const userStore = useUserStore();
 
         const isLoading = ref(true);
         const error = ref(null);  // Add this
@@ -299,6 +426,33 @@ export default {
 
         const featuredProducts = ref([]);
         const productReviews = ref({});
+        const showSellerReviewModal = ref(false);
+        const isSubmittingSellerReview = ref(false);
+        const sellerReviewForm = ref({
+            rating: 5,
+            comment: ''
+        });
+
+        const canReviewSeller = computed(() => Boolean(sellerProfile.value?.canReviewSeller));
+
+        const sellerReviewStateMessage = computed(() => {
+            if (!userStore.user) {
+                return t('sellerProfilePage.loginToReviewSeller');
+            }
+            if (userStore.user?.sellerProfile && userStore.user.sellerProfile === sellerProfile.value?._id) {
+                return t('sellerProfilePage.cannotReviewOwnStore');
+            }
+            if (sellerProfile.value?.user?._id && userStore.user?._id === sellerProfile.value.user._id) {
+                return t('sellerProfilePage.cannotReviewOwnStore');
+            }
+            if (sellerProfile.value?.hasReviewedSeller) {
+                return t('sellerProfilePage.alreadyReviewedSeller');
+            }
+            if (!sellerProfile.value?.hasCompletedOrderWithSeller) {
+                return t('sellerProfilePage.completeOrderToReviewSeller');
+            }
+            return t('sellerProfilePage.reviewUnavailable');
+        });
 
         const storeStatusMessage = computed(() => {
             if (!sellerProfile.value) return '';
@@ -455,6 +609,45 @@ export default {
             router.push({ name: 'ProductDetails', params: { id: productId } });
         };
 
+        const goToSellerReviews = () => {
+            router.push({ name: 'SellerReviews', params: { sellerId: sellerProfile.value._id } });
+        };
+
+        const closeSellerReviewModal = () => {
+            showSellerReviewModal.value = false;
+            sellerReviewForm.value = {
+                rating: 5,
+                comment: ''
+            };
+        };
+
+        const submitSellerReview = async () => {
+            if (!userStore.user) {
+                toast.error(t('sellerProfilePage.loginRequiredToReview'));
+                router.push({ name: 'Login' });
+                return;
+            }
+
+            if (!canReviewSeller.value) {
+                toast.error(t('sellerProfilePage.cannotReviewOwnStore'));
+                return;
+            }
+
+            try {
+                isSubmittingSellerReview.value = true;
+                await sellerStore.addSellerReview(sellerProfile.value._id, {
+                    rating: sellerReviewForm.value.rating,
+                    comment: sellerReviewForm.value.comment?.trim() || ''
+                });
+                await loadSellerData(sellerProfile.value._id);
+                closeSellerReviewModal();
+            } catch (reviewError) {
+                console.error('Failed to submit seller review:', reviewError);
+            } finally {
+                isSubmittingSellerReview.value = false;
+            }
+        };
+
         return {
             t,
             sellerProfile,
@@ -471,7 +664,15 @@ export default {
             calculateOriginalPrice,
             navigateToProduct,
             getProductName,
-            totalSales
+            totalSales,
+            canReviewSeller,
+            sellerReviewStateMessage,
+            goToSellerReviews,
+            showSellerReviewModal,
+            closeSellerReviewModal,
+            sellerReviewForm,
+            submitSellerReview,
+            isSubmittingSellerReview
         };
     }
 };

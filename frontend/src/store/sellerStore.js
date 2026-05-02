@@ -38,31 +38,51 @@ export const useSellerStore = defineStore("seller", {
         if (response.data) {
           // Get all orders for this seller
           const allOrders = await orderStore.fetchUserOrders();
+          const sellerUserId = response.data.user?._id;
 
           // Count delivered orders
           const deliveredOrders = allOrders.filter(
             (order) =>
-              order.seller === response.data.user._id &&
+              order.seller === sellerUserId &&
               (order.status?.toLowerCase() === "delivered" ||
                 order.status?.toLowerCase() === "completed")
           );
 
+          const currentUserId = userStore.user?._id;
+          const reviews = Array.isArray(response.data.reviews)
+            ? response.data.reviews
+            : [];
+          const hasReviewedSeller = reviews.some((review) => {
+            const reviewUserId =
+              typeof review.user === "object" ? review.user?._id : review.user;
+            return reviewUserId?.toString() === currentUserId?.toString();
+          });
+          const canReviewSeller =
+            Boolean(currentUserId) &&
+            response.data.user?._id?.toString() !== currentUserId?.toString() &&
+            deliveredOrders.length > 0 &&
+            !hasReviewedSeller;
+
           // Calculate average rating if there are reviews
           let averageRating = 0;
-          if (response.data.reviews && response.data.reviews.length > 0) {
-            const totalRating = response.data.reviews.reduce(
+          if (reviews.length > 0) {
+            const totalRating = reviews.reduce(
               (sum, review) => sum + review.rating,
               0
             );
-            averageRating = totalRating / response.data.reviews.length;
+            averageRating = totalRating / reviews.length;
           }
 
           // Update seller profile with correct stats
           const updatedProfile = {
             ...response.data,
+            reviews,
             totalSales: deliveredOrders.length, // Set totalSales to match delivered orders
             totalProducts: response.data.products?.length || 0, // Set total products from products array
             averageRating: Number(averageRating.toFixed(1)), // Set properly calculated average rating
+            hasCompletedOrderWithSeller: deliveredOrders.length > 0,
+            hasReviewedSeller,
+            canReviewSeller,
           };
 
           console.log("Fetched seller profile:", updatedProfile);
@@ -165,7 +185,10 @@ export const useSellerStore = defineStore("seller", {
         return response.data;
       } catch (error) {
         console.error("Error submitting review:", error);
-        toast.error("Failed to submit review. Please try again.");
+        toast.error(
+          error.response?.data?.error ||
+            "Failed to submit review. Please try again."
+        );
         throw error;
       }
     },
@@ -174,7 +197,6 @@ export const useSellerStore = defineStore("seller", {
       try {
         const response = await apiClient.get(`/seller/${sellerId}/reviews`, {
           params: { page, itemsPerPage },
-          headers: { Authorization: `Bearer ${this.token}` },
         });
         return response.data;
       } catch (error) {

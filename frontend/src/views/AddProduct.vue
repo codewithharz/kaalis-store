@@ -186,6 +186,7 @@
                                             class="w-full px-4 py-3 text-gray-700 bg-transparent border-none focus:outline-none"
                                             step="0.01" min="0" required />
                                     </div>
+                                    <p class="text-xs text-gray-500">{{ formatPricePreview(product.price) }}</p>
                                 </div>
 
                                 <!-- Original Price -->
@@ -197,6 +198,7 @@
                                             class="w-full px-4 py-3 text-gray-700 bg-transparent border-none focus:outline-none"
                                             step="0.01" min="0" />
                                     </div>
+                                    <p class="text-xs text-gray-500">{{ formatPricePreview(product.originalPrice) }}</p>
                                 </div>
 
                                 <!-- Discount -->
@@ -475,6 +477,7 @@
                                             <input type="number" v-model.number="variant.price"
                                                 class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                                                 :placeholder="t('addProductPage.price')" min="0" step="0.01" />
+                                            <p class="text-xs text-gray-500">{{ formatPricePreview(variant.price) }}</p>
                                         </div>
                                         <div class="space-y-2">
                                             <label class="text-sm font-medium text-gray-700">{{ t('addProductPage.stock') }}</label>
@@ -537,10 +540,10 @@
                                                 class="relative w-24 h-24">
                                                 <img :src="img" :alt="`Variant ${index + 1} image ${imgIndex + 1}`"
                                                     class="w-full h-full object-cover rounded-lg" />
-                                                <button @click="removeVariantImage(index, imgIndex)"
-                                                    class="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors">
-                                                    <X class="w-4 h-4" />
-                                                </button>
+                                            <button @click.stop.prevent="removeVariantImage(index, imgIndex)" type="button"
+                                                class="absolute -top-2 -right-2 z-10 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-sm">
+                                                <X class="w-4 h-4" />
+                                            </button>
                                             </div>
                                         </div>
                                     </div>
@@ -578,7 +581,7 @@
 
                             <div v-show="showSections.bulkPricing" class="space-y-4 pt-2">
                                 <div v-for="(pricing, index) in product.bulkPricing" :key="index"
-                                    class="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                                    class="flex flex-wrap items-center gap-4 p-4 bg-gray-50 rounded-lg">
                                     <input type="number" v-model.number="pricing.quantity"
                                         :placeholder="t('addProductPage.bulkPricing.minQuantityPlaceholder')"
                                         class="flex-1 px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
@@ -586,6 +589,7 @@
                                     <input type="number" v-model.number="pricing.price" :placeholder="t('addProductPage.bulkPricing.pricePerUnitPlaceholder')"
                                         class="flex-1 px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                                         step="0.01" min="0" />
+                                    <p class="basis-full text-xs text-gray-500 -mt-2">{{ formatPricePreview(pricing.price) }}</p>
                                     <button @click="removeBulkPricing(index)" type="button"
                                         class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                                         <Trash2 class="w-5 h-5" />
@@ -685,6 +689,7 @@ import uploadService from '../services/uploadService';
 import { toast } from 'vue-sonner';
 import { Trash2, UploadCloud, ChevronDown, ChevronRight, Sparkles, Settings2, Plus } from 'lucide-vue-next';
 import { parseColorValue, getColorName, getAllColors, isColorPreset } from '../utils/colorUtils.js';
+import { formatCurrencyAmount, getCurrencyForCountry } from '../utils/countryCurrency.js';
 import HierarchicalCategorySelector from './HierarchicalCategorySelector.vue';
 
 export default {
@@ -774,6 +779,18 @@ export default {
             if (props.adminMode) return t('adminProducts.actions.create');
             return t('addProductPage.submit');
         });
+
+        const activeFormCurrency = computed(() => {
+            if (props.adminMode) {
+                const selectedSeller = sellers.value.find((seller) => seller._id === selectedSellerId.value);
+                const sellerCountry = selectedSeller?.country || selectedSeller?.user?.country;
+                return getCurrencyForCountry(sellerCountry || 'Nigeria');
+            }
+
+            return getCurrencyForCountry(userStore.user?.country || 'Nigeria');
+        });
+
+        const formatPricePreview = (value) => formatCurrencyAmount(value, activeFormCurrency.value);
 
         // Watchers for automatic discount calculation
         watch([() => product.price, () => product.originalPrice], ([newPrice, newOriginalPrice]) => {
@@ -1035,7 +1052,9 @@ export default {
 
         const removeVariantImage = (variantIndex, imageIndex) => {
             if (product.variants[variantIndex]?.images) {
-                product.variants[variantIndex].images.splice(imageIndex, 1);
+                product.variants[variantIndex].images = product.variants[variantIndex].images.filter(
+                    (_, index) => index !== imageIndex
+                );
             }
         };
 
@@ -1410,6 +1429,7 @@ export default {
             pageTitle,
             pageSubtitle,
             submitLabel,
+            formatPricePreview,
             handleImageUpload,
             handleVariantImageUpload,
             handleSubmit,

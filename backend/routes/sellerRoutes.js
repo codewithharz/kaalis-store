@@ -10,6 +10,7 @@ const {
   getDashboardData,
   getSellerOrders,
   addSellerReview,
+  getSellerReviews,
   getAllSellerOrders,
   toggleVacationMode,
   updateOrderStatus,
@@ -43,6 +44,7 @@ router.get("/:sellerId/orders", sellerAuthMiddleware, getSellerOrders);
 router.get("/:sellerId/all-orders", sellerAuthMiddleware, getAllSellerOrders);
 router.get("/:sellerId/reports/:type", sellerAuthMiddleware, generateReport);
 router.get("/:sellerId/follow-status", userAuthMiddleware, getFollowStatus);
+router.get("/:sellerId/reviews", getSellerReviews);
 router.post('/:sellerId/message', userAuthMiddleware, sendMessageToSeller);
 
 // POST routes with parameters

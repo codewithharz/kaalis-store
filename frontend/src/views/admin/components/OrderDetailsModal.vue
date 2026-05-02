@@ -1,7 +1,12 @@
 <!-- OrderDetailsModal.vue -->
 <template>
-    <div v-if="order" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center overflow-y-auto">
-        <div class="bg-white rounded-lg p-6 w-full max-w-4xl m-4">
+    <div
+        v-if="order"
+        class="fixed inset-0 z-[120] bg-black/70 p-4 sm:p-6"
+        @click.self="$emit('close')"
+    >
+        <div class="mx-auto max-w-5xl">
+        <div class="relative z-[121] max-h-[calc(100vh-2rem)] overflow-y-auto rounded-lg bg-white p-6 shadow-2xl sm:max-h-[calc(100vh-3rem)] sm:p-8">
             <!-- Header -->
             <div class="flex justify-between items-start mb-6">
                 <div>
@@ -22,8 +27,8 @@
             </div>
 
             <!-- Order Summary -->
-            <div class="grid grid-cols-2 gap-6 mb-6">
-                <!-- Customer Info -->
+            <div class="grid grid-cols-1 gap-6 mb-6 lg:grid-cols-2">
+                <!-- Shipping Info -->
                 <div>
                     <h4 class="font-medium text-gray-900 mb-2">{{ t('adminOrderDetailsModal.sections.shippingInformation') }}</h4>
                     <div class="bg-gray-50 p-4 rounded-lg">
@@ -38,7 +43,7 @@
                     <h4 class="font-medium text-gray-900 mb-2">{{ t('adminOrderDetailsModal.sections.paymentInformation') }}</h4>
                     <div class="bg-gray-50 p-4 rounded-lg">
                         <p class="mb-1"><span class="font-medium">{{ t('adminOrderDetailsModal.labels.method') }}</span> {{ order.paymentMethod }}</p>
-                        <p class="mb-1"><span class="font-medium">{{ t('adminOrderDetailsModal.labels.status') }}</span>
+                        <p class="mb-1"><span class="font-medium">{{ t('adminOrderDetailsModal.labels.orderStatus') }}</span>
                             <span :class="[
                                 'ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
                                 getStatusClass(order.status)
@@ -50,6 +55,90 @@
                             {{ order.transactionId }}
                         </p>
                     </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6 mb-6 lg:grid-cols-2">
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-2">{{ t('adminOrderDetailsModal.sections.sellerInformation') }}</h4>
+                    <div class="bg-gray-50 p-4 rounded-lg space-y-2">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <p class="font-medium text-gray-900">
+                                {{ sellerStoreName }}
+                            </p>
+                            <span
+                                v-if="order.seller?.sellerProfile?.isVerified"
+                                class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700"
+                            >
+                                {{ t('adminOrderDetailsModal.labels.verifiedSeller') }}
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-600">
+                            <span class="font-medium">{{ t('adminOrderDetailsModal.labels.sellerUsername') }}</span>
+                            {{ order.seller?.username || t('adminOrderDetailsModal.labels.notAvailable') }}
+                        </p>
+                        <p class="text-sm text-gray-600 break-all">
+                            <span class="font-medium">{{ t('adminOrderDetailsModal.labels.sellerEmail') }}</span>
+                            {{ order.seller?.email || t('adminOrderDetailsModal.labels.notAvailable') }}
+                        </p>
+                    </div>
+                </div>
+
+                <div v-if="order.payoutSummary">
+                    <h4 class="font-medium text-gray-900 mb-2">{{ t('adminOrderDetailsModal.sections.payoutInformation') }}</h4>
+                    <div class="bg-gray-50 p-4 rounded-lg space-y-2">
+                        <p class="text-sm text-gray-600">
+                            <span class="font-medium">{{ t('adminOrderDetailsModal.labels.payoutMethod') }}</span>
+                            {{ order.payoutSummary.paymentMethod || t('adminOrderDetailsModal.labels.notAvailable') }}
+                        </p>
+                        <p class="text-sm text-gray-600">
+                            <span class="font-medium">{{ t('adminOrderDetailsModal.labels.payoutStatus') }}</span>
+                            <span :class="[
+                                'ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
+                                getPayoutStatusClass(order.payoutSummary.status)
+                            ]">
+                                {{ formatPayoutStatus(order.payoutSummary.status) }}
+                            </span>
+                        </p>
+                        <p v-if="order.payoutSummary.providerStatus" class="text-sm text-gray-600">
+                            <span class="font-medium">{{ t('adminOrderDetailsModal.labels.providerStatus') }}</span>
+                            {{ formatPayoutStatus(order.payoutSummary.providerStatus) }}
+                        </p>
+                        <p v-if="order.payoutSummary.transferReference" class="text-sm text-gray-600 break-all">
+                            <span class="font-medium">{{ t('adminOrderDetailsModal.labels.transferReference') }}</span>
+                            {{ order.payoutSummary.transferReference }}
+                        </p>
+                        <p v-if="order.payoutSummary.providerPayoutId" class="text-sm text-gray-600 break-all">
+                            <span class="font-medium">{{ t('adminOrderDetailsModal.labels.providerPayoutId') }}</span>
+                            {{ order.payoutSummary.providerPayoutId }}
+                        </p>
+                        <p v-if="order.payoutSummary.scheduledDate" class="text-sm text-gray-600">
+                            <span class="font-medium">{{ t('adminOrderDetailsModal.labels.scheduledDate') }}</span>
+                            {{ formatDate(order.payoutSummary.scheduledDate) }}
+                        </p>
+                        <p v-if="order.payoutSummary.processedAt" class="text-sm text-gray-600">
+                            <span class="font-medium">{{ t('adminOrderDetailsModal.labels.processedAt') }}</span>
+                            {{ formatDate(order.payoutSummary.processedAt) }}
+                        </p>
+                        <p v-if="order.payoutSummary.errorMessage" class="text-sm text-red-600">
+                            <span class="font-medium">{{ t('adminOrderDetailsModal.labels.payoutError') }}</span>
+                            {{ order.payoutSummary.errorMessage }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="order.status === 'Cancelled' || order.cancelReason || order.cancelledAt" class="mb-6">
+                <h4 class="font-medium text-gray-900 mb-2">{{ t('adminOrderDetailsModal.sections.cancellationDetails') }}</h4>
+                <div class="bg-red-50 p-4 rounded-lg space-y-2">
+                    <p class="text-sm text-gray-700">
+                        <span class="font-medium">{{ t('adminOrderDetailsModal.labels.cancelledAt') }}</span>
+                        {{ order.cancelledAt ? formatDate(order.cancelledAt) : t('adminOrderDetailsModal.labels.notAvailable') }}
+                    </p>
+                    <p class="text-sm text-gray-700">
+                        <span class="font-medium">{{ t('adminOrderDetailsModal.labels.cancelReason') }}</span>
+                        {{ order.cancelReason || t('adminOrderDetailsModal.labels.notAvailable') }}
+                    </p>
                 </div>
             </div>
 
@@ -126,7 +215,7 @@
                         </thead>
                         <!-- Order Items -->
                         <tbody class="bg-white divide-y divide-gray-200">
-                            <tr v-for="item in order.products" :key="item._id">
+                            <tr v-for="(item, itemIdx) in order.products" :key="item._id || `${getProductName(item)}-${itemIdx}`">
                                 <td class="px-6 py-4">
                                     <div class="flex items-center">
                                         <div class="h-10 w-10 flex-shrink-0">
@@ -143,7 +232,11 @@
                                             <div class="text-sm font-medium text-gray-900">
                                                 {{ getProductName(item) }}
                                             </div>
-
+                                            <div v-if="getVariantDetails(item.variant).length" class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
+                                                <span v-for="detail in getVariantDetails(item.variant)" :key="detail">
+                                                    {{ detail }}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -158,9 +251,6 @@
                                 </td>
                             </tr>
                         </tbody>
-                        <tfoot>
-                            
-                        </tfoot>
                         <tfoot class="bg-gray-50">
                             <tr>
                                 <td colspan="3" class="px-6 py-3 text-right font-medium text-gray-500">{{ t('adminOrderDetailsModal.summary.subtotal') }}</td>
@@ -228,6 +318,7 @@
                 </div>
             </div>
         </div>
+        </div>
     </div>
 </template>
 
@@ -263,6 +354,14 @@ export default {
         const productStore = useProductStore();
         const loadedProducts = ref([]);
         const isLoading = ref(true);
+
+        const sellerStoreName = computed(() => {
+            return (
+                props.order?.seller?.sellerProfile?.storeName ||
+                props.order?.seller?.username ||
+                t('adminOrderDetailsModal.labels.notAvailable')
+            );
+        });
 
         const timeline = computed(() => {
             const events = [
@@ -313,7 +412,7 @@ export default {
                 events.push({
                     type: 'cancelled',
                     message: t('adminOrderDetailsModal.timeline.cancelled'),
-                    timestamp: props.order.updatedAt
+                    timestamp: props.order.cancelledAt || props.order.updatedAt
                 })
             }
 
@@ -377,9 +476,10 @@ export default {
         }
 
         const formatCurrency = (amount) => {
+            const currency = props.order?.currency === 'XOF' ? 'XOF' : 'NGN';
             return new Intl.NumberFormat(locale.value === 'fr' ? 'fr-FR' : 'en-NG', {
                 style: 'currency',
-                currency: 'NGN',
+                currency,
                 minimumFractionDigits: 2
             }).format(amount)
         }
@@ -394,6 +494,27 @@ export default {
             }
             return classes[status] || 'bg-gray-100 text-gray-800'
         }
+
+        const getPayoutStatusClass = (status) => {
+            const normalizedStatus = (status || '').toLowerCase();
+            const classes = {
+                pending: 'bg-yellow-100 text-yellow-800',
+                processing: 'bg-blue-100 text-blue-800',
+                processed: 'bg-green-100 text-green-800',
+                failed: 'bg-red-100 text-red-800',
+            };
+            return classes[normalizedStatus] || 'bg-gray-100 text-gray-800';
+        };
+
+        const formatPayoutStatus = (status) => {
+            if (!status) {
+                return t('adminOrderDetailsModal.labels.notAvailable');
+            }
+            return status
+                .toString()
+                .replace(/_/g, ' ')
+                .replace(/\b\w/g, (char) => char.toUpperCase());
+        };
 
         const getTimelineIcon = (type) => {
             const icons = {
@@ -434,18 +555,55 @@ export default {
             return item.product?.name || t('adminOrderDetailsModal.product.unavailable');
         };
 
+        const getVariantDetails = (variant) => {
+            if (!variant) {
+                return [];
+            }
+
+            const details = [];
+
+            if (variant.color) {
+                const colorName =
+                    typeof variant.color === 'object' ? variant.color.name : variant.color;
+                if (colorName) {
+                    details.push(`${t('adminOrderDetailsModal.labels.color')} ${colorName}`);
+                }
+            }
+
+            if (Array.isArray(variant.attributes)) {
+                variant.attributes.forEach((attribute) => {
+                    if (attribute?.name && attribute?.value) {
+                        details.push(`${attribute.name}: ${attribute.value}`);
+                    }
+                });
+            }
+
+            const hasSizeAttribute = Array.isArray(variant.attributes)
+                && variant.attributes.some((attribute) => attribute?.name?.toLowerCase() === 'size');
+
+            if (variant.size && !hasSizeAttribute) {
+                details.push(`${t('adminOrderDetailsModal.labels.size')} ${variant.size}`);
+            }
+
+            return details;
+        };
+
         return {
             t,
             timeline,
             rewardBreakdown,
+            sellerStoreName,
             formatDate,
             formatStatus,
             formatCurrency,
             getStatusClass,
+            getPayoutStatusClass,
+            formatPayoutStatus,
             getTimelineIcon,
             getTimelineItemClass,
             getProductImage,
             getProductName,
+            getVariantDetails,
 
             isLoading,
             loadedProducts,

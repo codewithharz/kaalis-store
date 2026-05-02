@@ -701,6 +701,7 @@ exports.getAdminOrders = async (req, res) => {
       page = 1,
       limit = 10,
       status,
+      currency,
       search,
       dateFrom,
       dateTo,
@@ -712,6 +713,26 @@ exports.getAdminOrders = async (req, res) => {
     // Add filters if they exist
     if (status) {
       query.status = status;
+    }
+
+    if (currency) {
+      const normalizedCurrency = currency.toUpperCase();
+      if (normalizedCurrency === "NGN") {
+        query.$and = [
+          ...(query.$and || []),
+          {
+            $or: [
+              { currency: "NGN" },
+              { currency: "ngn" },
+              { currency: { $exists: false } },
+              { currency: null },
+              { currency: "" },
+            ],
+          },
+        ];
+      } else {
+        query.currency = normalizedCurrency;
+      }
     }
 
     if (search) {
@@ -734,14 +755,49 @@ exports.getAdminOrders = async (req, res) => {
     const [orders, total] = await Promise.all([
       Order.find(query)
         .populate("user", "username email")
+        .populate({
+          path: "seller",
+          select: "username email sellerProfile",
+          populate: {
+            path: "sellerProfile",
+            select: "storeName isVerified averageRating totalReviews",
+          },
+        })
+        .populate("appliedCoupon", "code type value")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit)),
       Order.countDocuments(query),
     ]);
 
+    const orderIds = orders.map((order) => order._id);
+    const payouts = orderIds.length
+      ? await VendorPayout.find({ orderId: { $in: orderIds } })
+          .select(
+            "orderId status paymentMethod amount currency scheduledDate processedAt transferReference providerPayoutId providerStatus errorMessage createdAt updatedAt"
+          )
+          .sort({ createdAt: -1 })
+          .lean()
+      : [];
+
+    const payoutByOrderId = new Map();
+    for (const payout of payouts) {
+      const key = payout.orderId?.toString();
+      if (key && !payoutByOrderId.has(key)) {
+        payoutByOrderId.set(key, payout);
+      }
+    }
+
+    const ordersWithAdminContext = orders.map((order) => {
+      const plainOrder = order.toObject();
+      return {
+        ...plainOrder,
+        payoutSummary: payoutByOrderId.get(order._id.toString()) || null,
+      };
+    });
+
     res.status(200).json({
-      orders,
+      orders: ordersWithAdminContext,
       pagination: {
         total,
         page: parseInt(page),
@@ -1410,7 +1466,6 @@ exports.getAdminSellers = async (req, res) => {
     const {
       page = 1,
       limit = 10,
-      status,
       search,
       sortBy = "createdAt",
       order = "desc",
@@ -1424,27 +1479,176 @@ exports.getAdminSellers = async (req, res) => {
 
     // Add search filter if provided
     if (search) {
+      const matchingUsers = await User.find({
+        $or: [
+          { username: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+        ],
+      }).select("_id");
+
+      const matchingUserIds = matchingUsers.map((user) => user._id);
+
       query.$or = [
         { storeName: { $regex: search, $options: "i" } },
-        { "user.username": { $regex: search, $options: "i" } },
-        { "user.email": { $regex: search, $options: "i" } },
+        ...(matchingUserIds.length ? [{ user: { $in: matchingUserIds } }] : []),
       ];
     }
 
-    const sellers = await Seller.find(query)
-      .populate("user", "username email twoFactorEnabled isBlocked lastLogin")
+    const useComputedSort = ["rating", "totalSales"].includes(sortBy);
+
+    let sellersQuery = Seller.find(query)
+      .populate(
+        "user",
+        "username email twoFactorEnabled isBlocked lastLogin isOnline currency countryCode"
+      )
       .populate("products")
       .select(
-        "storeName storeDescription verificationStatus isVacationMode totalSales averageRating products reviews"
-      )
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit))
-      .sort({ [sortBy]: order === "desc" ? -1 : 1 });
+        "storeName storeDescription verificationStatus isVerified isVacationMode totalSales averageRating products reviews createdAt updatedAt statusNote"
+      );
+
+    if (useComputedSort) {
+      sellersQuery = sellersQuery.sort({ createdAt: -1 });
+    } else {
+      sellersQuery = sellersQuery
+        .skip((page - 1) * limit)
+        .limit(parseInt(limit))
+        .sort({ [sortBy]: order === "desc" ? -1 : 1 });
+    }
+
+    const sellers = await sellersQuery;
+
+    const sellerUserIds = sellers
+      .map((seller) => seller.user?._id)
+      .filter(Boolean);
+
+    const orderStats = sellerUserIds.length
+      ? await Order.aggregate([
+          {
+            $match: {
+              seller: { $in: sellerUserIds },
+            },
+          },
+          {
+            $group: {
+              _id: {
+                seller: "$seller",
+                currency: "$currency",
+              },
+              totalSales: { $sum: "$totalAmount" },
+              orderCount: { $sum: 1 },
+              cancelledOrders: {
+                $sum: {
+                  $cond: [{ $eq: ["$status", "Cancelled"] }, 1, 0],
+                },
+              },
+            },
+          },
+        ])
+      : [];
+
+    const statsBySellerId = new Map();
+    for (const row of orderStats) {
+      const sellerId = row._id?.seller?.toString();
+      const currency = row._id?.currency || "NGN";
+      if (!sellerId) continue;
+
+      if (!statsBySellerId.has(sellerId)) {
+        statsBySellerId.set(sellerId, {
+          orderCount: 0,
+          cancelledOrders: 0,
+          salesTotalsByCurrency: {},
+          totalSales: 0,
+        });
+      }
+
+      const stats = statsBySellerId.get(sellerId);
+      stats.orderCount += row.orderCount || 0;
+      stats.cancelledOrders += row.cancelledOrders || 0;
+      stats.totalSales += row.totalSales || 0;
+      stats.salesTotalsByCurrency[currency] =
+        (stats.salesTotalsByCurrency[currency] || 0) + (row.totalSales || 0);
+    }
 
     const total = await Seller.countDocuments(query);
 
+    const enrichedSellers = sellers.map((seller) => {
+        const sellerObject = seller.toObject();
+        const stats = statsBySellerId.get(seller.user?._id?.toString()) || {
+          orderCount: 0,
+          cancelledOrders: 0,
+          salesTotalsByCurrency: {},
+          totalSales: 0,
+        };
+
+        const products = Array.isArray(sellerObject.products)
+          ? sellerObject.products
+          : [];
+        const ratedProducts = products.filter(
+          (product) => Number(product?.numberOfRatings || 0) > 0
+        );
+        const totalPortfolioRatings = ratedProducts.reduce(
+          (sum, product) => sum + Number(product.numberOfRatings || 0),
+          0
+        );
+        const weightedPortfolioRating = totalPortfolioRatings
+          ? ratedProducts.reduce(
+              (sum, product) =>
+                sum +
+                Number(product.averageRating || 0) *
+                  Number(product.numberOfRatings || 0),
+              0
+            ) / totalPortfolioRatings
+          : 0;
+
+        return {
+          ...sellerObject,
+          orderCount: stats.orderCount,
+          cancelledOrders: stats.cancelledOrders,
+          cancellationRate: stats.orderCount
+            ? (stats.cancelledOrders / stats.orderCount) * 100
+            : 0,
+          salesTotalsByCurrency: stats.salesTotalsByCurrency,
+          totalSales: stats.totalSales || sellerObject.totalSales || 0,
+          sellerReviewAverageRating: Number(sellerObject.averageRating || 0),
+          sellerReviewCount: sellerObject.reviews?.length || 0,
+          portfolioAverageRating: weightedPortfolioRating,
+          portfolioRatingsCount: totalPortfolioRatings,
+        };
+      });
+
+    const sortDirection = order === "desc" ? -1 : 1;
+    const sortedSellers = useComputedSort
+      ? [...enrichedSellers].sort((a, b) => {
+          const aValue =
+            sortBy === "rating"
+              ? a.portfolioRatingsCount > 0
+                ? Number(a.portfolioAverageRating || 0)
+                : Number(a.sellerReviewAverageRating || 0)
+              : Number(a.totalSales || 0);
+          const bValue =
+            sortBy === "rating"
+              ? b.portfolioRatingsCount > 0
+                ? Number(b.portfolioAverageRating || 0)
+                : Number(b.sellerReviewAverageRating || 0)
+              : Number(b.totalSales || 0);
+
+          if (bValue === aValue) {
+            return (
+              (new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) *
+              sortDirection
+            );
+          }
+
+          return (aValue - bValue) * sortDirection;
+        })
+      : enrichedSellers;
+
+    const paginatedSellers = useComputedSort
+      ? sortedSellers.slice((page - 1) * limit, page * limit)
+      : sortedSellers;
+
     res.json({
-      sellers,
+      sellers: paginatedSellers,
       pagination: {
         total,
         currentPage: parseInt(page),
@@ -1463,14 +1667,79 @@ exports.getSellerById = async (req, res) => {
   try {
     const { id } = req.params;
     const seller = await Seller.findById(id)
-      .populate("user", "username email")
+      .populate(
+        "user",
+        "username email twoFactorEnabled isBlocked lastLogin isOnline currency countryCode"
+      )
       .populate("products");
 
     if (!seller) {
       return res.status(404).json({ message: "Seller not found" });
     }
 
-    res.json(seller);
+    const salesTotalsByCurrency = {};
+    let orderCount = 0;
+    let cancelledOrders = 0;
+    let totalSales = 0;
+
+    const statsRows = await Order.aggregate([
+      {
+        $match: {
+          seller: seller.user?._id,
+        },
+      },
+      {
+        $group: {
+          _id: "$currency",
+          totalSales: { $sum: "$totalAmount" },
+          orderCount: { $sum: 1 },
+          cancelledOrders: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "Cancelled"] }, 1, 0],
+            },
+          },
+        },
+      },
+    ]);
+
+    for (const row of statsRows) {
+      const currency = row._id || "NGN";
+      salesTotalsByCurrency[currency] = row.totalSales || 0;
+      orderCount += row.orderCount || 0;
+      cancelledOrders += row.cancelledOrders || 0;
+      totalSales += row.totalSales || 0;
+    }
+
+    const products = Array.isArray(seller.products) ? seller.products : [];
+    const ratedProducts = products.filter(
+      (product) => Number(product?.numberOfRatings || 0) > 0
+    );
+    const portfolioRatingsCount = ratedProducts.reduce(
+      (sum, product) => sum + Number(product.numberOfRatings || 0),
+      0
+    );
+    const portfolioAverageRating = portfolioRatingsCount
+      ? ratedProducts.reduce(
+          (sum, product) =>
+            sum +
+            Number(product.averageRating || 0) *
+              Number(product.numberOfRatings || 0),
+          0
+        ) / portfolioRatingsCount
+      : 0;
+
+    res.json({
+      ...seller.toObject(),
+      orderCount,
+      cancelledOrders,
+      cancellationRate: orderCount ? (cancelledOrders / orderCount) * 100 : 0,
+      salesTotalsByCurrency,
+      totalSales,
+      sellerReviewAverageRating: Number(seller.averageRating || 0),
+      sellerReviewCount: seller.reviews?.length || 0,
+      portfolioAverageRating,
+      portfolioRatingsCount,
+    });
   } catch (error) {
     console.error("Error fetching seller details:", error);
     res

@@ -2,111 +2,123 @@
 <template>
     <div>
         <!-- Header -->
-        <div class="flex justify-between mb-3 px-8 py-4 bg-white">
-            <h2 class="text-2xl font-bold text-gray-800">{{ t('adminOrders.title') }}</h2>
-            <!-- Time Period Toggle -->
-            <div class="flex space-x-2">
-                <button v-for="period in ['Today', 'Week', 'Month', 'Year']" :key="period"
-                    @click="selectedPeriod = period" :class="[
-                        'px-4 py-2 rounded-md text-sm font-medium',
-                        selectedPeriod === period
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    ]">
-                    {{ t(`adminOrders.periods.${period.toLowerCase()}`) }}
-                </button>
+        <div class="mb-3 bg-white px-4 py-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div class="min-w-0">
+                    <h2 class="text-2xl font-bold text-gray-800">{{ t('adminOrders.title') }}</h2>
+                </div>
+                <!-- Time Period Toggle -->
+                <div class="overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    <div class="inline-flex min-w-full rounded-xl bg-gray-100 p-1 sm:min-w-0">
+                        <button v-for="period in ['Today', 'Week', 'Month', 'Year']" :key="period"
+                            @click="selectedPeriod = period" :class="[
+                                'flex-1 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition sm:flex-none',
+                                selectedPeriod === period
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ]">
+                            {{ t(`adminOrders.periods.${period.toLowerCase()}`) }}
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 mb-3">
 
             <!-- Total Revenue -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-green-100">
-                        <DollarSign class="h-6 w-6 text-green-600" />
+            <div class="bg-white rounded-lg shadow px-4 py-4 sm:p-6">
+                <div class="flex items-center gap-3">
+                    <div class="rounded-full bg-green-100 p-2.5 sm:p-3">
+                        <DollarSign class="h-5 w-5 text-green-600 sm:h-6 sm:w-6" />
                     </div>
                     <!-- <div class="ml-4">
                         <p class="text-gray-500 text-sm">Total Revenue</p>
                         <p class="text-2xl font-semibold">{{ totalRevenueFormatted }}</p>
                     </div> -->
 
-                    <div class="ml-4">
-                        <p class="text-gray-500 text-sm">
+                    <div class="min-w-0">
+                        <p class="text-xs text-gray-500 sm:text-sm">
                             {{ filters.status ? t('adminOrders.summary.filteredRevenue', { status: formatStatus(filters.status) }) : t('adminOrders.summary.totalRevenue') }}
                         </p>
-                        <p class="text-2xl font-semibold">{{ totalRevenueFormatted }}</p>
+                        <p class="text-xl font-semibold text-gray-900 sm:text-2xl break-words">{{ totalRevenueFormatted }}</p>
+                        <p v-if="hasMixedCurrencies" class="mt-1 text-xs text-amber-600">
+                            {{ t('adminOrders.summary.mixedCurrencyNotice', { currencies: currenciesLabel }) }}
+                        </p>
                     </div>
                 </div>
             </div>
 
             <!-- timeline Revenue -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-green-100">
-                        <DollarSign class="h-6 w-6 text-green-600" />
+            <div class="bg-white rounded-lg shadow px-4 py-4 sm:p-6">
+                <div class="flex items-center gap-3">
+                    <div class="rounded-full bg-green-100 p-2.5 sm:p-3">
+                        <DollarSign class="h-5 w-5 text-green-600 sm:h-6 sm:w-6" />
                     </div>
-                    <div class="ml-4">
-                        <p class="text-gray-500 text-sm">{{ t('adminOrders.summary.periodRevenue', { period: t(`adminOrders.periods.${selectedPeriod.toLowerCase()}`) }) }}</p>
-                        <p class="text-2xl font-semibold">{{ filteredRevenue }}</p>
+                    <div class="min-w-0">
+                        <p class="text-xs text-gray-500 sm:text-sm">{{ t('adminOrders.summary.periodRevenue', { period: t(`adminOrders.periods.${selectedPeriod.toLowerCase()}`) }) }}</p>
+                        <p class="text-xl font-semibold text-gray-900 sm:text-2xl break-words">{{ filteredRevenue }}</p>
+                        <p v-if="hasMixedCurrencies" class="mt-1 text-xs text-amber-600">
+                            {{ t('adminOrders.summary.mixedCurrencyNotice', { currencies: currenciesLabel }) }}
+                        </p>
                     </div>
                 </div>
             </div>
 
             <!-- Orders Today -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-purple-100">
-                        <CalendarClock class="h-6 w-6 text-purple-600" />
+            <div class="bg-white rounded-lg shadow px-4 py-4 sm:p-6">
+                <div class="flex items-center gap-3">
+                    <div class="rounded-full bg-purple-100 p-2.5 sm:p-3">
+                        <CalendarClock class="h-5 w-5 text-purple-600 sm:h-6 sm:w-6" />
                     </div>
-                    <div class="ml-4">
-                        <p class="text-gray-500 text-sm">{{ t('adminOrders.summary.ordersToday') }}</p>
-                        <p class="text-2xl font-semibold">{{ todayOrders }}</p>
+                    <div class="min-w-0">
+                        <p class="text-xs text-gray-500 sm:text-sm">{{ t('adminOrders.summary.ordersToday') }}</p>
+                        <p class="text-xl font-semibold text-gray-900 sm:text-2xl">{{ todayOrders }}</p>
                     </div>
                 </div>
             </div>
 
             <!-- Total Orders -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-blue-100">
-                        <ShoppingCartIcon class="h-6 w-6 text-blue-600" />
+            <div class="bg-white rounded-lg shadow px-4 py-4 sm:p-6">
+                <div class="flex items-center gap-3">
+                    <div class="rounded-full bg-blue-100 p-2.5 sm:p-3">
+                        <ShoppingCartIcon class="h-5 w-5 text-blue-600 sm:h-6 sm:w-6" />
                     </div>
-                    <div class="ml-4">
+                    <div class="min-w-0">
                         <!-- <p class="text-gray-500 text-sm">Total Orders</p> -->
-                        <p class="text-gray-500 text-sm">
+                        <p class="text-xs text-gray-500 sm:text-sm">
                             {{ filters.status ? t('adminOrders.summary.filteredOrders', { status: formatStatus(filters.status) }) : t('adminOrders.summary.totalOrders') }}
                         </p>
-                        <p class="text-2xl font-semibold">{{ orderSummary.total }}</p>
+                        <p class="text-xl font-semibold text-gray-900 sm:text-2xl">{{ orderSummary.total }}</p>
                     </div>
                 </div>
             </div>
 
             <!-- timeline Orders -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-blue-100">
-                        <ShoppingCartIcon class="h-6 w-6 text-blue-600" />
+            <div class="bg-white rounded-lg shadow px-4 py-4 sm:p-6">
+                <div class="flex items-center gap-3">
+                    <div class="rounded-full bg-blue-100 p-2.5 sm:p-3">
+                        <ShoppingCartIcon class="h-5 w-5 text-blue-600 sm:h-6 sm:w-6" />
                     </div>
-                    <div class="ml-4">
-                        <p class="text-gray-500 text-sm">
+                    <div class="min-w-0">
+                        <p class="text-xs text-gray-500 sm:text-sm">
                             {{ t('adminOrders.summary.periodOrders', { period: t(`adminOrders.periods.${selectedPeriod.toLowerCase()}`) }) }}
                         </p>
-                        <p class="text-2xl font-semibold">{{ filteredOrders }}</p>
+                        <p class="text-xl font-semibold text-gray-900 sm:text-2xl">{{ filteredOrders }}</p>
                     </div>
                 </div>
             </div>
 
             <!-- Processing Orders -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-blue-100">
-                        <Clock class="h-6 w-6 text-blue-600" />
+            <div class="bg-white rounded-lg shadow px-4 py-4 sm:p-6">
+                <div class="flex items-center gap-3">
+                    <div class="rounded-full bg-blue-100 p-2.5 sm:p-3">
+                        <Clock class="h-5 w-5 text-blue-600 sm:h-6 sm:w-6" />
                     </div>
-                    <div class="ml-4">
-                        <p class="text-gray-500 text-sm">{{ t('adminOrders.summary.processingToday') }}</p>
-                        <p class="text-2xl font-semibold">{{ processingToday }}</p>
+                    <div class="min-w-0">
+                        <p class="text-xs text-gray-500 sm:text-sm">{{ t('adminOrders.summary.processingToday') }}</p>
+                        <p class="text-xl font-semibold text-gray-900 sm:text-2xl">{{ processingToday }}</p>
                     </div>
                 </div>
             </div>
@@ -126,6 +138,9 @@
             <!-- Platform Fee Summary -->
             <div class="bg-white rounded-lg shadow p-6">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">{{ t('adminOrders.charts.platformPerformance') }}</h3>
+                <p v-if="hasMixedCurrencies" class="mb-4 text-xs text-amber-600">
+                    {{ t('adminOrders.charts.mixedCurrencyNotice', { currencies: currenciesLabel }) }}
+                </p>
                 <div class="space-y-4">
                     <div class="flex justify-between items-center">
                         <span class="text-gray-600">{{ t('adminOrders.charts.totalPlatformFees') }}</span>
@@ -145,7 +160,7 @@
 
         <!-- Filters -->
         <div class="bg-white p-4 rounded-lg shadow-sm mb-3">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
                 <!-- Search -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('adminOrders.filters.search') }}</label>
@@ -159,7 +174,7 @@
                     <div class="relative">
                         <select v-model="filters.status"
                             class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
-                            @change="fetchOrders">
+                            @change="applyFilters">
                             <option value="">{{ t('adminOrders.filters.allStatus') }}</option>
                             <option v-for="status in orderStatuses" :key="status" :value="status">
                                 {{ formatStatus(status) }}
@@ -171,52 +186,249 @@
                     </div>
                 </div>
 
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('adminOrders.filters.currency') }}</label>
+                    <div class="relative">
+                        <select v-model="filters.currency"
+                            class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
+                            @change="applyFilters">
+                            <option value="">{{ t('adminOrders.filters.allCurrencies') }}</option>
+                            <option value="NGN">NGN</option>
+                            <option value="XOF">XOF</option>
+                        </select>
+                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <ChevronDown class="w-5 h-5 text-gray-400" />
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Date Range -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('adminOrders.filters.fromDate') }}</label>
-                    <input type="date" v-model="filters.dateFrom" class="w-full p-2 border rounded-md"
-                        @change="fetchOrders">
+                    <Popover v-model:open="fromDateOpen">
+                        <PopoverTrigger as-child>
+                            <button
+                                type="button"
+                                class="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 transition hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
+                                :aria-label="t('adminOrders.filters.fromDate')"
+                            >
+                                <span :class="filters.dateFrom ? 'text-gray-900' : 'text-gray-400'">
+                                    {{ formatDateFilterLabel(filters.dateFrom, 'adminOrders.filters.fromDate') }}
+                                </span>
+                                <CalendarDays class="h-4 w-4 text-gray-400" />
+                            </button>
+                        </PopoverTrigger>
+                        <PopoverContent align="start" class="w-auto p-0">
+                            <div class="border-b border-gray-100 px-3 py-2 text-xs font-medium uppercase tracking-wide text-gray-500">
+                                {{ t('adminOrders.filters.fromDate') }}
+                            </div>
+                            <Calendar
+                                :model-value="calendarFromValue"
+                                :placeholder="calendarFromValue || calendarToValue || todayCalendarDate"
+                                @update:modelValue="setFilterDate('from', $event)"
+                            />
+                            <div class="flex justify-end border-t border-gray-100 p-2">
+                                <button
+                                    type="button"
+                                    class="text-xs font-medium text-gray-500 hover:text-gray-700"
+                                    @click="clearFilterDate('from')"
+                                >
+                                    {{ t('adminOrders.filters.clearDate') }}
+                                </button>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('adminOrders.filters.toDate') }}</label>
-                    <input type="date" v-model="filters.dateTo" class="w-full p-2 border rounded-md"
-                        @change="fetchOrders">
+                    <Popover v-model:open="toDateOpen">
+                        <PopoverTrigger as-child>
+                            <button
+                                type="button"
+                                class="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 transition hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
+                                :aria-label="t('adminOrders.filters.toDate')"
+                            >
+                                <span :class="filters.dateTo ? 'text-gray-900' : 'text-gray-400'">
+                                    {{ formatDateFilterLabel(filters.dateTo, 'adminOrders.filters.toDate') }}
+                                </span>
+                                <CalendarDays class="h-4 w-4 text-gray-400" />
+                            </button>
+                        </PopoverTrigger>
+                        <PopoverContent align="start" class="w-auto p-0">
+                            <div class="border-b border-gray-100 px-3 py-2 text-xs font-medium uppercase tracking-wide text-gray-500">
+                                {{ t('adminOrders.filters.toDate') }}
+                            </div>
+                            <Calendar
+                                :model-value="calendarToValue"
+                                :placeholder="calendarToValue || calendarFromValue || todayCalendarDate"
+                                @update:modelValue="setFilterDate('to', $event)"
+                            />
+                            <div class="flex justify-end border-t border-gray-100 p-2">
+                                <button
+                                    type="button"
+                                    class="text-xs font-medium text-gray-500 hover:text-gray-700"
+                                    @click="clearFilterDate('to')"
+                                >
+                                    {{ t('adminOrders.filters.clearDate') }}
+                                </button>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                </div>
+            </div>
+
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+                <button
+                    type="button"
+                    class="inline-flex items-center rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    @click="clearFilters"
+                >
+                    {{ t('adminOrders.filters.clear') }}
+                </button>
+                <div
+                    v-if="filters.dateFrom || filters.dateTo"
+                    class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600"
+                >
+                    <CalendarDays class="h-4 w-4" />
+                    <span>{{ t('adminOrders.filters.dateHint') }}</span>
+                    <button
+                        type="button"
+                        class="inline-flex items-center text-slate-500 hover:text-slate-700"
+                        @click="clearDateRange"
+                    >
+                        <X class="h-4 w-4" />
+                    </button>
                 </div>
             </div>
         </div>
 
         <!-- Orders Table -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div class="min-w-full">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+            <div class="md:hidden divide-y divide-gray-200">
+                <template v-if="loading">
+                    <div class="px-6 py-10 text-center">
+                        <div class="flex justify-center">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        </div>
+                    </div>
+                </template>
+                <template v-else>
+                    <div
+                        v-for="order in orders"
+                        :key="`${order._id}-mobile`"
+                        class="p-4 space-y-4"
+                    >
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <div class="text-sm font-semibold text-gray-900 break-words">
+                                    #{{ order.orderId }}
+                                </div>
+                                <div class="mt-1 text-sm text-gray-900 break-words">
+                                    {{ order.user?.username || t('adminOrders.unknown') }}
+                                </div>
+                                <div class="text-xs text-gray-500 break-all">
+                                    {{ order.user?.email }}
+                                </div>
+                            </div>
+                            <span :class="[
+                                'inline-flex px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap',
+                                getStatusClass(order.status)
+                            ]">
+                                {{ formatStatus(order.status) }}
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                                <div class="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    {{ t('adminOrders.table.paymentMethod') }}
+                                </div>
+                                <div class="mt-1 text-gray-900 break-words">
+                                    {{ order.paymentMethod }}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    {{ t('adminOrders.table.total') }}
+                                </div>
+                                <div class="mt-1 font-medium text-gray-900">
+                                    {{ formatCurrency(order.totalAmount, order.currency) }}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    {{ t('adminOrders.table.platformFee') }}
+                                </div>
+                                <div class="mt-1 text-gray-900">
+                                    {{ formatCurrency(order.platformFee, order.currency) }}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    {{ t('adminOrders.table.vendorAmount') }}
+                                </div>
+                                <div class="mt-1 text-gray-900">
+                                    {{ formatCurrency(order.vendorAmount, order.currency) }}
+                                </div>
+                            </div>
+                            <div class="col-span-2">
+                                <div class="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    {{ t('adminOrders.table.date') }}
+                                </div>
+                                <div class="mt-1 text-gray-600 break-words">
+                                    {{ formatDate(order.createdAt) }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2 border-t border-gray-100 pt-3">
+                            <button
+                                @click="viewOrderDetails(order)"
+                                class="inline-flex items-center rounded-md bg-sky-50 px-3 py-2 text-sm font-medium text-sky-700 hover:bg-sky-100"
+                            >
+                                {{ t('adminOrders.actions.view') }}
+                            </button>
+                            <button
+                                @click="showUpdateStatus(order)"
+                                class="inline-flex items-center rounded-md bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100"
+                            >
+                                {{ t('adminOrders.actions.update') }}
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div class="hidden md:block max-h-[70vh] overflow-auto">
+                <table class="min-w-[1240px] w-full divide-y divide-gray-200 table-fixed">
+                    <thead class="sticky top-0 z-10 bg-gray-50 shadow-sm">
                         <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th scope="col" class="w-[16%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
                                 {{ t('adminOrders.table.orderId') }}</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th scope="col" class="w-[18%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
                                 {{ t('adminOrders.table.customer') }}</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th scope="col" class="w-[13%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                 {{ t('adminOrders.table.paymentMethod') }}</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th scope="col" class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                 {{ t('adminOrders.table.platformFee') }}</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th scope="col" class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                 {{ t('adminOrders.table.vendorAmount') }}</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th scope="col" class="w-[14%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
                                 {{ t('adminOrders.table.date') }}</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th scope="col" class="w-[9%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                 {{ t('adminOrders.table.total') }}
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th scope="col" class="w-[8%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                 {{ t('adminOrders.table.status') }}</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th scope="col" class="w-[12%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
                                 {{ t('adminOrders.table.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         <template v-if="loading">
                             <tr>
-                                <td colspan="6" class="px-6 py-4 text-center">
+                                <td colspan="9" class="px-6 py-4 text-center">
                                     <div class="flex justify-center">
                                         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                                     </div>
@@ -225,37 +437,37 @@
                         </template>
                         <template v-else>
                             <tr v-for="order in orders" :key="order._id">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">
+                                <td class="px-6 py-4 align-top">
+                                    <div class="text-sm font-medium text-gray-900 break-all">
                                         #{{ order.orderId }}
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">
+                                <td class="px-6 py-4 align-top">
+                                    <div class="text-sm text-gray-900 break-words">
                                         {{ order.user?.username || t('adminOrders.unknown') }}
                                     </div>
-                                    <div class="text-sm text-gray-500">
+                                    <div class="text-sm text-gray-500 break-all">
                                         {{ order.user?.email }}
                                     </div>
                                 </td>
 
 
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ order.paymentMethod }}
+                                <td class="px-6 py-4 align-top text-sm text-gray-500 break-words">{{ order.paymentMethod }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{
-                                    formatCurrency(order.platformFee) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{
-                                    formatCurrency(order.vendorAmount) }}</td>
+                                <td class="px-6 py-4 align-top whitespace-nowrap text-sm text-gray-900">{{
+                                    formatCurrency(order.platformFee, order.currency) }}</td>
+                                <td class="px-6 py-4 align-top whitespace-nowrap text-sm text-gray-900">{{
+                                    formatCurrency(order.vendorAmount, order.currency) }}</td>
 
 
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td class="px-6 py-4 align-top text-sm text-gray-500">
                                     {{ formatDate(order.createdAt) }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ formatCurrency(order.totalAmount) }}
+                                <td class="px-6 py-4 align-top whitespace-nowrap text-sm text-gray-900">
+                                    {{ formatCurrency(order.totalAmount, order.currency) }}
                                 </td>
 
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-6 py-4 align-top whitespace-nowrap">
                                     <span :class="[
                                         'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
                                         getStatusClass(order.status)
@@ -263,15 +475,17 @@
                                         {{ formatStatus(order.status) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <td class="px-6 py-4 align-top">
+                                    <div class="flex flex-wrap gap-x-3 gap-y-2 text-sm font-medium">
                                     <button @click="viewOrderDetails(order)"
-                                        class="text-blue-600 hover:text-blue-900 mr-3">
+                                        class="text-blue-600 hover:text-blue-900">
                                         {{ t('adminOrders.actions.view') }}
                                     </button>
                                     <button @click="showUpdateStatus(order)"
                                         class="text-indigo-600 hover:text-indigo-900">
                                         {{ t('adminOrders.actions.update') }}
                                     </button>
+                                    </div>
                                 </td>
                             </tr>
                         </template>
@@ -375,6 +589,8 @@ import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAdminStore } from '@/store/admin';
 import { useProductStore } from '@/store/productStore';
+import { format as formatDateFns } from 'date-fns';
+import { CalendarDate } from '@internationalized/date';
 import OrderDetailsModal from './components/OrderDetailsModal.vue'
 import {
     XIcon,
@@ -386,7 +602,9 @@ import {
     DollarSign,
     Clock,
     CheckCircle,
-    CalendarClock
+    CalendarClock,
+    CalendarDays,
+    X
 } from 'lucide-vue-next';
 import {
     Chart as ChartJS,
@@ -407,6 +625,8 @@ ChartJS.register(
 import { Doughnut } from 'vue-chartjs';
 import { toast } from 'vue-sonner';
 import { debounce } from 'lodash';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 export default {
     name: 'AdminOrders',
@@ -423,6 +643,12 @@ export default {
         Doughnut,
         OrderDetailsModal,
         CalendarClock,
+        CalendarDays,
+        X,
+        Calendar,
+        Popover,
+        PopoverContent,
+        PopoverTrigger,
     },
 
     setup() {
@@ -439,6 +665,8 @@ export default {
         const showDetailsModal = ref(false)
         const totalOrdersCount = ref(0);
         const selectedPeriod = ref('Today');
+        const fromDateOpen = ref(false);
+        const toDateOpen = ref(false);
 
         // Pagination
         const currentPage = ref(1);
@@ -449,9 +677,16 @@ export default {
         const filters = ref({
             search: '',
             status: '',
+            currency: '',
             dateFrom: '',
             dateTo: ''
         });
+
+        const todayCalendarDate = new CalendarDate(
+            new Date().getFullYear(),
+            new Date().getMonth() + 1,
+            new Date().getDate()
+        );
 
         const orderSummary = ref({
             total: 0,
@@ -476,6 +711,23 @@ export default {
         const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value));
         const startItem = computed(() => ((currentPage.value - 1) * itemsPerPage.value) + 1);
         const endItem = computed(() => Math.min(currentPage.value * itemsPerPage.value, totalItems.value));
+        const activeCurrencies = computed(() => {
+            const currencies = new Set(
+                (orders.value || []).map((order) => (order?.currency === 'XOF' ? 'XOF' : 'NGN'))
+            );
+            return Array.from(currencies).sort();
+        });
+        const hasMixedCurrencies = computed(() => activeCurrencies.value.length > 1);
+        const currenciesLabel = computed(() => activeCurrencies.value.join(', '));
+        const createCalendarDate = (value) => {
+            if (!value) return undefined;
+            const [year, month, day] = value.split('-').map(Number);
+            if (!year || !month || !day) return undefined;
+            return new CalendarDate(year, month, day);
+        };
+
+        const calendarFromValue = computed(() => createCalendarDate(filters.value.dateFrom));
+        const calendarToValue = computed(() => createCalendarDate(filters.value.dateTo));
 
         const availableStatuses = computed(() => {
             const currentStatus = selectedOrder.value?.status;
@@ -507,7 +759,9 @@ export default {
             return orders.value?.reduce((sum, order) => sum + order.totalAmount, 0) || 0;
         });
 
-        const totalRevenueFormatted = computed(() => formatCurrency(totalRevenue.value));
+        const totalRevenueFormatted = computed(() =>
+            formatCurrencyTotals(sumAmountsByCurrency(orders.value, (order) => order.totalAmount))
+        );
 
 
         const paymentMethodStats = computed(() => {
@@ -526,20 +780,26 @@ export default {
             return orders.value?.reduce((sum, order) => sum + order.platformFee, 0) || 0;
         });
 
-        const totalPlatformFeesFormatted = computed(() => formatCurrency(totalPlatformFees.value));
+        const totalPlatformFeesFormatted = computed(() =>
+            formatCurrencyTotals(sumAmountsByCurrency(orders.value, (order) => order.platformFee))
+        );
 
         const averageOrderValue = computed(() => {
             if (!orders.value?.length) return 0;
             return totalRevenue.value / orders.value.length;
         });
 
-        const totalAverageOrderValue = computed(() => formatCurrency(averageOrderValue.value));
+        const totalAverageOrderValue = computed(() =>
+            formatAverageByCurrency(orders.value, (order) => order.totalAmount)
+        );
 
         const shippingFees = computed(() => {
             return orders.value?.reduce((sum, order) => sum + order.shippingFee, 0) || 0;
         });
 
-        const totalShippingFees = computed(() => formatCurrency(shippingFees.value));
+        const totalShippingFees = computed(() =>
+            formatCurrencyTotals(sumAmountsByCurrency(orders.value, (order) => order.shippingFee || 0))
+        );
 
         const todayOrders = computed(() => {
             const today = new Date().toISOString().split('T')[0];
@@ -623,10 +883,9 @@ export default {
 
         const filteredRevenue = computed(() => {
             const { startDate } = getDateRange();
-            const total = orders.value
+            const filtered = orders.value
                 .filter(order => new Date(order.createdAt) >= startDate)
-                .reduce((sum, order) => sum + order.totalAmount, 0);
-            return formatCurrency(total);
+            return formatCurrencyTotals(sumAmountsByCurrency(filtered, (order) => order.totalAmount));
         });
 
         // const viewOrderDetails = async (order) => {
@@ -732,12 +991,57 @@ export default {
         };
 
         // Helper function to format numbers with commas
-        const formatCurrency = (amount) => {
+        const formatCurrency = (amount, currency = 'NGN') => {
+            const resolvedCurrency = currency === 'XOF' ? 'XOF' : 'NGN';
             return new Intl.NumberFormat('en-NG', {
                 style: 'currency',
-                currency: 'NGN',
+                currency: resolvedCurrency,
                 minimumFractionDigits: 2
             }).format(amount);
+        };
+
+        const sumAmountsByCurrency = (list, selector) => {
+            return (list || []).reduce((acc, item) => {
+                const currency = item?.currency === 'XOF' ? 'XOF' : 'NGN';
+                const amount = Number(selector(item) || 0);
+                acc[currency] = (acc[currency] || 0) + amount;
+                return acc;
+            }, {});
+        };
+
+        const formatCurrencyTotals = (totals) => {
+            const entries = Object.entries(totals || {}).filter(([, amount]) => Math.abs(amount) > 0.0001);
+            if (!entries.length) {
+                return formatCurrency(0, 'NGN');
+            }
+
+            return entries
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([currency, amount]) => formatCurrency(amount, currency))
+                .join(' / ');
+        };
+
+        const formatAverageByCurrency = (list, selector) => {
+            const stats = (list || []).reduce((acc, item) => {
+                const currency = item?.currency === 'XOF' ? 'XOF' : 'NGN';
+                const amount = Number(selector(item) || 0);
+                if (!acc[currency]) {
+                    acc[currency] = { total: 0, count: 0 };
+                }
+                acc[currency].total += amount;
+                acc[currency].count += 1;
+                return acc;
+            }, {});
+
+            const entries = Object.entries(stats).filter(([, value]) => value.count > 0);
+            if (!entries.length) {
+                return formatCurrency(0, 'NGN');
+            }
+
+            return entries
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([currency, value]) => formatCurrency(value.total / value.count, currency))
+                .join(' / ');
         };
 
         const fetchOrders = async () => {
@@ -747,6 +1051,7 @@ export default {
                     page: currentPage.value,
                     limit: itemsPerPage.value,
                     status: filters.value.status,
+                    currency: filters.value.currency,
                     search: filters.value.search,
                     dateFrom: filters.value.dateFrom,
                     dateTo: filters.value.dateTo
@@ -778,6 +1083,11 @@ export default {
             currentPage.value = 1;
             fetchOrders();
         }, 300);
+
+        const applyFilters = () => {
+            currentPage.value = 1;
+            fetchOrders();
+        };
 
         const showUpdateStatus = (order) => {
             selectedOrder.value = order;
@@ -826,6 +1136,55 @@ export default {
                 currentPage.value++;
                 fetchOrders();
             }
+        };
+
+        const formatDateFilterLabel = (value, fallbackKey) => {
+            if (!value) return t(fallbackKey);
+            try {
+                return formatDateFns(new Date(`${value}T00:00:00`), 'MMM d, yyyy');
+            } catch (_) {
+                return value;
+            }
+        };
+
+        const setFilterDate = (field, value) => {
+            filters.value[field === 'from' ? 'dateFrom' : 'dateTo'] = value?.toString?.() || '';
+            if (field === 'from') {
+                fromDateOpen.value = false;
+            } else {
+                toDateOpen.value = false;
+            }
+            applyFilters();
+        };
+
+        const clearFilterDate = (field) => {
+            filters.value[field === 'from' ? 'dateFrom' : 'dateTo'] = '';
+            if (field === 'from') {
+                fromDateOpen.value = false;
+            } else {
+                toDateOpen.value = false;
+            }
+            applyFilters();
+        };
+
+        const clearDateRange = () => {
+            filters.value.dateFrom = '';
+            filters.value.dateTo = '';
+            fromDateOpen.value = false;
+            toDateOpen.value = false;
+            applyFilters();
+        };
+
+        const clearFilters = () => {
+            filters.value = {
+                search: '',
+                status: '',
+                currency: '',
+                dateFrom: '',
+                dateTo: ''
+            };
+            currentPage.value = 1;
+            fetchOrders();
         };
 
         // Helper functions
@@ -891,6 +1250,9 @@ export default {
             totalPages,
             startItem,
             endItem,
+            activeCurrencies,
+            hasMixedCurrencies,
+            currenciesLabel,
             orderSummary,
             formatCurrency,
             totalRevenueFormatted,
@@ -901,9 +1263,15 @@ export default {
             todayOrders,
             processingToday,
             filters,
+            fromDateOpen,
+            toDateOpen,
+            todayCalendarDate,
+            calendarFromValue,
+            calendarToValue,
             orderStatuses,
             availableStatuses,
             handleSearch,
+            applyFilters,
             viewOrderDetails,
             showUpdateStatus,
             updateOrderStatus,
@@ -911,11 +1279,16 @@ export default {
             prevPage,
             nextPage,
             formatDate,
+            formatDateFilterLabel,
             formatStatus,
             getStatusClass,
             getTimelineIcon,
             getTimelineItemClass,
             fetchOrders,
+            setFilterDate,
+            clearFilterDate,
+            clearDateRange,
+            clearFilters,
             paymentMethodChartData,
             chartOptions,
             showDetailsModal,

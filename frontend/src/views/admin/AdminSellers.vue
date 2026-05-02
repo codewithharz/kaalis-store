@@ -50,6 +50,9 @@
                             <ChevronDown class="w-5 h-5 text-gray-400" />
                         </div>
                     </div>
+                    <p v-if="filters.sortBy === 'rating'" class="mt-1 text-xs text-gray-500">
+                        {{ t('adminSellers.filters.ratingHint') }}
+                    </p>
                 </div>
 
                 <!-- Order Filter -->
@@ -72,29 +75,110 @@
 
         <!-- Sellers Table -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div class="min-w-full">
-                <table class="min-w-full divide-y divide-gray-200">
+            <div class="md:hidden divide-y divide-gray-200">
+                <template v-if="loading">
+                    <div class="px-6 py-8 text-center">
+                        <div class="flex justify-center">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        </div>
+                    </div>
+                </template>
+                <template v-else>
+                    <div v-for="seller in sellers" :key="seller._id" class="p-4 space-y-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0 flex items-center gap-3">
+                                <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                                    <span class="text-sm font-medium text-gray-500">
+                                        {{ getInitials(seller.username) }}
+                                    </span>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-sm font-medium text-gray-900 break-words">{{ seller.username }}</div>
+                                    <div class="text-sm text-gray-500 break-all">{{ seller.email }}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1 flex-wrap justify-end">
+                                <span :class="[
+                                    'w-fit px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
+                                    getStatusClass(seller?.verificationStatus)
+                                ]">
+                                    {{ formatStatus(seller?.verificationStatus) }}
+                                </span>
+                                <span v-if="seller.verificationStatus === 'approved' && seller.isVerified"
+                                    class="w-fit h-fit inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                    <span class="flex items-center gap-1">
+                                        <CheckCircle class="w-3 h-3" />
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                                <div class="text-xs font-medium uppercase tracking-wide text-gray-500">{{ t('adminSellers.table.store') }}</div>
+                                <div class="mt-1 text-gray-900 break-words">{{ seller.storeName }}</div>
+                                <div class="text-xs text-gray-500 mt-1">{{ t('adminSellers.since', { date: formatDate(seller.createdAt) }) }}</div>
+                            </div>
+                            <div>
+                                <div class="text-xs font-medium uppercase tracking-wide text-gray-500">{{ t('adminSellers.table.products') }}</div>
+                                <div class="mt-1 text-gray-900">{{ seller.productCount || 0 }}</div>
+                            </div>
+                            <div>
+                                <div class="text-xs font-medium uppercase tracking-wide text-gray-500">{{ t('adminSellers.table.sales') }}</div>
+                                <div class="mt-1 text-gray-900 break-words">{{ formatSellerSales(seller) }}</div>
+                                <div class="text-xs text-gray-500 mt-1">{{ t('adminSellers.ordersCount', { count: seller.orderCount || 0 }) }}</div>
+                            </div>
+                            <div>
+                                <div class="text-xs font-medium uppercase tracking-wide text-gray-500">{{ t('adminSellers.table.rating') }}</div>
+                                <div class="mt-1 flex items-center">
+                                    <Star :class="getDisplayRating(seller) >= 4 ? 'text-yellow-400' : 'text-gray-300'" class="h-5 w-5" />
+                                    <span class="ml-1 text-sm text-gray-500">
+                                        {{ formatRatingValue(getDisplayRating(seller)) }}
+                                    </span>
+                                </div>
+                                <div class="mt-1 text-xs text-gray-500">
+                                    {{ getRatingContextText(seller) }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2 border-t border-gray-100 pt-3">
+                            <button @click="viewSellerDetails(seller)"
+                                class="inline-flex items-center rounded-md bg-sky-50 px-3 py-2 text-sm font-medium text-sky-700 hover:bg-sky-100">
+                                {{ t('adminSellers.actions.view') }}
+                            </button>
+                            <button @click="showUpdateStatus(seller)"
+                                class="inline-flex items-center rounded-md bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100">
+                                {{ t('adminSellers.actions.status') }}
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div class="hidden md:block overflow-auto">
+                <table class="min-w-[1100px] w-full divide-y divide-gray-200 table-fixed">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th class="w-[23%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                 {{ t('adminSellers.table.seller') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th class="w-[18%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                 {{ t('adminSellers.table.store') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th class="w-[15%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                 {{ t('adminSellers.table.status') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                 {{ t('adminSellers.table.products') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th class="w-[16%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                 {{ t('adminSellers.table.sales') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th class="w-[8%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                 {{ t('adminSellers.table.rating') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                 {{ t('adminSellers.table.actions') }}
                             </th>
                         </tr>
@@ -111,7 +195,7 @@
                         </template>
                         <template v-else>
                             <tr v-for="seller in sellers" :key="seller._id">
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-6 py-4">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-10 w-10">
                                             <div
@@ -122,17 +206,17 @@
                                             </div>
                                         </div>
                                         <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900">
+                                            <div class="text-sm font-medium text-gray-900 break-words">
                                                 {{ seller.username }}
                                             </div>
-                                            <div class="text-sm text-gray-500">
+                                            <div class="text-sm text-gray-500 break-all">
                                                 {{ seller.email }}
                                             </div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ seller.storeName }}</div>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-900 break-words">{{ seller.storeName }}</div>
                                     <div class="text-sm text-gray-500">
                                         {{ t('adminSellers.since', { date: formatDate(seller.createdAt) }) }}
                                     </div>
@@ -159,7 +243,7 @@
                                         <!-- Verified Badge -->
                                         <!-- v-if="seller.verificationStatus === 'approved' && seller.isVerified === true" -->
 
-                                        <span v-if="seller.verificationStatus === 'approved'"
+                                        <span v-if="seller.verificationStatus === 'approved' && seller.isVerified"
                                             class="w-fit h-fit inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                                             <span class="flex items-center gap-1">
                                                 <CheckCircle class="w-3 h-3" />
@@ -173,9 +257,9 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ seller.productCount || 0 }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-6 py-4">
                                     <div class="text-sm text-gray-900">
-                                        ${{ formatNumber(seller.totalSales || 0) }}
+                                        {{ formatSellerSales(seller) }}
                                     </div>
                                     <div class="text-sm text-gray-500">
                                         {{ t('adminSellers.ordersCount', { count: seller.orderCount || 0 }) }}
@@ -183,14 +267,17 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
-                                        <Star :class="seller.rating >= 4 ? 'text-yellow-400' : 'text-gray-300'"
+                                        <Star :class="getDisplayRating(seller) >= 4 ? 'text-yellow-400' : 'text-gray-300'"
                                             class="h-5 w-5" />
                                         <span class="ml-1 text-sm text-gray-500">
-                                            {{ seller.rating?.toFixed(1) || t('adminSellers.notAvailable') }}
+                                            {{ formatRatingValue(getDisplayRating(seller)) }}
                                         </span>
                                     </div>
+                                    <div class="mt-1 text-xs text-gray-500">
+                                        {{ getRatingContextText(seller) }}
+                                    </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <td class="px-6 py-4 text-sm font-medium">
                                     <button @click="viewSellerDetails(seller)"
                                         class="text-blue-600 hover:text-blue-900 mr-3">
                                         {{ t('adminSellers.actions.view') }}
@@ -218,7 +305,7 @@
                         {{ t('adminSellers.pagination.next') }}
                     </button>
                 </div>
-                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div class="hidden md:flex-1 md:flex md:items-center md:justify-between">
                     <div>
                         <p class="text-sm text-gray-700">
                             {{ t('adminSellers.pagination.showing') }}
@@ -248,8 +335,9 @@
 
         <!-- Seller Details Modal -->
         <div v-if="selectedSeller"
-            class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center overflow-y-auto">
-            <div class="bg-white rounded-lg p-6 w-full max-w-4xl m-4">
+            class="fixed inset-0 z-[120] bg-gray-500 bg-opacity-75 flex items-center justify-center overflow-y-auto p-4"
+            @click.self="selectedSeller = null">
+            <div class="bg-white rounded-lg p-6 w-full max-w-5xl m-4 max-h-[calc(100vh-2rem)] overflow-y-auto">
                 <div class="flex justify-between items-start mb-6">
                     <div>
                         <h3 class="text-lg font-medium text-gray-900">
@@ -264,24 +352,27 @@
                     </button>
                 </div>
 
-                <div class="grid grid-cols-2 gap-6 mb-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                     <!-- Basic Info -->
                     <div>
                         <h4 class="font-medium text-gray-900 mb-2">{{ t('adminSellers.details.basicInformation') }}</h4>
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <p><span class="font-medium">{{ t('adminSellers.details.name') }}</span> {{ selectedSeller.username }}</p>
-                            <p><span class="font-medium">{{ t('adminSellers.details.email') }}</span> {{ selectedSeller.email }}</p>
+                        <div class="bg-gray-50 p-4 rounded-lg space-y-1">
+                            <p><span class="font-medium">{{ t('adminSellers.details.name') }}</span> {{ selectedSeller.username || selectedSeller.user?.username || t('adminSellers.details.notProvided') }}</p>
+                            <p class="break-all"><span class="font-medium">{{ t('adminSellers.details.email') }}</span> {{ selectedSeller.email || selectedSeller.user?.email || t('adminSellers.details.notProvided') }}</p>
                             <p><span class="font-medium">{{ t('adminSellers.details.phone') }}</span> {{ selectedSeller.phone || t('adminSellers.details.notProvided') }}</p>
+                            <p><span class="font-medium">{{ t('adminSellers.details.lastLogin') }}</span> {{ selectedSeller.user?.lastLogin ? formatDateTime(selectedSeller.user.lastLogin) : t('adminSellers.details.notProvided') }}</p>
                         </div>
                     </div>
 
                     <!-- Store Info -->
                     <div>
                         <h4 class="font-medium text-gray-900 mb-2">{{ t('adminSellers.details.storeInformation') }}</h4>
-                        <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="bg-gray-50 p-4 rounded-lg space-y-1">
                             <p><span class="font-medium">{{ t('adminSellers.details.storeName') }}</span> {{ selectedSeller.storeName }}</p>
                             <p><span class="font-medium">{{ t('adminSellers.details.applicationStatus') }}</span> {{
                                 formatStatus(selectedSeller.verificationStatus) }}</p>
+                            <p><span class="font-medium">{{ t('adminSellers.details.accountStatus') }}</span> {{ getAccountStatusText(selectedSeller) }}</p>
+                            <p><span class="font-medium">{{ t('adminSellers.details.twoFactor') }}</span> {{ selectedSeller.user?.twoFactorEnabled ? t('adminSellers.details.enabled') : t('adminSellers.details.disabled') }}</p>
                             <p v-if="selectedSeller.isVerified" class="flex items-center gap-2">
                                 <span class="font-medium">{{ t('adminSellers.details.verification') }}</span>
                                 <span
@@ -289,8 +380,20 @@
                                     {{ t('adminSellers.details.verifiedStore') }}
                                 </span>
                             </p>
-                            <p><span class="font-medium">{{ t('adminSellers.details.rating') }}</span> {{ selectedSeller.rating?.toFixed(1) || t('adminSellers.notAvailable')
-                                }}/5</p>
+                            <p>
+                                <span class="font-medium">{{ t('adminSellers.details.portfolioRating') }}</span>
+                                {{ formatRatingValue(selectedSeller.portfolioAverageRating) }}/5
+                                <span class="text-gray-500">
+                                    ({{ t('adminSellers.table.productRatingsCount', { count: selectedSeller.portfolioRatingsCount || 0 }) }})
+                                </span>
+                            </p>
+                            <p>
+                                <span class="font-medium">{{ t('adminSellers.details.sellerReviewRating') }}</span>
+                                {{ formatRatingValue(selectedSeller.sellerReviewAverageRating) }}/5
+                                <span class="text-gray-500">
+                                    ({{ t('adminSellers.table.sellerReviewsCount', { count: selectedSeller.sellerReviewCount || 0 }) }})
+                                </span>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -298,10 +401,10 @@
                 <!-- Performance Metrics -->
                 <div class="mb-6">
                     <h4 class="font-medium text-gray-900 mb-2">{{ t('adminSellers.details.performanceMetrics') }}</h4>
-                    <div class="grid grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                         <div class="bg-gray-50 p-4 rounded-lg">
                             <p class="text-sm text-gray-500">{{ t('adminSellers.metrics.totalSales') }}</p>
-                            <p class="text-xl font-semibold">${{ formatNumber(selectedSeller.totalSales || 0) }}</p>
+                            <p class="text-xl font-semibold break-words">{{ formatSellerSales(selectedSeller) }}</p>
                         </div>
                         <div class="bg-gray-50 p-4 rounded-lg">
                             <p class="text-sm text-gray-500">{{ t('adminSellers.metrics.orders') }}</p>
@@ -312,16 +415,51 @@
                             <p class="text-xl font-semibold">{{ selectedSeller.productCount || 0 }}</p>
                         </div>
                         <div class="bg-gray-50 p-4 rounded-lg">
-                            <p class="text-sm text-gray-500">{{ t('adminSellers.metrics.returnRate') }}</p>
-                            <p class="text-xl font-semibold">{{ (selectedSeller.returnRate || 0).toFixed(1) }}%</p>
+                            <p class="text-sm text-gray-500">{{ t('adminSellers.metrics.cancellationRate') }}</p>
+                            <p class="text-xl font-semibold">{{ (selectedSeller.cancellationRate || 0).toFixed(1) }}%</p>
                         </div>
                     </div>
                 </div>
 
+                <div class="mb-6">
+                    <h4 class="font-medium text-gray-900 mb-2">{{ t('adminSellers.details.adminActions') }}</h4>
+                    <div class="flex flex-wrap gap-3">
+                        <button
+                            type="button"
+                            class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                            @click="handleResetSellerPassword"
+                        >
+                            {{ t('adminSellers.actions.resetPassword') }}
+                        </button>
+                        <button
+                            type="button"
+                            class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                            @click="handleToggleSeller2FA"
+                        >
+                            {{ selectedSeller.user?.twoFactorEnabled ? t('adminSellers.actions.disable2FA') : t('adminSellers.actions.enable2FA') }}
+                        </button>
+                        <button
+                            type="button"
+                            class="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700"
+                            @click="handleForceSellerLogout"
+                        >
+                            {{ t('adminSellers.actions.forceLogout') }}
+                        </button>
+                        <button
+                            type="button"
+                            class="rounded-md px-4 py-2 text-sm font-medium text-white"
+                            :class="selectedSeller.user?.isBlocked ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'"
+                            @click="handleToggleSellerBlock"
+                        >
+                            {{ selectedSeller.user?.isBlocked ? t('adminSellers.actions.unblock') : t('adminSellers.actions.block') }}
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Recent Reviews -->
-                <div>
+                <div class="mb-6">
                     <h4 class="font-medium text-gray-900 mb-2">{{ t('adminSellers.details.recentReviews') }}</h4>
-                    <div class="space-y-4">
+                    <div v-if="selectedSeller.recentReviews?.length" class="space-y-4">
                         <div v-for="review in selectedSeller.recentReviews" :key="review._id"
                             class="bg-gray-50 p-4 rounded-lg">
                             <div class="flex justify-between items-start">
@@ -339,12 +477,37 @@
                             </div>
                         </div>
                     </div>
+                    <div v-else class="rounded-lg bg-gray-50 p-4 text-sm text-gray-500">
+                        {{ t('adminSellers.details.noRecentReviews') }}
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-2">{{ t('adminSellers.details.recentActivity') }}</h4>
+                    <div v-if="selectedSeller.recentActivity?.length" class="space-y-3">
+                        <div
+                            v-for="activity in selectedSeller.recentActivity.slice(0, 5)"
+                            :key="activity.id"
+                            class="rounded-lg bg-gray-50 p-4"
+                        >
+                            <div class="flex items-start justify-between gap-4">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">{{ formatActivityAction(activity.action) }}</p>
+                                    <p v-if="activity.details?.reason" class="mt-1 text-sm text-gray-600">{{ activity.details.reason }}</p>
+                                </div>
+                                <span class="text-sm text-gray-500">{{ formatDateTime(activity.timestamp) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="rounded-lg bg-gray-50 p-4 text-sm text-gray-500">
+                        {{ t('adminSellers.details.noRecentActivity') }}
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Update Status Modal -->
-        <div v-if="showStatusModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+        <div v-if="showStatusModal" class="fixed inset-0 z-[130] bg-gray-500 bg-opacity-75 flex items-center justify-center">
             <div class="bg-white rounded-lg p-6 max-w-md w-full">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">
                     {{ t('adminSellers.statusModal.title') }}
@@ -442,10 +605,11 @@ export default {
         const loading = computed(() => adminStore.loading);
         const sellers = computed(() => adminStore.sellers);
         const selectedSeller = ref(null);
+        const statusTargetSeller = ref(null);
         const showStatusModal = ref(false);
         const newStatus = ref('');
         const statusNote = ref('');
-        const isVerifiedStore = ref(false);
+        const isSubmittingStatus = ref(false);
 
         // Filters
         const filters = ref({
@@ -489,23 +653,27 @@ export default {
             }
         };
 
+        const refreshSelectedSeller = async (sellerId) => {
+            await fetchSellers();
+            selectedSeller.value = await adminStore.fetchSellerDetails(sellerId);
+        };
+
         const showUpdateStatus = (seller) => {
-            selectedSeller.value = seller;
+            statusTargetSeller.value = seller;
             newStatus.value = seller.verificationStatus;
-            isVerifiedStore.value = seller.isVerified;
             statusNote.value = STATUS_TEMPLATES[seller.verificationStatus] || '';
             showStatusModal.value = true;
         };
 
         const updateSellerStatus = async () => {
             try {
-                loading.value = true;
+                isSubmittingStatus.value = true;
 
                 // Automatically set isVerified to true when status is approved
                 const isVerifiedStore = newStatus.value === 'approved';
 
                 await adminStore.updateSellerStatus(
-                    selectedSeller.value._id,
+                    statusTargetSeller.value._id,
                     {
                         verificationStatus: newStatus.value,
                         isVerified: isVerifiedStore,
@@ -513,19 +681,75 @@ export default {
                     }
                 );
                 toast.success(t('adminSellers.toasts.statusUpdated'));
+                const sellerId = statusTargetSeller.value?._id;
                 closeStatusModal();
                 await fetchSellers();
 
                 // If the updated seller was selected in the details modal, refresh that data too
-                if (selectedSeller.value) {
-                    const updatedSellerDetails = await adminStore.fetchSellerDetails(selectedSeller.value._id);
+                if (selectedSeller.value && sellerId && selectedSeller.value._id === sellerId) {
+                    const updatedSellerDetails = await adminStore.fetchSellerDetails(sellerId);
                     selectedSeller.value = updatedSellerDetails;
                 }
             } catch (error) {
                 console.error('Error in updateSellerStatus:', error);
                 toast.error(t('adminSellers.toasts.statusUpdateFailed'));
             } finally {
-                loading.value = false;
+                isSubmittingStatus.value = false;
+            }
+        };
+
+        const handleResetSellerPassword = async () => {
+            if (!selectedSeller.value) return;
+            try {
+                await adminStore.resetUserPassword(selectedSeller.value._id, 'sellers');
+                toast.success(t('adminSellers.toasts.passwordResetSent'));
+            } catch (error) {
+                console.error('Error resetting seller password:', error);
+                toast.error(t('adminSellers.toasts.passwordResetFailed'));
+            }
+        };
+
+        const handleToggleSeller2FA = async () => {
+            if (!selectedSeller.value) return;
+            try {
+                const response = await adminStore.toggle2FA(selectedSeller.value._id, 'sellers');
+                toast.success(
+                    response.twoFactorEnabled
+                        ? t('adminSellers.toasts.twoFactorEnabled')
+                        : t('adminSellers.toasts.twoFactorDisabled')
+                );
+                await refreshSelectedSeller(selectedSeller.value._id);
+            } catch (error) {
+                console.error('Error toggling seller 2FA:', error);
+                toast.error(t('adminSellers.toasts.twoFactorUpdateFailed'));
+            }
+        };
+
+        const handleToggleSellerBlock = async () => {
+            if (!selectedSeller.value) return;
+            try {
+                const response = await adminStore.toggleBlockStatus(selectedSeller.value._id, 'sellers');
+                toast.success(
+                    response.isBlocked
+                        ? t('adminSellers.toasts.sellerBlocked')
+                        : t('adminSellers.toasts.sellerUnblocked')
+                );
+                await refreshSelectedSeller(selectedSeller.value._id);
+            } catch (error) {
+                console.error('Error toggling seller block:', error);
+                toast.error(t('adminSellers.toasts.blockUpdateFailed'));
+            }
+        };
+
+        const handleForceSellerLogout = async () => {
+            if (!selectedSeller.value) return;
+            try {
+                await adminStore.forceLogout(selectedSeller.value._id, 'sellers');
+                toast.success(t('adminSellers.toasts.forceLogoutSuccess'));
+                await refreshSelectedSeller(selectedSeller.value._id);
+            } catch (error) {
+                console.error('Error forcing seller logout:', error);
+                toast.error(t('adminSellers.toasts.forceLogoutFailed'));
             }
         };
 
@@ -533,7 +757,7 @@ export default {
             showStatusModal.value = false;
             newStatus.value = '';
             statusNote.value = '';
-            selectedSeller.value = null;
+            statusTargetSeller.value = null;
         };
 
         const prevPage = () => {
@@ -559,6 +783,16 @@ export default {
             });
         };
 
+        const formatDateTime = (date) => {
+            return new Date(date).toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        };
+
         const formatStatus = (verificationStatus) => {
             if (!verificationStatus) return t('adminSellers.statusOptions.notSubmitted');
 
@@ -578,6 +812,65 @@ export default {
             return number.toLocaleString('en-US', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
+            });
+        };
+
+        const formatCurrency = (amount, currency = 'NGN') => {
+            const resolvedCurrency = currency === 'XOF' ? 'XOF' : 'NGN';
+            return new Intl.NumberFormat('en-NG', {
+                style: 'currency',
+                currency: resolvedCurrency,
+                minimumFractionDigits: 2,
+            }).format(Number(amount || 0));
+        };
+
+        const formatCurrencyTotals = (totals, fallbackCurrency = 'NGN', fallbackAmount = 0) => {
+            const entries = Object.entries(totals || {}).filter(([, amount]) => Math.abs(Number(amount || 0)) > 0.0001);
+            if (!entries.length) {
+                return formatCurrency(fallbackAmount, fallbackCurrency);
+            }
+
+            return entries
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([currency, amount]) => formatCurrency(amount, currency))
+                .join(' / ');
+        };
+
+        const formatSellerSales = (seller) => {
+            const fallbackCurrency = seller?.user?.currency || 'NGN';
+            return formatCurrencyTotals(
+                seller?.salesTotalsByCurrency,
+                fallbackCurrency,
+                seller?.totalSales || 0
+            );
+        };
+
+        const getDisplayRating = (seller) => {
+            if ((seller?.portfolioRatingsCount || 0) > 0) {
+                return Number(seller?.portfolioAverageRating || 0);
+            }
+
+            return Number(
+                seller?.sellerReviewAverageRating ??
+                seller?.rating ??
+                0
+            );
+        };
+
+        const formatRatingValue = (rating) => {
+            const numericRating = Number(rating || 0);
+            return numericRating > 0 ? numericRating.toFixed(1) : '0.0';
+        };
+
+        const getRatingContextText = (seller) => {
+            if ((seller?.portfolioRatingsCount || 0) > 0) {
+                return t('adminSellers.table.productRatingsCount', {
+                    count: seller?.portfolioRatingsCount || 0
+                });
+            }
+
+            return t('adminSellers.table.sellerReviewsCount', {
+                count: seller?.sellerReviewCount || 0
             });
         };
 
@@ -604,6 +897,20 @@ export default {
             return classes[verificationStatus] || 'bg-gray-100 text-gray-800';
         };
 
+        const getAccountStatusText = (seller) => {
+            if (seller?.user?.isBlocked) return t('adminSellers.details.blocked');
+            if (seller?.isVacationMode) return t('adminSellers.details.vacationMode');
+            return t('adminSellers.details.active');
+        };
+
+        const formatActivityAction = (action) => {
+            if (!action) return t('adminSellers.details.notProvided');
+            return action
+                .toString()
+                .replace(/_/g, ' ')
+                .replace(/\b\w/g, (char) => char.toUpperCase());
+        };
+
         watch(newStatus, (newValue) => {
             statusNote.value = STATUS_TEMPLATES[newValue] || '';
         });
@@ -626,18 +933,30 @@ export default {
             startItem,
             endItem,
             filters,
+            isSubmittingStatus,
             handleSearch,
             viewSellerDetails,
             showUpdateStatus,
             updateSellerStatus,
+            handleResetSellerPassword,
+            handleToggleSeller2FA,
+            handleToggleSellerBlock,
+            handleForceSellerLogout,
             closeStatusModal,
             prevPage,
             nextPage,
             formatDate,
+            formatDateTime,
             formatStatus,
             formatNumber,
+            formatSellerSales,
+            getDisplayRating,
+            formatRatingValue,
+            getRatingContextText,
             getInitials,
             getStatusClass,
+            getAccountStatusText,
+            formatActivityAction,
             fetchSellers,
             STATUS_TEMPLATES,
             t

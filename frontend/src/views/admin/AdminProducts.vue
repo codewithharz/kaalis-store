@@ -100,20 +100,73 @@
                 <div class="sm:col-span-2 xl:col-span-1">
                     <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('adminProducts.filters.createdDate') }}</label>
                     <div class="grid grid-cols-1 gap-2">
-                        <input
-                            v-model="filters.createdFrom"
-                            type="date"
-                            class="w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
-                            :aria-label="t('adminProducts.filters.createdFrom')"
-                            @change="applyFilters"
-                        >
-                        <input
-                            v-model="filters.createdTo"
-                            type="date"
-                            class="w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
-                            :aria-label="t('adminProducts.filters.createdTo')"
-                            @change="applyFilters"
-                        >
+                        <Popover v-model:open="fromDateOpen">
+                            <PopoverTrigger as-child>
+                                <button
+                                    type="button"
+                                    class="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 transition hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
+                                    :aria-label="t('adminProducts.filters.createdFrom')"
+                                >
+                                    <span :class="filters.createdFrom ? 'text-gray-900' : 'text-gray-400'">
+                                        {{ formatDateFilterLabel(filters.createdFrom, 'adminProducts.filters.createdFrom') }}
+                                    </span>
+                                    <CalendarDays class="h-4 w-4 text-gray-400" />
+                                </button>
+                            </PopoverTrigger>
+                            <PopoverContent align="start" class="w-auto p-0">
+                                <div class="border-b border-gray-100 px-3 py-2 text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    {{ t('adminProducts.filters.createdFrom') }}
+                                </div>
+                                <Calendar
+                                    :model-value="calendarFromValue"
+                                    :placeholder="calendarFromValue || calendarToValue || todayCalendarDate"
+                                    @update:modelValue="setCreatedDate('from', $event)"
+                                />
+                                <div class="flex justify-end border-t border-gray-100 p-2">
+                                    <button
+                                        type="button"
+                                        class="text-xs font-medium text-gray-500 hover:text-gray-700"
+                                        @click="clearCreatedDate('from')"
+                                    >
+                                        {{ t('adminProducts.filters.clearDate') }}
+                                    </button>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+
+                        <Popover v-model:open="toDateOpen">
+                            <PopoverTrigger as-child>
+                                <button
+                                    type="button"
+                                    class="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 transition hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
+                                    :aria-label="t('adminProducts.filters.createdTo')"
+                                >
+                                    <span :class="filters.createdTo ? 'text-gray-900' : 'text-gray-400'">
+                                        {{ formatDateFilterLabel(filters.createdTo, 'adminProducts.filters.createdTo') }}
+                                    </span>
+                                    <CalendarDays class="h-4 w-4 text-gray-400" />
+                                </button>
+                            </PopoverTrigger>
+                            <PopoverContent align="start" class="w-auto p-0">
+                                <div class="border-b border-gray-100 px-3 py-2 text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    {{ t('adminProducts.filters.createdTo') }}
+                                </div>
+                                <Calendar
+                                    :model-value="calendarToValue"
+                                    :placeholder="calendarToValue || calendarFromValue || todayCalendarDate"
+                                    @update:modelValue="setCreatedDate('to', $event)"
+                                />
+                                <div class="flex justify-end border-t border-gray-100 p-2">
+                                    <button
+                                        type="button"
+                                        class="text-xs font-medium text-gray-500 hover:text-gray-700"
+                                        @click="clearCreatedDate('to')"
+                                    >
+                                        {{ t('adminProducts.filters.clearDate') }}
+                                    </button>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
                     </div>
                 </div>
             </div>
@@ -126,12 +179,20 @@
                 >
                     {{ t('adminProducts.filters.clear') }}
                 </button>
-                <span
+                <div
                     v-if="filters.createdFrom || filters.createdTo"
-                    class="text-sm text-gray-500"
+                    class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600"
                 >
-                    {{ t('adminProducts.filters.dateHint') }}
-                </span>
+                    <CalendarDays class="h-4 w-4" />
+                    <span>{{ t('adminProducts.filters.dateHint') }}</span>
+                    <button
+                        type="button"
+                        class="inline-flex items-center text-slate-500 hover:text-slate-700"
+                        @click="clearCreatedDateRange"
+                    >
+                        <X class="h-4 w-4" />
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -421,16 +482,26 @@ import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { toast } from 'vue-sonner';
-import { ChevronDown } from 'lucide-vue-next';
+import { format as formatDateFns } from 'date-fns';
+import { ChevronDown, CalendarDays, X } from 'lucide-vue-next';
 import { debounce } from 'lodash';
+import { CalendarDate } from '@internationalized/date';
 import apiClient from '../../api/axios';
 import { formatCurrencyAmount } from '../../utils/countryCurrency';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 export default {
     name: 'AdminProducts',
 
     components: {
-        ChevronDown
+        ChevronDown,
+        CalendarDays,
+        X,
+        Calendar,
+        Popover,
+        PopoverContent,
+        PopoverTrigger
     },
 
     setup() {
@@ -441,6 +512,8 @@ export default {
         const sellers = ref([]);
         const showDeleteModal = ref(false);
         const productToDelete = ref(null);
+        const fromDateOpen = ref(false);
+        const toDateOpen = ref(false);
 
         // Pagination
         const currentPage = ref(1);
@@ -459,6 +532,12 @@ export default {
             status: ''
         });
 
+        const todayCalendarDate = new CalendarDate(
+            new Date().getFullYear(),
+            new Date().getMonth() + 1,
+            new Date().getDate()
+        );
+
         const getErrorMessage = (error, fallbackKey) =>
             error?.response?.data?.message ||
             error?.message ||
@@ -467,6 +546,24 @@ export default {
         // Computed
         const startItem = computed(() => ((currentPage.value - 1) * itemsPerPage.value) + 1);
         const endItem = computed(() => Math.min(currentPage.value * itemsPerPage.value, totalItems.value));
+        const createCalendarDate = (value) => {
+            if (!value) return undefined;
+            const [year, month, day] = value.split('-').map(Number);
+            if (!year || !month || !day) return undefined;
+            return new CalendarDate(year, month, day);
+        };
+
+        const formatDateFilterLabel = (value, fallbackKey) => {
+            if (!value) return t(fallbackKey);
+            try {
+                return formatDateFns(new Date(`${value}T00:00:00`), 'MMM d, yyyy');
+            } catch (_) {
+                return value;
+            }
+        };
+
+        const calendarFromValue = computed(() => createCalendarDate(filters.value.createdFrom));
+        const calendarToValue = computed(() => createCalendarDate(filters.value.createdTo));
 
         // Methods
         const fetchProducts = async () => {
@@ -553,6 +650,34 @@ export default {
             fetchProducts();
         };
 
+        const setCreatedDate = (field, value) => {
+            filters.value[field === 'from' ? 'createdFrom' : 'createdTo'] = value?.toString?.() || '';
+            if (field === 'from') {
+                fromDateOpen.value = false;
+            } else {
+                toDateOpen.value = false;
+            }
+            applyFilters();
+        };
+
+        const clearCreatedDate = (field) => {
+            filters.value[field === 'from' ? 'createdFrom' : 'createdTo'] = '';
+            if (field === 'from') {
+                fromDateOpen.value = false;
+            } else {
+                toDateOpen.value = false;
+            }
+            applyFilters();
+        };
+
+        const clearCreatedDateRange = () => {
+            filters.value.createdFrom = '';
+            filters.value.createdTo = '';
+            fromDateOpen.value = false;
+            toDateOpen.value = false;
+            applyFilters();
+        };
+
         const goToCreateProduct = () => {
             router.push('/admin/products/new');
         };
@@ -604,6 +729,11 @@ export default {
             sellers,
             showDeleteModal,
             filters,
+            fromDateOpen,
+            toDateOpen,
+            todayCalendarDate,
+            calendarFromValue,
+            calendarToValue,
             currentPage,
             totalItems,
             totalPages,
@@ -611,6 +741,7 @@ export default {
             endItem,
             formatPrice,
             formatDate,
+            formatDateFilterLabel,
             goToEditProduct,
             viewProduct,
             confirmDelete,
@@ -621,6 +752,9 @@ export default {
             nextPage,
             applyFilters,
             clearFilters,
+            setCreatedDate,
+            clearCreatedDate,
+            clearCreatedDateRange,
             getStockStatusClass,
             fetchProducts,
             t
