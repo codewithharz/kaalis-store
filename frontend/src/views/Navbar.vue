@@ -389,7 +389,7 @@ import {
     ChevronDown
 } from 'lucide-vue-next';
 
-import { menuItems } from '../utils/menuItems.js';
+import { getMenuItems } from '../utils/menuItems.js';
 import { useUserStore } from '../store/user';
 import { useCartStore } from '../store/cart';
 import { useWishlistStore } from '../store/wishlistStore';
@@ -498,7 +498,10 @@ export default {
 
         const selectedCountry = computed(() => countryStore.selectedCountry);
         const translatedMenuItems = computed(() =>
-            menuItems.map((item) => ({
+            getMenuItems({
+                user: userStore.user,
+                isXofCountry: countryStore.isXofCountry,
+            }).map((item) => ({
                 ...item,
                 label: t(item.labelKey),
             }))

@@ -4,8 +4,15 @@ const Order = require("../models/orderModels");
 const User = require("../models/userModels");
 const PaystackService = require("../services/paystackService");
 const CurrencyService = require("../services/currencyService");
-const payoutConfig = require("../config/payoutConfig");
 const logger = require("../utils/logger");
+const {
+  getPlatformSettings,
+  getPayoutConfigSnapshot,
+} = require("../services/platformSettingsService");
+const {
+  requestAfriExchangeLinkVerification,
+  confirmAfriExchangeLinkVerification,
+} = require("../services/afriExchangeAccountVerificationService");
 
 // Helper function to validate phone number
 const validatePhoneNumber = (phoneNumber, countryCode) => {
@@ -31,10 +38,12 @@ const vendorController = {
   // Get vendor's payout history
   async getPayouts(req, res) {
     try {
+      const platformSettings = await getPlatformSettings();
+      const payoutConfig = await getPayoutConfigSnapshot();
       const payouts = await VendorPayout.find({
         vendorId: req.user._id,
       })
-        .sort({ createdAt: -1 })
+        .sort({ processedAt: -1, scheduledDate: -1, createdAt: -1 })
         .limit(50);
 
       const payoutTotals = await VendorPayout.aggregate([
@@ -129,7 +138,9 @@ const vendorController = {
           platformFeeAmounts,
           orderCounts,
           nextPayoutDate: nextPayout?.scheduledDate || null,
-          platformFee: payoutConfig.fees.default.platformFee * 100,
+          platformFee:
+            platformSettings.payment.checkoutPlatformFeePercent ||
+            payoutConfig.fees.default.platformFee * 100,
         },
       });
     } catch (error) {
@@ -201,12 +212,55 @@ const vendorController = {
         });
       }
 
+      const verificationRequest = await requestAfriExchangeLinkVerification({
+        afriExchangeUserId,
+        walletAddress,
+        accountEmail,
+        tokenType: "CT",
+      });
+
+      res.json({
+        message: "AfriExchange verification code sent successfully",
+        verification: {
+          requestId: verificationRequest.requestId,
+          maskedEmail: verificationRequest.maskedEmail,
+          expiresInSeconds: verificationRequest.expiresInSeconds,
+        },
+        pendingLink: {
+          countryCode: countryCode || req.user.countryCode || "SN",
+        },
+      });
+    } catch (error) {
+      logger.error("Error linking AfriExchange account:", error);
+      res.status(error.statusCode || 500).json({
+        message: error.message || "Failed to link AfriExchange account",
+        error: error.message,
+      });
+    }
+  },
+
+  async confirmAfriExchangeAccountLink(req, res) {
+    try {
+      const { requestId, code, countryCode } = req.body;
+
+      if (!requestId || !code) {
+        return res.status(400).json({
+          message: "Verification requestId and code are required",
+        });
+      }
+
+      const verification = await confirmAfriExchangeLinkVerification({
+        requestId,
+        code,
+      });
+
       await User.findByIdAndUpdate(req.user._id, {
         afriExchange: {
-          userId: afriExchangeUserId,
-          walletAddress,
-          accountEmail,
+          userId: verification.user.id,
+          walletAddress: verification.wallet.blockchain_address,
+          accountEmail: verification.user.email,
           linkedAt: new Date(),
+          verifiedAt: new Date(),
         },
         paymentMethod: "AfriExchange",
         currency: "XOF",
@@ -214,18 +268,19 @@ const vendorController = {
       });
 
       res.json({
-        message: "AfriExchange account linked successfully",
+        message: "AfriExchange account verified and linked successfully",
         data: {
-          afriExchangeUserId,
-          walletAddress,
-          accountEmail,
+          afriExchangeUserId: verification.user.id,
+          walletAddress: verification.wallet.blockchain_address,
+          accountEmail: verification.user.email,
           countryCode: countryCode || req.user.countryCode || "SN",
+          verifiedAt: new Date().toISOString(),
         },
       });
     } catch (error) {
-      logger.error("Error linking AfriExchange account:", error);
-      res.status(500).json({
-        message: "Failed to link AfriExchange account",
+      logger.error("Error confirming AfriExchange account link:", error);
+      res.status(error.statusCode || 500).json({
+        message: error.message || "Failed to confirm AfriExchange account link",
         error: error.message,
       });
     }
@@ -282,6 +337,8 @@ const vendorController = {
   // Get payout stats
   async getPayoutStats(req, res) {
     try {
+      const platformSettings = await getPlatformSettings();
+      const payoutConfig = await getPayoutConfigSnapshot();
       // Get pending amounts by currency
       const pendingByStatus = await VendorPayout.aggregate([
         {
@@ -351,7 +408,9 @@ const vendorController = {
       res.json({
         stats,
         nextPayoutDate: nextPayout?.scheduledDate || null,
-        platformFee: payoutConfig.fees.default.platformFee * 100,
+        platformFee:
+          platformSettings.payment.checkoutPlatformFeePercent ||
+          payoutConfig.fees.default.platformFee * 100,
         paymentMethod: vendor?.paymentMethod || "Paystack",
         currency: vendor?.currency || "NGN",
       });

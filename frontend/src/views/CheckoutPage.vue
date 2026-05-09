@@ -258,6 +258,17 @@
                         <div v-if="paymentMethod === 'AfriExchange'" class="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
                             <p class="font-medium">{{ afriExchangeCheckoutTitle }}</p>
                             <p class="mt-1 text-amber-800">{{ afriExchangeCheckoutBody }}</p>
+                            <div v-if="hasLinkedAfriExchangeAccount" class="mt-3 rounded-md border border-amber-200 bg-white/80 p-3">
+                                <p class="text-xs font-semibold uppercase tracking-wide text-amber-700">
+                                    {{ t('checkout.afriExchangeLinkedWalletLabel') }}
+                                </p>
+                                <p class="mt-1 break-all font-medium text-amber-950">
+                                    {{ afriExchangeLinkedIdentity }}
+                                </p>
+                                <p class="mt-2 text-xs text-amber-800">
+                                    {{ t('checkout.afriExchangeFundWalletHint') }}
+                                </p>
+                            </div>
                             <div class="mt-3 flex flex-wrap gap-2">
                                 <button
                                     v-if="!hasLinkedAfriExchangeAccount && afriExchangeSignupUrl"
@@ -330,6 +341,7 @@ import { storeToRefs } from 'pinia';
 import apiClient from '../api/axios';
 import axios from 'axios';
 import { getCurrencySymbol, formatCurrencyAmount } from '../utils/countryCurrency.js';
+import { fetchPlatformRuntimeSettings, getCachedPlatformRuntimeSettings } from '../utils/platformSettings.js';
 
 // Import images
 import paystackLogo from '../assets/images/paystack-p.svg';
@@ -339,6 +351,17 @@ import mastercardLogo from '../assets/images/mastercard-pay.webp';
 import applePay from '../assets/images/apple-pay.webp';
 import googlePay from '../assets/images/google-pay.png';
 import paypalLogo from '../assets/images/paypal-pay.webp';
+
+// Make imported images available to the template and computed properties
+const paymentImages = {
+    paystackLogo,
+    visaLogo,
+    mastercardLogo,
+    applePay,
+    googlePay,
+    paypalLogo,
+    opayLogo
+};
 
 const router = useRouter();
 const { t } = useI18n();
@@ -356,6 +379,7 @@ const isLoading = ref(true);
 const error = ref(null);
 const shippingFee = ref(0);
 const exchangeRate = ref(0.0006);
+const checkoutPlatformFeeRate = ref(getCachedPlatformRuntimeSettings().payment.checkoutPlatformFeePercent / 100);
 const loadingItems = reactive({});
 const promoCode = ref('');
 
@@ -398,6 +422,16 @@ const hasLinkedAfriExchangeAccount = computed(() => {
     );
 });
 
+const afriExchangeLinkedIdentity = computed(() => {
+    const afriExchange = userStore.user?.afriExchange;
+    return (
+        afriExchange?.accountEmail ||
+        afriExchange?.walletAddress ||
+        afriExchange?.userId ||
+        t('checkout.linkAfriExchangeAccount')
+    );
+});
+
 const isAfriExchangeBlocked = computed(() =>
     paymentMethod.value === 'AfriExchange' && !hasLinkedAfriExchangeAccount.value
 );
@@ -405,6 +439,9 @@ const isAfriExchangeBlocked = computed(() =>
 const isPlaceOrderDisabled = computed(() =>
     isProcessingPayment.value || isAfriExchangeBlocked.value
 );
+
+const hasPaystackConfig = computed(() => Boolean(import.meta.env.VITE_PAYSTACK_PUBLIC_KEY));
+const isPaystackScriptLoaded = () => typeof window !== 'undefined' && typeof window.PaystackPop !== 'undefined';
 
 const afriExchangeCheckoutTitle = computed(() =>
     hasLinkedAfriExchangeAccount.value
@@ -652,23 +689,27 @@ watch(() => stats.value?.storeCreditBalance, (newBalance) => {
 
 onMounted(async () => {
     try {
-        if (!import.meta.env.VITE_PAYSTACK_PUBLIC_KEY) {
-            console.error('Paystack public key not found in environment variables');
-            toast.error(t('checkout.paymentConfigError'));
-            return;
-        }
-        if (typeof PaystackPop === 'undefined') {
-            console.error('Paystack script not loaded');
-            toast.error(t('checkout.paymentNotInitialized'));
-            return;
-        }
+        const runtimeSettings = await fetchPlatformRuntimeSettings().catch(() => getCachedPlatformRuntimeSettings());
+        checkoutPlatformFeeRate.value = Number(runtimeSettings?.payment?.checkoutPlatformFeePercent || 8) / 100;
         await loadCheckoutData();
         if (productStore && cartStore) {
             updateShippingFee();
         }
+
+        if (checkoutCurrency.value === 'NGN') {
+            if (!hasPaystackConfig.value) {
+                console.error('Paystack public key not found in environment variables');
+                toast.error(t('checkout.paymentConfigError'));
+            } else if (!isPaystackScriptLoaded()) {
+                console.error('Paystack script not loaded');
+                toast.error(t('checkout.paymentNotInitialized'));
+            }
+        }
     } catch (error) {
         console.error('Error initializing checkout:', error);
         toast.error(t('checkout.failedInitializeCheckout'));
+        error.value = t('checkout.failedLoadCheckout');
+        isLoading.value = false;
     }
 });
 
@@ -677,7 +718,7 @@ const retryLoading = () => {
 };
 
 const goToAfriExchangeLinking = async () => {
-    await router.push('/account/profile/bank-details');
+    await router.push('/account/profile/checkout-wallet');
 };
 
 const openAfriExchangeSignup = () => {
@@ -806,13 +847,16 @@ const getCheckoutItemUnitPrice = (item) => {
 
 const prepareItemsForPayload = (items, totalDiscount, subtotalAmount) => {
     if (!subtotalAmount) return [];
+    const platformFeeRate = Number.isFinite(checkoutPlatformFeeRate.value)
+        ? checkoutPlatformFeeRate.value
+        : 0.08;
     const discountRatio = totalDiscount / subtotalAmount;
     return items.map(item => {
         const itemPrice = getCheckoutItemUnitPrice(item);
         const itemTotal = itemPrice * item.quantity;
         const itemDiscount = Math.round(itemTotal * discountRatio);
         const discountedItemTotal = itemTotal - itemDiscount;
-        const vendorAmount = Math.floor(discountedItemTotal * 0.92);
+        const vendorAmount = Math.floor(discountedItemTotal * (1 - platformFeeRate));
         const platformFee = discountedItemTotal - vendorAmount;
         return {
             productId: item.product._id,  // Changed from 'product' to 'productId'
@@ -872,6 +916,11 @@ const buildPurchasedCartItems = (items) => items.map((item) => ({
     variantId: item.variant?._id || null,
     quantity: item.quantity,
 }));
+
+const isAfriExchangeInsufficientBalanceError = (error) => {
+    const message = error?.response?.data?.message || error?.message || '';
+    return message.toLowerCase().includes('insufficient buyer ct balance');
+};
 
 const placeOrder = async () => {
     let createdOrder = null;
@@ -1122,12 +1171,21 @@ const placeOrder = async () => {
         }
     } catch (error) {
         console.error('Payment initialization error:', error);
-        toast.error(error.response?.data?.message || error.message || t('checkout.paymentInitializationFailed'));
+        const isInsufficientBalance = paymentMethod.value === 'AfriExchange' && isAfriExchangeInsufficientBalanceError(error);
+        toast.error(
+            isInsufficientBalance
+                ? t('checkout.afriExchangeInsufficientBalance')
+                : (error.response?.data?.message || error.message || t('checkout.paymentInitializationFailed'))
+        );
 
         if (createdOrder?._id) {
             try {
                 await orderStore.cancelOrder(createdOrder._id, "Payment cancelled by user");
-                toast.info(t('checkout.orderCancelledPaymentFailure'));
+                toast.info(
+                    isInsufficientBalance
+                        ? t('checkout.afriExchangeInsufficientBalanceCancelled')
+                        : t('checkout.orderCancelledPaymentFailure')
+                );
             } catch (cancelError) {
                 console.error('Error cancelling order:', cancelError);
             }
@@ -1216,7 +1274,11 @@ const handlePaymentClose = async (orderId) => {
 };
 
 const validatePaystackScript = () => {
-    if (typeof window.PaystackPop === 'undefined') {
+    if (!hasPaystackConfig.value) {
+        console.error('Paystack public key not configured');
+        return false;
+    }
+    if (!isPaystackScriptLoaded()) {
         console.error('Paystack script not loaded');
         return false;
     }
@@ -1258,16 +1320,6 @@ const editAddress = () => {
     selectedAddress.value = null;
 };
 
-// Make imported images available to the template
-const paymentImages = {
-    paystackLogo,
-    visaLogo,
-    mastercardLogo,
-    applePay,
-    googlePay,
-    paypalLogo,
-    opayLogo
-};
 </script>
 
 <style scoped>

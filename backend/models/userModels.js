@@ -78,6 +78,7 @@ const userSchema = new mongoose.Schema(
       walletAddress: String,
       accountEmail: String,
       linkedAt: Date,
+      verifiedAt: Date,
     },
     paymentMethod: {
       type: String,

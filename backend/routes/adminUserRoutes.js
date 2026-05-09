@@ -3,6 +3,7 @@ const express = require("express");
 const AdminUser = require("../models/adminUserModels");
 const adminUserController = require("../controllers/adminUserController");
 const adminDashboardController = require("../controllers/adminDashboardController");
+const platformSettingsController = require("../controllers/platformSettingsController");
 const adminAuthMiddleware = require("../middleware/adminAuthMiddleware");
 const isAdmin = require("../middleware/isAdmin");
 const isSuperAdmin = require("../middleware/isSuperAdmin");
@@ -79,6 +80,8 @@ router.put("/regular-users/:id/permissions", adminAuthMiddleware, isAdmin, admin
 router.get("/dashboard/stats", adminAuthMiddleware, adminDashboardController.getDashboardStats);
 router.get("/products", adminAuthMiddleware, adminDashboardController.getAdminProducts);
 router.get("/orders", adminAuthMiddleware, adminDashboardController.getAdminOrders);
+router.get("/payments", adminAuthMiddleware, isAdmin, adminDashboardController.getAdminPayments);
+router.get("/payments/export", adminAuthMiddleware, isAdmin, adminDashboardController.exportAdminPayments);
 router.get("/payouts", adminAuthMiddleware, isAdmin, adminDashboardController.getAdminPayouts);
 router.post("/payouts/reconcile-afriexchange", adminAuthMiddleware, isSuperAdmin, adminDashboardController.reconcileAfriExchangePayouts);
 router.post("/payouts/:id/check-status", adminAuthMiddleware, isAdmin, adminDashboardController.checkPayoutStatus);
@@ -98,6 +101,18 @@ if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
 }
 router.get("/categories", adminAuthMiddleware, adminDashboardController.getAdminCategories);
 router.get("/revenue-stats", adminAuthMiddleware, adminDashboardController.getRevenueStats);
+router.get(
+  "/settings",
+  adminAuthMiddleware,
+  isAdmin,
+  platformSettingsController.getAdminPlatformSettings
+);
+router.put(
+  "/settings",
+  adminAuthMiddleware,
+  isSuperAdmin,
+  platformSettingsController.updateAdminPlatformSettings
+);
 
 // Product Management Routes
 router.post("/products", adminAuthMiddleware, isAdmin, adminDashboardController.createAdminProduct);

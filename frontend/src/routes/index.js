@@ -261,7 +261,11 @@ const routes = [
           // { path: "", redirect: "profile/profile-user" },
           { path: "", component: ProfileUserCard },
           { path: "address-book", component: ProfileAddressBookCard },
-          { path: "bank-details", component: ProfileBankDetailsCard },
+          {
+            path: "bank-details",
+            component: ProfileBankDetailsCard,
+            alias: ["checkout-wallet", "payout-settings"],
+          },
           { path: "my-products", component: UserProducts },
           { path: "change-password", component: ProfileChangePasswordCard },
           { path: "manage-payment", component: ProfileManagePaymentCard },

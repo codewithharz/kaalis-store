@@ -20,6 +20,157 @@ const {
 } = require("../services/emailService");
 const mongoose = require("mongoose");
 
+const normalizePaymentCurrency = (currency) => {
+  return currency === "XOF" ? "XOF" : "NGN";
+};
+
+const applyAdminPaymentDateRange = (query, dateRange) => {
+  const range = (dateRange || "month").toLowerCase();
+  if (!range || range === "all") {
+    return;
+  }
+
+  const now = new Date();
+  const startDate = new Date();
+
+  switch (range) {
+    case "today":
+      startDate.setHours(0, 0, 0, 0);
+      break;
+    case "week":
+      startDate.setDate(startDate.getDate() - 6);
+      startDate.setHours(0, 0, 0, 0);
+      break;
+    case "month":
+      startDate.setDate(startDate.getDate() - 29);
+      startDate.setHours(0, 0, 0, 0);
+      break;
+    case "quarter":
+      startDate.setMonth(startDate.getMonth() - 3);
+      startDate.setHours(0, 0, 0, 0);
+      break;
+    case "year":
+      startDate.setFullYear(startDate.getFullYear() - 1);
+      startDate.setHours(0, 0, 0, 0);
+      break;
+    default:
+      return;
+  }
+
+  query.createdAt = {
+    $gte: startDate,
+    $lte: now,
+  };
+};
+
+const buildAdminPaymentQuery = async (params = {}) => {
+  const query = {};
+  const status = (params.status || "").trim().toLowerCase();
+  const paymentMethod = (params.paymentMethod || "").trim();
+  const currency = (params.currency || "").trim().toUpperCase();
+  const search = (params.search || "").trim();
+
+  if (status) {
+    query.status = status === "completed" ? "success" : status;
+  }
+
+  if (paymentMethod) {
+    query.paymentMethod = paymentMethod;
+  }
+
+  if (currency) {
+    if (currency === "NGN") {
+      query.$and = [
+        ...(query.$and || []),
+        {
+          $or: [
+            { currency: "NGN" },
+            { currency: "ngn" },
+            { currency: { $exists: false } },
+            { currency: null },
+            { currency: "" },
+          ],
+        },
+      ];
+    } else {
+      query.currency = currency;
+    }
+  }
+
+  applyAdminPaymentDateRange(query, params.dateRange);
+
+  if (search) {
+    const [matchingUsers, matchingOrders] = await Promise.all([
+      User.find({
+        $or: [
+          { email: { $regex: search, $options: "i" } },
+          { username: { $regex: search, $options: "i" } },
+          { firstName: { $regex: search, $options: "i" } },
+          { lastName: { $regex: search, $options: "i" } },
+        ],
+      })
+        .select("_id")
+        .limit(50)
+        .lean(),
+      Order.find({
+        orderId: { $regex: search, $options: "i" },
+      })
+        .select("_id")
+        .limit(50)
+        .lean(),
+    ]);
+
+    const userIds = matchingUsers.map((user) => user._id);
+    const orderIds = matchingOrders.map((order) => order._id);
+
+    query.$and = [
+      ...(query.$and || []),
+      {
+        $or: [
+          { reference: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+          { "metadata.userEmail": { $regex: search, $options: "i" } },
+          { "metadata.userId": { $in: userIds } },
+          { orderId: { $in: orderIds } },
+        ],
+      },
+    ];
+  }
+
+  return query;
+};
+
+const mapAdminPayment = (paymentDoc) => {
+  const payment = paymentDoc.toObject ? paymentDoc.toObject() : paymentDoc;
+  const user = payment.metadata?.userId;
+  const order = payment.orderId;
+  const customerName =
+    user?.username ||
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+    payment.email;
+
+  return {
+    id: payment._id,
+    paymentId: payment.reference || payment._id.toString(),
+    reference: payment.reference || null,
+    orderId: order?._id || payment.orderId || null,
+    orderNumber: order?.orderId || null,
+    customerName,
+    customerEmail: user?.email || payment.email || payment.metadata?.userEmail || "",
+    amount: payment.amount || 0,
+    currency: normalizePaymentCurrency(payment.currency || order?.currency),
+    status: payment.status || "pending",
+    paymentMethod: payment.paymentMethod || "Paystack",
+    createdAt: payment.createdAt,
+    updatedAt: payment.updatedAt,
+  };
+};
+
+const toCsvCell = (value) => {
+  const text = value == null ? "" : String(value);
+  return `"${text.replace(/"/g, '""')}"`;
+};
+
 // backend/controllers/adminDashboardController.js
 exports.getDashboardStats = async (req, res) => {
   try {
@@ -736,9 +887,22 @@ exports.getAdminOrders = async (req, res) => {
     }
 
     if (search) {
+      const matchingUsers = await User.find({
+        $or: [
+          { username: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+          { firstName: { $regex: search, $options: "i" } },
+          { lastName: { $regex: search, $options: "i" } },
+        ],
+      })
+        .select("_id")
+        .limit(50)
+        .lean();
+
       query.$or = [
-        { orderNumber: { $regex: search, $options: "i" } },
-        { "user.username": { $regex: search, $options: "i" } },
+        { orderId: { $regex: search, $options: "i" } },
+        { transactionId: { $regex: search, $options: "i" } },
+        { user: { $in: matchingUsers.map((user) => user._id) } },
       ];
     }
 
@@ -771,14 +935,20 @@ exports.getAdminOrders = async (req, res) => {
     ]);
 
     const orderIds = orders.map((order) => order._id);
-    const payouts = orderIds.length
-      ? await VendorPayout.find({ orderId: { $in: orderIds } })
-          .select(
-            "orderId status paymentMethod amount currency scheduledDate processedAt transferReference providerPayoutId providerStatus errorMessage createdAt updatedAt"
-          )
-          .sort({ createdAt: -1 })
-          .lean()
-      : [];
+    const [payouts, payments] = orderIds.length
+      ? await Promise.all([
+          VendorPayout.find({ orderId: { $in: orderIds } })
+            .select(
+              "orderId status paymentMethod amount currency scheduledDate processedAt transferReference providerPayoutId providerStatus errorMessage createdAt updatedAt"
+            )
+            .sort({ createdAt: -1 })
+            .lean(),
+          Payment.find({ orderId: { $in: orderIds } })
+            .select("orderId reference amount currency status paymentMethod createdAt updatedAt")
+            .sort({ createdAt: -1 })
+            .lean(),
+        ])
+      : [[], []];
 
     const payoutByOrderId = new Map();
     for (const payout of payouts) {
@@ -788,10 +958,27 @@ exports.getAdminOrders = async (req, res) => {
       }
     }
 
+    const paymentByOrderId = new Map();
+    for (const payment of payments) {
+      const key = payment.orderId?.toString();
+      if (key && !paymentByOrderId.has(key)) {
+        paymentByOrderId.set(key, {
+          id: payment._id,
+          reference: payment.reference || payment._id?.toString(),
+          amount: payment.amount || 0,
+          currency: normalizePaymentCurrency(payment.currency),
+          status: payment.status || "pending",
+          paymentMethod: payment.paymentMethod || "Paystack",
+          createdAt: payment.createdAt,
+        });
+      }
+    }
+
     const ordersWithAdminContext = orders.map((order) => {
       const plainOrder = order.toObject();
       return {
         ...plainOrder,
+        paymentSummary: paymentByOrderId.get(order._id.toString()) || null,
         payoutSummary: payoutByOrderId.get(order._id.toString()) || null,
       };
     });
@@ -1239,6 +1426,138 @@ exports.getRevenueStats = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error fetching revenue statistics",
+      error: error.message,
+    });
+  }
+};
+
+exports.getAdminPayments = async (req, res) => {
+  try {
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
+    const skip = (page - 1) * limit;
+    const query = await buildAdminPaymentQuery(req.query);
+
+    const [payments, total, summary] = await Promise.all([
+      Payment.find(query)
+        .populate("orderId", "orderId totalAmount currency status paymentMethod")
+        .populate("metadata.userId", "username email firstName lastName")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Payment.countDocuments(query),
+      Payment.aggregate([
+        { $match: query },
+        {
+          $group: {
+            _id: {
+              status: "$status",
+              currency: {
+                $cond: [{ $eq: ["$currency", "XOF"] }, "XOF", "NGN"],
+              },
+            },
+            amount: { $sum: "$amount" },
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+    ]);
+
+    const byStatus = {};
+    const successTotalsByCurrency = {};
+
+    for (const row of summary) {
+      const statusKey = row._id?.status || "pending";
+      const currencyKey = normalizePaymentCurrency(row._id?.currency);
+
+      if (!byStatus[statusKey]) {
+        byStatus[statusKey] = { count: 0, totalsByCurrency: {} };
+      }
+
+      byStatus[statusKey].count += row.count;
+      byStatus[statusKey].totalsByCurrency[currencyKey] = row.amount;
+
+      if (statusKey === "success") {
+        successTotalsByCurrency[currencyKey] =
+          (successTotalsByCurrency[currencyKey] || 0) + row.amount;
+      }
+    }
+
+    res.json({
+      success: true,
+      payments: payments.map(mapAdminPayment),
+      summary: {
+        byStatus,
+        successTotalsByCurrency,
+      },
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching admin payments:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch payments",
+      error: error.message,
+    });
+  }
+};
+
+exports.exportAdminPayments = async (req, res) => {
+  try {
+    const query = await buildAdminPaymentQuery(req.query);
+    const payments = await Payment.find(query)
+      .populate("orderId", "orderId totalAmount currency status paymentMethod")
+      .populate("metadata.userId", "username email firstName lastName")
+      .sort({ createdAt: -1 })
+      .limit(5000);
+
+    const headers = [
+      "Payment Reference",
+      "Order Number",
+      "Customer Name",
+      "Customer Email",
+      "Amount",
+      "Currency",
+      "Status",
+      "Method",
+      "Created At",
+    ];
+
+    const rows = payments.map((payment) => {
+      const mapped = mapAdminPayment(payment);
+      return [
+        mapped.paymentId,
+        mapped.orderNumber || "",
+        mapped.customerName || "",
+        mapped.customerEmail || "",
+        mapped.amount,
+        mapped.currency,
+        mapped.status,
+        mapped.paymentMethod,
+        mapped.createdAt ? new Date(mapped.createdAt).toISOString() : "",
+      ];
+    });
+
+    const csv = [headers, ...rows]
+      .map((row) => row.map(toCsvCell).join(","))
+      .join("\n");
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="admin-payments-${new Date().toISOString().split("T")[0]}.csv"`
+    );
+    res.status(200).send(csv);
+  } catch (error) {
+    console.error("Error exporting admin payments:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to export payments",
       error: error.message,
     });
   }
@@ -2109,21 +2428,33 @@ exports.getAdminPayouts = async (req, res) => {
 
     const vendorSearchIds = [];
     if (search) {
-      const matchingVendors = await User.find({
-        $or: [
-          { email: { $regex: search, $options: "i" } },
-          { firstName: { $regex: search, $options: "i" } },
-          { lastName: { $regex: search, $options: "i" } },
-        ],
-      })
-        .select("_id")
-        .limit(50);
+      const [matchingVendors, matchingOrders] = await Promise.all([
+        User.find({
+          $or: [
+            { email: { $regex: search, $options: "i" } },
+            { username: { $regex: search, $options: "i" } },
+            { firstName: { $regex: search, $options: "i" } },
+            { lastName: { $regex: search, $options: "i" } },
+          ],
+        })
+          .select("_id")
+          .limit(50)
+          .lean(),
+        Order.find({
+          orderId: { $regex: search, $options: "i" },
+        })
+          .select("_id")
+          .limit(50)
+          .lean(),
+      ]);
 
       vendorSearchIds.push(...matchingVendors.map((vendor) => vendor._id));
+      const orderSearchIds = matchingOrders.map((order) => order._id);
       query.$or = [
         { transactionReference: { $regex: search, $options: "i" } },
         { transferReference: { $regex: search, $options: "i" } },
         { vendorId: { $in: vendorSearchIds } },
+        { orderId: { $in: orderSearchIds } },
       ];
     }
 

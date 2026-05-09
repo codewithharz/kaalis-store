@@ -1,444 +1,783 @@
-<!-- // frontend/src/views/admin/AdminSettings.vue -->
 <template>
-    <div>
-        <!-- Header -->
-        <div class="mb-3 px-8 py-4 bg-white">
-            <h2 class="text-2xl font-bold text-gray-800">{{ t('adminSettings.title') }}</h2>
+    <div class="space-y-6">
+        <div class="rounded-lg bg-white px-4 py-5 shadow-sm sm:px-6">
+            <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">{{ t('adminSettings.title') }}</h2>
+                    <p class="mt-1 max-w-3xl text-sm text-slate-600">
+                        Keep the platform fee, payout schedule, and rail availability aligned with the logic Kaalis is
+                        actually using at runtime.
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    @click="saveSettings"
+                    :disabled="loading || saving"
+                    class="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    {{ saving ? 'Saving...' : t('adminSettings.saveChanges') }}
+                </button>
+            </div>
         </div>
 
-        <!-- Settings Navigation -->
-        <div class="grid grid-cols-12 gap-6">
-            <!-- Settings Menu -->
-            <div class="col-span-3">
-                <div class="bg-white rounded-lg shadow-sm p-4">
-                    <nav class="space-y-1">
-                        <button v-for="tab in tabs" :key="tab.id" @click="currentTab = tab.id" :class="[
-                            'w-full flex items-center px-4 py-2 text-sm rounded-md',
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Checkout fee</p>
+                <p class="mt-2 text-2xl font-semibold text-slate-900">{{ settings.payment.checkoutPlatformFeePercent }}%</p>
+                <p class="mt-1 text-sm text-slate-500">Used when Kaalis creates order splits at checkout.</p>
+            </section>
+            <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Default vendor share</p>
+                <p class="mt-2 text-2xl font-semibold text-slate-900">{{ settings.payouts.defaultTier.vendorSharePercent }}%</p>
+                <p class="mt-1 text-sm text-slate-500">Standard vendor settlement share for payout batches.</p>
+            </section>
+            <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Premium vendor share</p>
+                <p class="mt-2 text-2xl font-semibold text-slate-900">{{ settings.payouts.premiumTier.vendorSharePercent }}%</p>
+                <p class="mt-1 text-sm text-slate-500">Applied later during premium payout settlement.</p>
+            </section>
+            <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Maintenance mode</p>
+                <p class="mt-2 text-2xl font-semibold text-slate-900">{{ settings.general.maintenanceMode ? 'On' : 'Off' }}</p>
+                <p class="mt-1 text-sm text-slate-500">Public runtime flag from Kaalis platform settings.</p>
+            </section>
+        </div>
+
+        <div class="grid gap-6 xl:grid-cols-[220px_minmax(0,1fr)]">
+            <aside class="rounded-lg bg-white p-3 shadow-sm">
+                <nav class="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+                    <button
+                        v-for="tab in tabs"
+                        :key="tab.id"
+                        type="button"
+                        @click="currentTab = tab.id"
+                        :class="[
+                            'rounded-md px-3 py-2 text-left text-sm font-medium transition',
                             currentTab === tab.id
-                                ? 'bg-blue-50 text-blue-700'
-                                : 'text-gray-700 hover:bg-gray-50'
-                        ]">
-                            <component :is="tab.icon" class="h-5 w-5 mr-3" />
-                            {{ tab.name }}
-                        </button>
-                    </nav>
-                </div>
-            </div>
+                                ? 'bg-slate-900 text-white'
+                                : 'text-slate-700 hover:bg-slate-100'
+                        ]"
+                    >
+                        {{ tab.name }}
+                    </button>
+                </nav>
+            </aside>
 
-            <!-- Settings Content -->
-            <div class="col-span-9">
-                <div class="bg-white rounded-lg shadow-sm p-6">
-                    <!-- General Settings -->
+            <div class="rounded-lg bg-white p-4 shadow-sm sm:p-6">
+                <div v-if="loading" class="py-12 text-center text-sm text-slate-500">Loading platform settings...</div>
+
+                <template v-else>
                     <div v-if="currentTab === 'general'" class="space-y-6">
-                        <h3 class="text-lg font-medium text-gray-900">{{ t('adminSettings.sections.general') }}</h3>
+                        <section>
+                            <h3 class="text-lg font-semibold text-slate-900">General</h3>
+                            <p class="mt-1 text-sm text-slate-500">Basic platform identity and runtime defaults.</p>
+                        </section>
 
-                        <div class="grid grid-cols-2 gap-6">
-                            <div>
-                                <label class="block pb-1 text-sm font-medium text-gray-700">{{ t('adminSettings.general.platformName') }}</label>
-                                <input type="text" v-model="settings.platformName"
-                                    class="mt-1 block w-full border rounded-md shadow-sm p-2">
-                            </div>
-
-                            <div>
-                                <label class="block pb-1 text-sm font-medium text-gray-700">{{ t('adminSettings.general.supportEmail') }}</label>
-                                <input type="email" v-model="settings.supportEmail"
-                                    class="mt-1 block w-full border rounded-md shadow-sm p-2">
-                            </div>
-
-                            <div>
-                                <label class="block pb-1 text-sm font-medium text-gray-700">{{ t('adminSettings.general.currency') }}</label>
-                                <div class="relative">
-                                    <select v-model="settings.currency"
-                                        class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent">
-                                        <option value="USD">USD ($)</option>
-                                        <option value="EUR">EUR (€)</option>
-                                        <option value="GBP">GBP (£)</option>
-                                        <option value="NGN">NGN (₦)</option>
-                                    </select>
-                                    <div
-                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                                        <ChevronDown class="w-5 h-5 text-gray-400" />
-                                    </div>
-                                </div>
-                            </div>
-
-
-                            <div>
-                                <label class="block pb-1 text-sm font-medium text-gray-700">{{ t('adminSettings.general.timezone') }}</label>
-                                <div class="relative">
-                                    <select v-model="settings.timezone"
-                                        class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent">
-                                        <option value="UTC">UTC</option>
-                                        <option value="WAT">{{ t('adminSettings.general.westAfricaTime') }}</option>
-                                        <option value="GMT">GMT</option>
-                                    </select>
-                                    <div
-                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                                        <ChevronDown class="w-5 h-5 text-gray-400" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center space-x-2">
-                            <input type="checkbox" id="maintenanceMode" v-model="settings.maintenanceMode">
-                            <label for="maintenanceMode" class="text-sm text-gray-700">
-                                {{ t('adminSettings.general.enableMaintenanceMode') }}
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <label class="space-y-1 text-sm">
+                                <span class="font-medium text-slate-700">Platform name</span>
+                                <input v-model="settings.general.platformName" type="text" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                            </label>
+                            <label class="space-y-1 text-sm">
+                                <span class="font-medium text-slate-700">Support email</span>
+                                <input v-model="settings.general.supportEmail" type="email" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                            </label>
+                            <label class="space-y-1 text-sm">
+                                <span class="font-medium text-slate-700">Default currency</span>
+                                <select v-model="settings.general.currency" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                    <option value="NGN">NGN</option>
+                                    <option value="XOF">XOF</option>
+                                </select>
+                            </label>
+                            <label class="space-y-1 text-sm">
+                                <span class="font-medium text-slate-700">Timezone</span>
+                                <select v-model="settings.general.timezone" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                    <option value="WAT">WAT</option>
+                                    <option value="UTC">UTC</option>
+                                    <option value="GMT">GMT</option>
+                                </select>
                             </label>
                         </div>
+
+                        <label class="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
+                            <input v-model="settings.general.maintenanceMode" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500">
+                            <span>
+                                <span class="block font-medium text-slate-800">Maintenance mode</span>
+                                <span class="block text-slate-500">Expose a platform-wide flag for planned maintenance windows.</span>
+                            </span>
+                        </label>
                     </div>
 
-                    <!-- Payment Settings -->
-                    <div v-if="currentTab === 'payment'" class="space-y-6">
-                        <h3 class="text-lg font-medium text-gray-900">{{ t('adminSettings.sections.payment') }}</h3>
+                    <div v-else-if="currentTab === 'commerce'" class="space-y-6">
+                        <section>
+                            <h3 class="text-lg font-semibold text-slate-900">Commerce</h3>
+                            <p class="mt-1 text-sm text-slate-500">
+                                This checkout fee is the number the storefront now uses when it creates vendor/platform splits.
+                            </p>
+                        </section>
 
-                        <div class="space-y-6">
-                            <!-- Paystack Configuration -->
-                            <div class="border rounded-lg p-4">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h4 class="font-medium text-gray-900">{{ t('adminSettings.payment.paystack') }}</h4>
-                                    <div class="flex items-center">
-                                        <input type="checkbox" id="paystackEnabled"
-                                            v-model="settings.payment.paystack.enabled" class="mr-2">
-                                        <label for="paystackEnabled" class="text-sm text-gray-700">
-                                            {{ t('adminSettings.payment.enablePaystack') }}
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block pb-1 text-sm font-medium text-gray-700">
-                                            {{ t('adminSettings.payment.publicKey') }}
-                                        </label>
-                                        <input type="text" v-model="settings.payment.paystack.publicKey"
-                                            :disabled="!settings.payment.paystack.enabled"
-                                            class="mt-1 block w-full border rounded-md shadow-sm p-2">
-                                    </div>
-
-                                    <div>
-                                        <label class="block pb-1 text-sm font-medium text-gray-700">
-                                            {{ t('adminSettings.payment.secretKey') }}
-                                        </label>
-                                        <input type="password" v-model="settings.payment.paystack.secretKey"
-                                            :disabled="!settings.payment.paystack.enabled"
-                                            class="mt-1 block w-full border rounded-md shadow-sm p-2">
-                                    </div>
+                        <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+                            <div class="rounded-lg border border-slate-200 p-4">
+                                <label class="space-y-1 text-sm">
+                                    <span class="font-medium text-slate-700">Checkout platform fee (%)</span>
+                                    <input
+                                        v-model.number="settings.payment.checkoutPlatformFeePercent"
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        step="0.1"
+                                        class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none"
+                                    >
+                                </label>
+                                <div class="mt-3 rounded-md bg-amber-50 p-3 text-sm text-amber-900">
+                                    <p class="font-medium">Source of truth</p>
+                                    <p class="mt-1">
+                                        Checkout uses this fee for order splits. Vendor payout tiers below can still settle vendors differently later.
+                                    </p>
                                 </div>
                             </div>
 
-                            <!-- Commission Settings -->
-                            <div class="border rounded-lg p-4">
-                                <h4 class="font-medium text-gray-900 mb-4">{{ t('adminSettings.payment.commissionSettings') }}</h4>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block pb-1 text-sm font-medium text-gray-700">
-                                            {{ t('adminSettings.payment.platformFee') }}
-                                        </label>
-                                        <input type="number" v-model="settings.payment.platformFee" min="0" max="100"
-                                            class="mt-1 block w-full border rounded-md shadow-sm p-2">
-                                    </div>
-
-                                    <div>
-                                        <label class="block pb-1 text-sm font-medium text-gray-700">
-                                            {{ t('adminSettings.payment.minimumPayoutAmount') }}
-                                        </label>
-                                        <input type="number" v-model="settings.payment.minimumPayout" min="0"
-                                            class="mt-1 block w-full border rounded-md shadow-sm p-2">
+                            <div class="rounded-lg border border-slate-200 p-4">
+                                <h4 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Payment rails</h4>
+                                <div class="mt-4 space-y-3">
+                                    <div v-for="rail in paymentRails" :key="rail.key" class="flex items-center justify-between rounded-md border border-slate-100 px-3 py-2">
+                                        <div>
+                                            <p class="text-sm font-medium text-slate-800">{{ rail.label }}</p>
+                                            <p class="text-xs text-slate-500">{{ rail.description }}</p>
+                                        </div>
+                                        <span :class="rail.enabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'" class="rounded-full px-2.5 py-1 text-xs font-semibold">
+                                            {{ rail.enabled ? 'Configured' : 'Unavailable' }}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Email Settings -->
-                    <div v-if="currentTab === 'email'" class="space-y-6">
-                        <h3 class="text-lg font-medium text-gray-900">{{ t('adminSettings.sections.email') }}</h3>
+                    <div v-else-if="currentTab === 'payouts'" class="space-y-6">
+                        <section>
+                            <h3 class="text-lg font-semibold text-slate-900">Payouts</h3>
+                            <p class="mt-1 text-sm text-slate-500">These rules drive vendor settlement timing and share after orders are paid.</p>
+                        </section>
 
-                        <div class="space-y-6">
-                            <!-- SMTP Configuration -->
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block pb-1 text-sm font-medium text-gray-700">{{ t('adminSettings.email.smtpHost') }}</label>
-                                    <input type="text" v-model="settings.email.smtp.host"
-                                        class="mt-1 block w-full border rounded-md shadow-sm p-2">
+                        <div class="grid gap-6 xl:grid-cols-2">
+                            <section class="rounded-lg border border-slate-200 p-4">
+                                <h4 class="text-base font-semibold text-slate-900">Default tier</h4>
+                                <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                                    <label class="space-y-1 text-sm">
+                                        <span class="font-medium text-slate-700">Vendor share (%)</span>
+                                        <input v-model.number="settings.payouts.defaultTier.vendorSharePercent" type="number" min="0" max="100" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                    </label>
+                                    <label class="space-y-1 text-sm">
+                                        <span class="font-medium text-slate-700">Holding period (days)</span>
+                                        <input v-model.number="settings.payouts.defaultTier.holdingPeriod" type="number" min="0" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                    </label>
+                                    <label class="space-y-1 text-sm">
+                                        <span class="font-medium text-slate-700">Minimum payout</span>
+                                        <input v-model.number="settings.payouts.defaultTier.minimumAmount" type="number" min="0" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                    </label>
+                                    <label class="space-y-1 text-sm">
+                                        <span class="font-medium text-slate-700">Batch size</span>
+                                        <input v-model.number="settings.payouts.defaultTier.batchSize" type="number" min="1" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                    </label>
                                 </div>
+                            </section>
 
-                                <div>
-                                    <label class="block pb-1 text-sm font-medium text-gray-700">{{ t('adminSettings.email.smtpPort') }}</label>
-                                    <input type="number" v-model="settings.email.smtp.port"
-                                        class="mt-1 block w-full border rounded-md shadow-sm p-2">
+                            <section class="rounded-lg border border-slate-200 p-4">
+                                <h4 class="text-base font-semibold text-slate-900">Premium tier</h4>
+                                <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                                    <label class="space-y-1 text-sm">
+                                        <span class="font-medium text-slate-700">Vendor share (%)</span>
+                                        <input v-model.number="settings.payouts.premiumTier.vendorSharePercent" type="number" min="0" max="100" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                    </label>
+                                    <label class="space-y-1 text-sm">
+                                        <span class="font-medium text-slate-700">Holding period (days)</span>
+                                        <input v-model.number="settings.payouts.premiumTier.holdingPeriod" type="number" min="0" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                    </label>
+                                    <label class="space-y-1 text-sm">
+                                        <span class="font-medium text-slate-700">Minimum payout</span>
+                                        <input v-model.number="settings.payouts.premiumTier.minimumAmount" type="number" min="0" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                    </label>
+                                    <label class="space-y-1 text-sm">
+                                        <span class="font-medium text-slate-700">Batch size</span>
+                                        <input v-model.number="settings.payouts.premiumTier.batchSize" type="number" min="1" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                    </label>
                                 </div>
+                            </section>
+                        </div>
 
-                                <div>
-                                    <label class="block pb-1 text-sm font-medium text-gray-700">{{ t('adminSettings.email.username') }}</label>
-                                    <input type="text" v-model="settings.email.smtp.username"
-                                        class="mt-1 block w-full border rounded-md shadow-sm p-2">
-                                </div>
-
-                                <div>
-                                    <label class="block pb-1 text-sm font-medium text-gray-700">{{ t('adminSettings.email.password') }}</label>
-                                    <input type="password" v-model="settings.email.smtp.password"
-                                        class="mt-1 block w-full border rounded-md shadow-sm p-2">
-                                </div>
+                        <section class="rounded-lg border border-slate-200 p-4">
+                            <h4 class="text-base font-semibold text-slate-900">Retry and notifications</h4>
+                            <div class="mt-4 grid gap-4 lg:grid-cols-2">
+                                <label class="space-y-1 text-sm">
+                                    <span class="font-medium text-slate-700">Max retry attempts</span>
+                                    <input v-model.number="settings.payouts.retryStrategy.maxAttempts" type="number" min="0" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                </label>
+                                <label class="space-y-1 text-sm">
+                                    <span class="font-medium text-slate-700">Reminder hours</span>
+                                    <input v-model.number="settings.payouts.notifications.reminderHours" type="number" min="0" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                </label>
                             </div>
+                            <div class="mt-4 grid gap-3 md:grid-cols-3">
+                                <label class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2 text-sm">
+                                    <input v-model="settings.payouts.notifications.sendVendorNotifications" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500">
+                                    <span>Notify vendors</span>
+                                </label>
+                                <label class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2 text-sm">
+                                    <input v-model="settings.payouts.notifications.notifyOnFailure" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500">
+                                    <span>Notify on failure</span>
+                                </label>
+                                <label class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2 text-sm">
+                                    <input v-model="settings.payouts.notifications.notifyBeforePayout" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500">
+                                    <span>Notify before payout</span>
+                                </label>
+                            </div>
+                        </section>
+                    </div>
 
-                            <!-- Test Email -->
-                            <div class="border-t pt-4">
-                                <button @click="sendTestEmail"
-                                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                                    {{ t('adminSettings.email.sendTestEmail') }}
+                    <div v-else-if="currentTab === 'shipping'" class="space-y-6">
+                        <section>
+                            <h3 class="text-lg font-semibold text-slate-900">Shipping</h3>
+                            <p class="mt-1 text-sm text-slate-500">Base shipping defaults used when storefront shipping rules fall back to platform values.</p>
+                        </section>
+
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <label class="space-y-1 text-sm">
+                                <span class="font-medium text-slate-700">Base shipping cost</span>
+                                <input v-model.number="settings.shipping.baseCost" type="number" min="0" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                            </label>
+                            <label class="space-y-1 text-sm">
+                                <span class="font-medium text-slate-700">Free shipping threshold</span>
+                                <input v-model.number="settings.shipping.freeThreshold" type="number" min="0" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                            </label>
+                        </div>
+
+                        <section class="rounded-lg border border-slate-200 p-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="text-base font-semibold text-slate-900">Shipping zones</h4>
+                                    <p class="text-sm text-slate-500">Optional fallback zones for admin-managed shipping defaults.</p>
+                                </div>
+                                <button type="button" @click="addShippingZone" class="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                                    Add zone
                                 </button>
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- Shipping Settings -->
-                    <div v-if="currentTab === 'shipping'" class="space-y-6">
-                        <h3 class="text-lg font-medium text-gray-900">{{ t('adminSettings.sections.shipping') }}</h3>
-
-                        <div class="space-y-6">
-                            <!-- Default Shipping Rules -->
-                            <div class="border rounded-lg p-4">
-                                <h4 class="font-medium text-gray-900 mb-4">{{ t('adminSettings.shipping.defaultShippingRules') }}</h4>
-
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block pb-1 text-sm font-medium text-gray-700">
-                                            {{ t('adminSettings.shipping.baseShippingCost') }}
-                                        </label>
-                                        <input type="number" v-model="settings.shipping.baseCost" min="0"
-                                            class="mt-1 block w-full border rounded-md shadow-sm p-2">
-                                    </div>
-
-                                    <div>
-                                        <label class="block pb-1 text-sm font-medium text-gray-700">
-                                            {{ t('adminSettings.shipping.freeShippingThreshold') }}
-                                        </label>
-                                        <input type="number" v-model="settings.shipping.freeThreshold" min="0"
-                                            class="mt-1 block w-full border rounded-md shadow-sm p-2">
-                                    </div>
+                            <div class="mt-4 space-y-4">
+                                <div v-if="!settings.shipping.zones.length" class="rounded-md border border-dashed border-slate-200 p-4 text-sm text-slate-500">
+                                    No fallback shipping zones yet.
                                 </div>
-                            </div>
-
-                            <!-- Shipping Zones -->
-                            <div class="border rounded-lg p-4">
-                                <div class="flex justify-between items-center">
-                                    <h4 class="font-medium text-gray-900">{{ t('adminSettings.shipping.shippingZones') }}</h4>
-                                    <button @click="addShippingZone" class="text-blue-600 hover:text-blue-800">
-                                        {{ t('adminSettings.shipping.addZone') }}
-                                    </button>
-                                </div>
-
-                                <div class="space-y-4">
-                                    <div v-for="(zone, index) in settings.shipping.zones" :key="index"
-                                        class="border rounded p-3">
-                                        <div class="grid grid-cols-3 gap-4">
-                                            <div>
-                                                <label class="block pb-1 text-sm font-medium text-gray-700">
-                                                    {{ t('adminSettings.shipping.zoneName') }}
-                                                </label>
-                                                <input type="text" v-model="zone.name"
-                                                    class="mt-1 block w-full border rounded-md shadow-sm p-2">
-                                            </div>
-
-                                            <div>
-                                                <label class="block pb-1 text-sm font-medium text-gray-700">
-                                                    {{ t('adminSettings.shipping.regions') }}
-                                                </label>
-                                                <input type="text" v-model="zone.regions"
-                                                    class="mt-1 block w-full border rounded-md shadow-sm p-2"
-                                                    :placeholder="t('adminSettings.shipping.regionsPlaceholder')">
-                                            </div>
-
-                                            <div>
-                                                <label class="block pb-1 text-sm font-medium text-gray-700">
-                                                    {{ t('adminSettings.shipping.rate') }}
-                                                </label>
-                                                <input type="number" v-model="zone.rate" min="0"
-                                                    class="mt-1 block w-full border rounded-md shadow-sm p-2">
-                                            </div>
-                                        </div>
-                                        <button @click="removeShippingZone(index)"
-                                            class="text-red-600 hover:text-red-800 text-sm mt-2">
-                                            {{ t('adminSettings.shipping.removeZone') }}
+                                <div
+                                    v-for="(zone, index) in settings.shipping.zones"
+                                    :key="index"
+                                    class="rounded-lg border border-slate-100 p-4"
+                                >
+                                    <div class="grid gap-4 lg:grid-cols-[1fr_1.2fr_180px]">
+                                        <label class="space-y-1 text-sm">
+                                            <span class="font-medium text-slate-700">Zone name</span>
+                                            <input v-model="zone.name" type="text" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                        </label>
+                                        <label class="space-y-1 text-sm">
+                                            <span class="font-medium text-slate-700">Regions</span>
+                                            <input v-model="zone.regions" type="text" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none" placeholder="Lagos, Abuja, Dakar">
+                                        </label>
+                                        <label class="space-y-1 text-sm">
+                                            <span class="font-medium text-slate-700">Rate</span>
+                                            <input v-model.number="zone.rate" type="number" min="0" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                        </label>
+                                    </div>
+                                    <div class="mt-3 flex justify-end">
+                                        <button type="button" @click="removeShippingZone(index)" class="text-sm font-medium text-rose-600 hover:text-rose-700">
+                                            Remove zone
                                         </button>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </section>
                     </div>
 
-                    <!-- Save Button -->
-                    <div class="mt-6 flex justify-end">
-                        <button @click="saveSettings"
-                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                            {{ t('adminSettings.saveChanges') }}
-                        </button>
+                    <div v-else-if="currentTab === 'afriexchange'" class="space-y-6">
+                        <section>
+                            <h3 class="text-lg font-semibold text-slate-900">AfriExchange Integration</h3>
+                            <p class="mt-1 text-sm text-slate-500">
+                                Keep the Kaalis to AfriExchange merchant link visible, make the current CT strategy explicit,
+                                and expose the non-secret runtime values operators need most often.
+                            </p>
+                        </section>
+
+                        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                            <section class="rounded-lg border border-slate-200 p-4">
+                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Integration status</p>
+                                <p class="mt-2 text-2xl font-semibold text-slate-900">{{ afriExchangeStatus.label }}</p>
+                                <p class="mt-1 text-sm text-slate-500">{{ afriExchangeStatus.description }}</p>
+                            </section>
+                            <section class="rounded-lg border border-slate-200 p-4">
+                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Linked merchant</p>
+                                <p class="mt-2 text-lg font-semibold text-slate-900">{{ settings.afriExchange.linkedMerchantName || 'Not set' }}</p>
+                                <p class="mt-1 break-all font-mono text-xs text-slate-500">{{ settings.afriExchange.linkedMerchantId || 'Merchant id missing' }}</p>
+                            </section>
+                            <section class="rounded-lg border border-slate-200 p-4">
+                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Default token</p>
+                                <p class="mt-2 text-2xl font-semibold text-slate-900">{{ settings.afriExchange.defaultToken }}</p>
+                                <p class="mt-1 text-sm text-slate-500">Current live Kaalis AfriExchange token path.</p>
+                            </section>
+                            <section class="rounded-lg border border-slate-200 p-4">
+                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Webhook secret</p>
+                                <p class="mt-2 text-2xl font-semibold text-slate-900">
+                                    {{ settings.runtime?.integrations?.afriExchange?.webhookSecretConfigured ? 'Configured' : 'Missing' }}
+                                </p>
+                                <p class="mt-1 text-sm text-slate-500">Environment-backed secret status only.</p>
+                            </section>
+                            <section class="rounded-lg border border-slate-200 p-4">
+                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Last webhook received</p>
+                                <p class="mt-2 text-sm font-semibold text-slate-900">
+                                    {{ formatAfriExchangeHealthTimestamp(settings.afriExchange.health?.lastWebhookReceivedAt) }}
+                                </p>
+                                <p class="mt-1 text-xs text-slate-500">
+                                    {{ settings.afriExchange.health?.lastWebhookEvent || 'No AfriExchange webhook recorded yet.' }}
+                                </p>
+                            </section>
+                        </div>
+
+                        <div class="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+                            <section class="rounded-lg border border-slate-200 p-4">
+                                <h4 class="text-base font-semibold text-slate-900">Connection configuration</h4>
+                                <div class="mt-4 grid gap-4 md:grid-cols-2">
+                                    <label class="space-y-1 text-sm md:col-span-2">
+                                        <span class="font-medium text-slate-700">AfriExchange API base URL</span>
+                                        <input :value="settings.runtime?.integrations?.afriExchange?.apiBaseUrl || ''" type="text" disabled class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-slate-600 shadow-sm">
+                                    </label>
+                                    <label class="space-y-1 text-sm md:col-span-2">
+                                        <span class="font-medium text-slate-700">AfriExchange web URL</span>
+                                        <input v-model="settings.afriExchange.webAppUrl" type="text" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none" placeholder="https://afri-x.vercel.app/">
+                                    </label>
+                                    <label class="space-y-1 text-sm">
+                                        <span class="font-medium text-slate-700">Linked merchant name</span>
+                                        <input v-model="settings.afriExchange.linkedMerchantName" type="text" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                    </label>
+                                    <label class="space-y-1 text-sm">
+                                        <span class="font-medium text-slate-700">Linked merchant ID</span>
+                                        <input v-model="settings.afriExchange.linkedMerchantId" type="text" class="w-full rounded-md border border-slate-200 px-3 py-2 font-mono text-xs shadow-sm focus:border-slate-400 focus:outline-none">
+                                    </label>
+                                    <label class="space-y-1 text-sm md:col-span-2">
+                                        <span class="font-medium text-slate-700">Expected webhook callback URL</span>
+                                        <input v-model="settings.afriExchange.webhookCallbackUrl" type="text" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none" placeholder="http://localhost:7788/api/afriexchange/webhooks">
+                                    </label>
+                                </div>
+                            </section>
+
+                            <section class="rounded-lg border border-slate-200 p-4">
+                                <h4 class="text-base font-semibold text-slate-900">Runtime and secrets</h4>
+                                <div class="mt-4 space-y-3">
+                                    <div class="rounded-md border border-slate-100 px-3 py-2">
+                                        <p class="text-sm font-medium text-slate-800">API key</p>
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            {{ settings.runtime?.integrations?.afriExchange?.apiKeyConfigured ? 'Configured in environment' : 'Missing from environment' }}
+                                        </p>
+                                    </div>
+                                    <div class="rounded-md border border-slate-100 px-3 py-2">
+                                        <p class="text-sm font-medium text-slate-800">Webhook secret</p>
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            {{ settings.runtime?.integrations?.afriExchange?.webhookSecretConfigured ? 'Configured in environment' : 'Missing from environment' }}
+                                        </p>
+                                    </div>
+                                    <div class="rounded-md border border-slate-100 px-3 py-2">
+                                        <p class="text-sm font-medium text-slate-800">Operator note</p>
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            {{ settings.runtime?.notes?.afriExchange || 'AfriExchange runtime note unavailable.' }}
+                                        </p>
+                                    </div>
+                                    <div class="rounded-md border border-slate-100 px-3 py-2">
+                                        <p class="text-sm font-medium text-slate-800">Webhook health</p>
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            Status: {{ settings.afriExchange.health?.lastWebhookStatus || 'No webhook status yet' }}
+                                        </p>
+                                        <p class="mt-1 break-all text-xs text-slate-400">
+                                            Reference: {{ settings.afriExchange.health?.lastWebhookReference || 'Not available yet' }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+
+                        <section class="rounded-lg border border-slate-200 p-4">
+                            <h4 class="text-base font-semibold text-slate-900">Token strategy</h4>
+                            <div class="mt-4 grid gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+                                <div class="space-y-4">
+                                    <label class="space-y-1 text-sm">
+                                        <span class="font-medium text-slate-700">Default AfriExchange token</span>
+                                        <select v-model="settings.afriExchange.defaultToken" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                            <option value="CT">CT</option>
+                                            <option value="NT">NT</option>
+                                            <option value="USDT">USDT</option>
+                                        </select>
+                                    </label>
+
+                                    <div class="space-y-2 text-sm">
+                                        <span class="font-medium text-slate-700">Allowed tokens</span>
+                                        <div class="grid gap-2 sm:grid-cols-3">
+                                            <label v-for="token in tokenOptions" :key="token" class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2">
+                                                <input
+                                                    :checked="settings.afriExchange.allowedTokens.includes(token)"
+                                                    type="checkbox"
+                                                    class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+                                                    @change="toggleAllowedToken(token)"
+                                                >
+                                                <span>{{ token }}</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-4">
+                                    <label class="space-y-1 text-sm">
+                                        <span class="font-medium text-slate-700">Settlement reason</span>
+                                        <textarea v-model="settings.afriExchange.notes.settlementReason" rows="4" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none"></textarea>
+                                    </label>
+                                    <label class="space-y-1 text-sm">
+                                        <span class="font-medium text-slate-700">Operator note</span>
+                                        <textarea v-model="settings.afriExchange.notes.operatorNote" rows="3" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none" placeholder="Optional note for operators, rollout context, or upcoming token changes."></textarea>
+                                    </label>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="rounded-lg border border-slate-200 p-4">
+                            <h4 class="text-base font-semibold text-slate-900">Rail availability</h4>
+                            <div class="mt-4 grid gap-3 md:grid-cols-3">
+                                <label class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2 text-sm">
+                                    <input v-model="settings.afriExchange.rails.afriExchangeEnabled" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500">
+                                    <span>AfriExchange enabled</span>
+                                </label>
+                                <label class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2 text-sm">
+                                    <input v-model="settings.afriExchange.rails.paystackEnabled" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500">
+                                    <span>Paystack visible</span>
+                                </label>
+                                <label class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2 text-sm">
+                                    <input v-model="settings.afriExchange.rails.opayEnabled" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500">
+                                    <span>OPay visible</span>
+                                </label>
+                            </div>
+                        </section>
                     </div>
-                </div>
+                </template>
             </div>
         </div>
     </div>
 </template>
 
-<script>
-import { ref, onMounted } from 'vue';
-import { useI18n } from 'vue-i18n';
-import {
-    Settings as SettingsIcon,
-    CreditCard,
-    Mail,
-    Truck,
-    Globe,
-    ChevronDown
-} from 'lucide-vue-next';
-import { toast } from 'vue-sonner';
+<script setup>
+import { computed, onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
+import { toast } from "vue-sonner";
+import apiClient from "@/api/axios";
 
-export default {
-    name: 'AdminSettings',
-    components: {
-        SettingsIcon,
-        CreditCard,
-        Mail,
-        Truck,
-        Globe,
-        ChevronDown
+const { t } = useI18n();
+
+const loading = ref(true);
+const saving = ref(false);
+const currentTab = ref("general");
+
+const tabs = [
+    { id: "general", name: "General" },
+    { id: "commerce", name: "Commerce" },
+    { id: "payouts", name: "Payouts" },
+    { id: "shipping", name: "Shipping" },
+    { id: "afriexchange", name: "AfriExchange" },
+];
+
+const tokenOptions = ["CT", "NT", "USDT"];
+const defaultAfriExchangeWebUrl = import.meta.env.VITE_AFRIEXCHANGE_WEB_URL || "https://afri-x.vercel.app/";
+const defaultAfriExchangeMerchantId = "04b76353-6d94-419d-9b10-4e84161575c1";
+const defaultAfriExchangeWebhookCallbackUrl = "http://localhost:7788/api/afriexchange/webhooks";
+
+const createDefaultSettings = () => ({
+    general: {
+        platformName: "Kaalis",
+        supportEmail: "",
+        currency: "NGN",
+        timezone: "WAT",
+        maintenanceMode: false,
     },
-
-    setup() {
-        const { t } = useI18n();
-        const currentTab = ref('general');
-        const loading = ref(false);
-
-        const tabs = [
-            { id: 'general', name: t('adminSettings.tabs.general'), icon: Globe },
-            { id: 'payment', name: t('adminSettings.tabs.payment'), icon: CreditCard },
-            { id: 'email', name: t('adminSettings.tabs.email'), icon: Mail },
-            { id: 'shipping', name: t('adminSettings.tabs.shipping'), icon: Truck }
-        ];
-
-        const settings = ref({
-            platformName: '',
-            supportEmail: '',
-            currency: 'USD',
-            timezone: 'UTC',
-            maintenanceMode: false,
-            payment: {
-                paystack: {
-                    enabled: false,
-                    publicKey: '',
-                    secretKey: ''
-                },
-                platformFee: 5,
-                minimumPayout: 100
+    payment: {
+        checkoutPlatformFeePercent: 8,
+    },
+    payouts: {
+        defaultTier: {
+            holdingPeriod: 3,
+            minimumAmount: 1000,
+            batchSize: 100,
+            vendorSharePercent: 92,
+        },
+        premiumTier: {
+            holdingPeriod: 1,
+            minimumAmount: 500,
+            batchSize: 200,
+            vendorSharePercent: 95,
+        },
+        notifications: {
+            sendVendorNotifications: true,
+            notifyOnFailure: true,
+            notifyBeforePayout: true,
+            reminderHours: 24,
+        },
+        retryStrategy: {
+            maxAttempts: 3,
+            delays: [24, 48, 72],
+        },
+    },
+    shipping: {
+        baseCost: 10,
+        freeThreshold: 100,
+        zones: [],
+    },
+    afriExchange: {
+        linkedMerchantId: defaultAfriExchangeMerchantId,
+        linkedMerchantName: "Kaalis Store",
+        webAppUrl: defaultAfriExchangeWebUrl,
+        webhookCallbackUrl: defaultAfriExchangeWebhookCallbackUrl,
+        defaultToken: "CT",
+        allowedTokens: ["CT"],
+        rails: {
+            afriExchangeEnabled: true,
+            paystackEnabled: true,
+            opayEnabled: true,
+        },
+        notes: {
+            settlementReason: "CT currently solves Kaalis XOF settlement needs.",
+            operatorNote: "",
+        },
+        health: {
+            lastWebhookReceivedAt: null,
+            lastWebhookEvent: "",
+            lastWebhookReference: "",
+            lastWebhookStatus: "",
+        },
+    },
+    runtime: {
+        integrations: {
+            paystack: { enabled: false },
+            opay: { enabled: false },
+            afriExchange: {
+                enabled: false,
+                apiBaseUrl: "",
+                apiKeyConfigured: false,
+                webhookSecretConfigured: false,
             },
-            email: {
-                smtp: {
-                    host: '',
-                    port: 587,
-                    username: '',
-                    password: ''
-                }
+        },
+        notes: {},
+    },
+});
+
+const settings = ref(createDefaultSettings());
+
+const paymentRails = computed(() => [
+    {
+        key: "paystack",
+        label: "Paystack",
+        description: "Primary NGN checkout rail",
+        enabled: Boolean(settings.value.runtime?.integrations?.paystack?.enabled),
+    },
+    {
+        key: "opay",
+        label: "OPay",
+        description: "Optional NGN checkout rail",
+        enabled: Boolean(settings.value.runtime?.integrations?.opay?.enabled),
+    },
+    {
+        key: "afriExchange",
+        label: "AfriExchange",
+        description: "XOF collection and settlement rail",
+        enabled: Boolean(settings.value.runtime?.integrations?.afriExchange?.enabled),
+    },
+]);
+
+const normalizeSettings = (payload = {}) => ({
+    ...createDefaultSettings(),
+    ...payload,
+    general: {
+        ...createDefaultSettings().general,
+        ...(payload.general || {}),
+    },
+    payment: {
+        ...createDefaultSettings().payment,
+        ...(payload.payment || {}),
+    },
+    payouts: {
+        ...createDefaultSettings().payouts,
+        ...(payload.payouts || {}),
+        defaultTier: {
+            ...createDefaultSettings().payouts.defaultTier,
+            ...(payload.payouts?.defaultTier || {}),
+        },
+        premiumTier: {
+            ...createDefaultSettings().payouts.premiumTier,
+            ...(payload.payouts?.premiumTier || {}),
+        },
+        notifications: {
+            ...createDefaultSettings().payouts.notifications,
+            ...(payload.payouts?.notifications || {}),
+        },
+        retryStrategy: {
+            ...createDefaultSettings().payouts.retryStrategy,
+            ...(payload.payouts?.retryStrategy || {}),
+        },
+    },
+    shipping: {
+        ...createDefaultSettings().shipping,
+        ...(payload.shipping || {}),
+        zones: Array.isArray(payload.shipping?.zones) ? payload.shipping.zones : [],
+    },
+    afriExchange: {
+        ...createDefaultSettings().afriExchange,
+        ...(payload.afriExchange || {}),
+        linkedMerchantId:
+            payload.afriExchange?.linkedMerchantId?.trim?.() ||
+            createDefaultSettings().afriExchange.linkedMerchantId,
+        linkedMerchantName:
+            payload.afriExchange?.linkedMerchantName?.trim?.() ||
+            createDefaultSettings().afriExchange.linkedMerchantName,
+        webAppUrl:
+            payload.afriExchange?.webAppUrl?.trim?.() ||
+            createDefaultSettings().afriExchange.webAppUrl,
+        webhookCallbackUrl:
+            payload.afriExchange?.webhookCallbackUrl?.trim?.() ||
+            createDefaultSettings().afriExchange.webhookCallbackUrl,
+        allowedTokens: Array.isArray(payload.afriExchange?.allowedTokens)
+            ? payload.afriExchange.allowedTokens
+            : createDefaultSettings().afriExchange.allowedTokens,
+        rails: {
+            ...createDefaultSettings().afriExchange.rails,
+            ...(payload.afriExchange?.rails || {}),
+        },
+        notes: {
+            ...createDefaultSettings().afriExchange.notes,
+            ...(payload.afriExchange?.notes || {}),
+        },
+        health: {
+            ...createDefaultSettings().afriExchange.health,
+            ...(payload.afriExchange?.health || {}),
+        },
+    },
+    runtime: {
+        ...createDefaultSettings().runtime,
+        ...(payload.runtime || {}),
+        integrations: {
+            ...createDefaultSettings().runtime.integrations,
+            ...(payload.runtime?.integrations || {}),
+            afriExchange: {
+                ...createDefaultSettings().runtime.integrations.afriExchange,
+                ...(payload.runtime?.integrations?.afriExchange || {}),
             },
-            shipping: {
-                baseCost: 10,
-                freeThreshold: 100,
-                zones: []
-            }
-        });
+        },
+    },
+});
 
-        const fetchSettings = async () => {
-            loading.value = true;
-            try {
-                const response = await fetch('/api/admin/settings');
-                const data = await response.json();
-                settings.value = { ...settings.value, ...data };
-            } catch (error) {
-                console.error('Error fetching settings:', error);
-                toast.error(t('adminSettings.toasts.fetchFailed'));
-            } finally {
-                loading.value = false;
-            }
-        };
+const afriExchangeStatus = computed(() => {
+    const runtime = settings.value.runtime?.integrations?.afriExchange || {};
+    const configured = Boolean(runtime.enabled && runtime.apiKeyConfigured && runtime.webhookSecretConfigured);
+    const linked = Boolean(settings.value.afriExchange.linkedMerchantId && settings.value.afriExchange.webhookCallbackUrl);
 
-        const saveSettings = async () => {
-            loading.value = true;
-            try {
-                await fetch('/api/admin/settings', {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(settings.value)
-                });
-                toast.success(t('adminSettings.toasts.saved'));
-            } catch (error) {
-                console.error('Error saving settings:', error);
-                toast.error(t('adminSettings.toasts.saveFailed'));
-            } finally {
-                loading.value = false;
-            }
-        };
-
-        const sendTestEmail = async () => {
-            try {
-                await fetch('/api/admin/settings/test-email', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(settings.value.email)
-                });
-                toast.success(t('adminSettings.toasts.testEmailSent'));
-            } catch (error) {
-                console.error('Error sending test email:', error);
-                toast.error(t('adminSettings.toasts.testEmailFailed'));
-            }
-        };
-
-        const addShippingZone = () => {
-            settings.value.shipping.zones.push({
-                name: '',
-                regions: '',
-                rate: 0
-            });
-        };
-
-        const removeShippingZone = (index) => {
-            settings.value.shipping.zones.splice(index, 1);
-        };
-
-        // Lifecycle hooks
-        onMounted(() => {
-            fetchSettings();
-        });
-
+    if (configured && linked) {
         return {
-            currentTab,
-            tabs,
-            settings,
-            loading,
-            saveSettings,
-            sendTestEmail,
-            addShippingZone,
-            removeShippingZone,
-            t
+            label: "Connected",
+            description: "Runtime secrets and merchant linkage are both in place.",
         };
     }
+
+    if (configured || linked) {
+        return {
+            label: "Needs attention",
+            description: "Some AfriExchange pieces are configured, but the full operator picture is incomplete.",
+        };
+    }
+
+    return {
+        label: "Disabled",
+        description: "AfriExchange is not fully configured for this Kaalis environment.",
+    };
+});
+
+const fetchSettings = async () => {
+    loading.value = true;
+    try {
+        const response = await apiClient.get("/admin/settings");
+        settings.value = normalizeSettings(response.data || {});
+    } catch (error) {
+        console.error("Error fetching settings:", error);
+        toast.error(t("adminSettings.toasts.fetchFailed"));
+    } finally {
+        loading.value = false;
+    }
 };
+
+const saveSettings = async () => {
+    saving.value = true;
+    try {
+        const payload = {
+            general: settings.value.general,
+            payment: settings.value.payment,
+            payouts: settings.value.payouts,
+            shipping: settings.value.shipping,
+            afriExchange: settings.value.afriExchange,
+        };
+        const response = await apiClient.put("/admin/settings", payload);
+        settings.value = normalizeSettings(response.data?.settings || settings.value);
+        toast.success(t("adminSettings.toasts.saved"));
+    } catch (error) {
+        console.error("Error saving settings:", error);
+        toast.error(error.response?.data?.message || t("adminSettings.toasts.saveFailed"));
+    } finally {
+        saving.value = false;
+    }
+};
+
+const addShippingZone = () => {
+    settings.value.shipping.zones.push({
+        name: "",
+        regions: "",
+        rate: 0,
+    });
+};
+
+const removeShippingZone = (index) => {
+    settings.value.shipping.zones.splice(index, 1);
+};
+
+const toggleAllowedToken = (token) => {
+    const allowed = settings.value.afriExchange.allowedTokens;
+    const exists = allowed.includes(token);
+
+    if (exists) {
+        if (allowed.length === 1) {
+            return;
+        }
+
+        settings.value.afriExchange.allowedTokens = allowed.filter((item) => item !== token);
+        if (settings.value.afriExchange.defaultToken === token) {
+            settings.value.afriExchange.defaultToken = settings.value.afriExchange.allowedTokens[0] || "CT";
+        }
+        return;
+    }
+
+    settings.value.afriExchange.allowedTokens = [...allowed, token];
+};
+
+const formatAfriExchangeHealthTimestamp = (value) => {
+    if (!value) {
+        return "No webhook received yet";
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return "No webhook received yet";
+    }
+
+    return new Intl.DateTimeFormat("en-US", {
+        dateStyle: "medium",
+        timeStyle: "short",
+    }).format(date);
+};
+
+onMounted(fetchSettings);
 </script>
-
-<style scoped>
-.settings-tab {
-    @apply flex items-center px-4 py-2 text-sm font-medium rounded-md;
-}
-
-.settings-tab.active {
-    @apply bg-blue-50 text-blue-700;
-}
-
-.settings-tab:not(.active) {
-    @apply text-gray-700 hover:bg-gray-50;
-}
-</style>

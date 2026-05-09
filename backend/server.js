@@ -41,6 +41,7 @@ const opayRoutes = require("./routes/opayRoutes");
 const vendorPayoutRoutes = require("./routes/vendorPayoutRoutes");
 const afriExchangeWebhookRoutes = require("./routes/afriExchangeWebhookRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
+const platformSettingsController = require("./controllers/platformSettingsController");
 // const { initPayoutCron } = require("./config/cronJobs"); // REMOVED: Cron disabled, using manual processing
 const {
   loggerMiddleware,
@@ -329,6 +330,11 @@ app.get("/api/cors-test", (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+app.get(
+  "/api/platform-settings/runtime",
+  platformSettingsController.getPublicRuntimeSettings
+);
 
 // Special handling for Paystack webhook
 app.post(

@@ -390,6 +390,20 @@
                                 {{ t('adminOrders.actions.view') }}
                             </button>
                             <button
+                                v-if="order.paymentSummary?.reference"
+                                @click="goToPayment(order.paymentSummary.reference)"
+                                class="inline-flex items-center rounded-md bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100"
+                            >
+                                {{ t('adminOrders.actions.viewPayment') }}
+                            </button>
+                            <button
+                                v-if="order.payoutSummary?.transferReference || order.payoutSummary?.transactionReference || order.orderId"
+                                @click="goToPayout(order)"
+                                class="inline-flex items-center rounded-md bg-violet-50 px-3 py-2 text-sm font-medium text-violet-700 hover:bg-violet-100"
+                            >
+                                {{ t('adminOrders.actions.viewPayout') }}
+                            </button>
+                            <button
                                 @click="showUpdateStatus(order)"
                                 class="inline-flex items-center rounded-md bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100"
                             >
@@ -481,6 +495,16 @@
                                         class="text-blue-600 hover:text-blue-900">
                                         {{ t('adminOrders.actions.view') }}
                                     </button>
+                                    <button v-if="order.paymentSummary?.reference"
+                                        @click="goToPayment(order.paymentSummary.reference)"
+                                        class="text-emerald-600 hover:text-emerald-900">
+                                        {{ t('adminOrders.actions.viewPayment') }}
+                                    </button>
+                                    <button v-if="order.payoutSummary?.transferReference || order.payoutSummary?.transactionReference || order.orderId"
+                                        @click="goToPayout(order)"
+                                        class="text-violet-600 hover:text-violet-900">
+                                        {{ t('adminOrders.actions.viewPayout') }}
+                                    </button>
                                     <button @click="showUpdateStatus(order)"
                                         class="text-indigo-600 hover:text-indigo-900">
                                         {{ t('adminOrders.actions.update') }}
@@ -537,14 +561,14 @@
             </div>
         </div>
 
-        <!-- Update Status Modal -->
-        <div v-if="showStatusModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-            <div class="bg-white rounded-lg p-6 max-w-md w-full">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">
-                    {{ t('adminOrders.updateStatus.title') }}
-                </h3>
-                <form @submit.prevent="updateOrderStatus">
-                    <div class="mb-4">
+        <Dialog :open="showStatusModal" @update:open="showStatusModal = $event">
+            <DialogContent class="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>{{ t('adminOrders.updateStatus.title') }}</DialogTitle>
+                </DialogHeader>
+
+                <form @submit.prevent="updateOrderStatus" class="space-y-4">
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             {{ t('adminOrders.updateStatus.newStatus') }}
                         </label>
@@ -561,14 +585,14 @@
                         </div>
                     </div>
 
-                    <div class="mb-4">
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             {{ t('adminOrders.updateStatus.noteOptional') }}
                         </label>
-                        <textarea v-model="statusNote" rows="3" class="w-full p-2 border rounded-md" :placeholder="t('adminOrders.updateStatus.notePlaceholder')"></textarea>
+                        <textarea v-model="statusNote" rows="3" class="w-full rounded-lg border border-gray-200 p-2 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent" :placeholder="t('adminOrders.updateStatus.notePlaceholder')"></textarea>
                     </div>
 
-                    <div class="flex justify-end space-x-3">
+                    <DialogFooter class="gap-3 sm:gap-0">
                         <button type="button" @click="closeStatusModal"
                             class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
                             {{ t('adminOrders.actions.cancel') }}
@@ -576,10 +600,10 @@
                         <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                             {{ t('adminOrders.updateStatus.submit') }}
                         </button>
-                    </div>
+                    </DialogFooter>
                 </form>
-            </div>
-        </div>
+            </DialogContent>
+        </Dialog>
         <OrderDetailsModal v-if="showDetailsModal" :order="selectedOrder" @close="showDetailsModal = false" />
     </div>
 </template>
@@ -587,6 +611,7 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRoute, useRouter } from 'vue-router';
 import { useAdminStore } from '@/store/admin';
 import { useProductStore } from '@/store/productStore';
 import { format as formatDateFns } from 'date-fns';
@@ -627,6 +652,7 @@ import { toast } from 'vue-sonner';
 import { debounce } from 'lodash';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default {
     name: 'AdminOrders',
@@ -649,10 +675,17 @@ export default {
         Popover,
         PopoverContent,
         PopoverTrigger,
+        Dialog,
+        DialogContent,
+        DialogFooter,
+        DialogHeader,
+        DialogTitle,
     },
 
     setup() {
         const { t, locale } = useI18n();
+        const router = useRouter();
+        const route = useRoute();
         // State
         const adminStore = useAdminStore();
         const productStore = useProductStore();
@@ -1095,6 +1128,31 @@ export default {
             showStatusModal.value = true;
         };
 
+        const goToPayment = (reference) => {
+            if (!reference) return;
+            router.push({
+                name: 'AdminPayments',
+                query: {
+                    search: reference,
+                },
+            });
+        };
+
+        const goToPayout = (order) => {
+            const searchValue =
+                order?.payoutSummary?.transferReference ||
+                order?.payoutSummary?.transactionReference ||
+                order?.orderId ||
+                '';
+            if (!searchValue) return;
+            router.push({
+                name: 'AdminPayouts',
+                query: {
+                    search: searchValue,
+                },
+            });
+        };
+
         // In AdminOrders.vue
         const updateOrderStatus = async () => {
             try {
@@ -1235,6 +1293,15 @@ export default {
 
         // Lifecycle hooks
         onMounted(() => {
+            if (typeof route.query.search === 'string') {
+                filters.value.search = route.query.search;
+            }
+            if (typeof route.query.status === 'string') {
+                filters.value.status = route.query.status;
+            }
+            if (typeof route.query.currency === 'string') {
+                filters.value.currency = route.query.currency;
+            }
             fetchOrders();
         });
 
@@ -1273,6 +1340,8 @@ export default {
             handleSearch,
             applyFilters,
             viewOrderDetails,
+            goToPayment,
+            goToPayout,
             showUpdateStatus,
             updateOrderStatus,
             closeStatusModal,

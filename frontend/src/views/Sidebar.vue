@@ -24,7 +24,9 @@
 <script>
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { menuItems } from '../utils/menuItems.js';
+import { useUserStore } from '../store/user';
+import { useCountryStore } from '../store/countryStore';
+import { getMenuItems } from '../utils/menuItems.js';
 import {
     PackageOpen,
     Wallet,
@@ -49,8 +51,13 @@ export default {
     },
     setup() {
         const { t } = useI18n();
+        const userStore = useUserStore();
+        const countryStore = useCountryStore();
         const translatedMenuItems = computed(() =>
-            menuItems.map((item) => ({
+            getMenuItems({
+                user: userStore.user,
+                isXofCountry: countryStore.isXofCountry,
+            }).map((item) => ({
                 ...item,
                 label: t(item.labelKey),
             }))

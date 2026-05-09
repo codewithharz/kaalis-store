@@ -35,6 +35,11 @@ router.post(
   sellerAuthMiddleware,
   vendorController.setupAfriExchangeAccount
 );
+router.post(
+  "/afriexchange/setup/confirm",
+  sellerAuthMiddleware,
+  vendorController.confirmAfriExchangeAccountLink
+);
 
 // Get provider options based on vendor country/currency
 router.get(

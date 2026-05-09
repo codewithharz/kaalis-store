@@ -206,7 +206,7 @@
                                     class="hover:bg-gray-50 transition-colors">
                                     <td
                                         class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">
-                                        {{ formatDate(payout.createdAt) }}
+                                        {{ formatDate(getPayoutDisplayDate(payout)) }}
                                     </td>
                                     <td
                                         class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 font-medium">
@@ -226,7 +226,7 @@
                                     </td>
                                     <td
                                         class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-mono text-gray-500">
-                                        {{ payout.transactionReference || payout.reference }}
+                                        {{ getPayoutReference(payout) }}
                                     </td>
                                 </tr>
                             </tbody>
@@ -364,7 +364,7 @@ onMounted(async () => {
 });
 
 const redirectToBankSetup = () => {
-    router.push('/account/profile/bank-details');
+    router.push('/account/profile/payout-settings');
 };
 
 const formatDate = (date) => {
@@ -408,6 +408,30 @@ const getPayoutStatusLabel = (payout) => {
     }
 
     return t(`vendorPaymentSetupPage.statuses.${payout.status.toLowerCase()}`);
+};
+
+const getPayoutDisplayDate = (payout) => {
+    if (!payout) return null;
+
+    if (payout.status?.toLowerCase() === 'processed' && payout.processedAt) {
+        return payout.processedAt;
+    }
+
+    if (payout.status?.toLowerCase() === 'processing' && payout.lastStatusCheckedAt) {
+        return payout.lastStatusCheckedAt;
+    }
+
+    return payout.scheduledDate || payout.createdAt;
+};
+
+const getPayoutReference = (payout) => {
+    return (
+        payout?.transferReference ||
+        payout?.transactionReference ||
+        payout?.providerPayoutId ||
+        payout?.reference ||
+        '—'
+    );
 };
 
 const displayAccountName = (accountName) => {

@@ -93,11 +93,23 @@ export default {
     rateYourPurchase: "Rate Your Purchase",
     myWishlist: "My Wishlist",
     myFavoriteStores: "My Favorite Stores",
-    bankDetails: "Bank Details",
+    bankDetails: "Payouts & Wallets",
+    checkoutWallet: "Checkout Wallet",
+    payoutSettings: "Payout Settings",
     helpSupport: "Help & Support",
     myAddressBook: "My Address Book",
     changePassword: "Change Password",
-    managePayment: "Manage Payment",
+    managePayment: "Cards & Payments",
+    profileWorkspace: "Profile Workspace",
+    profileWorkspaceBuyerSubtitle:
+      "Keep your checkout details, linked wallet, and payment history organized in one place.",
+    profileWorkspaceSellerSubtitle:
+      "Manage seller profile details, settlement setup, and payment operations from one workspace.",
+    profileWorkspaceCardOne: "Identity",
+    profileWorkspaceCardOneValue: "Profile & address book",
+    profileWorkspaceCardTwo: "Security",
+    profileWorkspaceCardTwoValue: "Password & access",
+    profileWorkspaceCardThree: "Focus",
     returns: "Returns",
     yourReviews: "Your Reviews",
     pendingReviews: "Pending Reviews",
@@ -278,12 +290,19 @@ export default {
     createAfriExchangeAccount: "Create AfriExchange account",
     linkAfriExchangeAccount: "Link AfriExchange account",
     updateAfriExchangeLink: "Review AfriExchange link",
+    afriExchangeLinkedWalletLabel: "Linked wallet/account",
+    afriExchangeFundWalletHint:
+      "Make sure this AfriExchange wallet has enough CT before placing the order. If your balance is low, fund the wallet first and then try checkout again.",
     afriExchangeSetupRequiredToast:
       "Please create or link your AfriExchange account before placing this order.",
     afriExchangeCheckoutBlocked:
       "Place Order is disabled until your AfriExchange account is linked.",
     afriExchangeSignupUnavailable:
       "AfriExchange signup link is not configured yet. Please use Link AfriExchange Account.",
+    afriExchangeInsufficientBalance:
+      "Your linked AfriExchange wallet does not have enough CT to complete this payment.",
+    afriExchangeInsufficientBalanceCancelled:
+      "This order was cancelled because your AfriExchange CT wallet balance is too low.",
     orderCancelledPaymentFailure: "Order cancelled due to payment failure",
     paymentVerificationFailed: "Payment verification failed",
     paymentSuccessful: "Payment successful!",
@@ -866,10 +885,17 @@ export default {
     deleting: "Deleting...",
     deleteAccount: "Delete Account",
     receivePayments: "Receive Payments",
-    bankDetails: "Bank Details",
+    bankDetails: "Payouts & Wallets",
+    buyerAfriExchangeTitle: "Checkout Wallet",
+    sellerAfriExchangeTitle: "Settlement Wallet",
     receivePaymentsSubtitle:
-      "Manage your payment information for receiving customer payments",
-    bankDetailsSubtitle: "Manage your bank account information",
+      "Manage vendor payout details and AfriExchange wallet linking",
+    bankDetailsSubtitle:
+      "Manage your bank details or linked AfriExchange wallet for checkout",
+    buyerAfriExchangeSubtitle:
+      "Link your AfriExchange wallet to pay for XOF checkout with CT",
+    sellerAfriExchangeSubtitle:
+      "Link your AfriExchange wallet to receive XOF seller settlements",
     sellerEmptyTitle: "You haven't added your payment details",
     buyerEmptyTitle: "You haven't added any bank account yet",
     sellerEmptySubtitle:
@@ -893,13 +919,17 @@ export default {
     linkAfriExchange: "Link AfriExchange Account",
     afriExchangeAccount: "AfriExchange Account",
     afriExchangeLinkedReady: "Linked and ready for XOF settlement",
+    afriExchangeCheckoutWallet: "AfriExchange Checkout Wallet",
+    afriExchangeSettlementWallet: "AfriExchange Settlement Wallet",
+    afriExchangeBuyerLinkedReady: "Linked and ready for XOF checkout",
+    afriExchangeSellerLinkedReady: "Linked and ready for XOF settlement",
     afriExchangeEmptyTitle: "Link your AfriExchange account",
     afriExchangeEmptySubtitle:
       "XOF countries use AfriExchange for checkout and seller settlement.",
     enterAfriExchangeDetails:
       "Enter your AfriExchange account details for XOF payments",
     afriExchangeHelp:
-      "Provide at least one AfriExchange identifier. We will use it to route XOF payments and seller payouts through AfriExchange.",
+      "Provide at least one AfriExchange identifier. We verify the account with AfriExchange before linking it, then use the verified details to route XOF payments and seller payouts.",
     afriExchangeIdentifier: "AfriExchange Identifier",
     afriExchangeUserId: "AfriExchange User ID",
     afriExchangeUserIdPlaceholder: "e.g. AfriExchange user UUID",
@@ -909,7 +939,15 @@ export default {
     afriExchangeEmailPlaceholder: "email used on AfriExchange",
     saveAfriExchange: "Save AfriExchange Account",
     savingAfriExchange: "Saving AfriExchange account...",
-    afriExchangeSaved: "AfriExchange account linked successfully",
+    afriExchangeSaved: "AfriExchange account verified and linked successfully",
+    afriExchangeCodeSent: "Verification code sent to your AfriExchange email",
+    afriExchangeVerificationSent:
+      "We sent a verification code to {email}. Enter it below to confirm that you own this AfriExchange account.",
+    afriExchangeVerificationCode: "Verification Code",
+    afriExchangeVerificationCodePlaceholder: "Enter the 6-digit code",
+    afriExchangeVerificationCodeRequired:
+      "Enter the verification code sent to your AfriExchange email",
+    confirmAfriExchangeVerification: "Confirm AfriExchange Link",
     afriExchangeRequired:
       "Enter an AfriExchange user ID, wallet address, or account email",
     afriExchangeSaveFailed: "Failed to link AfriExchange account",
@@ -924,8 +962,8 @@ export default {
     afriExchangeUnlinkFailed: "Failed to unlink AfriExchange account",
   },
   paymentMethodsPage: {
-    title: "Payment Methods",
-    subtitle: "Manage your payment methods and saved cards",
+    title: "Cards & Payments",
+    subtitle: "Manage saved cards and review your payment history",
     defaultPayment: "Default Payment",
     creditCard: "Credit Card",
     notSet: "Not Set",
@@ -4223,6 +4261,8 @@ export default {
       orderStatus: "Order Status:",
       status: "Status:",
       transactionId: "Transaction ID:",
+      paymentReference: "Payment reference:",
+      paymentStatus: "Payment status:",
       sellerUsername: "Seller username:",
       sellerEmail: "Seller email:",
       verifiedSeller: "Verified seller",
@@ -4285,17 +4325,25 @@ export default {
   },
   adminPayments: {
     title: "Payment Management",
+    subtitle: "Review real checkout payments across Paystack, OPay, and AfriExchange.",
     exportData: "Export Data",
+    exporting: "Exporting...",
     showFilters: "Show Filters",
     hideFilters: "Hide Filters",
     fromLastPeriod: "{change}% from last period",
     orderNumber: "Order #{id}",
+    loading: "Loading payments...",
+    empty: "No payments match these filters.",
+    notAvailable: "N/A",
     filters: {
       dateRange: "Date Range",
       status: "Status",
       paymentMethod: "Payment Method",
+      currency: "Currency",
+      allCurrencies: "All Currencies",
       search: "Search",
       searchPlaceholder: "Search by ID, customer...",
+      clear: "Clear Filters",
     },
     dateRanges: {
       today: "Today",
@@ -4307,6 +4355,7 @@ export default {
     },
     statuses: {
       all: "All Statuses",
+      success: "Completed",
       completed: "Completed",
       pending: "Pending",
       failed: "Failed",
@@ -4314,6 +4363,10 @@ export default {
     },
     methods: {
       all: "All Methods",
+      paystack: "Paystack",
+      opay: "OPay",
+      afriexchange: "AfriExchange",
+      cash: "Cash",
       creditCard: "Credit Card",
       debitCard: "Debit Card",
       paypal: "PayPal",
@@ -4322,8 +4375,13 @@ export default {
     stats: {
       totalPayments: "Total Payments",
       successfulPayments: "Successful Payments",
+      pendingPayments: "Pending Payments",
       failedPayments: "Failed Payments",
       refunds: "Refunds",
+      successVolumeDetail: "Successful payment volume by currency",
+      successCountDetail: "Payments confirmed successfully",
+      pendingCountDetail: "Payments waiting on confirmation",
+      failedCountDetail: "Payments that failed or were rejected",
     },
     table: {
       paymentId: "Payment ID",
@@ -4332,10 +4390,12 @@ export default {
       status: "Status",
       method: "Method",
       date: "Date",
+      currency: "Currency",
       actions: "Actions",
     },
     actions: {
       view: "View",
+      viewOrder: "View Order",
       refund: "Refund",
       cancel: "Cancel",
     },
@@ -4346,13 +4406,27 @@ export default {
       to: "to",
       of: "of",
       results: "results",
+      pageSummary: "Page {page} of {pages} - {total} payments",
     },
     details: {
       title: "Payment Details",
+      recordLabel: "Payment Record",
       paymentId: "Payment ID",
       orderId: "Order ID",
+      customer: "Customer",
+      customerEmail: "Customer Email",
       amount: "Amount",
       status: "Status",
+      method: "Method",
+      currency: "Currency",
+      reference: "Reference",
+      createdAt: "Created At",
+      checkoutRail: "Checkout rail used",
+      lastRecordedState: "Last recorded payment state",
+      sections: {
+        paymentRecord: "Payment Record",
+        customerOrder: "Customer & Order",
+      },
     },
     refundModal: {
       title: "Confirm Refund",
@@ -4430,6 +4504,8 @@ export default {
     },
     actions: {
       view: "View",
+      viewPayment: "View Payment",
+      viewPayout: "View Payout",
       update: "Update",
       cancel: "Cancel",
     },

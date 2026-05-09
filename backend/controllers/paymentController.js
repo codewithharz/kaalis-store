@@ -281,8 +281,16 @@ class PaymentController {
       }
     } catch (error) {
       logger.error("Payment initialization error:", error);
-      return res.status(500).json({
-        message: error.message || "Could not initialize payment",
+      const statusCode = error.response?.status || error.statusCode || 500;
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.error?.message ||
+        error.message ||
+        "Could not initialize payment";
+
+      return res.status(statusCode).json({
+        status: false,
+        message,
       });
     }
   }

@@ -4,6 +4,7 @@ import apiClient from "../api/axios";
 import { useUserStore } from "./user";
 import { useCartStore } from "./cart";
 import { toast } from "vue-sonner";
+import { getCheckoutPlatformFeeRate } from "../utils/platformSettings";
 
 export const useOrderStore = defineStore("order", {
   state: () => ({
@@ -45,7 +46,6 @@ export const useOrderStore = defineStore("order", {
         });
         this.currentOrder = response.data.order;
 
-        toast.success("Order created. Proceeding to payment...");
         return response.data.order;
       } catch (error) {
         console.error("Error creating order:", error);
@@ -183,7 +183,7 @@ export const useOrderStore = defineStore("order", {
 
     // fee calculation helper
     calculateFees(subtotal, shippingFee = 0) {
-      const platformFeePercentage = 0.08;
+      const platformFeePercentage = getCheckoutPlatformFeeRate();
       const basePlatformFee = Math.round(subtotal * platformFeePercentage);
       const totalPlatformFee = basePlatformFee + shippingFee;
       const vendorAmount = Math.round(subtotal * (1 - platformFeePercentage));

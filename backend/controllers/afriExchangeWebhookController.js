@@ -1,5 +1,8 @@
 const crypto = require("crypto");
 const payoutService = require("../services/payoutService");
+const {
+  updateAfriExchangeWebhookHealth,
+} = require("../services/platformSettingsService");
 const logger = require("../utils/logger");
 
 const getWebhookSecret = () =>
@@ -91,6 +94,19 @@ exports.handleAfriExchangeWebhook = async (req, res) => {
 
   try {
     const result = await payoutService.applyAfriExchangePayoutUpdate(req.body);
+
+    await updateAfriExchangeWebhookHealth({
+      event,
+      reference:
+        req.body?.data?.reference ||
+        req.body?.data?.transferReference ||
+        req.body?.data?.payoutReference ||
+        req.body?.reference ||
+        "",
+      status:
+        req.body?.data?.status || req.body?.status || event.replace("payout.", ""),
+      receivedAt: new Date(),
+    });
 
     if (!result.success) {
       logger.warn("AfriExchange webhook could not update payout", {

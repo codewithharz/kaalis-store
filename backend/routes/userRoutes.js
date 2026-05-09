@@ -7,7 +7,8 @@ const {
   completeUserProfile,
   clearUserProfile,
   updateMarketSettings,
-  linkAfriExchangeAccount,
+  requestAfriExchangeLinkVerification,
+  confirmAfriExchangeLink,
   unlinkAfriExchangeAccount,
   getUserProducts,
   requestPasswordReset,
@@ -43,9 +44,14 @@ router.put(
   updateMarketSettings
 );
 router.put(
-  "/:userId/afriexchange/link",
+  "/:userId/afriexchange/link/request",
   userAuthMiddleware,
-  linkAfriExchangeAccount
+  requestAfriExchangeLinkVerification
+);
+router.put(
+  "/:userId/afriexchange/link/confirm",
+  userAuthMiddleware,
+  confirmAfriExchangeLink
 );
 router.delete(
   "/:userId/afriexchange/link",

@@ -11,6 +11,10 @@ const {
   sendVerificationEmail: sendVerificationEmailMessage,
   sendWelcomeEmail: sendWelcomeEmailMessage,
 } = require("../services/emailService");
+const {
+  requestAfriExchangeLinkVerification,
+  confirmAfriExchangeLinkVerification,
+} = require("../services/afriExchangeAccountVerificationService");
 
 const JWT_SECRET = process.env.JWT_SECRET; // Use environment variable
 
@@ -279,8 +283,7 @@ exports.updateMarketSettings = async (req, res) => {
   }
 };
 
-exports.linkAfriExchangeAccount = async (req, res) => {
-  const { userId } = req.params;
+exports.requestAfriExchangeLinkVerification = async (req, res) => {
   const { afriExchangeUserId, walletAddress, accountEmail, countryCode } =
     req.body;
 
@@ -293,14 +296,58 @@ exports.linkAfriExchangeAccount = async (req, res) => {
   }
 
   try {
+    const verificationRequest = await requestAfriExchangeLinkVerification({
+      afriExchangeUserId,
+      walletAddress,
+      accountEmail,
+      tokenType: "CT",
+    });
+
+    return res.json({
+      success: true,
+      message: "AfriExchange verification code sent successfully",
+      verification: {
+        requestId: verificationRequest.requestId,
+        maskedEmail: verificationRequest.maskedEmail,
+        expiresInSeconds: verificationRequest.expiresInSeconds,
+      },
+      pendingLink: {
+        countryCode: countryCode || "SN",
+      },
+    });
+  } catch (error) {
+    return res
+      .status(error.statusCode || 500)
+      .json({ success: false, message: error.message });
+  }
+};
+
+exports.confirmAfriExchangeLink = async (req, res) => {
+  const { userId } = req.params;
+  const { requestId, code, countryCode } = req.body;
+
+  if (!requestId || !code) {
+    return res.status(400).json({
+      success: false,
+      message: "Verification requestId and code are required",
+    });
+  }
+
+  try {
+    const verification = await confirmAfriExchangeLinkVerification({
+      requestId,
+      code,
+    });
+
     const user = await User.findByIdAndUpdate(
       userId,
       {
         afriExchange: {
-          userId: afriExchangeUserId,
-          walletAddress,
-          accountEmail,
+          userId: verification.user.id,
+          walletAddress: verification.wallet.blockchain_address,
+          accountEmail: verification.user.email,
           linkedAt: new Date(),
+          verifiedAt: new Date(),
         },
         countryCode: countryCode || "SN",
         currency: "XOF",
@@ -315,14 +362,16 @@ exports.linkAfriExchangeAccount = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    res.json({
+    return res.json({
       success: true,
-      message: "AfriExchange account linked successfully",
+      message: "AfriExchange account verified and linked successfully",
       afriExchange: user.afriExchange,
       user,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res
+      .status(error.statusCode || 500)
+      .json({ success: false, message: error.message });
   }
 };
 

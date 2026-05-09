@@ -94,11 +94,23 @@ export default {
     rateYourPurchase: "Evaluer votre achat",
     myWishlist: "Ma liste de souhaits",
     myFavoriteStores: "Mes boutiques preferees",
-    bankDetails: "Coordonnees bancaires",
+    bankDetails: "Versements et portefeuilles",
+    checkoutWallet: "Portefeuille de paiement",
+    payoutSettings: "Parametres de versement",
     helpSupport: "Aide et support",
     myAddressBook: "Mon carnet d'adresses",
     changePassword: "Changer le mot de passe",
-    managePayment: "Gerer le paiement",
+    managePayment: "Cartes et paiements",
+    profileWorkspace: "Espace profil",
+    profileWorkspaceBuyerSubtitle:
+      "Gardez vos informations de paiement, votre portefeuille lie et votre historique organises au meme endroit.",
+    profileWorkspaceSellerSubtitle:
+      "Gerez votre profil vendeur, vos reglages de versement et vos operations de paiement depuis un seul espace.",
+    profileWorkspaceCardOne: "Identite",
+    profileWorkspaceCardOneValue: "Profil et adresses",
+    profileWorkspaceCardTwo: "Securite",
+    profileWorkspaceCardTwoValue: "Mot de passe et acces",
+    profileWorkspaceCardThree: "Focus",
     returns: "Retours",
     yourReviews: "Vos avis",
     pendingReviews: "Avis en attente",
@@ -294,12 +306,19 @@ export default {
     createAfriExchangeAccount: "Creer un compte AfriExchange",
     linkAfriExchangeAccount: "Lier le compte AfriExchange",
     updateAfriExchangeLink: "Verifier la liaison AfriExchange",
+    afriExchangeLinkedWalletLabel: "Portefeuille ou compte lie",
+    afriExchangeFundWalletHint:
+      "Assurez-vous que ce portefeuille AfriExchange contient assez de CT avant de passer la commande. Si le solde est insuffisant, approvisionnez d'abord le portefeuille puis reessayez.",
     afriExchangeSetupRequiredToast:
       "Veuillez creer ou lier votre compte AfriExchange avant de passer cette commande.",
     afriExchangeCheckoutBlocked:
       "Le bouton de commande reste desactive tant que votre compte AfriExchange n'est pas lie.",
     afriExchangeSignupUnavailable:
       "Le lien d'inscription AfriExchange n'est pas encore configure. Utilisez Lier le compte AfriExchange.",
+    afriExchangeInsufficientBalance:
+      "Votre portefeuille AfriExchange lie ne contient pas assez de CT pour finaliser ce paiement.",
+    afriExchangeInsufficientBalanceCancelled:
+      "Cette commande a ete annulee car le solde CT de votre portefeuille AfriExchange est insuffisant.",
     orderCancelledPaymentFailure:
       "Commande annulee a cause d'un echec de paiement",
     paymentVerificationFailed: "La verification du paiement a echoue",
@@ -904,10 +923,17 @@ export default {
     deleting: "Suppression...",
     deleteAccount: "Supprimer le compte",
     receivePayments: "Recevoir des paiements",
-    bankDetails: "Coordonnees bancaires",
+    bankDetails: "Versements et portefeuilles",
+    buyerAfriExchangeTitle: "Portefeuille de paiement",
+    sellerAfriExchangeTitle: "Portefeuille de reglement",
     receivePaymentsSubtitle:
-      "Gerez vos informations de paiement pour recevoir les paiements des clients",
-    bankDetailsSubtitle: "Gerez les informations de votre compte bancaire",
+      "Gerez les versements vendeur et la liaison du portefeuille AfriExchange",
+    bankDetailsSubtitle:
+      "Gerez vos coordonnees bancaires ou votre portefeuille AfriExchange lie pour le paiement",
+    buyerAfriExchangeSubtitle:
+      "Liez votre portefeuille AfriExchange pour payer les commandes XOF avec CT",
+    sellerAfriExchangeSubtitle:
+      "Liez votre portefeuille AfriExchange pour recevoir les reglements vendeur XOF",
     sellerEmptyTitle: "Vous n'avez pas encore ajoute vos details de paiement",
     buyerEmptyTitle: "Vous n'avez encore ajoute aucun compte bancaire",
     sellerEmptySubtitle:
@@ -932,13 +958,17 @@ export default {
     linkAfriExchange: "Lier le compte AfriExchange",
     afriExchangeAccount: "Compte AfriExchange",
     afriExchangeLinkedReady: "Lie et pret pour les reglements XOF",
+    afriExchangeCheckoutWallet: "Portefeuille AfriExchange de paiement",
+    afriExchangeSettlementWallet: "Portefeuille AfriExchange de reglement",
+    afriExchangeBuyerLinkedReady: "Lie et pret pour le paiement XOF",
+    afriExchangeSellerLinkedReady: "Lie et pret pour les reglements XOF",
     afriExchangeEmptyTitle: "Liez votre compte AfriExchange",
     afriExchangeEmptySubtitle:
       "Les pays XOF utilisent AfriExchange pour le paiement et les reglements vendeurs.",
     enterAfriExchangeDetails:
       "Saisissez vos informations AfriExchange pour les paiements XOF",
     afriExchangeHelp:
-      "Indiquez au moins un identifiant AfriExchange. Il servira a router les paiements XOF et les versements vendeurs via AfriExchange.",
+      "Indiquez au moins un identifiant AfriExchange. Le compte est verifie aupres d AfriExchange avant la liaison, puis les informations verifiees servent a router les paiements XOF et les versements vendeurs.",
     afriExchangeIdentifier: "Identifiant AfriExchange",
     afriExchangeUserId: "ID utilisateur AfriExchange",
     afriExchangeUserIdPlaceholder: "ex. UUID utilisateur AfriExchange",
@@ -948,7 +978,16 @@ export default {
     afriExchangeEmailPlaceholder: "e-mail utilise sur AfriExchange",
     saveAfriExchange: "Enregistrer le compte AfriExchange",
     savingAfriExchange: "Enregistrement du compte AfriExchange...",
-    afriExchangeSaved: "Compte AfriExchange lie avec succes",
+    afriExchangeSaved: "Compte AfriExchange verifie et lie avec succes",
+    afriExchangeCodeSent:
+      "Le code de verification a ete envoye a votre e-mail AfriExchange",
+    afriExchangeVerificationSent:
+      "Nous avons envoye un code de verification a {email}. Saisissez-le ci-dessous pour confirmer que ce compte AfriExchange vous appartient.",
+    afriExchangeVerificationCode: "Code de verification",
+    afriExchangeVerificationCodePlaceholder: "Saisissez le code a 6 chiffres",
+    afriExchangeVerificationCodeRequired:
+      "Saisissez le code de verification envoye a votre e-mail AfriExchange",
+    confirmAfriExchangeVerification: "Confirmer la liaison AfriExchange",
     afriExchangeRequired:
       "Saisissez un ID utilisateur, une adresse de portefeuille ou un e-mail AfriExchange",
     afriExchangeSaveFailed: "Impossible de lier le compte AfriExchange",
@@ -963,8 +1002,8 @@ export default {
     afriExchangeUnlinkFailed: "Impossible de delier le compte AfriExchange",
   },
   paymentMethodsPage: {
-    title: "Methodes de paiement",
-    subtitle: "Gerez vos methodes de paiement et vos cartes enregistrees",
+    title: "Cartes et paiements",
+    subtitle: "Gerez les cartes enregistrees et consultez votre historique de paiement",
     defaultPayment: "Paiement par defaut",
     creditCard: "Carte bancaire",
     notSet: "Non defini",
@@ -4289,6 +4328,8 @@ export default {
       orderStatus: "Statut de la commande :",
       status: "Statut :",
       transactionId: "ID de transaction :",
+      paymentReference: "Reference de paiement :",
+      paymentStatus: "Statut du paiement :",
       sellerUsername: "Nom vendeur :",
       sellerEmail: "E-mail vendeur :",
       verifiedSeller: "Vendeur verifie",
@@ -4351,17 +4392,25 @@ export default {
   },
   adminPayments: {
     title: "Gestion des paiements",
+    subtitle: "Consultez les paiements reels via Paystack, OPay et AfriExchange.",
     exportData: "Exporter les donnees",
+    exporting: "Exportation...",
     showFilters: "Afficher les filtres",
     hideFilters: "Masquer les filtres",
     fromLastPeriod: "{change}% par rapport a la periode precedente",
     orderNumber: "Commande #{id}",
+    loading: "Chargement des paiements...",
+    empty: "Aucun paiement ne correspond a ces filtres.",
+    notAvailable: "N/A",
     filters: {
       dateRange: "Plage de dates",
       status: "Statut",
       paymentMethod: "Methode de paiement",
+      currency: "Devise",
+      allCurrencies: "Toutes les devises",
       search: "Recherche",
       searchPlaceholder: "Rechercher par ID, client...",
+      clear: "Effacer les filtres",
     },
     dateRanges: {
       today: "Aujourd'hui",
@@ -4373,6 +4422,7 @@ export default {
     },
     statuses: {
       all: "Tous les statuts",
+      success: "Termine",
       completed: "Termine",
       pending: "En attente",
       failed: "Echoue",
@@ -4380,6 +4430,10 @@ export default {
     },
     methods: {
       all: "Toutes les methodes",
+      paystack: "Paystack",
+      opay: "OPay",
+      afriexchange: "AfriExchange",
+      cash: "Especes",
       creditCard: "Carte de credit",
       debitCard: "Carte de debit",
       paypal: "PayPal",
@@ -4388,8 +4442,13 @@ export default {
     stats: {
       totalPayments: "Total des paiements",
       successfulPayments: "Paiements reussis",
+      pendingPayments: "Paiements en attente",
       failedPayments: "Paiements echoues",
       refunds: "Remboursements",
+      successVolumeDetail: "Volume des paiements reussis par devise",
+      successCountDetail: "Paiements confirmes avec succes",
+      pendingCountDetail: "Paiements en attente de confirmation",
+      failedCountDetail: "Paiements echoues ou rejetes",
     },
     table: {
       paymentId: "ID paiement",
@@ -4398,10 +4457,12 @@ export default {
       status: "Statut",
       method: "Methode",
       date: "Date",
+      currency: "Devise",
       actions: "Actions",
     },
     actions: {
       view: "Voir",
+      viewOrder: "Voir la commande",
       refund: "Rembourser",
       cancel: "Annuler",
     },
@@ -4412,13 +4473,27 @@ export default {
       to: "a",
       of: "sur",
       results: "resultats",
+      pageSummary: "Page {page} sur {pages} - {total} paiements",
     },
     details: {
       title: "Details du paiement",
+      recordLabel: "Fiche paiement",
       paymentId: "ID paiement",
       orderId: "ID commande",
+      customer: "Client",
+      customerEmail: "Email du client",
       amount: "Montant",
       status: "Statut",
+      method: "Methode",
+      currency: "Devise",
+      reference: "Reference",
+      createdAt: "Cree le",
+      checkoutRail: "Canal de paiement utilise",
+      lastRecordedState: "Dernier etat enregistre",
+      sections: {
+        paymentRecord: "Fiche paiement",
+        customerOrder: "Client et commande",
+      },
     },
     refundModal: {
       title: "Confirmer le remboursement",
@@ -4496,6 +4571,8 @@ export default {
     },
     actions: {
       view: "Voir",
+      viewPayment: "Voir le paiement",
+      viewPayout: "Voir le paiement vendeur",
       update: "Mettre a jour",
       cancel: "Annuler",
     },

@@ -344,52 +344,6 @@
                     </div>
                 </div>
 
-                <!-- Digital Wallets Section - Moved outside of stats cards -->
-                <div class="border-t border-gray-100 mt-6 sm:mt-8">
-                    <div class="py-6 sm:py-8">
-                        <div class="flex items-center justify-between mb-4 sm:mb-6">
-                            <div>
-                                <h2 class="text-xl sm:text-2xl font-semibold text-gray-900">{{ t('paymentMethodsPage.digitalWallets') }}</h2>
-                                <p class="text-xs sm:text-sm text-gray-500 mt-1">{{ t('paymentMethodsPage.walletsComingSoon') }}</p>
-                            </div>
-                        </div>
-
-                        <div
-                            class="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg sm:rounded-xl p-6 sm:p-8 border border-gray-200 overflow-hidden">
-                            <!-- Decorative background elements -->
-                            <div
-                                class="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-full -translate-y-1/2 translate-x-1/2">
-                            </div>
-                            <div
-                                class="absolute bottom-0 left-0 w-32 h-32 sm:w-48 sm:h-48 bg-gradient-to-tr from-indigo-500/5 to-purple-500/5 rounded-full translate-y-1/2 -translate-x-1/2">
-                            </div>
-
-                            <div
-                                class="relative flex flex-col items-center text-center gap-6 sm:gap-8 md:flex-row md:text-left md:justify-between">
-                                <div class="flex-1">
-                                    <span
-                                        class="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-600 mb-3 sm:mb-4">
-                                        {{ t('paymentMethodsPage.comingSoon') }}
-                                    </span>
-                                    <h3 class="text-lg sm:text-xl font-medium text-gray-900 mb-2">{{ t('paymentMethodsPage.walletSupport') }}</h3>
-                                    <p class="text-gray-500 text-sm sm:text-base">{{ t('paymentMethodsPage.walletSupportBody') }}</p>
-                                </div>
-                                <div class="relative">
-                                    <div
-                                        class="w-32 h-32 sm:w-40 sm:h-40 bg-white rounded-full flex items-center justify-center shadow-inner">
-                                        <Wallet class="w-12 h-12 sm:w-16 sm:h-16 text-gray-300" />
-                                    </div>
-                                    <div
-                                        class="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-4 h-4 sm:w-6 sm:h-6 bg-indigo-500/10 rounded-full animate-pulse">
-                                    </div>
-                                    <div
-                                        class="absolute -bottom-1 -left-1 sm:-bottom-2 sm:-left-2 w-3 h-3 sm:w-4 sm:h-4 bg-purple-500/10 rounded-full animate-pulse delay-150">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -587,7 +541,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import VendorPaymentSetup from './VendorPaymentSetup.vue';
 import {
-    CreditCard, PlusCircle, Wallet, Trash2, X, Search, User,
+    CreditCard, PlusCircle, Trash2, X, Search, User,
     CircleDollarSign, History, Calendar, ChevronLeft, ChevronRight,
     Lock, Loader2, AlertCircle
 } from 'lucide-vue-next';

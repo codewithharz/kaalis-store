@@ -10,10 +10,20 @@ const CurrencyService = require("./currencyService");
 const VendorPayout = require("../models/vendorPayoutModels");
 const User = require("../models/userModels");
 const Order = require("../models/orderModels");
-const payoutConfig = require("../config/payoutConfig");
+const fallbackPayoutConfig = require("../config/payoutConfig");
 const NotificationService = require("../services/notificationService");
+const { getPayoutConfigSnapshot } = require("./platformSettingsService");
 
 class PayoutService {
+  async getRuntimePayoutConfig() {
+    try {
+      return await getPayoutConfigSnapshot();
+    } catch (error) {
+      logger.warn("Using fallback payout config:", error.message);
+      return fallbackPayoutConfig;
+    }
+  }
+
   constructor() {
     // Services are now lazy-loaded on demand
     this._paystackService = null;
@@ -109,6 +119,7 @@ class PayoutService {
    */
   async scheduleVendorPayout(vendorId, amount, orderData) {
     try {
+      const payoutConfig = await this.getRuntimePayoutConfig();
       // Get vendor details
       const vendor = await User.findById(vendorId).select(
         "email paystack bankDetails afriExchange currency paymentMethod countryCode"
@@ -205,6 +216,7 @@ class PayoutService {
    * Find existing small payout for aggregation
    */
   async findExistingSmallPayout(vendorId, currency, paymentMethod) {
+    const payoutConfig = await this.getRuntimePayoutConfig();
     return await VendorPayout.findOne({
       vendorId,
       currency,
@@ -218,6 +230,7 @@ class PayoutService {
    * Aggregate new amount with existing small payout
    */
   async aggregateWithExistingPayout(existingPayout, newAmount) {
+    const payoutConfig = await this.getRuntimePayoutConfig();
     const vendorTier = await this.getVendorTier(existingPayout.vendorId);
     const tierConfig = payoutConfig.schedules[vendorTier];
 
@@ -246,6 +259,7 @@ class PayoutService {
     paymentMethod,
     orderData = {}
   ) {
+    const payoutConfig = await this.getRuntimePayoutConfig();
     const payout = new VendorPayout({
       vendorId,
       orderId: orderData.orderId,
@@ -294,6 +308,7 @@ class PayoutService {
    * Process batches of payouts for all vendors
    */
   async processBatchPayouts(vendorPayouts) {
+    const payoutConfig = await this.getRuntimePayoutConfig();
     const results = [];
 
     for (const vendorId in vendorPayouts) {
@@ -944,6 +959,7 @@ class PayoutService {
    */
   async handleFailedPayout(payout, error) {
     try {
+      const payoutConfig = await this.getRuntimePayoutConfig();
       const retryConfig = payoutConfig.retryStrategy;
       const shouldRetry = payout.retriesCount < retryConfig.maxAttempts;
 
@@ -1070,8 +1086,9 @@ class PayoutService {
   /**
    * Helper method for calculating vendor amounts
    */
-  calculateVendorAmount(order, vendorTier = "default") {
+  async calculateVendorAmount(order, vendorTier = "default") {
     try {
+      const payoutConfig = await this.getRuntimePayoutConfig();
       const totalAmount = order.totalAmount || 0;
       const vendorShare = payoutConfig.fees[vendorTier].vendorShare;
       const vendorAmount = totalAmount * vendorShare;
@@ -1117,7 +1134,14 @@ class PayoutService {
         logger.info(
           `Payout ${payoutId} status is ${payout.status}, no status check needed`
         );
-        return { status: payout.status };
+        return {
+          success: true,
+          status: payout.status,
+          previousStatus: payout.status,
+          currentStatus: payout.status,
+          changed: false,
+          message: `Payout is already ${payout.status}`,
+        };
       }
 
       // Get vendor details
@@ -1154,6 +1178,7 @@ class PayoutService {
 
       // Update status if necessary
       if (statusResult.success) {
+        const previousStatus = payout.status;
         const mappedStatus = this.mapProviderPayoutStatus(statusResult.status);
         const update = {
           providerStatus: statusResult.status,
@@ -1199,14 +1224,30 @@ class PayoutService {
         logger.info(
           `Checked payout ${payoutId} status: ${statusResult.status}`
         );
+
+        return {
+          ...statusResult,
+          previousStatus,
+          currentStatus: mappedStatus,
+          changed: mappedStatus !== previousStatus,
+          message:
+            mappedStatus === previousStatus
+              ? `Payout remains ${mappedStatus}`
+              : `Payout moved from ${previousStatus} to ${mappedStatus}`,
+        };
       } else {
         await VendorPayout.findByIdAndUpdate(payoutId, {
           lastStatusCheckedAt: new Date(),
           errorMessage: statusResult.message,
         });
-      }
 
-      return statusResult;
+        return {
+          ...statusResult,
+          previousStatus: payout.status,
+          currentStatus: payout.status,
+          changed: false,
+        };
+      }
     } catch (error) {
       logger.error(`Error checking payout status for ${payoutId}:`, error);
       return { success: false, message: error.message };

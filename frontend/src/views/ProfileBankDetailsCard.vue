@@ -2,7 +2,7 @@
 <template>
     <div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
         <!-- Enhanced Hero Header -->
-        <div class="relative text-white overflow-hidden bg-gradient-to-r from-violet-600 to-indigo-600">
+        <div class="relative text-white overflow-hidden" :class="heroGradientClass">
             <!-- Decorative Elements -->
             <div class="absolute inset-0">
                 <div class="absolute inset-0 bg-black/10"></div>
@@ -15,7 +15,7 @@
                     <div class="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
                         <div
                             class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-lg sm:rounded-xl flex items-center justify-center">
-                            <Building class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                            <component :is="heroIcon" class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                         </div>
                         <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold">{{ headerText }}</h1>
                     </div>
@@ -57,8 +57,9 @@
                         <div class="flex flex-col items-center py-8 sm:py-12 lg:py-16 space-y-6 sm:space-y-8">
                             <div class="relative">
                                 <div
-                                    class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-indigo-100 to-purple-200 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
-                                    <Landmark class="w-8 h-8 sm:w-10 sm:h-10 text-indigo-600" />
+                                    class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg"
+                                    :class="emptyStateBadgeClass">
+                                    <component :is="heroIcon" class="w-8 h-8 sm:w-10 sm:h-10" :class="emptyStateIconClass" />
                                 </div>
                                 <div
                                     class="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-orange-400 to-red-500 rounded-full flex items-center justify-center">
@@ -71,7 +72,8 @@
                                 </p>
                             </div>
                             <button @click="openForm"
-                                class="group w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-lg sm:rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base">
+                                class="group w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 text-white rounded-lg sm:rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base"
+                                :class="primaryActionClass">
                                 <PlusCircle
                                     class="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform duration-300" />
                                 <span class="font-semibold">{{ primaryActionText }}</span>
@@ -86,8 +88,9 @@
                             <div class="flex items-center space-x-3 sm:space-x-4">
                                 <div class="relative">
                                     <div
-                                        class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
-                                        <Building class="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                                        class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg"
+                                        :class="summaryBadgeClass">
+                                        <component :is="heroIcon" class="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                                     </div>
                                     <div
                                         class="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
@@ -107,7 +110,8 @@
                                     <span>{{ deleteButtonText }}</span>
                                 </button>
                                 <button @click="handleEdit"
-                                    class="group px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-600 font-medium hover:from-indigo-500 hover:to-purple-600 hover:text-white rounded-lg sm:rounded-xl border-2 border-indigo-200 hover:border-transparent transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md flex items-center justify-center gap-2 text-sm sm:text-base">
+                                    class="group px-3 sm:px-4 py-2 sm:py-2.5 font-medium rounded-lg sm:rounded-xl border-2 transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md flex items-center justify-center gap-2 text-sm sm:text-base"
+                                    :class="secondaryActionClass">
                                     <Edit
                                         class="w-3 h-3 sm:w-4 sm:h-4 group-hover:rotate-12 transition-transform duration-200" />
                                     <span>{{ t('bankDetailsPage.editDetails') }}</span>
@@ -117,7 +121,8 @@
 
                         <!-- Bank Account Details with Modern Card Design -->
                         <div
-                            class="bg-gradient-to-br from-gray-50 via-white to-blue-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 border-2 border-gray-100 shadow-inner">
+                            class="rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 border-2 shadow-inner"
+                            :class="detailsCardClass">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
                                 <div class="space-y-4 sm:space-y-6">
                                     <div class="group">
@@ -216,7 +221,7 @@
             <div
                 class="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 scale-100 max-h-[95vh] overflow-hidden flex flex-col">
                 <!-- Modern Modal Header -->
-                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 sm:p-6 lg:p-8 text-white flex-shrink-0">
+                <div class="p-4 sm:p-6 lg:p-8 text-white flex-shrink-0" :class="heroGradientClass">
                     <div class="flex items-center justify-between gap-3">
                         <div class="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                             <div
@@ -241,6 +246,23 @@
                         <div v-if="isAfriExchangeMode"
                             class="rounded-lg sm:rounded-xl border border-cyan-100 bg-cyan-50 p-4 text-sm text-cyan-900">
                             {{ t('bankDetailsPage.afriExchangeHelp') }}
+                        </div>
+
+                        <div v-if="isAfriExchangeMode && afriExchangeVerification.requestId"
+                            class="rounded-lg sm:rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-900 space-y-3">
+                            <p>
+                                {{ t('bankDetailsPage.afriExchangeVerificationSent', { email: afriExchangeVerification.maskedEmail || t('bankDetailsPage.notAvailable') }) }}
+                            </p>
+                            <div class="space-y-2">
+                                <label class="flex items-center gap-2 text-sm font-semibold text-emerald-900">
+                                    <CreditCard class="w-3 h-3 sm:w-4 sm:h-4 text-emerald-700" />
+                                    {{ t('bankDetailsPage.afriExchangeVerificationCode') }}
+                                </label>
+                                <input type="text" v-model="afriExchangeVerification.code"
+                                    maxlength="6"
+                                    class="w-full px-3 sm:px-4 py-3 sm:py-4 text-gray-700 bg-white border-2 border-emerald-200 rounded-lg sm:rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-200 text-sm sm:text-base"
+                                    :placeholder="t('bankDetailsPage.afriExchangeVerificationCodePlaceholder')">
+                            </div>
                         </div>
 
                         <!-- Account Name -->
@@ -512,6 +534,12 @@ const afriExchangeForm = ref({
     walletAddress: '',
     accountEmail: ''
 });
+const afriExchangeVerification = ref({
+    requestId: '',
+    maskedEmail: '',
+    code: '',
+    countryCode: ''
+});
 
 const verifying = ref(false);
 const verifiedAccount = ref(null);
@@ -525,13 +553,67 @@ const bankDetailsContentOffset = computed(() => {
     return showDemoModeBanner.value ? '-mt-3 sm:-mt-5' : '-mt-20 sm:-mt-32 lg:-mt-44';
 });
 const showDeleteConfirm = ref(false);
+const isSellerAfriExchangeMode = computed(() => isAfriExchangeMode.value && Boolean(user.value?.isSeller));
+const isBuyerAfriExchangeMode = computed(() => isAfriExchangeMode.value && !user.value?.isSeller);
+const heroIcon = computed(() => {
+    if (isSellerAfriExchangeMode.value) return Landmark;
+    if (isBuyerAfriExchangeMode.value) return Wallet;
+    return Building;
+});
+const heroGradientClass = computed(() => {
+    if (isSellerAfriExchangeMode.value) return 'bg-gradient-to-r from-amber-600 to-orange-600';
+    if (isBuyerAfriExchangeMode.value) return 'bg-gradient-to-r from-sky-600 to-cyan-600';
+    return 'bg-gradient-to-r from-violet-600 to-indigo-600';
+});
+const primaryActionClass = computed(() => {
+    if (isSellerAfriExchangeMode.value) return 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700';
+    if (isBuyerAfriExchangeMode.value) return 'bg-gradient-to-r from-sky-500 to-cyan-600 hover:from-sky-600 hover:to-cyan-700';
+    return 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700';
+});
+const secondaryActionClass = computed(() => {
+    if (isSellerAfriExchangeMode.value) return 'bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border-amber-200 hover:from-amber-500 hover:to-orange-600 hover:text-white hover:border-transparent';
+    if (isBuyerAfriExchangeMode.value) return 'bg-gradient-to-r from-sky-50 to-cyan-50 text-sky-700 border-sky-200 hover:from-sky-500 hover:to-cyan-600 hover:text-white hover:border-transparent';
+    return 'bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-600 border-indigo-200 hover:from-indigo-500 hover:to-purple-600 hover:text-white hover:border-transparent';
+});
+const summaryBadgeClass = computed(() => {
+    if (isSellerAfriExchangeMode.value) return 'bg-gradient-to-br from-amber-500 to-orange-600';
+    if (isBuyerAfriExchangeMode.value) return 'bg-gradient-to-br from-sky-500 to-cyan-600';
+    return 'bg-gradient-to-br from-indigo-500 to-purple-600';
+});
+const emptyStateBadgeClass = computed(() => {
+    if (isSellerAfriExchangeMode.value) return 'bg-gradient-to-br from-amber-100 to-orange-200';
+    if (isBuyerAfriExchangeMode.value) return 'bg-gradient-to-br from-sky-100 to-cyan-200';
+    return 'bg-gradient-to-br from-indigo-100 to-purple-200';
+});
+const emptyStateIconClass = computed(() => {
+    if (isSellerAfriExchangeMode.value) return 'text-amber-700';
+    if (isBuyerAfriExchangeMode.value) return 'text-sky-700';
+    return 'text-indigo-600';
+});
+const detailsCardClass = computed(() => {
+    if (isSellerAfriExchangeMode.value) return 'bg-gradient-to-br from-amber-50 via-white to-orange-50 border-amber-100';
+    if (isBuyerAfriExchangeMode.value) return 'bg-gradient-to-br from-sky-50 via-white to-cyan-50 border-sky-100';
+    return 'bg-gradient-to-br from-gray-50 via-white to-blue-50 border-gray-100';
+});
 
 // Computed properties for conditional text
 const headerText = computed(() => {
+    if (isAfriExchangeMode.value) {
+        return user.value?.isSeller
+            ? t('bankDetailsPage.sellerAfriExchangeTitle')
+            : t('bankDetailsPage.buyerAfriExchangeTitle');
+    }
+
     return user.value?.isSeller ? t('bankDetailsPage.receivePayments') : t('bankDetailsPage.bankDetails');
 });
 
 const subHeaderText = computed(() => {
+    if (isAfriExchangeMode.value) {
+        return user.value?.isSeller
+            ? t('bankDetailsPage.sellerAfriExchangeSubtitle')
+            : t('bankDetailsPage.buyerAfriExchangeSubtitle');
+    }
+
     return user.value?.isSeller
         ? t('bankDetailsPage.receivePaymentsSubtitle')
         : t('bankDetailsPage.bankDetailsSubtitle');
@@ -562,11 +644,23 @@ const primaryActionText = computed(() => {
 });
 
 const accountSummaryTitle = computed(() => {
-    return isAfriExchangeMode.value ? t('bankDetailsPage.afriExchangeAccount') : t('bankDetailsPage.yourBankAccount');
+    if (isAfriExchangeMode.value) {
+        return user.value?.isSeller
+            ? t('bankDetailsPage.afriExchangeSettlementWallet')
+            : t('bankDetailsPage.afriExchangeCheckoutWallet');
+    }
+
+    return t('bankDetailsPage.yourBankAccount');
 });
 
 const accountSummarySubtitle = computed(() => {
-    return isAfriExchangeMode.value ? t('bankDetailsPage.afriExchangeLinkedReady') : t('bankDetailsPage.verifiedReady');
+    if (isAfriExchangeMode.value) {
+        return user.value?.isSeller
+            ? t('bankDetailsPage.afriExchangeSellerLinkedReady')
+            : t('bankDetailsPage.afriExchangeBuyerLinkedReady');
+    }
+
+    return t('bankDetailsPage.verifiedReady');
 });
 
 const primaryAccountName = computed(() => {
@@ -598,7 +692,13 @@ const formSubtitle = computed(() => {
 });
 
 const saveButtonText = computed(() => {
-    return isAfriExchangeMode.value ? t('bankDetailsPage.saveAfriExchange') : t('bankDetailsPage.saveBankDetails');
+    if (isAfriExchangeMode.value) {
+        return afriExchangeVerification.value.requestId
+            ? t('bankDetailsPage.confirmAfriExchangeVerification')
+            : t('bankDetailsPage.saveAfriExchange');
+    }
+
+    return t('bankDetailsPage.saveBankDetails');
 });
 
 const deleteButtonText = computed(() => {
@@ -636,6 +736,12 @@ const resetAfriExchangeForm = () => {
         afriExchangeUserId: user.value?.afriExchange?.userId || '',
         walletAddress: user.value?.afriExchange?.walletAddress || '',
         accountEmail: user.value?.afriExchange?.accountEmail || ''
+    };
+    afriExchangeVerification.value = {
+        requestId: '',
+        maskedEmail: '',
+        code: '',
+        countryCode: ''
     };
 };
 
@@ -724,6 +830,12 @@ const closeForm = () => {
         afriExchangeUserId: '',
         walletAddress: '',
         accountEmail: ''
+    };
+    afriExchangeVerification.value = {
+        requestId: '',
+        maskedEmail: '',
+        code: '',
+        countryCode: ''
     };
     verifiedAccount.value = null;
     verifying.value = false;
@@ -879,10 +991,34 @@ const saveAfriExchangeAccount = async () => {
     const loadingToast = toast.loading(t('bankDetailsPage.savingAfriExchange'));
 
     try {
-        await userStore.linkAfriExchangeAccount(payload);
+        if (!afriExchangeVerification.value.requestId) {
+            const response = await userStore.requestAfriExchangeLinkVerification(payload);
+            afriExchangeVerification.value = {
+                requestId: response?.verification?.requestId || '',
+                maskedEmail: response?.verification?.maskedEmail || payload.accountEmail,
+                code: '',
+                countryCode: payload.countryCode
+            };
+            toast.dismiss(loadingToast);
+            toast.success(t('bankDetailsPage.afriExchangeCodeSent'));
+            return;
+        }
+
+        if (!afriExchangeVerification.value.code.trim()) {
+            toast.dismiss(loadingToast);
+            toast.error(t('bankDetailsPage.afriExchangeVerificationCodeRequired'));
+            return;
+        }
+
+        await userStore.confirmAfriExchangeLink({
+            requestId: afriExchangeVerification.value.requestId,
+            code: afriExchangeVerification.value.code.trim(),
+            countryCode: afriExchangeVerification.value.countryCode || payload.countryCode
+        });
         toast.dismiss(loadingToast);
         toast.success(t('bankDetailsPage.afriExchangeSaved'));
         showForm.value = false;
+        resetAfriExchangeForm();
         await userStore.getUserProfile();
     } catch (error) {
         toast.dismiss(loadingToast);
