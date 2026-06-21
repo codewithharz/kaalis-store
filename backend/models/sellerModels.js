@@ -21,6 +21,20 @@ const sellerSchema = new mongoose.Schema(
     reviews: [reviewSchema],
     averageRating: { type: Number, default: 0 },
     isVacationMode: { type: Boolean, default: false },
+    fulfillmentType: {
+      type: String,
+      enum: ["platform", "vendor"],
+      default: "platform",
+    },
+    selfShippingApproved: {
+      type: Boolean,
+      default: false,
+    },
+    selfShippingRequestStatus: {
+      type: String,
+      enum: ["none", "pending", "approved", "rejected"],
+      default: "none",
+    },
 
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // New field for followers
 
@@ -40,5 +54,16 @@ const sellerSchema = new mongoose.Schema(
   }
 );
 
+sellerSchema.pre("save", function (next) {
+  if (this.isVerified && (!this.verificationStatus || this.verificationStatus === "not_submitted")) {
+    this.verificationStatus = "approved";
+  }
+  if (this.verificationStatus === "approved" && !this.isVerified) {
+    this.isVerified = true;
+  }
+  next();
+});
+
 const Seller = mongoose.model("Seller", sellerSchema);
 module.exports = Seller;
+

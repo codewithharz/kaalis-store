@@ -32,8 +32,8 @@ apiClient.interceptors.request.use(
     try {
       console.log("Making request to:", `${config.baseURL}${config.url}`);
 
-      // Handle admin routes first
-      if (config.url.startsWith("/admin")) {
+      // Handle admin routes - matches /admin/* AND routes containing /admin (e.g. /returns/admin)
+      if (config.url.startsWith("/admin") || config.url.includes("/admin")) {
         const adminToken = localStorage.getItem("adminToken");
         if (adminToken) {
           config.headers.Authorization = `Bearer ${adminToken}`;

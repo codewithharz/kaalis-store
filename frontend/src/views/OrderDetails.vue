@@ -253,6 +253,7 @@
                         <div class="relative">
                             <div class="absolute left-3 sm:left-4 top-6 sm:top-8 bottom-0 w-px bg-gray-200"></div>
                             <div class="space-y-4 sm:space-y-6">
+                                <!-- Order Placed -->
                                 <div class="flex items-start gap-3 sm:gap-4">
                                     <div
                                         class="w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 rounded-full flex items-center justify-center shadow-lg relative z-10 flex-shrink-0">
@@ -266,24 +267,84 @@
                                     </div>
                                 </div>
 
-                                <div class="flex items-start gap-3 sm:gap-4"
-                                    :class="{ 'opacity-50': order.status === 'Pending' }">
-                                    <div class="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-lg relative z-10 flex-shrink-0"
-                                        :class="order.status !== 'Pending' ? 'bg-green-500' : 'bg-gray-300'">
-                                        <Check class="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                                <template v-if="order.status !== 'Cancelled'">
+                                    <!-- Processing -->
+                                    <div class="flex items-start gap-3 sm:gap-4"
+                                        :class="{ 'opacity-50': order.status === 'Pending' }">
+                                        <div class="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-lg relative z-10 flex-shrink-0"
+                                            :class="order.status !== 'Pending' ? 'bg-green-500' : 'bg-gray-300'">
+                                            <Check class="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                                        </div>
+                                        <div class="flex-1 p-3 sm:p-4 rounded-lg sm:rounded-xl border min-w-0"
+                                            :class="order.status !== 'Pending' ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'">
+                                            <p class="font-semibold text-sm sm:text-base"
+                                                :class="order.status !== 'Pending' ? 'text-green-900' : 'text-gray-600'">
+                                                {{ t('orderDetailsModal.processing') }}
+                                            </p>
+                                            <p class="text-xs sm:text-sm"
+                                                :class="order.status !== 'Pending' ? 'text-green-700' : 'text-gray-500'">
+                                                {{ t('orderDetailsModal.orderBeingPrepared') }}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div class="flex-1 p-3 sm:p-4 rounded-lg sm:rounded-xl border min-w-0"
-                                        :class="order.status !== 'Pending' ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'">
-                                        <p class="font-semibold text-sm sm:text-base"
-                                            :class="order.status !== 'Pending' ? 'text-green-900' : 'text-gray-600'">
-                                            {{ t('orderDetailsModal.processing') }}
-                                        </p>
-                                        <p class="text-xs sm:text-sm"
-                                            :class="order.status !== 'Pending' ? 'text-green-700' : 'text-gray-500'">
-                                            {{ t('orderDetailsModal.orderBeingPrepared') }}
-                                        </p>
+
+                                    <!-- Shipped -->
+                                    <div class="flex items-start gap-3 sm:gap-4"
+                                        :class="{ 'opacity-50': ['Pending', 'Processing'].includes(order.status) }">
+                                        <div class="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-lg relative z-10 flex-shrink-0"
+                                            :class="['Shipped', 'Delivered'].includes(order.status) ? 'bg-green-500' : 'bg-gray-300'">
+                                            <Truck class="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                                        </div>
+                                        <div class="flex-1 p-3 sm:p-4 rounded-lg sm:rounded-xl border min-w-0"
+                                            :class="['Shipped', 'Delivered'].includes(order.status) ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'">
+                                            <p class="font-semibold text-sm sm:text-base"
+                                                :class="['Shipped', 'Delivered'].includes(order.status) ? 'text-green-900' : 'text-gray-600'">
+                                                {{ t('orderDetailsModal.shipped') }}
+                                            </p>
+                                            <p class="text-xs sm:text-sm"
+                                                :class="['Shipped', 'Delivered'].includes(order.status) ? 'text-green-700' : 'text-gray-500'">
+                                                {{ t('orderDetailsModal.orderShipped') }}
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
+
+                                    <!-- Delivered -->
+                                    <div class="flex items-start gap-3 sm:gap-4"
+                                        :class="{ 'opacity-50': order.status !== 'Delivered' }">
+                                        <div class="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-lg relative z-10 flex-shrink-0"
+                                            :class="order.status === 'Delivered' ? 'bg-green-500' : 'bg-gray-300'">
+                                            <Check class="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                                        </div>
+                                        <div class="flex-1 p-3 sm:p-4 rounded-lg sm:rounded-xl border min-w-0"
+                                            :class="order.status === 'Delivered' ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'">
+                                            <p class="font-semibold text-sm sm:text-base"
+                                                :class="order.status === 'Delivered' ? 'text-green-900' : 'text-gray-600'">
+                                                {{ t('orderDetailsModal.delivered') }}
+                                            </p>
+                                            <p class="text-xs sm:text-sm"
+                                                :class="order.status === 'Delivered' ? 'text-green-700' : 'text-gray-500'">
+                                                {{ t('orderDetailsModal.orderDelivered') }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template v-else>
+                                    <!-- Cancelled -->
+                                    <div class="flex items-start gap-3 sm:gap-4">
+                                        <div class="w-6 h-6 sm:w-8 sm:h-8 bg-red-500 rounded-full flex items-center justify-center shadow-lg relative z-10 flex-shrink-0">
+                                            <X class="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                                        </div>
+                                        <div class="flex-1 p-3 sm:p-4 bg-red-50 border-red-200 rounded-lg sm:rounded-xl border min-w-0">
+                                            <p class="font-semibold text-red-900 text-sm sm:text-base">
+                                                {{ t('orderDetailsModal.cancelled') }}
+                                            </p>
+                                            <p class="text-xs sm:text-sm text-red-700">
+                                                {{ order.cancellationReason || t('orderDetailsModal.orderCancelled') }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </template>
                             </div>
                         </div>
                     </div>

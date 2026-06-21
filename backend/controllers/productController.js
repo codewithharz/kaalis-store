@@ -2,10 +2,11 @@ const Product = require("../models/productModels");
 const User = require("../models/userModels");
 const Review = require("../models/reviewRatingModels");
 const Seller = require("../models/sellerModels");
-const ShippingRule = require("../models/shippingRulesModel");
+const { getPlatformSettings } = require("../services/platformSettingsService");
 const Order = require("../models/orderModels");
 const ProductRating = require("../models/productRatingModel");
 const Category = require("../models/categoryModels");
+const Address = require("../models/addressModels");
 const mongoose = require("mongoose");
 
 
@@ -27,6 +28,9 @@ exports.addProducts = async (req, res) => {
         .status(400)
         .json({ error: "Cannot add more than 100 products at once" });
     }
+
+    const user = await User.findById(userId);
+    const userCurrency = user?.currency || "NGN";
 
     const processedProducts = await Promise.all(
       products.map(async (product) => {
@@ -62,6 +66,7 @@ exports.addProducts = async (req, res) => {
           user: userId,
           category: category._id,
           slug: productSlug,
+          currency: userCurrency,
         };
       })
     );
@@ -92,7 +97,7 @@ exports.getAllProducts = async (req, res) => {
       ...otherFilters
     } = req.query;
 
-    let query = {};
+    let query = { isAvailable: { $ne: false } };
 
     if (search) {
       query.$or = [
@@ -156,10 +161,21 @@ exports.getAllProducts = async (req, res) => {
       ]);
 
       // After aggregation, populate the necessary fields
-      products = await Product.populate(products, {
-        path: "category",
-        select: "_id name",
-      });
+      products = await Product.populate(products, [
+        {
+          path: "category",
+          select: "_id name",
+        },
+        {
+          path: "user",
+          select: "username isSeller",
+          populate: {
+            path: "sellerProfile",
+            model: "Seller",
+            select: "storeName fulfillmentType",
+          },
+        },
+      ]);
 
       totalProducts = await Product.countDocuments(query);
     } else {
@@ -169,7 +185,15 @@ exports.getAllProducts = async (req, res) => {
         .sort(sort)
         .skip(skip)
         .limit(parseInt(limit))
-        .populate("user", "username");
+        .populate({
+          path: "user",
+          select: "username isSeller",
+          populate: {
+            path: "sellerProfile",
+            model: "Seller",
+            select: "storeName fulfillmentType",
+          },
+        });
 
       totalProducts = await Product.countDocuments(query);
     }
@@ -200,45 +224,35 @@ exports.getAllProducts = async (req, res) => {
       })
     );
 
-    const shippingRules = await ShippingRule.findOne({ isDefault: true });
+    const settings = await getPlatformSettings();
 
-    // Define default shipping rules in case no default rule is found
-    const defaultShippingRules = {
-      baseShippingFee: 5.99,
-      freeShippingThreshold: 50,
+    // Map platform settings to the shipping rules object
+    const shippingRules = {
+      baseCost: settings.shipping?.baseCost ?? 999.99,
+      freeThreshold: settings.shipping?.freeThreshold ?? 50000,
+      zones: settings.shipping?.zones || [],
+      // Compatibility fields for legacy components
+      baseShippingFee: settings.shipping?.baseCost ?? 999.99,
+      freeShippingThreshold: settings.shipping?.freeThreshold ?? 50000,
       categoryFees: new Map(),
       perWeightUnitFee: 0.1,
     };
 
     const productsWithShipping = productsWithRatings.map((product) => {
-      let shippingFee = shippingRules
-        ? shippingRules.baseShippingFee
-        : defaultShippingRules.baseShippingFee;
+      let shippingFee = shippingRules.baseShippingFee;
 
-      if (
-        product.price >
-        (shippingRules
-          ? shippingRules.freeShippingThreshold
-          : defaultShippingRules.freeShippingThreshold)
-      ) {
+      if (product.price > shippingRules.freeShippingThreshold) {
         shippingFee = 0;
       } else {
         // Safely handle category fee calculation
         const categoryId = product.category
           ? product.category.toString()
           : null;
-        const categoryFee = categoryId
-          ? shippingRules?.categoryFees?.get(categoryId) ||
-          defaultShippingRules.categoryFees?.get(categoryId) ||
-          0
-          : 0;
+        const categoryFee = 0;
         shippingFee += categoryFee;
 
         const weightFee =
-          (product.unit?.value || 0) *
-          (shippingRules
-            ? shippingRules.perWeightUnitFee
-            : defaultShippingRules.perWeightUnitFee);
+          (product.unit?.value || 0) * shippingRules.perWeightUnitFee;
         shippingFee += weightFee;
       }
 
@@ -253,7 +267,7 @@ exports.getAllProducts = async (req, res) => {
       currentPage: parseInt(page),
       totalPages: Math.ceil(totalProducts / parseInt(limit)),
       totalProducts: totalProducts,
-      shippingRules: shippingRules || defaultShippingRules,
+      shippingRules: shippingRules,
     });
   } catch (error) {
     console.error("Error in getAllProducts:", error);
@@ -745,6 +759,35 @@ exports.updateProduct = async (req, res) => {
   }
 
   try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Verify that the seller has their payout settings configured before updating a product
+    if (user.isSeller) {
+      const paymentMethod = user.paymentMethod || 'Paystack';
+      const hasPaystackDetails = user.paystack && user.paystack.accountNumber && user.paystack.bankCode;
+      const hasAfriExchangeDetails = user.afriExchange && user.afriExchange.walletAddress;
+
+      const isPayoutConfigured = (paymentMethod === "AfriExchange" && hasAfriExchangeDetails) ||
+        (paymentMethod === "Paystack" && hasPaystackDetails);
+
+      if (!isPayoutConfigured) {
+        return res.status(400).json({
+          error: "You must set up your payout bank details or link your AfriExchange wallet in Account settings before updating products."
+        });
+      }
+
+      // Check if seller has a dispatch address configured
+      const dispatchAddress = await Address.findOne({ user: userId, isDispatch: true });
+      if (!dispatchAddress) {
+        return res.status(400).json({
+          error: "You must set up a seller dispatch address in your Address Book before updating products."
+        });
+      }
+    }
+
     const updateData = { ...req.body };
 
     // Add color validation
@@ -913,13 +956,44 @@ exports.uploadProduct = async (req, res) => {
       categoryId = existingCategory._id;
     }
 
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Verify that the seller has their payout settings configured before uploading a product
+    if (user.isSeller) {
+      const paymentMethod = user.paymentMethod || 'Paystack';
+      const hasPaystackDetails = user.paystack && user.paystack.accountNumber && user.paystack.bankCode;
+      const hasAfriExchangeDetails = user.afriExchange && user.afriExchange.walletAddress;
+
+      const isPayoutConfigured = (paymentMethod === "AfriExchange" && hasAfriExchangeDetails) ||
+        (paymentMethod === "Paystack" && hasPaystackDetails);
+
+      if (!isPayoutConfigured) {
+        return res.status(400).json({
+          error: "You must set up your payout bank details or link your AfriExchange wallet in Account settings before listing products."
+        });
+      }
+
+      // Check if seller has a dispatch address configured
+      const dispatchAddress = await Address.findOne({ user: userId, isDispatch: true });
+      if (!dispatchAddress) {
+        return res.status(400).json({
+          error: "You must set up a seller dispatch address in your Address Book before listing products."
+        });
+      }
+    }
+
+    const userCurrency = user.currency || "NGN";
+
     // Create new product with explicit images array
     const newProduct = new Product({
       ...productData,
       slug,
       user: userId,
       category: categoryId,
-      // images: req.files ? req.files.map((file) => file.path) : [],
+      currency: userCurrency,
       images: productData.images, // Use the validated images array from request body
     });
 
@@ -933,15 +1007,15 @@ exports.uploadProduct = async (req, res) => {
     }
 
     // Update user and seller references
-    await User.findByIdAndUpdate(userId, {
-      $push: { products: newProduct._id },
-    });
-
-    const user = await User.findById(userId);
-    if (user.isSeller && user.sellerProfile) {
-      await Seller.findByIdAndUpdate(user.sellerProfile, {
+    if (user) {
+      await User.findByIdAndUpdate(userId, {
         $push: { products: newProduct._id },
       });
+      if (user.isSeller && user.sellerProfile) {
+        await Seller.findByIdAndUpdate(user.sellerProfile, {
+          $push: { products: newProduct._id },
+        });
+      }
     }
 
     res.status(201).json(newProduct);
@@ -1019,6 +1093,7 @@ exports.getRelatedProducts = async (req, res) => {
     let query = {
       _id: { $ne: productId },
       tags: { $in: product.tags },
+      isAvailable: { $ne: false },
     };
 
     // If includeColor is true, add color matching to the query

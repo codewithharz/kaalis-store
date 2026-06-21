@@ -68,7 +68,7 @@
                 </AlertDialog>
 
                 <!-- Mobile Thumbnail Images -->
-                <div class="flex space-x-2 p-4 justify-start overflow-x-auto scrollbar-hide">
+                <div class="flex space-x-2 p-4 justify-center overflow-x-auto scrollbar-hide">
                     <img v-for="image in displayImages" :src="image" :key="image" @click="selectVariantByImage(image)"
                         @mouseover="hoveredImage = image" @mouseleave="hoveredImage = null"
                         class="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 rounded-lg cursor-pointer object-cover border-2 transition-all"
@@ -170,7 +170,7 @@
                                 selectedColor === variant.color?.hexCode
                                     ? 'border-[#24a6bb]'
                                     : 'border-gray-400',
-                                !variant.color?.inStock && 'opacity-50 cursor-not-allowed'
+                                !isColorOptionAvailable(variant.color?.hexCode) && 'opacity-30 cursor-not-allowed bg-gray-100/50'
                             ]" @click="selectVariantColor(variant)" @mouseenter="previewVariantImage(variant)"
                                 @mouseleave="resetMainImage">
                                 <!-- Show image if available, otherwise show color block -->
@@ -220,7 +220,7 @@
                                 :disabled="quantity <= 1">
                                 <Minus class="w-3.5 h-3.5 text-gray-600" />
                             </button>
-                            <input v-model.number="quantity" type="number" min="1"
+                            <input v-model.number="quantity" type="number" min="1" :max="maxAvailableStock"
                                 class="w-14 text-center appearance-none focus:outline-none text-base [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                             <button @click="incrementQuantity"
                                 class="px-3 py-2 flex items-center justify-center hover:bg-gray-50 border-l border-gray-200">
@@ -546,7 +546,7 @@
                             </div>
 
                             <!-- Thumbnails -->
-                            <div v-if="displayImages.length > 1" class="flex gap-4 mt-6 overflow-x-auto pb-2 scrollbar-hide">
+                            <div v-if="displayImages.length > 1" class="flex justify-center gap-4 mt-6 overflow-x-auto pb-2 scrollbar-hide">
                                 <div v-for="(image, index) in displayImages" :key="index"
                                     class="flex-shrink-0 w-20 h-20 rounded-xl border-2 transition-all cursor-pointer overflow-hidden p-1 bg-white"
                                     :class="[mainImage === image ? 'border-indigo-500 shadow-md transform scale-105' : 'border-transparent hover:border-gray-200']"
@@ -722,7 +722,7 @@
                                         selectedColor === variant.color?.hexCode
                                             ? 'border-[#24a6bb]'
                                             : 'border-gray-400',
-                                        !variant.color?.inStock && 'opacity-50 cursor-not-allowed'
+                                        !isColorOptionAvailable(variant.color?.hexCode) && 'opacity-30 cursor-not-allowed bg-gray-100/50'
                                     ]" @click="selectVariantColor(variant)" @mouseenter="previewVariantImage(variant)"
                                         @mouseleave="resetMainImage">
                                         <!-- Show image if available, otherwise show color block -->
@@ -771,7 +771,7 @@
                                     :disabled="quantity <= 1">
                                     <Minus class="w-3.5 h-3.5 text-gray-600" />
                                 </button>
-                                <input v-model.number="quantity" type="number" min="1"
+                                <input v-model.number="quantity" type="number" min="1" :max="maxAvailableStock"
                                     class="w-14 text-center appearance-none focus:outline-none text-base [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                                 <button @click="incrementQuantity"
                                     class="px-3 py-2 flex items-center justify-center hover:bg-gray-50 border-l border-gray-200">
@@ -1305,6 +1305,27 @@ export default {
             }) || product.value.variants[0];
         });
 
+        const isColorOptionAvailable = (colorHex) => {
+            if (!product.value?.variants) return false;
+            return product.value.variants.some(v => {
+                if (v.color?.hexCode?.toLowerCase() !== colorHex?.toLowerCase()) return false;
+                
+                const matchesSize = !selectedSize.value || v.attributes?.some(attr =>
+                    ['size', 'shape', 'measurement', 'length', 'width', 'height', 'storage', 'capacity', 'volume']
+                        .includes(attr.name.toLowerCase()) &&
+                    attr.value === selectedSize.value
+                );
+                
+                const matchesOtherAttributes = Object.keys(selectedOtherAttributes).every(attrName =>
+                    !selectedOtherAttributes[attrName] || v.attributes?.some(attr =>
+                        attr.name === attrName && attr.value === selectedOtherAttributes[attrName]
+                    )
+                );
+                
+                return matchesSize && matchesOtherAttributes && v.stock > 0;
+            });
+        };
+
         const displaySpecifications = computed(() => {
             const specs = {};
 
@@ -1348,15 +1369,9 @@ export default {
         });
 
         const displayImages = computed(() => {
-            // Priority: selected variant images first, then combine with product images
-            const variantImgs = selectedVariant.value?.images || [];
             const productImgs = product.value?.images || [];
-            
-            // Combine both - product images always show, but variant images come first if a variant is selected
-            const combined = [...variantImgs, ...productImgs];
-            
-            // Filter out duplicates and invalid URLs
-            return [...new Set(combined.filter(img => img && typeof img === 'string'))];
+            const filtered = [...new Set(productImgs.filter(img => img && typeof img === 'string'))];
+            return filtered.slice(0, 5);
         });
 
         const otherVaryingAttributes = computed(() => {
@@ -1878,12 +1893,32 @@ export default {
             }
         };
 
+        const maxAvailableStock = computed(() => {
+            if (!product.value) return 0;
+            if (product.value.variants && product.value.variants.length > 0) {
+                return selectedVariant.value ? (selectedVariant.value.stock ?? 0) : 0;
+            }
+            return product.value.stock ?? 0;
+        });
+
         const isInCart = computed(() => {
-            return cartStore.items.some(item => item.product._id === product.value._id);
+            if (!product.value) return false;
+            return cartStore.items.some(item => {
+                const matchesProduct = item.product._id === product.value._id;
+                const matchesVariant = !selectedVariant.value || 
+                    (item.variant && item.variant._id === selectedVariant.value._id);
+                return matchesProduct && matchesVariant;
+            });
         });
 
         const cartItem = computed(() => {
-            const item = cartStore.items.find(item => item.product._id === product.value._id);
+            if (!product.value) return null;
+            const item = cartStore.items.find(item => {
+                const matchesProduct = item.product._id === product.value._id;
+                const matchesVariant = !selectedVariant.value || 
+                    (item.variant && item.variant._id === selectedVariant.value._id);
+                return matchesProduct && matchesVariant;
+            });
             if (item && item.product.selectedVariant) {
                 item.product.price = item.product.selectedVariant.price;
             }
@@ -1891,11 +1926,12 @@ export default {
         });
 
         const decrementQuantity = async () => {
-            if (isInCart.value) {
+            if (isInCart.value && cartItem.value) {
+                const variantId = selectedVariant.value?._id || null;
                 if (cartItem.value.quantity > 1) {
-                    await cartStore.updateQuantity(product.value._id, cartItem.value.quantity - 1);
+                    await cartStore.updateQuantity(product.value._id, cartItem.value.quantity - 1, variantId);
                 } else {
-                    await cartStore.removeFromCart(product.value._id);
+                    await cartStore.removeFromCart(product.value._id, variantId);
                 }
             } else if (quantity.value > 1) {
                 quantity.value--;
@@ -1903,48 +1939,53 @@ export default {
         };
 
         const incrementQuantity = async () => {
-            if (isInCart.value) {
-                await cartStore.updateQuantity(product.value._id, cartItem.value.quantity + 1);
+            const maxStock = maxAvailableStock.value;
+            if (isInCart.value && cartItem.value) {
+                const newQty = cartItem.value.quantity + 1;
+                if (newQty > maxStock) {
+                    toast.error(t('productDetails.exceedsStock', { stock: maxStock }) || `Cannot exceed available stock (${maxStock})`);
+                    return;
+                }
+                const variantId = selectedVariant.value?._id || null;
+                await cartStore.updateQuantity(product.value._id, newQty, variantId);
             } else {
+                if (quantity.value >= maxStock) {
+                    toast.error(t('productDetails.exceedsStock', { stock: maxStock }) || `Cannot exceed available stock (${maxStock})`);
+                    return;
+                }
                 quantity.value++;
             }
         };
 
         const addToCart = async () => {
-            if (!selectedColor.value) {
+            if (hasColors.value && !selectedColor.value) {
                 toast.error(t('productDetails.selectColor'));
                 return;
             }
-            if (!selectedSize.value) {
+            if (hasSizes.value && !selectedSize.value) {
                 toast.error(t('productDetails.selectSize'));
                 return;
             }
 
-            const currentVariant = product.value.variants.find(v => {
-                const sizeAttribute = v.attributes.find(attr =>
-                    [
-                        'size',
-                        'measurement',
-                        'length',
-                        'width',
-                        'height',
-                        'shape',
-                        'storage',
-                        'capacity',
-                        'volume'
-                    ].includes(attr.name.toLowerCase()) &&
-                    attr.value === selectedSize.value
-                );
-                return v.color?.hexCode === selectedColor.value && sizeAttribute;
-            });
+            const currentVariant = product.value.variants && product.value.variants.length > 0
+                ? selectedVariant.value
+                : null;
 
-            if (!currentVariant) {
+            if (product.value.variants && product.value.variants.length > 0 && !currentVariant) {
                 toast.error(t('productDetails.selectedCombinationUnavailable'));
                 return;
             }
 
-            if (!currentVariant.stock) {
+            if (currentVariant && !currentVariant.stock) {
                 toast.error(t('productDetails.selectedVariantOutOfStock'));
+                return;
+            }
+
+            // Check if adding this quantity will exceed stock
+            const existingQty = cartItem.value ? cartItem.value.quantity : 0;
+            const newTotalQty = existingQty + quantity.value;
+            if (newTotalQty > maxAvailableStock.value) {
+                toast.error(t('productDetails.exceedsStock', { stock: maxAvailableStock.value }) || `Cannot exceed available stock (${maxAvailableStock.value})`);
                 return;
             }
 
@@ -1954,19 +1995,19 @@ export default {
                 const payload = {
                     _id: product.value._id,
                     name: product.value.name,
-                    price: currentVariant.price,
-                    selectedVariant: currentVariant,
+                    price: currentVariant ? currentVariant.price : product.value.price,
+                    selectedVariant: currentVariant || null,
                     quantity: addedQuantity
                 };
 
                 await cartStore.addToCart(payload, addedQuantity, {
-                    variant: {
+                    variant: currentVariant ? {
                         _id: currentVariant._id,
-                        color: selectedColor.value,
-                        size: selectedSize.value,
+                        color: selectedColor.value || null,
+                        size: selectedSize.value || null,
                         price: currentVariant.price,
                         attributes: currentVariant.attributes
-                    }
+                    } : null
                 });
 
                 await cartStore.fetchCart();
@@ -1978,6 +2019,7 @@ export default {
                 toast.error(t('productDetails.failedAddToCartLogin'));
             }
         };
+
 
         const cartCount = computed(() => cartStore.cartCount);
 
@@ -2005,7 +2047,12 @@ export default {
             return product.originalPrice || (product.discount ? Math.round(product.price / (1 - product.discount / 100)) : product.price);
         };
 
-        const formatMoney = (amount) => formatCurrencyAmount(amount, countryStore.currency || 'NGN');
+        const formatMoney = (amount) => {
+            if (amount === undefined || amount === null) return "";
+            const baseCurrency = product.value ? (product.value.currency || "NGN") : "NGN";
+            const converted = countryStore.convertPrice(amount, baseCurrency);
+            return formatCurrencyAmount(converted, countryStore.currency || 'NGN');
+        };
 
         const fetchReviews = async () => {
             try {
@@ -2087,7 +2134,11 @@ export default {
 
             } catch (error) {
                 console.error('Error submitting review:', error);
-                toast.error(t('productDetails.failedSubmitReview'));
+                if (error.response?.data?.message === 'You have already rated this product') {
+                    toast.error(t('productDetails.alreadyReviewed'));
+                } else {
+                    toast.error(t('productDetails.failedSubmitReview'));
+                }
             }
         };
 
@@ -2128,6 +2179,35 @@ export default {
 
         onUnmounted(() => {
             clearInterval(interval);
+        });
+
+        watch(quantity, (newVal) => {
+            if (typeof newVal !== 'number' || isNaN(newVal)) {
+                return;
+            }
+            if (newVal < 1) {
+                quantity.value = 1;
+            } else {
+                const maxStock = maxAvailableStock.value;
+                if (newVal > maxStock) {
+                    quantity.value = maxStock > 0 ? maxStock : 1;
+                    toast.warning(t('productDetails.exceedsStock', { stock: maxStock }) || `Cannot exceed available stock (${maxStock})`);
+                }
+            }
+        });
+
+        watch(maxAvailableStock, (newStock) => {
+            if (quantity.value > newStock) {
+                quantity.value = Math.max(1, newStock);
+            }
+        });
+
+        watch([isInCart, () => cartItem.value?.quantity], ([inCart, cartQty]) => {
+            if (inCart && cartQty !== undefined) {
+                quantity.value = cartQty;
+            } else if (!inCart) {
+                quantity.value = 1;
+            }
         });
 
         watch(() => product.value, (newProduct) => {
@@ -2233,6 +2313,7 @@ export default {
             addToCart,
             cartCount,
             showStockAlert,
+            maxAvailableStock,
             formatRating,
             displayRating,
             relatedProducts,
@@ -2258,6 +2339,7 @@ export default {
             getSelectedColorName,
             previewVariantImage,
             selectVariantColor,
+            isColorOptionAvailable,
             resetMainImage,
             showSizeGuide,
             hasSizes,

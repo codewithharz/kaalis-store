@@ -199,7 +199,6 @@ export default {
     },
     data() {
         return {
-            selectedSize: null,
             showSizeGuide: false,
             lowStockThreshold: 5
         }
@@ -328,8 +327,16 @@ export default {
                         variants: []
                     };
                 }
-                acc[size].stock += variant.stock;
-                acc[size].inStock = acc[size].inStock || variant.stock > 0;
+
+                // If a color is selected, only count stock and check availability for that color
+                const matchesSelectedColor = !this.selectedColor || 
+                    (variant.color?.hexCode?.toLowerCase() === this.selectedColor.toLowerCase());
+
+                if (matchesSelectedColor) {
+                    acc[size].stock += variant.stock;
+                    acc[size].inStock = acc[size].inStock || variant.stock > 0;
+                }
+
                 acc[size].variants.push(variant);
                 return acc;
             }, {}));
@@ -371,8 +378,6 @@ export default {
     methods: {
         selectSize(sizeOption) {
             if (!sizeOption.inStock) return;
-
-            this.selectedSize = sizeOption.size;
 
             // If there's only one color variant for this size, select it automatically
             const availableColors = sizeOption.variants

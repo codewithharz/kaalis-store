@@ -34,6 +34,10 @@ const platformSettingsSchema = new mongoose.Schema(
       timezone: { type: String, trim: true, default: "WAT" },
       maintenanceMode: { type: Boolean, default: false },
     },
+    currencyConversion: {
+      ngnToXofRate: { type: Number, default: 0.42, min: 0 },
+      xofToNgnRate: { type: Number, default: 2.38, min: 0 },
+    },
     payment: {
       checkoutPlatformFeePercent: {
         type: Number,

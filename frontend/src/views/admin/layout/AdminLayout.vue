@@ -1,34 +1,27 @@
 <!-- frontend/src/views/admin/layout/AdminLayout.vue -->
 <template>
-    <div class="min-h-screen bg-slate-100">
-        <div class="flex min-h-screen">
+    <div class="h-screen w-screen overflow-hidden bg-slate-100">
+        <div class="flex h-full w-full overflow-hidden">
             <Transition name="admin-fade">
-                <div
-                    v-if="isMobileNavOpen"
-                    class="fixed inset-0 z-40 bg-slate-950/45 lg:hidden"
-                    @click="closeMobileNav"
-                ></div>
+                <div v-if="isMobileNavOpen" class="fixed inset-0 z-40 bg-slate-950/45 lg:hidden"
+                    @click="closeMobileNav"></div>
             </Transition>
 
             <aside
                 class="fixed inset-y-0 left-0 z-50 flex w-[280px] max-w-[85vw] flex-col border-r border-slate-200 bg-white shadow-xl transition-transform duration-300 lg:static lg:z-auto lg:w-72 lg:max-w-none lg:translate-x-0 lg:shadow-none"
-                :class="isMobileNavOpen ? 'translate-x-0' : '-translate-x-full'"
-                @click.stop
-            >
+                :class="isMobileNavOpen ? 'translate-x-0' : '-translate-x-full'" @click.stop>
                 <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4 lg:px-6">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#24a3b5]">
                             {{ t('adminLayout.breadcrumbPrefix') }}
                         </p>
-                        <h1 class="mt-1 text-xl font-semibold text-slate-900">
+                        <h1 class="mt-0 text-xl font-semibold text-slate-900">
                             {{ t('adminLayout.panelTitle') }}
                         </h1>
                     </div>
-                    <button
-                        type="button"
+                    <button type="button"
                         class="rounded-md p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 lg:hidden"
-                        @click.stop="closeMobileNav"
-                    >
+                        @click.stop="closeMobileNav">
                         <X class="h-5 w-5" />
                     </button>
                 </div>
@@ -36,30 +29,25 @@
                 <div class="flex-1 overflow-y-auto px-4 py-5 lg:px-5">
                     <ul class="space-y-5">
                         <li>
-                            <router-link
-                                to="/admin/dashboard"
+                            <router-link to="/admin/dashboard"
                                 class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors"
-                                :class="linkClass('AdminDashboard')"
-                                @click="closeMobileNav"
-                            >
+                                :class="linkClass('AdminDashboard')" @click="closeMobileNav">
                                 <LayoutDashboard class="h-5 w-5" />
                                 <span>{{ t('adminLayout.dashboard') }}</span>
                             </router-link>
                         </li>
 
                         <li v-for="group in navGroups" :key="group.titleKey" class="space-y-2">
-                            <div class="flex items-center gap-3 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                            <div
+                                class="flex items-center gap-3 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
                                 <component :is="group.icon" class="h-4 w-4" />
                                 <span>{{ t(group.titleKey) }}</span>
                             </div>
                             <ul class="space-y-1">
                                 <li v-for="item in group.items" :key="item.routeName">
-                                    <router-link
-                                        :to="item.to"
+                                    <router-link :to="item.to"
                                         class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors"
-                                        :class="linkClass(item.routeName)"
-                                        @click="closeMobileNav"
-                                    >
+                                        :class="linkClass(item.routeName)" @click="closeMobileNav">
                                         <component :is="item.icon" class="h-4 w-4" />
                                         <span>{{ t(item.labelKey) }}</span>
                                     </router-link>
@@ -70,15 +58,13 @@
                 </div>
             </aside>
 
-            <div class="flex min-h-screen min-w-0 flex-1 flex-col">
-                <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-                    <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+            <div class="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
+                <header class="z-30 flex-shrink-0 border-b border-slate-200 bg-white/95 backdrop-blur">
+                    <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8">
                         <div class="flex min-w-0 items-center gap-3">
-                            <button
-                                type="button"
+                            <button type="button"
                                 class="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 lg:hidden"
-                                @click="toggleMobileNav"
-                            >
+                                @click="toggleMobileNav">
                                 <Menu class="h-5 w-5" />
                             </button>
                             <div class="min-w-0">
@@ -92,22 +78,20 @@
                         </div>
 
                         <div class="flex items-center gap-3 sm:gap-4">
-                            <button
-                                type="button"
+                            <button type="button"
                                 class="relative rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-[#24a3b5]"
-                                @click="toggleNotifications"
-                            >
+                                @click="toggleNotifications">
                                 <Bell class="h-5 w-5" />
-                                <span
-                                    v-if="unreadNotifications > 0"
-                                    class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white"
-                                >
+                                <span v-if="unreadNotifications > 0"
+                                    class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
                                     {{ unreadNotifications }}
                                 </span>
                             </button>
 
-                            <div class="hidden items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 sm:flex">
-                                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-[#24a3b5] text-white">
+                            <div
+                                class="hidden items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 sm:flex">
+                                <div
+                                    class="flex h-8 w-8 items-center justify-center rounded-full bg-[#24a3b5] text-white">
                                     <span class="text-sm font-medium">{{ adminInitials }}</span>
                                 </div>
                                 <span class="max-w-[140px] truncate text-sm font-medium text-slate-700">
@@ -115,11 +99,8 @@
                                 </span>
                             </div>
 
-                            <button
-                                type="button"
-                                @click="handleLogout"
-                                class="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100"
-                            >
+                            <button type="button" @click="handleLogout"
+                                class="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100">
                                 <LogOut class="h-4 w-4" />
                                 <span class="hidden sm:inline">{{ t('adminLayout.logout') }}</span>
                             </button>
@@ -159,6 +140,9 @@ import {
     Menu,
     X,
     KeyRound,
+    RotateCcw,
+    Headphones,
+    MessageSquare,
 } from 'lucide-vue-next'
 
 export default {
@@ -182,6 +166,9 @@ export default {
         Menu,
         X,
         KeyRound,
+        RotateCcw,
+        Headphones,
+        MessageSquare,
     },
     setup() {
         const router = useRouter()
@@ -215,6 +202,14 @@ export default {
                     { routeName: 'AdminOrders', to: '/admin/orders', icon: ScrollText, labelKey: 'adminLayout.allOrders' },
                     { routeName: 'AdminPayments', to: '/admin/payments', icon: CreditCard, labelKey: 'adminLayout.payments' },
                     { routeName: 'AdminPayouts', to: '/admin/payouts', icon: Banknote, labelKey: 'adminLayout.payouts' },
+                    { routeName: 'AdminReturns', to: '/admin/returns', icon: RotateCcw, labelKey: 'adminLayout.returns' },
+                ],
+            },
+            {
+                titleKey: 'adminLayout.support',
+                icon: Headphones,
+                items: [
+                    { routeName: 'AdminSupport', to: '/admin/support', icon: MessageSquare, labelKey: 'adminLayout.supportMessages' },
                 ],
             },
             {

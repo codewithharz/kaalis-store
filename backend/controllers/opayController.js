@@ -277,12 +277,27 @@ class OpayController {
       // Create vendor payouts
       const vendorPayouts = [];
       if (payment.metadata.items && Array.isArray(payment.metadata.items)) {
-        for (const item of payment.metadata.items) {
+        const shippingFee = payment.metadata?.shippingFee || 0;
+        const User = require("../models/userModels");
+        const firstItem = payment.metadata.items[0];
+        const vendorId = firstItem?.vendorId;
+        let fulfillmentType = "platform";
+        if (vendorId) {
+          const sellerUser = await User.findById(vendorId).populate("sellerProfile");
+          fulfillmentType = sellerUser?.sellerProfile?.fulfillmentType || "platform";
+        }
+
+        for (let i = 0; i < payment.metadata.items.length; i++) {
+          const item = payment.metadata.items[i];
           if (item.vendorId) {
+            let payoutAmount = item.vendorAmount;
+            if (fulfillmentType === "vendor" && i === 0) {
+              payoutAmount += shippingFee;
+            }
             const payout = new VendorPayout({
               vendorId: item.vendorId,
               paymentId: payment._id,
-              amount: item.vendorAmount,
+              amount: payoutAmount,
               status: "pending",
             });
             vendorPayouts.push(await payout.save());

@@ -16,7 +16,6 @@ export const getMenuItems = ({ user, isXofCountry }) => {
   return [
     { labelKey: "account.myOrders", link: "/account/orders", icon: PackageOpen },
     { labelKey: "account.myCluesBucks", link: "/account/clues-bucks", icon: Wallet },
-    { labelKey: "account.myCluesBucksStar", link: "/account/clues-bucks", icon: Wallet },
     { labelKey: "account.myProfile", link: "/account/profile", icon: User },
     { labelKey: "account.myProducts", link: "/account/my-products", icon: Box },
     { labelKey: "account.rateYourPurchase", link: "/account/rate-purchase", icon: Star },

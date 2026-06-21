@@ -87,7 +87,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div v-for="course in featuredCourses" :key="course.id"
                         class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                        <img :src="course.thumbnail" :alt="course.title" class="w-full h-48 object-cover" />
+                        <img :src="course.thumbnail" :alt="course.title" class="w-full h-48 object-cover" @error="handleImageError($event, 'course')" />
                         <div class="p-6">
                             <div class="flex items-start justify-between mb-4">
                                 <h3 class="text-lg font-bold text-[#2d3642]">{{ course.title }}</h3>
@@ -149,7 +149,7 @@
                             <div class="flex -space-x-2">
                                 <img v-for="speaker in workshop.speakers" :key="speaker.id" :src="speaker.avatar"
                                     :alt="speaker.name" class="w-8 h-8 rounded-full border-2 border-white"
-                                    :title="speaker.name" />
+                                    :title="speaker.name" @error="handleImageError($event, 'avatar')" />
                             </div>
                             <button @click="registerWorkshop(workshop.id)"
                                 class="bg-[#24a6bb] text-white px-4 py-2 rounded-lg hover:bg-[#1a7f8f] transition-colors">
@@ -166,7 +166,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div v-for="story in successStories" :key="story.id" class="bg-gray-50 rounded-lg p-6">
                         <div class="flex items-center mb-4">
-                            <img :src="story.avatar" :alt="story.name" class="w-12 h-12 rounded-full mr-4" />
+                            <img :src="story.avatar" :alt="story.name" class="w-12 h-12 rounded-full mr-4" @error="handleImageError($event, 'avatar')" />
                             <div>
                                 <h3 class="font-semibold text-[#2d3642]">{{ story.name }}</h3>
                                 <p class="text-gray-600 text-sm">{{ story.business }}</p>
@@ -210,7 +210,10 @@ import {
     // ChartBar,
     // Box
 } from 'lucide-vue-next';
+import { toast } from 'vue-sonner';
 import image from '../../../assets/images/Kyrian.png';
+import defaultAvatar from '../../../assets/images/user1-avatar.png';
+import defaultLogo from '../../../assets/images/logo.png';
 
 const { t } = useI18n();
 
@@ -331,36 +334,48 @@ const successStories = [
     }
 ];
 
+const handleImageError = (event, type = 'avatar') => {
+    event.target.onerror = null;
+    event.target.src = type === 'avatar' ? defaultAvatar : defaultLogo;
+};
+
 // Navigation Functions
 const startLearning = () => {
-    // Implement navigation to first course or learning path
+    const element = document.querySelector('h2');
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+    }
+    toast.success(t('brutholAcademyPage.pathStarted'));
 };
 
 const showCertifications = () => {
-    // Implement navigation to certifications page
+    toast.success(t('brutholAcademyPage.certificationsSoon'));
 };
 
 const viewAllPaths = () => {
-    // Implement navigation to all learning paths
+    const element = document.querySelector('h2');
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+    }
 };
 
 const continuePath = (pathId) => {
-    // Implement continue learning for specific path
     console.log('Continuing path:', pathId);
+    toast.success(t('brutholAcademyPage.pathStarted'));
 };
 
 const startCourse = (courseId) => {
-    // Implement course start functionality
     console.log('Starting course:', courseId);
+    toast.success(t('brutholAcademyPage.courseStarted'));
 };
 
 const registerWorkshop = (workshopId) => {
-    // Implement workshop registration
     console.log('Registering for workshop:', workshopId);
+    toast.success(t('brutholAcademyPage.workshopRegistered'));
 };
 
 const readStory = (storyId) => {
-    // Implement navigation to full success story
     console.log('Reading story:', storyId);
+    toast.info(t('brutholAcademyPage.storyLoading'));
 };
 </script>

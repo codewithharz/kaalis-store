@@ -624,7 +624,34 @@ const getSellerOrders = async (req, res) => {
 const updateSellerProfile = async (req, res) => {
   try {
     const { sellerId } = req.params;
-    const updateData = req.body;
+    const updateData = { ...req.body };
+
+    // Fetch existing seller profile
+    const existingSeller = await Seller.findById(sellerId);
+    if (!existingSeller) {
+      return res.status(404).json({ error: "Seller not found" });
+    }
+
+    // Security: Remove admin-controlled fields from updateData
+    delete updateData.selfShippingApproved;
+
+    // Validate fulfillmentType update: Only allowed if selfShippingApproved is true
+    if (updateData.fulfillmentType && updateData.fulfillmentType !== existingSeller.fulfillmentType) {
+      if (!existingSeller.selfShippingApproved) {
+        return res.status(400).json({ error: "Self-shipping is not approved for this store yet." });
+      }
+    }
+
+    // Handle self-shipping request submission
+    if (updateData.selfShippingRequestStatus === 'pending') {
+      if (existingSeller.selfShippingApproved) {
+        // If already approved, they can just toggle fulfillmentType, no need to request
+        delete updateData.selfShippingRequestStatus;
+      }
+    } else {
+      // Don't allow them to arbitrarily set it to other statuses
+      delete updateData.selfShippingRequestStatus;
+    }
 
     const seller = await Seller.findByIdAndUpdate(sellerId, updateData, {
       new: true,

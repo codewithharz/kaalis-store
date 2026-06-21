@@ -110,10 +110,13 @@ import AdminSellers from "../views/admin/AdminSellers.vue";
 import AdminProducts from "../views/admin/AdminProducts.vue";
 import AdminCategories from "../views/admin/AdminCategories.vue";
 import AdminOrders from "../views/admin/AdminOrders.vue";
+import AdminReturns from "../views/admin/AdminReturns.vue";
 import AdminPayments from "../views/admin/AdminPayments.vue";
 import AdminPayouts from "../views/admin/AdminPayouts.vue";
 import AdminSettings from "../views/admin/AdminSettings.vue";
 import AdminPasswordReset from "../views/admin/AdminPasswordReset.vue";
+import AdminSupport from "../views/admin/AdminSupport.vue";
+
 
 const adminRoutes = [
   {
@@ -197,6 +200,11 @@ const adminRoutes = [
         component: AdminOrders,
       },
       {
+        path: "returns",
+        name: "AdminReturns",
+        component: AdminReturns,
+      },
+      {
         path: "payments",
         name: "AdminPayments",
         component: AdminPayments,
@@ -215,6 +223,11 @@ const adminRoutes = [
         path: "password-reset",
         name: "AdminPasswordReset",
         component: AdminPasswordReset,
+      },
+      {
+        path: "support",
+        name: "AdminSupport",
+        component: AdminSupport,
       },
       // Add other admin routes...
     ],
@@ -574,6 +587,12 @@ const routes = [
     name: "GiftIdeas",
     component: GiftIdeas,
     props: true,
+  },
+
+  {
+    path: "/page/help/help-and-support",
+    name: "PublicHelpAndSupport",
+    component: HelpAndSupport,
   },
 
   {

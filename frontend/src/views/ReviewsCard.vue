@@ -215,7 +215,7 @@
                             <!-- Product Preview -->
                             <div v-if="review.product" class="ml-6">
                                 <div class="w-24 h-24 relative group">
-                                    <img :src="review.product.images?.[0]" :alt="review.product.name"
+                                    <img :src="review.product.images?.[0] || '/placeholder-image.jpg'" :alt="review.product.name"
                                         class="w-full h-full object-cover rounded-xl border-2 border-gray-200 shadow-sm cursor-pointer hover:opacity-75 transition-all duration-300 group-hover:scale-105"
                                         @error="handleImageError" @click="navigateToProduct(review.product._id)">
                                     <div
@@ -318,6 +318,46 @@
                 </div>
             </div>
         </div>
+
+        <!-- Image Lightbox Modal -->
+        <div v-if="showLightbox"
+            class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 animate-fadeIn"
+            @click="closeLightbox">
+            
+            <!-- Close Button -->
+            <button @click.stop="closeLightbox"
+                class="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-200 hover:scale-105 active:scale-95 z-55">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            
+            <!-- Previous Button -->
+            <button v-if="lightboxImages.length > 1" @click.stop="prevImage"
+                class="absolute left-6 p-4 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-200 hover:scale-105 active:scale-95 z-55">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </button>
+
+            <!-- Image Content -->
+            <div class="max-w-4xl max-h-[85vh] p-4 flex flex-col items-center justify-center animate-scaleIn" @click.stop>
+                <img :src="lightboxImages[lightboxIndex]" 
+                    class="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl border border-white/10"
+                    @error="handleImageError">
+                <p class="text-white/80 mt-4 text-sm font-semibold bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                    {{ lightboxIndex + 1 }} / {{ lightboxImages.length }}
+                </p>
+            </div>
+
+            <!-- Next Button -->
+            <button v-if="lightboxImages.length > 1" @click.stop="nextImage"
+                class="absolute right-6 p-4 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-200 hover:scale-105 active:scale-95 z-55">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+        </div>
     </div>
 </template>
 
@@ -340,7 +380,7 @@ export default {
     },
 
     setup() {
-        const { t } = useI18n();
+        const { t, locale } = useI18n();
         const productStore = useProductStore();
         const userStore = useUserStore();
         const router = useRouter();
@@ -390,7 +430,8 @@ export default {
 
         // Format date helper
         const formatDate = (dateString) => {
-            return new Date(dateString).toLocaleDateString('en-US', {
+            const activeLocale = locale.value === 'fr' ? 'fr-FR' : 'en-US';
+            return new Date(dateString).toLocaleDateString(activeLocale, {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
@@ -415,7 +456,8 @@ export default {
 
         // Handle image loading errors
         const handleImageError = (event) => {
-            event.target.src = '/placeholder-image.jpg'; // Replace with your placeholder image
+            event.target.onerror = null; // Prevent infinite loop if placeholder fails
+            event.target.src = '/placeholder-image.jpg';
         };
 
         const averageRating = computed(() => {
@@ -433,9 +475,28 @@ export default {
             return (getRatingCount(stars) / reviews.value.length) * 100;
         };
 
+        const showLightbox = ref(false);
+        const lightboxImages = ref([]);
+        const lightboxIndex = ref(0);
+
         const openImageGallery = (images, startIndex) => {
-            // Implement image gallery view logic here
-            console.log('Opening gallery with images:', images, 'starting at index:', startIndex);
+            lightboxImages.value = images;
+            lightboxIndex.value = startIndex;
+            showLightbox.value = true;
+        };
+
+        const closeLightbox = () => {
+            showLightbox.value = false;
+        };
+
+        const nextImage = () => {
+            if (lightboxImages.value.length === 0) return;
+            lightboxIndex.value = (lightboxIndex.value + 1) % lightboxImages.value.length;
+        };
+
+        const prevImage = () => {
+            if (lightboxImages.value.length === 0) return;
+            lightboxIndex.value = (lightboxIndex.value - 1 + lightboxImages.value.length) % lightboxImages.value.length;
         };
 
         const navigateToProduct = (productId) => {
@@ -464,6 +525,12 @@ export default {
             getRatingCount,
             getRatingPercentage,
             openImageGallery,
+            closeLightbox,
+            nextImage,
+            prevImage,
+            showLightbox,
+            lightboxImages,
+            lightboxIndex,
             navigateToProduct,
             userStore,
         };

@@ -14,6 +14,7 @@ const categorySchema = new mongoose.Schema(
     parent: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
     level: { type: Number, default: 0 },
     ancestors: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }],
+    active: { type: Boolean, default: true },
   },
   {
     timestamps: true,

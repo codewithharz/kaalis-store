@@ -112,7 +112,7 @@
                     <div class="min-w-0 flex-1">
                         <p class="text-xs sm:text-sm text-gray-500">{{ t('vendorPaymentSetupPage.stats.nextPayout') }}</p>
                         <p class="text-base sm:text-lg font-medium text-gray-900 break-words">
-                            {{ formatDate(vendorPayoutStore.nextPayoutDate) || t('vendorPaymentSetupPage.notScheduled') }}
+                            {{ nextPayoutText }}
                         </p>
                     </div>
                     <div
@@ -217,6 +217,7 @@
                                             class="inline-flex items-center">
                                             <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full mr-1.5 sm:mr-2" :class="{
                                                 'bg-yellow-400': payout.status.toLowerCase() === 'pending',
+                                                'bg-purple-400': payout.status.toLowerCase() === 'aggregating',
                                                 'bg-blue-400': payout.status.toLowerCase() === 'processing',
                                                 'bg-green-400': payout.status.toLowerCase() === 'processed',
                                                 'bg-red-400': payout.status.toLowerCase() === 'failed'
@@ -354,6 +355,16 @@ const afriExchangeIdentifier = computed(() => {
     );
 });
 
+const nextPayoutText = computed(() => {
+    if (vendorPayoutStore.nextPayoutDate) {
+        return formatDate(vendorPayoutStore.nextPayoutDate);
+    }
+    if (vendorPayoutStore.stats.nextPayoutStatus === 'aggregating') {
+        return t('vendorPaymentSetupPage.aggregatingThreshold');
+    }
+    return t('vendorPaymentSetupPage.notScheduled');
+});
+
 onMounted(async () => {
     try {
         await vendorPayoutStore.fetchPayoutHistory();
@@ -387,6 +398,7 @@ const getStatusClass = (status) => {
     const baseClasses = 'px-2 py-1 rounded-full text-xs font-medium';
     const statusClasses = {
         pending: 'bg-yellow-100 text-yellow-800',
+        aggregating: 'bg-purple-100 text-purple-800',
         processing: 'bg-blue-100 text-blue-800',
         processed: 'bg-green-100 text-green-800',
         failed: 'bg-red-100 text-red-800'

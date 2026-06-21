@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import apiClient from "../api/axios";
 import { useUserStore } from "./user";
+import { useCountryStore } from "./countryStore";
 import { toast } from "vue-sonner";
 
 export const useCartStore = defineStore("cart", {
@@ -16,7 +17,15 @@ export const useCartStore = defineStore("cart", {
   getters: {
     cartCount: (state) =>
       state.items.reduce((total, item) => total + item.quantity, 0),
-    cartTotal: (state) => state._cartTotal, // Keep cartTotal instead of total for consistency
+    cartTotal: (state) => {
+      const countryStore = useCountryStore();
+      return state.items.reduce((total, item) => {
+        const price = item.variant?.price || item.product?.price || 0;
+        const baseCurrency = item.product?.currency || "NGN";
+        const converted = countryStore.convertPrice(price, baseCurrency);
+        return total + converted * item.quantity;
+      }, 0);
+    },
     totalAfterDiscount: (state) => state.cartTotal - state.discount,
     appliedCouponCode: (state) => state.coupon?.code || null,
     selectedItems: (state) => state.items.filter((item) => item.selected),
@@ -24,13 +33,17 @@ export const useCartStore = defineStore("cart", {
       state.items
         .filter((item) => item.selected)
         .reduce((total, item) => total + item.quantity, 0),
-    selectedCartTotal: (state) =>
-      state.items
+    selectedCartTotal: (state) => {
+      const countryStore = useCountryStore();
+      return state.items
         .filter((item) => item.selected)
         .reduce((total, item) => {
           const price = item.variant?.price || item.product?.price || 0;
-          return total + price * item.quantity;
-        }, 0),
+          const baseCurrency = item.product?.currency || "NGN";
+          const converted = countryStore.convertPrice(price, baseCurrency);
+          return total + converted * item.quantity;
+        }, 0);
+    },
   },
 
   actions: {
@@ -97,19 +110,16 @@ export const useCartStore = defineStore("cart", {
     },
 
     calculateCartTotal() {
+      const countryStore = useCountryStore();
       this._cartTotal = this.items.reduce((total, item) => {
         const price = item.variant?.price || item.product?.price || 0;
-        return total + price * item.quantity;
+        const baseCurrency = item.product?.currency || "NGN";
+        const converted = countryStore.convertPrice(price, baseCurrency);
+        return total + converted * item.quantity;
       }, 0);
     },
 
     calculateDiscount() {
-      // if (this.coupon && this.coupon.discountPercentage) {
-      //   this.discount = (this.cartTotal * this.coupon.discountPercentage) / 100;
-      // } else {
-      //   this.discount = 0;
-      // }
-
       if (!this.coupon) {
         this.discount = 0;
         return;
@@ -117,7 +127,8 @@ export const useCartStore = defineStore("cart", {
 
       // Handle CluesBucks fixed amount coupons
       if (this.coupon.code.startsWith("CB")) {
-        this.discount = 1000; // Fixed ₦1000 discount for CluesBucks
+        const countryStore = useCountryStore();
+        this.discount = countryStore.convertPrice(1000, "NGN"); // Fixed ₦1000 discount for CluesBucks, converted to active currency
       }
       // Handle percentage-based coupons
       else if (this.coupon.discountPercentage) {
@@ -272,8 +283,9 @@ export const useCartStore = defineStore("cart", {
         this.calculateDiscount();
       } catch (error) {
         console.error("Error updating cart:", error);
-        this.error = "Failed to update cart";
-        toast.error(this.error);
+        const errorMsg = error.response?.data?.message || "Failed to update cart";
+        this.error = errorMsg;
+        toast.error(errorMsg);
       } finally {
         this.isLoading = false;
       }

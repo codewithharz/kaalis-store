@@ -1,12 +1,31 @@
 const Cart = require("../models/cartModels");
 const Product = require("../models/productModels");
 
+// Helper to determine the available stock for a product or its variant
+const getAvailableStock = (product, variantIdOrObj) => {
+  if (variantIdOrObj) {
+    const targetId = typeof variantIdOrObj === "object" ? (variantIdOrObj._id || variantIdOrObj) : variantIdOrObj;
+    const variant = product.variants.find((v) => v._id.toString() === targetId.toString());
+    return variant ? (variant.stock || 0) : 0;
+  }
+  return product.stock || 0;
+};
+
 // Get the cart for a specific user
 exports.getCart = async (req, res) => {
   try {
-    let cart = await Cart.findOne({ user: req.user._id }).populate(
-      "products.product"
-    );
+    let cart = await Cart.findOne({ user: req.user._id }).populate({
+      path: "products.product",
+      populate: {
+        path: "user",
+        select: "username isSeller",
+        populate: {
+          path: "sellerProfile",
+          model: "Seller",
+          select: "storeName fulfillmentType",
+        },
+      },
+    });
     if (!cart) {
       cart = new Cart({ user: req.user._id, products: [] });
       await cart.save();
@@ -27,6 +46,9 @@ exports.addToCart = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
+    const variantId = variant ? (typeof variant === "object" ? variant._id : variant) : null;
+    const maxStock = getAvailableStock(product, variantId);
+
     let cart = await Cart.findOne({ user: req.user._id });
     if (!cart) {
       cart = new Cart({ user: req.user._id, products: [] });
@@ -35,9 +57,16 @@ exports.addToCart = async (req, res) => {
     const existingProductIndex = cart.products.findIndex(
       (p) =>
         p.product.toString() === productId &&
-        ((!p.variant && !variant) ||
-          (p.variant && variant && p.variant._id === variant._id))
+        ((!p.variant && !variantId) ||
+          (p.variant && variantId && p.variant._id.toString() === variantId.toString()))
     );
+
+    const existingQty = existingProductIndex > -1 ? cart.products[existingProductIndex].quantity : 0;
+    if (existingQty + quantity > maxStock) {
+      return res.status(400).json({
+        message: `Cannot add requested quantity. Available stock is ${maxStock}. You already have ${existingQty} in your cart.`,
+      });
+    }
 
     if (existingProductIndex > -1) {
       cart.products[existingProductIndex].quantity += quantity;
@@ -63,6 +92,13 @@ exports.updateCart = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
+    const maxStock = getAvailableStock(product, variantId);
+    if (quantity > maxStock) {
+      return res.status(400).json({
+        message: `Requested quantity exceeds available stock of ${maxStock}.`,
+      });
+    }
+
     const cart = await Cart.findOne({ user: req.user._id });
     if (!cart) {
       return res.status(404).json({ message: "Cart not found" });
@@ -71,7 +107,8 @@ exports.updateCart = async (req, res) => {
     const productIndex = cart.products.findIndex(
       (p) =>
         p.product.toString() === productId &&
-        ((!p.variant && !variantId) || (p.variant && p.variant._id === variantId))
+        ((!p.variant && !variantId) ||
+          (p.variant && p.variant._id.toString() === variantId.toString()))
     );
     if (productIndex === -1) {
       return res.status(404).json({ message: "Product not found in cart" });

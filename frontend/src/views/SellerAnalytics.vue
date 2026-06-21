@@ -1,81 +1,108 @@
 <!-- frontend/src/views/SellerAnalytics.vue -->
 <template>
-    <div class="min-h-screen bg-gray-50 py-4 sm:py-8">
+    <div class="min-h-screen bg-slate-50/50 py-6 sm:py-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
             <!-- Header with Back Button - Mobile Friendly -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                 <button @click="router.back()"
-                    class="flex items-center text-gray-600 hover:text-gray-800 transition duration-150">
-                    <ArrowLeft class="w-5 h-5 mr-2" />
-                    <span class="text-sm sm:text-base">{{ t('sellerAnalyticsPage.backToDashboard') }}</span>
+                    class="flex items-center text-slate-600 hover:text-[#ff934b] hover:bg-[#ff934b]/5 px-3 py-2 rounded-xl transition-all duration-200 w-fit active:scale-95"
+                >
+                    <ArrowLeft class="w-4 h-4 mr-2" />
+                    <span class="text-sm font-bold">{{ t('sellerAnalyticsPage.backToDashboard') }}</span>
                 </button>
-                <div class="flex flex-col sm:flex-row gap-3 sm:space-x-4">
-                    <!-- Date Range Selector - Full Width on Mobile -->
+                
+                <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+                    <!-- Date Range Selector -->
                     <div class="relative">
                         <select
-                            class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
-                            v-model="dateRange">
+                            class="appearance-none w-full sm:w-48 bg-white border border-slate-200 rounded-xl px-4 py-2.5 pr-10 text-sm font-bold text-slate-700 focus:outline-none focus:border-[#ff934b] focus:ring-4 focus:ring-[#ff934b]/10 transition-all cursor-pointer shadow-sm hover:bg-slate-50/50"
+                            v-model="dateRange"
+                        >
                             <option value="7">{{ t('sellerAnalyticsPage.dateRanges.last7Days') }}</option>
                             <option value="30">{{ t('sellerAnalyticsPage.dateRanges.last30Days') }}</option>
                             <option value="90">{{ t('sellerAnalyticsPage.dateRanges.last90Days') }}</option>
                             <option value="365">{{ t('sellerAnalyticsPage.dateRanges.lastYear') }}</option>
                         </select>
-                        <div class="absolute right-1 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <ChevronDown class="w-5 h-5 text-gray-400" />
+                        <div class="absolute right-3.5 top-1/2 transform -translate-y-1/2 pointer-events-none text-slate-400">
+                            <ChevronDown class="w-4 h-4" />
                         </div>
                     </div>
+                    
+                    <!-- Refresh Button -->
                     <button @click="refreshData"
-                        class="flex items-center justify-center px-4 py-2 bg-white border rounded-md text-gray-600 hover:bg-gray-50">
+                        class="flex items-center justify-center px-4 py-2.5 bg-white border border-slate-200 hover:border-[#ff934b]/30 rounded-xl text-slate-600 hover:text-[#ff934b] hover:bg-[#ff934b]/5 shadow-sm transition-all duration-200 active:scale-95"
+                    >
                         <RefreshCcw class="w-4 h-4 mr-2" />
-                        <span class="text-sm sm:text-base">{{ t('sellerAnalyticsPage.refresh') }}</span>
+                        <span class="text-sm font-bold">{{ t('sellerAnalyticsPage.refresh') }}</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Analytics Content -->
-            <div class="bg-white p-4 sm:p-6 rounded-lg shadow">
-                <h2 class="text-xl sm:text-2xl font-bold mb-6">{{ t('sellerAnalyticsPage.title') }}</h2>
+            <!-- Analytics Content Card -->
+            <div class="bg-white border border-slate-100 p-6 sm:p-8 rounded-2xl shadow-sm space-y-8">
+                
+                <!-- Page Title -->
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] text-white rounded-xl shadow-md">
+                        <TrendingUp class="w-5 h-5" />
+                    </div>
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">{{ t('sellerAnalyticsPage.title') }}</h2>
+                        <p class="text-xs text-slate-400 font-semibold mt-0.5">{{ t('sellerAnalyticsPage.subtitle', 'Real-time performance metrics and business overview') }}</p>
+                    </div>
+                </div>
 
                 <!-- Key Metrics Cards - Scrollable on Mobile -->
-                <div class="overflow-x-auto pb-2 -mx-4 px-4 sm:overflow-x-visible sm:pb-0 sm:px-0">
-                    <div class="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-max sm:min-w-0">
+                <div class="overflow-x-auto pb-2 -mx-6 px-6 sm:overflow-x-visible sm:pb-0 sm:px-0 scrollbar-none">
+                    <div class="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-5 min-w-max sm:min-w-0">
                         <div v-for="metric in keyMetrics" :key="metric.title"
-                            class="w-72 sm:w-auto p-4 rounded-lg border bg-gradient-to-br from-white to-gray-50">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-gray-600 text-sm sm:text-base">{{ metric.title }}</span>
-                                <component :is="metric.icon" class="w-5 h-5 text-purple-500" />
+                            class="w-72 sm:w-auto p-5 rounded-2xl border border-slate-100 bg-white hover:border-[#ff934b]/20 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group flex flex-col justify-between"
+                        >
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-slate-500 text-xs sm:text-sm font-bold tracking-wide uppercase">{{ metric.title }}</span>
+                                <div class="p-2.5 bg-[#ff934b]/10 text-[#ff934b] group-hover:bg-gradient-to-r group-hover:from-[#ff934b] group-hover:to-[#ff5e62] group-hover:text-white rounded-xl transition-all duration-300 shadow-sm">
+                                    <component :is="metric.icon" class="w-4.5 h-4.5" />
+                                </div>
                             </div>
-                            <div class="flex items-baseline">
-                                <span class="text-xl sm:text-2xl font-bold">{{ metric.value }}</span>
-                                <span :class="[
-                                    'ml-2 text-xs sm:text-sm',
-                                    metric.trend > 0 ? 'text-green-500' : 'text-red-500'
-                                ]">
-                                    {{ metric.trend > 0 ? '↑' : '↓' }} {{ Math.abs(metric.trend) }}%
-                                </span>
+                            <div class="space-y-1">
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">{{ metric.value }}</span>
+                                    <span :class="[
+                                        'text-[10px] font-black px-1.5 py-0.5 rounded-lg flex items-center gap-0.5 select-none',
+                                        metric.trend >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                                    ]">
+                                        <span>{{ metric.trend >= 0 ? '↑' : '↓' }}</span>
+                                        <span>{{ Math.abs(metric.trend) }}%</span>
+                                    </span>
+                                </div>
+                                <p class="text-[11px] font-semibold text-slate-400">{{ t('sellerAnalyticsPage.vsLastPeriod') }}</p>
                             </div>
-                            <p class="text-xs sm:text-sm text-gray-500 mt-1">{{ t('sellerAnalyticsPage.vsLastPeriod') }}</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Sales Chart - Adjusted Height for Mobile -->
-                <div class="mb-6 sm:mb-8 p-4 border rounded-lg mt-6">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                        <h3 class="text-lg sm:text-xl font-semibold">{{ t('sellerAnalyticsPage.salesOverview') }}</h3>
-                        <div class="flex space-x-2">
+                <!-- Sales Chart -->
+                <div class="p-5 sm:p-6 border border-slate-100 rounded-2xl bg-slate-50/20 shadow-inner-soft">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h3 class="text-base sm:text-lg font-bold text-slate-800 tracking-tight">{{ t('sellerAnalyticsPage.salesOverview') }}</h3>
+                            <p class="text-xs text-slate-400 font-semibold mt-0.5">{{ t('sellerAnalyticsPage.salesOverviewSubtitle', 'Revenue tracking over the selected range') }}</p>
+                        </div>
+                        <div class="flex items-center gap-1.5 bg-slate-100/60 p-1 rounded-xl self-start sm:self-center">
                             <button v-for="view in timeViewOptions" :key="view.value"
                                 @click="changeTimeView(view.value)" :class="[
-                                    'px-3 py-1 rounded-md text-xs sm:text-sm',
+                                    'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 active:scale-95',
                                     timeView === view.value
-                                        ? 'bg-purple-100 text-purple-700'
-                                        : 'text-gray-600 hover:bg-gray-100'
-                                ]">
+                                        ? 'bg-white text-slate-800 shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-800'
+                                ]"
+                            >
                                 {{ view.label }}
                             </button>
                         </div>
                     </div>
-                    <div class="h-60 sm:h-80">
+                    <div class="h-64 sm:h-80 w-full">
                         <LineChart :data="salesData" :options="chartOptions" />
                     </div>
                 </div>
@@ -83,62 +110,72 @@
                 <!-- Two Column Layout - Stack on Mobile -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <!-- Top Products -->
-                    <div class="border rounded-lg p-4">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                            <h3 class="text-lg sm:text-xl font-semibold">{{ t('sellerAnalyticsPage.topProducts') }}</h3>
-                            <div class="relative">
-                                <select
-                                    class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-4 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
-                                    v-model="productSort">
-                                    <option value="sales">{{ t('sellerAnalyticsPage.productSort.bySales') }}</option>
-                                    <option value="revenue">{{ t('sellerAnalyticsPage.productSort.byRevenue') }}</option>
-                                    <option value="growth">{{ t('sellerAnalyticsPage.productSort.byGrowth') }}</option>
-                                </select>
-                                <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                                    <ChevronDown class="w-5 h-5 text-gray-400" />
+                    <div class="border border-slate-100 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                                <div>
+                                    <h3 class="text-base sm:text-lg font-bold text-slate-800 tracking-tight">{{ t('sellerAnalyticsPage.topProducts') }}</h3>
+                                    <p class="text-xs text-slate-400 font-semibold mt-0.5">{{ t('sellerAnalyticsPage.topProductsSubtitle', 'Best performing items') }}</p>
+                                </div>
+                                <div class="relative">
+                                    <select
+                                        class="appearance-none w-full sm:w-40 bg-white border border-slate-200 rounded-xl px-3 py-2 pr-8 text-xs font-bold text-slate-700 focus:outline-none focus:border-[#ff934b] focus:ring-4 focus:ring-[#ff934b]/10 transition-all cursor-pointer shadow-sm hover:bg-slate-50/50"
+                                        v-model="productSort"
+                                    >
+                                        <option value="sales">{{ t('sellerAnalyticsPage.productSort.bySales') }}</option>
+                                        <option value="revenue">{{ t('sellerAnalyticsPage.productSort.byRevenue') }}</option>
+                                        <option value="growth">{{ t('sellerAnalyticsPage.productSort.byGrowth') }}</option>
+                                    </select>
+                                    <div class="absolute right-2.5 top-1/2 transform -translate-y-1/2 pointer-events-none text-slate-400">
+                                        <ChevronDown class="w-3.5 h-3.5" />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="space-y-4">
-                            <div v-if="sortedProducts && sortedProducts.length === 0"
-                                class="text-center text-gray-500 py-4">
-                                {{ t('sellerAnalyticsPage.noProductData') }}
-                            </div>
-                            <template v-else>
-                                <div v-for="product in sortedProducts" :key="product.id"
-                                    class="flex flex-col sm:flex-row sm:items-center justify-between p-2 hover:bg-gray-50 rounded gap-2">
-                                    <div class="flex items-center space-x-3">
-                                        <div class="w-2 h-2 rounded-full" :style="{ backgroundColor: product.color }">
+                            <div class="space-y-3.5">
+                                <div v-if="sortedProducts && sortedProducts.length === 0"
+                                    class="text-center text-slate-400 font-semibold py-8"
+                                >
+                                    {{ t('sellerAnalyticsPage.noProductData') }}
+                                </div>
+                                <template v-else>
+                                    <div v-for="product in sortedProducts" :key="product.id"
+                                        class="flex items-center justify-between p-3 border border-slate-50 hover:border-[#ff934b]/10 hover:bg-[#ff934b]/5 rounded-xl transition-all duration-200 group gap-3"
+                                    >
+                                        <div class="flex items-center space-x-3 truncate">
+                                            <div class="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" :style="{ backgroundColor: product.color }"></div>
+                                            <span class="text-sm font-bold text-slate-700 truncate">{{ product.name }}</span>
                                         </div>
-                                        <span class="text-sm sm:text-base">{{ product.name }}</span>
+                                        <div class="flex items-center justify-end gap-4 shrink-0">
+                                            <span class="text-slate-800 font-black text-sm">
+                                                {{ formatCurrency(product.revenue) }}
+                                            </span>
+                                            <span class="text-xs font-bold px-1.5 py-0.5 rounded-lg select-none"
+                                                :class="product.growth >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'"
+                                            >
+                                                {{ product.growth >= 0 ? '+' : '' }}{{ product.growth }}%
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div
-                                        class="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4">
-                                        <span class="text-gray-600 text-sm">
-                                            {{ formatCurrency(product.revenue) }}
-                                        </span>
-                                        <span class="text-xs sm:text-sm"
-                                            :class="product.growth >= 0 ? 'text-green-500' : 'text-red-500'">
-                                            {{ product.growth >= 0 ? '+' : '' }}{{ product.growth }}%
-                                        </span>
-                                    </div>
-                                </div>
-                            </template>
+                                </template>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Orders Status -->
-                    <div class="border rounded-lg p-4">
-                        <h3 class="text-lg sm:text-xl font-semibold mb-4">{{ t('sellerAnalyticsPage.ordersByStatus') }}</h3>
-                        <div class="h-48 sm:h-64">
-                            <DoughnutChart :data="orderStatusData" :options="doughnutOptions" />
+                    <div class="border border-slate-100 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-base sm:text-lg font-bold text-slate-800 tracking-tight mb-1">{{ t('sellerAnalyticsPage.ordersByStatus') }}</h3>
+                            <p class="text-xs text-slate-400 font-semibold mb-6">{{ t('sellerAnalyticsPage.ordersByStatusSubtitle', 'Status distribution of all current period orders') }}</p>
+                            <div class="h-48 sm:h-56 relative flex items-center justify-center">
+                                <DoughnutChart :data="orderStatusData" :options="doughnutOptions" />
+                            </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div class="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-slate-50">
                             <div v-for="status in orderStatusData.labels" :key="status"
-                                class="flex items-center space-x-2">
-                                <div class="w-3 h-3 rounded-full" :style="{ backgroundColor: getStatusColor(status) }">
-                                </div>
-                                <span class="text-xs sm:text-sm text-gray-600">{{ translateStatus(status) }}</span>
+                                class="flex items-center space-x-2.5"
+                            >
+                                <div class="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" :style="{ backgroundColor: getStatusColor(status) }"></div>
+                                <span class="text-xs font-bold text-slate-500 truncate">{{ translateStatus(status) }}</span>
                             </div>
                         </div>
                     </div>
@@ -147,16 +184,18 @@
         </div>
 
         <!-- Loading Overlay -->
-        <div v-if="isLoading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white p-4 rounded-lg flex items-center space-x-3">
-                <svg class="animate-spin h-5 w-5 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none"
-                    viewBox="0 0 24 24">
+        <div v-if="isLoading" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 transition-all">
+            <div class="bg-white border border-slate-100 p-5 rounded-2xl flex items-center space-x-3 shadow-2xl scale-in duration-200">
+                <svg class="animate-spin h-5 w-5 text-[#ff934b]" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24"
+                >
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    >
                     </path>
                 </svg>
-                <span class="text-gray-700">{{ t('sellerAnalyticsPage.loading') }}</span>
+                <span class="text-slate-700 font-bold text-sm">{{ t('sellerAnalyticsPage.loading') }}</span>
             </div>
         </div>
     </div>
@@ -167,9 +206,25 @@ import { ref, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { Line as LineChart, Doughnut as DoughnutChart } from 'vue-chartjs';
+import { 
+    Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler, ArcElement 
+} from 'chart.js';
 import { ArrowLeft, RefreshCcw, TrendingUp, ShoppingBag, Users, CreditCard, ChevronDown } from 'lucide-vue-next';
 import { useSellerStore } from '../store/sellerStore';
 import { toast } from 'vue-sonner';
+
+// Register Chart.js core elements globally for components
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+    Filler,
+    ArcElement
+);
 
 export default {
     components: {
@@ -192,7 +247,6 @@ export default {
         const timeView = ref('daily');
         const productSort = ref('sales');
         const isLoading = ref(false);
-        const sellerId = ref(null);
 
         // Reactive refs for analytics data
         const analyticsData = ref({
@@ -270,12 +324,18 @@ export default {
             return {
                 labels: data.labels,
                 datasets: [{
-                    label: t('sellerAnalyticsPage.salesDataset'),
+                    label: t('sellerAnalyticsPage.salesDataset', 'Sales'),
                     data: data.values,
                     fill: true,
-                    borderColor: '#7C3AED',
-                    backgroundColor: 'rgba(124, 58, 237, 0.1)',
-                    tension: 0.4
+                    borderColor: '#ff934b',
+                    backgroundColor: 'rgba(255, 147, 75, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    pointBackgroundColor: '#ff934b',
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#ff5e62',
+                    pointHoverBorderColor: '#ffffff',
+                    pointHoverBorderWidth: 2
                 }]
             };
         });
@@ -302,12 +362,9 @@ export default {
                 labels: Object.keys(statusCounts),
                 datasets: [{
                     data: Object.values(statusCounts),
-                    backgroundColor: [
-                        '#F59E0B', // Pending
-                        '#7C3AED', // Processing
-                        '#10B981', // Shipped
-                        '#6366F1'  // Delivered
-                    ]
+                    backgroundColor: Object.keys(statusCounts).map(status => getStatusColor(status)),
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
                 }]
             };
         });
@@ -339,7 +396,7 @@ export default {
         };
 
         const formatCurrency = (amount) => {
-            const currencySymbol = t('sellerAnalyticsPage.currencySymbol');
+            const currencySymbol = t('sellerAnalyticsPage.currencySymbol', '₦');
             if (amount >= 1000000) {
                 return `${currencySymbol}${(amount / 1000000).toFixed(1)}M`;
             } else if (amount >= 1000) {
@@ -357,33 +414,29 @@ export default {
             const endDate = new Date();
             const startDate = new Date(endDate.getTime() - (rangeInDays * 24 * 60 * 60 * 1000));
 
-            let dateFormat;
             let groupingFunction;
 
             switch (view) {
                 case 'daily':
-                    dateFormat = { day: 'numeric' };
                     groupingFunction = date => date.toISOString().split('T')[0];
                     break;
                 case 'weekly':
-                    dateFormat = { week: 'numeric' };
                     groupingFunction = date => {
                         const week = Math.ceil((date.getDate() + date.getDay()) / 7);
                         return t('sellerAnalyticsPage.weekLabel', { week });
                     };
                     break;
                 case 'monthly':
-                    dateFormat = { month: 'short' };
                     groupingFunction = date => date.toISOString().slice(0, 7);
                     break;
             }
 
             const groupedData = new Map();
             orders.forEach(order => {
-                const date = new Date(order.date); // Changed from createdAt to date
+                const date = new Date(order.date);
                 if (date >= startDate && date <= endDate) {
                     const key = groupingFunction(date);
-                    groupedData.set(key, (groupedData.get(key) || 0) + order.total); // Changed from totalAmount to total
+                    groupedData.set(key, (groupedData.get(key) || 0) + order.total);
                 }
             });
 
@@ -450,7 +503,7 @@ export default {
                     });
                 });
 
-                const colors = ['#7C3AED', '#10B981', '#F59E0B', '#6366F1'];
+                const colors = ['#ff934b', '#f59e0b', '#0d9488', '#10b981', '#f43f5e'];
 
                 return Array.from(productStats.values())
                     .map((stats, index) => ({
@@ -467,7 +520,7 @@ export default {
                         if (productSort.value === 'revenue') return b.revenue - a.revenue;
                         return b.growth - a.growth;
                     })
-                    .slice(0, 4);
+                    .slice(0, 5);
             } catch (error) {
                 console.error('Error processing top products:', error);
                 return [];
@@ -504,7 +557,6 @@ export default {
         };
 
         // Fetch data
-        // In SellerAnalytics.vue
         const fetchAnalytics = async () => {
             isLoading.value = true;
             try {
@@ -514,7 +566,7 @@ export default {
                 }
 
                 if (!sellerStore.sellerProfile?._id) {
-                    throw new Error(t('sellerAnalyticsPage.toasts.sellerProfileUnavailable'));
+                    throw new Error(t('sellerAnalyticsPage.toasts.sellerProfileUnavailable', 'Seller profile not available'));
                 }
 
                 console.log('Fetching analytics for seller:', sellerStore.sellerProfile._id);
@@ -522,7 +574,7 @@ export default {
                 // Fetch orders and products
                 const [orders, products] = await Promise.all([
                     sellerStore.fetchAllSellerOrders(),
-                    sellerStore.fetchSellerProducts() // No need to pass sellerId, it will use from store
+                    sellerStore.fetchSellerProducts()
                 ]);
 
                 // Process orders
@@ -540,9 +592,6 @@ export default {
                 toast.success(t('sellerAnalyticsPage.toasts.updated'));
             } catch (error) {
                 console.error('Error fetching analytics:', error);
-                if (error.response) {
-                    console.error('Error response:', error.response.data);
-                }
                 toast.error(error.message || t('sellerAnalyticsPage.toasts.fetchFailed'));
             } finally {
                 isLoading.value = false;
@@ -566,19 +615,58 @@ export default {
                     display: false
                 },
                 tooltip: {
+                    backgroundColor: 'white',
+                    titleColor: '#475569',
+                    bodyColor: '#1e293b',
+                    titleFont: {
+                        size: 12,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 12,
+                        weight: 'bold'
+                    },
+                    padding: 12,
+                    cornerRadius: 10,
+                    borderColor: '#f1f5f9',
+                    borderWidth: 1,
                     mode: 'index',
-                    intersect: false
+                    intersect: false,
+                    callbacks: {
+                        label: (context) => {
+                            return ` ${context.dataset.label}: ${formatCurrency(context.raw)}`;
+                        }
+                    }
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
                     grid: {
-                        drawBorder: false
+                        color: '#f1f5f9'
+                    },
+                    ticks: {
+                        callback: (value) => formatCurrency(value),
+                        font: {
+                            size: 11
+                        },
+                        color: '#64748b'
+                    },
+                    border: {
+                        display: false
                     }
                 },
                 x: {
                     grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 11
+                        },
+                        color: '#64748b'
+                    },
+                    border: {
                         display: false
                     }
                 }
@@ -591,19 +679,39 @@ export default {
             plugins: {
                 legend: {
                     display: false
+                },
+                tooltip: {
+                    backgroundColor: 'white',
+                    bodyColor: '#1e293b',
+                    bodyFont: {
+                        size: 12,
+                        weight: 'bold'
+                    },
+                    padding: 12,
+                    cornerRadius: 10,
+                    borderColor: '#f1f5f9',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: (context) => {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            return ` ${translateStatus(label)}: ${value} ${t('sellerAnalyticsPage.ordersCount', 'orders')}`;
+                        }
+                    }
                 }
             },
-            cutout: '70%'
+            cutout: '75%'
         };
 
         const getStatusColor = (status) => {
             const colors = {
-                'Pending': '#F59E0B',
-                'Processing': '#7C3AED',
-                'Shipped': '#10B981',
-                'Delivered': '#6366F1'
+                'Pending': '#ff934b',      // Brand Coral
+                'Processing': '#f59e0b',   // Amber
+                'Shipped': '#0d9488',      // Teal
+                'Delivered': '#10b981',    // Emerald
+                'Cancelled': '#f43f5e'     // Rose
             };
-            return colors[status] || '#CBD5E1';
+            return colors[status] || '#cbd5e1';
         };
 
         onMounted(() => {
@@ -633,8 +741,19 @@ export default {
                 if (!products || !Array.isArray(products)) return [];
                 return products;
             }),
-            formatCurrency,  // Add this to be used in template
+            formatCurrency
         };
     }
 };
 </script>
+
+<style scoped>
+/* Custom scrollbar hiding for horizontal scroll tabs */
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+</style>

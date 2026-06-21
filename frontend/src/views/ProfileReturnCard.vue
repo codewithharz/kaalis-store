@@ -6,7 +6,7 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div class="flex items-center gap-4">
                     <div
-                        class="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                        class="w-12 h-12 bg-gradient-to-br from-[#ff934b] to-[#ff5e62] rounded-xl flex items-center justify-center shadow-lg">
                         <RotateCcw class="w-6 h-6 text-white" />
                     </div>
                     <div>
@@ -17,7 +17,7 @@
                     </div>
                 </div>
                 <button @click="showReturnForm = true"
-                    class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl hover:from-amber-600 hover:to-orange-700 font-medium transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                    class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] text-white rounded-xl hover:from-[#ff5e62] hover:to-[#ff934b] font-medium transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
                     <Plus class="w-5 h-5" />
                     {{ t('returnsPage.requestReturn') }}
                 </button>
@@ -29,7 +29,7 @@
             class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden">
                 <!-- Modal Header with Gradient -->
-                <div class="bg-gradient-to-r from-amber-500 to-orange-600 p-6 text-white">
+                <div class="bg-gradient-to-r from-[#ff934b] to-[#ff5e62] p-6 text-white">
                     <div class="flex justify-between items-center">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
@@ -37,7 +37,7 @@
                             </div>
                             <div>
                                 <h3 class="text-xl font-bold">{{ t('returnsPage.requestTitle') }}</h3>
-                                <p class="text-amber-100 text-sm mt-1">{{ t('returnsPage.requestSubtitle') }}</p>
+                                <p class="text-orange-100 text-sm mt-1">{{ t('returnsPage.requestSubtitle') }}</p>
                             </div>
                         </div>
                         <button @click="showReturnForm = false"
@@ -52,7 +52,7 @@
                     <div class="space-y-6">
                         <div class="flex items-center gap-3">
                             <div
-                                class="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                                class="w-8 h-8 bg-gradient-to-br from-[#ff934b] to-[#ff5e62] rounded-lg flex items-center justify-center">
                                 <Package class="w-4 h-4 text-white" />
                             </div>
                             <h4 class="text-lg font-semibold text-gray-900">{{ t('returnsPage.selectOrderToReturn') }}</h4>
@@ -61,7 +61,7 @@
                         <!-- Orders List with Modern Cards -->
                         <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                             <div v-if="!eligibleOrders.length"
-                                class="text-center py-12 bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl border-2 border-dashed border-gray-300">
+                                class="text-center py-12 bg-gradient-to-br from-gray-50 to-orange-50/10 rounded-2xl border-2 border-dashed border-gray-200">
                                 <div
                                     class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <Package class="w-8 h-8 text-gray-400" />
@@ -73,7 +73,7 @@
                             <div v-for="order in eligibleOrders" :key="order._id"
                                 class="group border-2 rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:shadow-lg"
                                 :class="{
-                                    'border-amber-500 bg-gradient-to-br from-amber-50 to-orange-50 shadow-lg scale-[1.02]': returnForm.orderId === order._id,
+                                    'border-[#ff934b] bg-gradient-to-br from-orange-50/20 to-amber-50/10 shadow-lg scale-[1.02]': returnForm.orderId === order._id,
                                     'border-gray-200 hover:border-gray-300 hover:bg-gray-50': returnForm.orderId !== order._id
                                 }" @click="selectOrder(order)">
 
@@ -81,7 +81,7 @@
                                 <div class="flex justify-between items-start mb-6">
                                     <div class="flex items-center gap-3">
                                         <div
-                                            class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                                            class="w-10 h-10 bg-gradient-to-br from-[#ff934b] to-[#ff5e62] rounded-xl flex items-center justify-center">
                                             <Hash class="w-5 h-5 text-white" />
                                         </div>
                                         <div>
@@ -117,13 +117,12 @@
                                             </h5>
                                             <div class="grid grid-cols-2 gap-4 text-sm">
                                                 <div class="flex items-center gap-2">
-                                                    <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                                    <div class="w-2 h-2 bg-[#ff934b] rounded-full"></div>
                                                     <span class="text-gray-600">{{ t('returnsPage.qtyShort') }}</span>
-                                                    <span class="font-semibold text-gray-900">{{ product.quantity
-                                                    }}</span>
+                                                    <span class="font-semibold text-gray-900">{{ product.quantity }}</span>
                                                 </div>
                                                 <div class="flex items-center gap-2">
-                                                    <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                                                    <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
                                                     <span class="text-gray-600">{{ t('returnsPage.price') }}</span>
                                                     <span class="font-semibold text-gray-900">₦{{
                                                         formatAmount(product.product?.price || 0) }}</span>
@@ -136,7 +135,7 @@
                                 <!-- Order Total with Modern Design -->
                                 <div class="mt-6 pt-4 border-t border-gray-200">
                                     <div
-                                        class="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl">
+                                        class="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-orange-50/20 rounded-xl">
                                         <span class="text-lg font-medium text-gray-700">{{ t('returnsPage.totalAmount') }}</span>
                                         <span class="text-xl font-bold text-gray-900">₦{{
                                             formatAmount(order.totalAmount) }}</span>
@@ -145,7 +144,7 @@
 
                                 <!-- Selection Indicator -->
                                 <div v-if="returnForm.orderId === order._id"
-                                    class="mt-4 flex items-center justify-center gap-2 text-amber-600 font-medium">
+                                    class="mt-4 flex items-center justify-center gap-2 text-[#ff934b] font-medium">
                                     <CheckCircle class="w-5 h-5" />
                                     <span>{{ t('returnsPage.selectedForReturn') }}</span>
                                 </div>
@@ -159,7 +158,7 @@
 
                         <div class="flex items-center gap-3">
                             <div
-                                class="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                                class="w-8 h-8 bg-gradient-to-br from-[#ff934b] to-[#ff5e62] rounded-lg flex items-center justify-center">
                                 <FileText class="w-4 h-4 text-white" />
                             </div>
                             <h4 class="text-lg font-semibold text-gray-900">{{ t('returnsPage.returnDetails') }}</h4>
@@ -168,11 +167,11 @@
                         <!-- Reason Selection with Modern Design -->
                         <div class="space-y-3">
                             <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                <AlertCircle class="w-4 h-4 text-amber-500" />
+                                <AlertCircle class="w-4 h-4 text-[#ff934b]" />
                                 {{ t('returnsPage.reasonForReturn') }}
                             </label>
                             <select v-model="returnForm.reason"
-                                class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all bg-white shadow-sm"
+                                class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:ring-2 focus:ring-[#ff934b]/20 focus:border-[#ff934b] transition-all bg-white shadow-sm"
                                 required>
                                 <option value="">{{ t('returnsPage.selectReason') }}</option>
                                 <option value="defective">🔧 {{ t('returnsPage.reasonDefective') }}</option>
@@ -186,11 +185,11 @@
                         <!-- Additional Comments with Enhanced Design -->
                         <div class="space-y-3">
                             <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                <MessageSquare class="w-4 h-4 text-blue-500" />
+                                <MessageSquare class="w-4 h-4 text-[#ff934b]" />
                                 {{ t('returnsPage.additionalComments') }}
                             </label>
                             <textarea v-model="returnForm.comments" rows="4"
-                                class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all bg-white shadow-sm resize-none"
+                                class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:ring-2 focus:ring-[#ff934b]/20 focus:border-[#ff934b] transition-all bg-white shadow-sm resize-none"
                                 :placeholder="t('returnsPage.commentsPlaceholder')"></textarea>
                             <p class="text-xs text-gray-500 flex items-center gap-1">
                                 <Info class="w-3 h-3" />
@@ -206,7 +205,7 @@
                             {{ t('returnsPage.cancel') }}
                         </button>
                         <button type="submit"
-                            class="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all duration-200 transform hover:scale-105 shadow-lg"
+                            class="px-8 py-3 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] text-white rounded-xl hover:from-[#ff5e62] hover:to-[#ff934b] disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all duration-200 transform hover:scale-105 shadow-lg"
                             :disabled="isSubmitting || !returnForm.orderId || !returnForm.reason">
                             <span v-if="isSubmitting" class="flex items-center gap-2">
                                 <div
@@ -230,11 +229,11 @@
                 class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300">
 
                 <!-- Return Header with Modern Design -->
-                <div class="bg-gradient-to-r from-gray-50 to-blue-50 p-6 border-b border-gray-200">
+                <div class="bg-gradient-to-r from-gray-50 to-orange-50/20 p-6 border-b border-gray-100">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div class="flex items-center gap-4">
                             <div
-                                class="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                                class="w-12 h-12 bg-gradient-to-br from-[#ff934b] to-[#ff5e62] rounded-xl flex items-center justify-center shadow-lg">
                                 <RotateCcw class="w-6 h-6 text-white" />
                             </div>
                             <div>
@@ -267,7 +266,7 @@
                             <!-- Timeline Node -->
                             <div class="relative flex flex-col items-center">
                                 <div class="w-4 h-4 rounded-full shadow-sm"
-                                    :class="index === 0 ? 'bg-green-500' : 'bg-blue-500'">
+                                    :class="index === 0 ? 'bg-[#ff934b]' : 'bg-slate-400'">
                                 </div>
                                 <div v-if="index !== returnRequest.statusHistory.length - 1"
                                     class="absolute top-4 bottom-0 left-2 w-px bg-gray-200"></div>
@@ -283,7 +282,7 @@
                                         {{ formatDate(status.timestamp) }}
                                     </p>
                                     <p v-if="status.comment"
-                                        class="text-sm text-gray-700 mt-2 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                                        class="text-sm text-gray-700 mt-2 p-3 bg-orange-50/30 rounded-lg border-l-4 border-[#ff934b]">
                                         {{ status.comment }}
                                     </p>
                                 </div>
@@ -306,7 +305,7 @@
                 {{ t('returnsPage.emptyBody') }}
             </p>
             <button @click="showReturnForm = true"
-                class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl hover:from-amber-600 hover:to-orange-700 font-medium transition-all duration-200 transform hover:scale-105 shadow-lg">
+                class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] text-white rounded-xl hover:from-[#ff5e62] hover:to-[#ff934b] font-medium transition-all duration-200 transform hover:scale-105 shadow-lg">
                 <Plus class="w-5 h-5" />
                 {{ t('returnsPage.firstReturn') }}
             </button>
@@ -315,9 +314,10 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useUserStore } from '../store/user';
+import { useOrderStore } from '../store/orderStore';
+import { useReturnStore } from '../store/returnStore';
 import {
     X, RotateCcw, Plus, Package, Hash, Calendar, CheckCircle,
     FileText, AlertCircle, MessageSquare, Info, Send, Clock
@@ -332,12 +332,10 @@ export default {
 
     setup() {
         const { t } = useI18n();
-        const userStore = useUserStore();
-        const user = computed(() => userStore.user);
+        const orderStore = useOrderStore();
+        const returnStore = useReturnStore();
 
         const showReturnForm = ref(false);
-        const isSubmitting = ref(false);
-        const returns = ref([]); // This would come from your API
 
         const returnForm = ref({
             orderId: '',
@@ -345,9 +343,21 @@ export default {
             comments: ''
         });
 
+        onMounted(async () => {
+            try {
+                await returnStore.fetchUserReturns();
+                await orderStore.fetchUserOrdersWithProducts();
+            } catch (error) {
+                console.error('Error in returns lifecycle initialization:', error);
+            }
+        });
+
+        const returns = computed(() => returnStore.returns);
+        const isSubmitting = computed(() => returnStore.loading);
+
         const eligibleOrders = computed(() => {
             // Filter orders that are eligible for return (e.g., delivered within last 30 days)
-            return user.value?.orders?.filter(order => {
+            return orderStore.orders?.filter(order => {
                 if (order.status !== 'Delivered') return false;
                 const deliveryDate = new Date(order.deliveredAt || order.updatedAt);
                 const thirtyDaysAgo = new Date();
@@ -415,9 +425,11 @@ export default {
             if (!returnForm.value.orderId || !returnForm.value.reason) return;
 
             try {
-                isSubmitting.value = true;
-                // Add your API call here
-                // await returnStore.createReturn(returnForm.value);
+                await returnStore.createReturnRequest({
+                    orderId: returnForm.value.orderId,
+                    reason: returnForm.value.reason,
+                    comments: returnForm.value.comments
+                });
 
                 showReturnForm.value = false;
                 returnForm.value = {
@@ -425,16 +437,16 @@ export default {
                     reason: '',
                     comments: ''
                 };
+
+                // Refetch returns
+                await returnStore.fetchUserReturns();
             } catch (error) {
                 console.error('Error submitting return request:', error);
-            } finally {
-                isSubmitting.value = false;
             }
         };
 
         return {
             t,
-            user,
             showReturnForm,
             returnForm,
             returns,
@@ -456,7 +468,7 @@ export default {
 /* Enhanced custom scrollbar */
 .overflow-y-auto {
     scrollbar-width: thin;
-    scrollbar-color: #fbbf24 #f9fafb;
+    scrollbar-color: #ff934b #f9fafb;
 }
 
 .overflow-y-auto::-webkit-scrollbar {
@@ -469,12 +481,12 @@ export default {
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb {
-    background: linear-gradient(to bottom, #fbbf24, #f59e0b);
+    background: linear-gradient(to bottom, #ff934b, #ff5e62);
     border-radius: 4px;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(to bottom, #f59e0b, #d97706);
+    background: linear-gradient(to bottom, #ff5e62, #ff934b);
 }
 
 /* Smooth animations */
@@ -489,11 +501,11 @@ export default {
         transform: none !important;
     }
 
-    .hover\:scale-105:hover {
+    .hover:scale-105:hover {
         transform: none !important;
     }
 
-    .hover\:scale-\[1\.02\]:hover {
+    .hover:scale-\[1\.02\]:hover {
         transform: none !important;
     }
 }

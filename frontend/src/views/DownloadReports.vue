@@ -1,126 +1,214 @@
 <template>
-    <div class="min-h-screen bg-gray-50 py-4 sm:py-8">
+    <div class="min-h-screen bg-slate-50/50 py-6 sm:py-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
             <!-- Header with Back Button -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                 <button @click="router.back()"
-                    class="flex items-center text-gray-600 hover:text-gray-800 transition duration-150">
-                    <ArrowLeft class="w-5 h-5 mr-2" />
-                    <span class="text-sm sm:text-base">{{ t('downloadReportsPage.backToDashboard') }}</span>
+                    class="flex items-center text-slate-600 hover:text-[#ff934b] hover:bg-[#ff934b]/5 px-3 py-2 rounded-xl transition-all duration-200 w-fit active:scale-95"
+                >
+                    <ArrowLeft class="w-4 h-4 mr-2" />
+                    <span class="text-sm font-bold">{{ t('downloadReportsPage.backToDashboard') }}</span>
                 </button>
-                <div class="flex flex-col sm:flex-row gap-3 sm:space-x-4">
+                
+                <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
                     <!-- Date Range Selector -->
                     <div class="relative">
                         <select
-                            class="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-3 focus:outline-none focus:ring-2 focus:ring-[#24a3b5] focus:border-transparent"
-                            v-model="dateRange">
+                            class="appearance-none w-full sm:w-48 bg-white border border-slate-200 rounded-xl px-4 py-2.5 pr-10 text-sm font-bold text-slate-700 focus:outline-none focus:border-[#ff934b] focus:ring-4 focus:ring-[#ff934b]/10 transition-all cursor-pointer shadow-sm hover:bg-slate-50/50"
+                            v-model="dateRange"
+                        >
                             <option value="today">{{ t('downloadReportsPage.dateRanges.today') }}</option>
                             <option value="week">{{ t('downloadReportsPage.dateRanges.thisWeek') }}</option>
                             <option value="month">{{ t('downloadReportsPage.dateRanges.thisMonth') }}</option>
                             <option value="year">{{ t('downloadReportsPage.dateRanges.thisYear') }}</option>
                             <option value="custom">{{ t('downloadReportsPage.dateRanges.customRange') }}</option>
                         </select>
-                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <ChevronDown class="w-5 h-5 text-gray-400" />
+                        <div class="absolute right-3.5 top-1/2 transform -translate-y-1/2 pointer-events-none text-slate-400">
+                            <ChevronDown class="w-4 h-4" />
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Custom Date Range (shown when custom is selected) -->
-            <div v-if="dateRange === 'custom'" class="mb-6 bg-white p-4 rounded-lg shadow">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('downloadReportsPage.startDate') }}</label>
-                        <input type="date" v-model="customDateRange.startDate"
-                            class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500">
+            <div v-if="dateRange === 'custom'" class="mb-6 bg-white border border-slate-100 p-5 rounded-2xl shadow-sm space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide">{{ t('downloadReportsPage.startDate') }}</label>
+                        <div class="relative rounded-xl border border-slate-200 focus-within:border-[#ff934b] focus-within:ring-4 focus-within:ring-[#ff934b]/10 bg-slate-50/30 transition-all duration-300">
+                            <input type="date" v-model="customDateRange.startDate"
+                                class="w-full px-4 py-2.5 text-slate-700 bg-transparent border-none focus:outline-none text-sm font-semibold cursor-pointer" />
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('downloadReportsPage.endDate') }}</label>
-                        <input type="date" v-model="customDateRange.endDate"
-                            class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide">{{ t('downloadReportsPage.endDate') }}</label>
+                        <div class="relative rounded-xl border border-slate-200 focus-within:border-[#ff934b] focus-within:ring-4 focus-within:ring-[#ff934b]/10 bg-slate-50/30 transition-all duration-300">
+                            <input type="date" v-model="customDateRange.endDate"
+                                class="w-full px-4 py-2.5 text-slate-700 bg-transparent border-none focus:outline-none text-sm font-semibold cursor-pointer" />
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Report Types Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <!-- Sales Report -->
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-900">{{ t('downloadReportsPage.reports.sales.title') }}</h3>
-                            <p class="text-sm text-gray-600 mt-1">{{ t('downloadReportsPage.reports.sales.description') }}</p>
+                <div class="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group flex flex-col justify-between">
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 bg-[#ff934b]/10 text-[#ff934b] rounded-xl shrink-0 group-hover:bg-[#ff934b] group-hover:text-white transition-all duration-300">
+                            <DollarSign class="w-6 h-6" />
                         </div>
-                        <button @click="downloadReport('sales')" :disabled="isLoading.sales"
-                            class="flex items-center px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 transition duration-150 disabled:opacity-50">
-                            <span v-if="isLoading.sales" class="mr-2">
-                                <RefreshCcw class="w-4 h-4 animate-spin" />
+                        <div class="space-y-1">
+                            <h3 class="text-base font-bold text-slate-800 tracking-tight">{{ t('downloadReportsPage.reports.sales.title') }}</h3>
+                            <p class="text-xs text-slate-400 font-semibold leading-relaxed">{{ t('downloadReportsPage.reports.sales.description') }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex flex-wrap sm:flex-nowrap gap-3 justify-end">
+                        <!-- Preview Button -->
+                        <button @click="generateReport('sales', false)" :disabled="isPreviewing.sales || isLoading.sales"
+                            class="w-full sm:w-auto px-4 py-2.5 bg-white border border-slate-200 text-slate-700 hover:text-[#ff934b] hover:border-[#ff934b] rounded-xl font-bold active:scale-95 transition-all duration-200 text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            <span v-if="isPreviewing.sales" class="animate-spin">
+                                <RefreshCcw class="w-3.5 h-3.5" />
                             </span>
-                            <span v-else class="mr-2">
-                                <Download class="w-4 h-4" />
+                            <span v-else>
+                                <Eye class="w-3.5 h-3.5" />
                             </span>
-                            {{ isLoading.sales ? t('downloadReportsPage.generating') : t('downloadReportsPage.download') }}
+                            <span>{{ isPreviewing.sales ? t('downloadReportsPage.previewing') : t('downloadReportsPage.preview') }}</span>
+                        </button>
+
+                        <!-- Download Button -->
+                        <button @click="generateReport('sales', true)" :disabled="isPreviewing.sales || isLoading.sales"
+                            class="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white rounded-xl font-bold shadow-sm hover:shadow active:scale-95 transition-all duration-200 text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            <span v-if="isLoading.sales" class="animate-spin">
+                                <RefreshCcw class="w-3.5 h-3.5" />
+                            </span>
+                            <span v-else>
+                                <Download class="w-3.5 h-3.5" />
+                            </span>
+                            <span>{{ isLoading.sales ? t('downloadReportsPage.generating') : t('downloadReportsPage.download') }}</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Inventory Report -->
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-900">{{ t('downloadReportsPage.reports.inventory.title') }}</h3>
-                            <p class="text-sm text-gray-600 mt-1">{{ t('downloadReportsPage.reports.inventory.description') }}</p>
+                <div class="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group flex flex-col justify-between">
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 bg-[#ff934b]/10 text-[#ff934b] rounded-xl shrink-0 group-hover:bg-[#ff934b] group-hover:text-white transition-all duration-300">
+                            <Package class="w-6 h-6" />
                         </div>
-                        <button @click="downloadReport('inventory')" :disabled="isLoading.inventory"
-                            class="flex items-center px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 transition duration-150 disabled:opacity-50">
-                            <span v-if="isLoading.inventory" class="mr-2">
-                                <RefreshCcw class="w-4 h-4 animate-spin" />
+                        <div class="space-y-1">
+                            <h3 class="text-base font-bold text-slate-800 tracking-tight">{{ t('downloadReportsPage.reports.inventory.title') }}</h3>
+                            <p class="text-xs text-slate-400 font-semibold leading-relaxed">{{ t('downloadReportsPage.reports.inventory.description') }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex flex-wrap sm:flex-nowrap gap-3 justify-end">
+                        <!-- Preview Button -->
+                        <button @click="generateReport('inventory', false)" :disabled="isPreviewing.inventory || isLoading.inventory"
+                            class="w-full sm:w-auto px-4 py-2.5 bg-white border border-slate-200 text-slate-700 hover:text-[#ff934b] hover:border-[#ff934b] rounded-xl font-bold active:scale-95 transition-all duration-200 text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            <span v-if="isPreviewing.inventory" class="animate-spin">
+                                <RefreshCcw class="w-3.5 h-3.5" />
                             </span>
-                            <span v-else class="mr-2">
-                                <Download class="w-4 h-4" />
+                            <span v-else>
+                                <Eye class="w-3.5 h-3.5" />
                             </span>
-                            {{ isLoading.inventory ? t('downloadReportsPage.generating') : t('downloadReportsPage.download') }}
+                            <span>{{ isPreviewing.inventory ? t('downloadReportsPage.previewing') : t('downloadReportsPage.preview') }}</span>
+                        </button>
+
+                        <!-- Download Button -->
+                        <button @click="generateReport('inventory', true)" :disabled="isPreviewing.inventory || isLoading.inventory"
+                            class="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white rounded-xl font-bold shadow-sm hover:shadow active:scale-95 transition-all duration-200 text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            <span v-if="isLoading.inventory" class="animate-spin">
+                                <RefreshCcw class="w-3.5 h-3.5" />
+                            </span>
+                            <span v-else>
+                                <Download class="w-3.5 h-3.5" />
+                            </span>
+                            <span>{{ isLoading.inventory ? t('downloadReportsPage.generating') : t('downloadReportsPage.download') }}</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Customer Report -->
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-900">{{ t('downloadReportsPage.reports.customers.title') }}</h3>
-                            <p class="text-sm text-gray-600 mt-1">{{ t('downloadReportsPage.reports.customers.description') }}</p>
+                <div class="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group flex flex-col justify-between">
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 bg-[#ff934b]/10 text-[#ff934b] rounded-xl shrink-0 group-hover:bg-[#ff934b] group-hover:text-white transition-all duration-300">
+                            <Users class="w-6 h-6" />
                         </div>
-                        <button @click="downloadReport('customers')" :disabled="isLoading.customers"
-                            class="flex items-center px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 transition duration-150 disabled:opacity-50">
-                            <span v-if="isLoading.customers" class="mr-2">
-                                <RefreshCcw class="w-4 h-4 animate-spin" />
+                        <div class="space-y-1">
+                            <h3 class="text-base font-bold text-slate-800 tracking-tight">{{ t('downloadReportsPage.reports.customers.title') }}</h3>
+                            <p class="text-xs text-slate-400 font-semibold leading-relaxed">{{ t('downloadReportsPage.reports.customers.description') }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex flex-wrap sm:flex-nowrap gap-3 justify-end">
+                        <!-- Preview Button -->
+                        <button @click="generateReport('customers', false)" :disabled="isPreviewing.customers || isLoading.customers"
+                            class="w-full sm:w-auto px-4 py-2.5 bg-white border border-slate-200 text-slate-700 hover:text-[#ff934b] hover:border-[#ff934b] rounded-xl font-bold active:scale-95 transition-all duration-200 text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            <span v-if="isPreviewing.customers" class="animate-spin">
+                                <RefreshCcw class="w-3.5 h-3.5" />
                             </span>
-                            <span v-else class="mr-2">
-                                <Download class="w-4 h-4" />
+                            <span v-else>
+                                <Eye class="w-3.5 h-3.5" />
                             </span>
-                            {{ isLoading.customers ? t('downloadReportsPage.generating') : t('downloadReportsPage.download') }}
+                            <span>{{ isPreviewing.customers ? t('downloadReportsPage.previewing') : t('downloadReportsPage.preview') }}</span>
+                        </button>
+
+                        <!-- Download Button -->
+                        <button @click="generateReport('customers', true)" :disabled="isPreviewing.customers || isLoading.customers"
+                            class="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white rounded-xl font-bold shadow-sm hover:shadow active:scale-95 transition-all duration-200 text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            <span v-if="isLoading.customers" class="animate-spin">
+                                <RefreshCcw class="w-3.5 h-3.5" />
+                            </span>
+                            <span v-else>
+                                <Download class="w-3.5 h-3.5" />
+                            </span>
+                            <span>{{ isLoading.customers ? t('downloadReportsPage.generating') : t('downloadReportsPage.download') }}</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Financial Report -->
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-900">{{ t('downloadReportsPage.reports.financial.title') }}</h3>
-                            <p class="text-sm text-gray-600 mt-1">{{ t('downloadReportsPage.reports.financial.description') }}</p>
+                <div class="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group flex flex-col justify-between">
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 bg-[#ff934b]/10 text-[#ff934b] rounded-xl shrink-0 group-hover:bg-[#ff934b] group-hover:text-white transition-all duration-300">
+                            <CreditCard class="w-6 h-6" />
                         </div>
-                        <button @click="downloadReport('financial')" :disabled="isLoading.financial"
-                            class="flex items-center px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 transition duration-150 disabled:opacity-50">
-                            <span v-if="isLoading.financial" class="mr-2">
-                                <RefreshCcw class="w-4 h-4 animate-spin" />
+                        <div class="space-y-1">
+                            <h3 class="text-base font-bold text-slate-800 tracking-tight">{{ t('downloadReportsPage.reports.financial.title') }}</h3>
+                            <p class="text-xs text-slate-400 font-semibold leading-relaxed">{{ t('downloadReportsPage.reports.financial.description') }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex flex-wrap sm:flex-nowrap gap-3 justify-end">
+                        <!-- Preview Button -->
+                        <button @click="generateReport('financial', false)" :disabled="isPreviewing.financial || isLoading.financial"
+                            class="w-full sm:w-auto px-4 py-2.5 bg-white border border-slate-200 text-slate-700 hover:text-[#ff934b] hover:border-[#ff934b] rounded-xl font-bold active:scale-95 transition-all duration-200 text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            <span v-if="isPreviewing.financial" class="animate-spin">
+                                <RefreshCcw class="w-3.5 h-3.5" />
                             </span>
-                            <span v-else class="mr-2">
-                                <Download class="w-4 h-4" />
+                            <span v-else>
+                                <Eye class="w-3.5 h-3.5" />
                             </span>
-                            {{ isLoading.financial ? t('downloadReportsPage.generating') : t('downloadReportsPage.download') }}
+                            <span>{{ isPreviewing.financial ? t('downloadReportsPage.previewing') : t('downloadReportsPage.preview') }}</span>
+                        </button>
+
+                        <!-- Download Button -->
+                        <button @click="generateReport('financial', true)" :disabled="isPreviewing.financial || isLoading.financial"
+                            class="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white rounded-xl font-bold shadow-sm hover:shadow active:scale-95 transition-all duration-200 text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            <span v-if="isLoading.financial" class="animate-spin">
+                                <RefreshCcw class="w-3.5 h-3.5" />
+                            </span>
+                            <span v-else>
+                                <Download class="w-3.5 h-3.5" />
+                            </span>
+                            <span>{{ isLoading.financial ? t('downloadReportsPage.generating') : t('downloadReportsPage.download') }}</span>
                         </button>
                     </div>
                 </div>
@@ -128,7 +216,7 @@
 
             <!-- Report Preview -->
             <div v-if="currentReport" class="mt-8">
-                <div class="bg-white rounded-lg shadow">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                     <ReportViewer :reportData="currentReport" :reportType="currentReportType"
                         :key="`${currentReportType}-${Date.now()}`" />
                 </div>
@@ -142,7 +230,7 @@ import { ref, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useSellerStore } from '../store/sellerStore';
-import { ArrowLeft, Download, RefreshCcw, ChevronDown } from 'lucide-vue-next';
+import { ArrowLeft, Download, Eye, RefreshCcw, ChevronDown, DollarSign, Package, Users, CreditCard } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import ReportViewer from './ReportViewer.vue';
 
@@ -151,9 +239,14 @@ export default {
     components: {
         ArrowLeft,
         Download,
+        Eye,
         ReportViewer,
         RefreshCcw,
-        ChevronDown
+        ChevronDown,
+        DollarSign,
+        Package,
+        Users,
+        CreditCard
     },
     setup() {
         const { t } = useI18n();
@@ -170,12 +263,18 @@ export default {
             customers: false,
             financial: false
         });
+        const isPreviewing = ref({
+            sales: false,
+            inventory: false,
+            customers: false,
+            financial: false
+        });
 
         // Report preview state
         const currentReport = ref(null);
         const currentReportType = ref(null);
 
-        // Add watchers for debugging
+        // Watchers for debugging
         watch(currentReport, (newVal) => {
             console.log('[Report Preview] Current report updated:', newVal);
         }, { deep: true });
@@ -184,9 +283,13 @@ export default {
             console.log('[Report Preview] Report type updated:', newVal);
         });
 
-        const downloadReport = async (reportType) => {
-            console.log(`[Report] Starting download for ${reportType} report`);
-            isLoading.value[reportType] = true;
+        const generateReport = async (reportType, forceDownload = false) => {
+            console.log(`[Report] Starting ${forceDownload ? 'download' : 'preview'} for ${reportType} report`);
+            if (forceDownload) {
+                isLoading.value[reportType] = true;
+            } else {
+                isPreviewing.value[reportType] = true;
+            }
 
             try {
                 const dateParams = dateRange.value === 'custom'
@@ -217,32 +320,43 @@ export default {
                     data: response.data
                 });
 
-                // Create download file
-                const reportData = JSON.stringify(response.data, null, 2);
-                const fileName = `${reportType}-report-${new Date().toISOString().split('T')[0]}.json`;
-                const blob = new Blob([reportData], { type: 'application/json' });
-                const url = window.URL.createObjectURL(blob);
+                if (forceDownload) {
+                    // Create download file
+                    const reportData = JSON.stringify(response.data, null, 2);
+                    const fileName = `${reportType}-report-${new Date().toISOString().split('T')[0]}.json`;
+                    const blob = new Blob([reportData], { type: 'application/json' });
+                    const url = window.URL.createObjectURL(blob);
 
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = fileName;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(url);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = fileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(url);
 
-                toast.success(t('downloadReportsPage.toasts.downloaded', {
-                    reportType: t(`downloadReportsPage.reportTypeLabels.${reportType}`)
-                }));
+                    toast.success(t('downloadReportsPage.toasts.downloaded', {
+                        reportType: t(`downloadReportsPage.reportTypeLabels.${reportType}`)
+                    }));
+                } else {
+                    toast.success(t('downloadReportsPage.toasts.previewLoaded', {
+                        reportType: t(`downloadReportsPage.reportTypeLabels.${reportType}`)
+                    }));
+                }
             } catch (error) {
                 console.error(`[Report] Error:`, error);
-                toast.error(error.message || t('downloadReportsPage.toasts.downloadFailed', {
+                const translationKey = forceDownload ? 'downloadFailed' : 'previewFailed';
+                toast.error(error.message || t(`downloadReportsPage.toasts.${translationKey}`, {
                     reportType: t(`downloadReportsPage.reportTypeLabels.${reportType}`)
                 }));
                 currentReport.value = null;
                 currentReportType.value = null;
             } finally {
-                isLoading.value[reportType] = false;
+                if (forceDownload) {
+                    isLoading.value[reportType] = false;
+                } else {
+                    isPreviewing.value[reportType] = false;
+                }
             }
         };
 
@@ -251,7 +365,8 @@ export default {
             dateRange,
             customDateRange,
             isLoading,
-            downloadReport,
+            isPreviewing,
+            generateReport,
             currentReport,
             currentReportType,
             t
@@ -259,3 +374,15 @@ export default {
     }
 };
 </script>
+
+<style scoped>
+/* Chrome, Safari, Edge, Opera: hide date input default picker indicators */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 0.9;
+}
+</style>

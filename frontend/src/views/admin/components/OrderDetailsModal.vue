@@ -229,10 +229,17 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                             <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('adminOrderDetailsModal.financial.platformFee') }}</p>
-                                <p class="mt-2 text-xl font-semibold text-slate-900">{{ formatCurrency(order.platformFee) }}</p>
+                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('adminOrderDetailsModal.financial.platformCommission') }}</p>
+                                <p class="mt-2 text-xl font-semibold text-slate-900">{{ formatCurrency(platformCommission) }}</p>
+                            </div>
+                            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('adminOrderDetailsModal.financial.shippingFee') }}</p>
+                                <p class="mt-2 text-xl font-semibold text-slate-900">{{ formatCurrency(order.shippingFee || 0) }}</p>
+                                <p class="mt-1 text-xs text-slate-500">
+                                    {{ orderFulfillmentType === 'vendor' ? t('adminSellers.fulfillmentTypes.vendor') : t('adminSellers.fulfillmentTypes.platform') }}
+                                </p>
                             </div>
                             <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                                 <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('adminOrderDetailsModal.financial.vendorAmount') }}</p>
@@ -520,6 +527,23 @@ export default {
                 0,
         }))
 
+        const orderFulfillmentType = computed(() => {
+            if (!props.order?.products) return 'platform';
+            const commission = props.order.products.reduce((sum, item) => sum + (item.platformFee || 0), 0);
+            if (props.order.platformFee > commission + 0.01) {
+                return 'platform';
+            }
+            return 'vendor';
+        });
+
+        const platformCommission = computed(() => {
+            if (orderFulfillmentType.value === 'vendor') {
+                return props.order?.platformFee || 0;
+            } else {
+                return Math.max(0, (props.order?.platformFee || 0) - (props.order?.shippingFee || 0));
+            }
+        });
+
         const loadProductDetails = async () => {
             try {
                 if (props.order?.products && props.order.products.length > 0) {
@@ -677,6 +701,8 @@ export default {
             t,
             timeline,
             rewardBreakdown,
+            platformCommission,
+            orderFulfillmentType,
             sellerStoreName,
             formatDate,
             formatStatus,

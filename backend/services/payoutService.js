@@ -120,13 +120,22 @@ class PayoutService {
   async scheduleVendorPayout(vendorId, amount, orderData) {
     try {
       const payoutConfig = await this.getRuntimePayoutConfig();
-      // Get vendor details
-      const vendor = await User.findById(vendorId).select(
-        "email paystack bankDetails afriExchange currency paymentMethod countryCode"
-      );
+      // Get vendor details with sellerProfile populated
+      const vendor = await User.findById(vendorId)
+        .select("email paystack bankDetails afriExchange currency paymentMethod countryCode sellerProfile")
+        .populate("sellerProfile");
 
       if (!vendor) {
         throw new Error(`Vendor with ID ${vendorId} not found`);
+      }
+
+      const fulfillmentType = vendor.sellerProfile?.fulfillmentType || "platform";
+      let finalAmount = amount;
+      if (fulfillmentType === "vendor" && orderData?.orderId) {
+        const order = await Order.findById(orderData.orderId);
+        if (order && order.shippingFee) {
+          finalAmount += order.shippingFee;
+        }
       }
 
       const vendorTier = await this.getVendorTier(vendorId);
@@ -151,16 +160,16 @@ class PayoutService {
       );
 
       if (existingPayout) {
-        return await this.aggregateWithExistingPayout(existingPayout, amount);
+        return await this.aggregateWithExistingPayout(existingPayout, finalAmount);
       }
 
-      // Check if amount meets minimum threshold
-      if (amount >= tierConfig.minimumAmount) {
+      // Check if finalAmount meets minimum threshold
+      if (finalAmount >= tierConfig.minimumAmount) {
         const payout = new VendorPayout({
           vendorId,
           orderId: orderData.orderId,
           paymentId: orderData.paymentId,
-          amount,
+          amount: finalAmount,
           scheduledDate,
           status: "pending",
           tier: vendorTier,
@@ -186,7 +195,7 @@ class PayoutService {
           await this.notificationService.sendPayoutScheduledNotification(
             vendorId,
             {
-              amount,
+              amount: finalAmount,
               scheduledDate,
               tier: vendorTier,
               currency: currency,
@@ -199,7 +208,7 @@ class PayoutService {
         // For small amounts, create aggregating payout
         return await this.createSmallPayout(
           vendorId,
-          amount,
+          finalAmount,
           tierConfig,
           currency,
           paymentMethod,
@@ -750,6 +759,7 @@ class PayoutService {
         providerStatus: payoutResult.status,
         lastProcessedAt: new Date(),
         lastStatusCheckedAt: new Date(),
+        errorMessage: null,
       };
 
       if (updateData.status === "processed") {
@@ -879,7 +889,7 @@ class PayoutService {
 
     if (mappedStatus === "processed") {
       update.processedAt = payout.processedAt || new Date();
-      update.errorMessage = undefined;
+      update.errorMessage = null;
     }
 
     if (mappedStatus === "failed") {
@@ -1200,7 +1210,7 @@ class PayoutService {
 
         if (mappedStatus === "processed") {
           update.processedAt = payout.processedAt || new Date();
-          update.errorMessage = undefined;
+          update.errorMessage = null;
         }
 
         if (mappedStatus === "failed") {

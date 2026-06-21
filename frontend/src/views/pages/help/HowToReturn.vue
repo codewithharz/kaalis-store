@@ -132,11 +132,11 @@
                     <h3 class="font-semibold text-[#24a6bb] mb-2">{{ t('returnsHelpPage.needHelp') }}</h3>
                     <p class="text-gray-600 mb-4">{{ t('returnsHelpPage.needHelpBody') }}</p>
                     <div class="flex space-x-4">
-                        <router-link to="/help/live-help"
+                        <router-link to="/page/help/live-help"
                             class="bg-[#24a6bb] text-white px-4 py-2 rounded-lg hover:bg-[#1a7f8f] transition-colors">
                             {{ t('returnsHelpPage.contactSupport') }}
                         </router-link>
-                        <router-link to="/help/faq"
+                        <router-link to="/page/help/frequently-asked-questions"
                             class="border border-[#24a6bb] text-[#24a6bb] px-4 py-2 rounded-lg hover:bg-[#24a6bb] hover:text-white transition-colors">
                             {{ t('returnsHelpPage.viewFaqs') }}
                         </router-link>

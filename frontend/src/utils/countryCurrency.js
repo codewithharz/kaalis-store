@@ -36,9 +36,10 @@ export const formatCurrencyAmount = (amount, currency = "NGN") => {
   const numericAmount = Number(amount || 0);
   const safeAmount = Number.isFinite(numericAmount) ? numericAmount : 0;
   const locale = currency === "XOF" ? "fr-FR" : "en-NG";
+  const isZeroDecimal = currency === "XOF";
 
   return `${getCurrencySymbol(currency)} ${new Intl.NumberFormat(locale, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: isZeroDecimal ? 0 : 2,
+    maximumFractionDigits: isZeroDecimal ? 0 : 2,
   }).format(safeAmount)}`;
 };

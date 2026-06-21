@@ -394,8 +394,9 @@ export const useAdminStore = defineStore("admin", {
           pagination: {
             total: response.data.pagination?.total || 0,
             currentPage: response.data.pagination?.page || 1,
+            pages: response.data.pagination?.pages || 1,
           },
-          totalRevenue: response.data.summary?.totalRevenue || 0,
+          summary: response.data.summary || null,
         };
       } catch (error) {
         console.error("Error fetching orders:", error);

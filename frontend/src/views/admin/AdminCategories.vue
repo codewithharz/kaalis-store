@@ -4,7 +4,7 @@
         <!-- Header -->
         <div class="flex justify-between items-center mb-3 px-8 py-4 bg-white">
             <h2 class="text-2xl font-bold text-gray-800">{{ t('adminCategories.title') }}</h2>
-            <button @click="showAddModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            <button @click="openAddModal" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
                 {{ t('adminCategories.addNewCategory') }}
             </button>
         </div>
@@ -32,16 +32,16 @@
                         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                     </div>
 
-                    <div v-else-if="filteredCategories.length === 0" class="text-center py-4 text-gray-500">
+                    <div v-else-if="rootFilteredCategories.length === 0" class="text-center py-4 text-gray-500">
                         {{ t('adminCategories.noCategoriesFound') }}
                     </div>
 
                     <div v-else class="space-y-2">
-                        <template v-for="category in filteredCategories" :key="category._id">
-                            <div v-if="!category.parent" class="category-item"
+                        <template v-for="category in rootFilteredCategories" :key="category._id">
+                            <div class="category-item"
                                 :class="{ 'border-blue-500': selectedCategory?._id === category._id }">
-                                <CategoryTreeItem :category="category" :all-categories="categories"
-                                    :selected-id="selectedCategory?._id" @select="selectCategory" />
+                                <CategoryTreeItem :category="category" :all-categories="filteredCategories"
+                                    :selected-id="selectedCategory?._id" :locale="locale" @select="selectCategory" />
                             </div>
                         </template>
                     </div>
@@ -55,9 +55,16 @@
                     <div class="flex justify-between items-start mb-6">
                         <div>
                             <h3 class="text-xl font-semibold text-gray-900">
-                                {{ selectedCategory.name }}
+                                {{ getCategoryDisplayName(selectedCategory) }}
                             </h3>
-                            <p class="text-sm text-gray-500">
+                            <p v-if="locale === 'fr' && selectedCategory.name" class="text-sm text-gray-400 italic">
+                                EN: {{ selectedCategory.name }}
+                            </p>
+                            <!-- Breadcrumb path -->
+                            <p class="text-sm text-gray-400 mt-1">
+                                {{ getCategoryPath(selectedCategory) }}
+                            </p>
+                            <p class="text-sm text-gray-500 mt-1">
                                 {{ t('adminCategories.createdOn', { date: formatDate(selectedCategory.createdAt) }) }}
                             </p>
                         </div>
@@ -77,7 +84,7 @@
                         <div>
                             <h4 class="font-medium text-gray-700 mb-2">{{ t('adminCategories.description') }}</h4>
                             <p class="text-gray-600">
-                                {{ selectedCategory.description || t('adminCategories.noDescription') }}
+                                {{ getCategoryDisplayDescription(selectedCategory) || t('adminCategories.noDescription') }}
                             </p>
                         </div>
                         <div>
@@ -90,31 +97,41 @@
                             <h4 class="font-medium text-gray-700 mb-2">{{ t('adminCategories.status') }}</h4>
                             <span :class="[
                                 'px-2 py-1 text-sm rounded-full',
-                                selectedCategory.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                selectedCategory.active !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                             ]">
-                                {{ selectedCategory.active ? t('adminCategories.active') : t('adminCategories.inactive') }}
+                                {{ selectedCategory.active !== false ? t('adminCategories.active') : t('adminCategories.inactive') }}
                             </span>
                         </div>
                         <div>
                             <h4 class="font-medium text-gray-700 mb-2">{{ t('adminCategories.productsCount') }}</h4>
-                            <p class="text-gray-600">
+                            <p class="text-gray-600 font-semibold">
                                 {{ t('adminCategories.productsCountValue', { count: selectedCategory.productsCount || 0 }) }}
                             </p>
                         </div>
                     </div>
 
                     <!-- Subcategories -->
-                    <div class="mt-6">
+                    <div class="mt-6" v-if="getSubcategories(selectedCategory._id).length > 0">
                         <h4 class="font-medium text-gray-700 mb-2">{{ t('adminCategories.subcategories') }}</h4>
-                        <div class="grid grid-cols-3 gap-4">
+                        <div class="grid grid-cols-3 gap-3">
                             <div v-for="subcategory in getSubcategories(selectedCategory._id)" :key="subcategory._id"
-                                class="p-3 bg-gray-50 rounded-lg">
-                                <p class="font-medium">{{ subcategory.name }}</p>
-                                <p class="text-sm text-gray-500">
+                                class="p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-blue-50 border border-transparent hover:border-blue-200 transition-colors"
+                                @click="selectCategory(subcategory)">
+                                <p class="font-medium text-sm">{{ getCategoryDisplayName(subcategory) }}</p>
+                                <p class="text-xs text-gray-500 mt-0.5">
                                     {{ t('adminCategories.productsCountValue', { count: subcategory.productsCount || 0 }) }}
                                 </p>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- French Translation Info -->
+                    <div v-if="selectedCategory.translations?.fr?.name" class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                        <h4 class="font-medium text-blue-700 mb-2">🇫🇷 Traduction</h4>
+                        <p class="text-blue-800 font-medium">{{ selectedCategory.translations.fr.name }}</p>
+                        <p v-if="selectedCategory.translations?.fr?.description" class="text-blue-700 text-sm mt-1">
+                            {{ selectedCategory.translations.fr.description }}
+                        </p>
                     </div>
                 </div>
 
@@ -129,34 +146,98 @@
         </div>
 
         <!-- Add/Edit Category Modal -->
-        <div v-if="showAddModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-            <div class="bg-white rounded-lg p-6 w-full max-w-md">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">
-                    {{ selectedCategory ? t('adminCategories.editCategory') : t('adminCategories.addNewCategory') }}
+        <div v-if="showAddModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                <h3 class="text-lg font-medium text-gray-900 mb-1">
+                    {{ editingCategory ? t('adminCategories.editCategory') : t('adminCategories.addNewCategory') }}
                 </h3>
+
+                <!-- 3-Level Placement Section -->
+                <div class="mb-5">
+                    <p class="text-xs text-gray-500 mb-3">{{ t('adminCategories.placementLabel') }}</p>
+
+                    <!-- Visual path display -->
+                    <div class="flex items-center gap-1 text-sm mb-3 flex-wrap">
+                        <span class="px-2 py-1 rounded text-xs font-medium"
+                            :class="!selectedRootId ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'">
+                            {{ t('adminCategories.levelRoot') }}
+                        </span>
+                        <span class="text-gray-400">›</span>
+                        <span class="px-2 py-1 rounded text-xs font-medium"
+                            :class="selectedRootId && !selectedSubId ? 'bg-blue-600 text-white' : (selectedRootId ? 'bg-gray-100 text-gray-600' : 'bg-gray-50 text-gray-300')">
+                            {{ t('adminCategories.levelSub') }}
+                        </span>
+                        <span class="text-gray-400">›</span>
+                        <span class="px-2 py-1 rounded text-xs font-medium"
+                            :class="selectedRootId && selectedSubId ? 'bg-blue-600 text-white' : 'bg-gray-50 text-gray-300'">
+                            {{ t('adminCategories.levelSubSub') }}
+                        </span>
+                    </div>
+
+                    <!-- Step 1: Root category -->
+                    <div class="mb-2">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">
+                            {{ t('adminCategories.step1Label') }}
+                        </label>
+                        <select v-model="selectedRootId" @change="onRootChange"
+                            class="block w-full border rounded-md shadow-sm p-2 text-sm">
+                            <option value="">{{ t('adminCategories.newRootCategory') }}</option>
+                            <option v-for="cat in rootCategories" :key="cat._id" :value="cat._id">
+                                {{ getCategoryDisplayName(cat) }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Step 2: Sub-category (visible when root is chosen) -->
+                    <div v-if="selectedRootId" class="mb-2 ml-4 border-l-2 border-blue-200 pl-3">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">
+                            {{ t('adminCategories.step2Label') }}
+                        </label>
+                        <select v-model="selectedSubId" @change="onSubChange"
+                            class="block w-full border rounded-md shadow-sm p-2 text-sm">
+                            <option value="">{{ t('adminCategories.newSubUnder', { name: getCategoryDisplayName(getRootById(selectedRootId)) }) }}</option>
+                            <option v-for="cat in subCategoriesOf(selectedRootId)" :key="cat._id" :value="cat._id">
+                                {{ getCategoryDisplayName(cat) }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Step 3: Sub-sub-category (visible when sub is chosen) -->
+                    <div v-if="selectedRootId && selectedSubId" class="mb-2 ml-8 border-l-2 border-blue-200 pl-3">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">
+                            {{ t('adminCategories.step3Label') }}
+                        </label>
+                        <select v-model="selectedSubSubId"
+                            class="block w-full border rounded-md shadow-sm p-2 text-sm">
+                            <option value="">{{ t('adminCategories.newSubSubUnder', { name: getCategoryDisplayName(getSubById(selectedSubId)) }) }}</option>
+                            <option v-for="cat in subCategoriesOf(selectedSubId)" :key="cat._id" :value="cat._id">
+                                {{ getCategoryDisplayName(cat) }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Resolved placement summary -->
+                    <div class="mt-3 px-3 py-2 bg-gray-50 rounded text-xs text-gray-600">
+                        📍 {{ placementSummary }}
+                    </div>
+                </div>
+
                 <form @submit.prevent="handleSubmit" class="space-y-4">
+                    <!-- English Name -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">{{ t('adminCategories.name') }}</label>
                         <input type="text" v-model="formData.name"
                             class="mt-1 block w-full border rounded-md shadow-sm p-2" required>
                     </div>
 
+                    <!-- English Description -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">{{ t('adminCategories.description') }}</label>
                         <textarea v-model="formData.description"
-                            class="mt-1 block w-full border rounded-md shadow-sm p-2" rows="3"></textarea>
+                            class="mt-1 block w-full border rounded-md shadow-sm p-2" rows="2"></textarea>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">{{ t('adminCategories.parentCategory') }}</label>
-                        <select v-model="formData.parent" class="mt-1 block w-full border rounded-md shadow-sm p-2">
-                            <option value="">{{ t('adminCategories.noneTopLevel') }}</option>
-                            <option v-for="cat in availableParents" :key="cat._id" :value="cat._id">
-                                {{ cat.name }}
-                            </option>
-                        </select>
-                    </div>
-
+                    <!-- Active toggle -->
                     <div class="flex items-center">
                         <input type="checkbox" id="active" v-model="formData.active"
                             class="h-4 w-4 text-blue-600 rounded">
@@ -165,13 +246,31 @@
                         </label>
                     </div>
 
+                    <!-- French Translations Section -->
+                    <div class="border-t pt-4">
+                        <h4 class="text-sm font-semibold text-gray-700 mb-3">🇫🇷 {{ t('adminCategories.translationsSection') }}</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">{{ t('adminCategories.frenchName') }}</label>
+                                <input type="text" v-model="formData.frName"
+                                    class="mt-1 block w-full border rounded-md shadow-sm p-2">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">{{ t('adminCategories.frenchDescription') }}</label>
+                                <textarea v-model="formData.frDescription"
+                                    class="mt-1 block w-full border rounded-md shadow-sm p-2" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mt-6 flex justify-end space-x-3">
                         <button type="button" @click="closeModal"
                             class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
                             {{ t('adminCategories.cancel') }}
                         </button>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                            {{ selectedCategory ? t('adminCategories.update') : t('adminCategories.create') }}
+                        <button type="submit" :disabled="saving"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-60">
+                            {{ saving ? '...' : (editingCategory ? t('adminCategories.update') : t('adminCategories.create')) }}
                         </button>
                     </div>
                 </form>
@@ -179,20 +278,23 @@
         </div>
 
         <!-- Delete Confirmation Modal -->
-        <div v-if="showDeleteModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+        <div v-if="showDeleteModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
             <div class="bg-white rounded-lg p-6 max-w-md w-full">
                 <h3 class="text-lg font-medium text-gray-900 mb-2">{{ t('adminCategories.confirmDelete') }}</h3>
                 <p class="text-gray-500 mb-4">
-                    {{ t('adminCategories.deletePrompt', { name: categoryToDelete?.name || '' }) }}
-                    {{ getSubcategories(categoryToDelete?._id).length > 0 ?
-                        ` ${t('adminCategories.deleteSubcategoriesWarning')}` : '' }}
+                    {{ t('adminCategories.deletePrompt', { name: getCategoryDisplayName(categoryToDelete) || '' }) }}
+                    <span v-if="getSubcategories(categoryToDelete?._id).length > 0" class="block mt-2 text-red-500 text-sm font-medium">
+                        ⚠ {{ t('adminCategories.deleteHasSubcategoriesError') }}
+                    </span>
                 </p>
                 <div class="flex justify-end space-x-3">
                     <button @click="showDeleteModal = false"
                         class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
                         {{ t('adminCategories.cancel') }}
                     </button>
-                    <button @click="deleteCategory" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                    <button @click="deleteCategory"
+                        :disabled="getSubcategories(categoryToDelete?._id).length > 0"
+                        class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed">
                         {{ t('adminCategories.delete') }}
                     </button>
                 </div>
@@ -207,40 +309,113 @@ import { useI18n } from 'vue-i18n';
 import { FolderOpen } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import CategoryTreeItem from './components/CategoryTreeItem.vue';
+import apiClient from '@/api/axios';
 import _ from 'lodash';
 
 export default {
     name: 'AdminCategories',
-
-    components: {
-        CategoryTreeItem,
-        FolderOpen
-    },
+    components: { CategoryTreeItem, FolderOpen },
 
     setup() {
-        const { t } = useI18n();
+        const { t, locale } = useI18n();
         const categories = ref([]);
         const selectedCategory = ref(null);
+        const editingCategory = ref(null);
         const showAddModal = ref(false);
         const showDeleteModal = ref(false);
         const categoryToDelete = ref(null);
         const loading = ref(false);
+        const saving = ref(false);
         const allExpanded = ref(false);
         const searchQuery = ref('');
+
+        // 3-level placement state
+        const selectedRootId = ref('');
+        const selectedSubId = ref('');
+        const selectedSubSubId = ref('');
 
         const formData = ref({
             name: '',
             description: '',
-            parent: '',
-            active: true
+            active: true,
+            frName: '',
+            frDescription: '',
         });
 
-        // Fetching categories
+        // ─── Locale helpers ─────────────────────────────────────────────
+        const getCategoryDisplayName = (category) => {
+            if (!category) return '';
+            if (locale.value === 'fr' && category.translations?.fr?.name) {
+                return category.translations.fr.name;
+            }
+            return category.name || '';
+        };
+
+        const getCategoryDisplayDescription = (category) => {
+            if (!category) return '';
+            if (locale.value === 'fr' && category.translations?.fr?.description) {
+                return category.translations.fr.description;
+            }
+            return category.description || '';
+        };
+
+        const getCategoryPath = (category) => {
+            if (!category) return '';
+            const parts = [];
+            let current = category;
+            while (current) {
+                parts.unshift(getCategoryDisplayName(current));
+                if (!current.parent) break;
+                current = categories.value.find(c => String(c._id) === String(current.parent));
+            }
+            return parts.join(' › ');
+        };
+
+        // ─── Hierarchy helpers ───────────────────────────────────────────
+        const rootCategories = computed(() =>
+            categories.value.filter(c => !c.parent)
+        );
+
+        const subCategoriesOf = (parentId) =>
+            categories.value.filter(c => String(c.parent) === String(parentId));
+
+        const getRootById = (id) => categories.value.find(c => String(c._id) === String(id));
+        const getSubById = (id) => categories.value.find(c => String(c._id) === String(id));
+
+        // Resolved parent from the 3-level selector
+        const resolvedParentId = computed(() => {
+            if (selectedSubSubId.value) return selectedSubSubId.value;
+            if (selectedSubId.value) return selectedSubId.value;
+            if (selectedRootId.value) return selectedRootId.value;
+            return null;
+        });
+
+        const placementSummary = computed(() => {
+            if (!selectedRootId.value) return t('adminCategories.placementRootLevel');
+            const root = getRootById(selectedRootId.value);
+            const rootName = getCategoryDisplayName(root);
+            if (!selectedSubId.value) return t('adminCategories.placementUnder', { parent: rootName });
+            const sub = getSubById(selectedSubId.value);
+            const subName = getCategoryDisplayName(sub);
+            if (!selectedSubSubId.value) return t('adminCategories.placementUnder', { parent: `${rootName} › ${subName}` });
+            const subsub = getSubById(selectedSubSubId.value);
+            return t('adminCategories.placementUnder', { parent: `${rootName} › ${subName} › ${getCategoryDisplayName(subsub)}` });
+        });
+
+        // Cascade reset handlers
+        const onRootChange = () => {
+            selectedSubId.value = '';
+            selectedSubSubId.value = '';
+        };
+        const onSubChange = () => {
+            selectedSubSubId.value = '';
+        };
+
+        // ─── Fetch ───────────────────────────────────────────────────────
         const fetchCategories = async () => {
             loading.value = true;
             try {
-                const response = await fetch('/api/admin/categories');
-                const data = await response.json();
+                const { data } = await apiClient.get('/admin/categories');
                 categories.value = data;
             } catch (error) {
                 console.error('Error fetching categories:', error);
@@ -250,89 +425,118 @@ export default {
             }
         };
 
-        // Computed properties
+        // ─── Computed tree / search ──────────────────────────────────────
         const filteredCategories = computed(() => {
             if (!searchQuery.value) return categories.value;
-
-            return categories.value.filter(category =>
-                category.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-            );
+            const q = searchQuery.value.toLowerCase();
+            // When searching, include matching items + their ancestors so tree is complete
+            const matched = new Set();
+            categories.value.forEach(cat => {
+                const matchEn = cat.name?.toLowerCase().includes(q);
+                const matchFr = cat.translations?.fr?.name?.toLowerCase().includes(q);
+                if (matchEn || matchFr) {
+                    matched.add(String(cat._id));
+                    // Add ancestors so the tree renders properly
+                    (cat.ancestors || []).forEach(aid => matched.add(String(aid)));
+                    if (cat.parent) matched.add(String(cat.parent));
+                }
+            });
+            return categories.value.filter(c => matched.has(String(c._id)));
         });
 
-        const availableParents = computed(() => {
-            if (!selectedCategory.value) return categories.value;
-            // Filter out the selected category and its children to prevent circular references
-            return categories.value.filter(cat =>
-                cat._id !== selectedCategory.value._id &&
-                !isDescendant(cat, selectedCategory.value._id)
-            );
-        });
+        const rootFilteredCategories = computed(() =>
+            filteredCategories.value.filter(c => !c.parent)
+        );
 
-        // Helper functions
-        const isDescendant = (category, parentId) => {
-            if (!category.parent) return false;
-            if (category.parent === parentId) return true;
-            const parent = categories.value.find(c => c._id === category.parent);
-            return parent ? isDescendant(parent, parentId) : false;
-        };
-
+        // ─── Actions ─────────────────────────────────────────────────────
         const getParentName = (category) => {
-            if (!category.parent) return t('adminCategories.noneTopLevel');
-            const parent = categories.value.find(c => c._id === category.parent);
-            return parent ? parent.name : t('adminCategories.unknown');
+            if (!category?.parent) return t('adminCategories.noneTopLevel');
+            const parent = categories.value.find(c => String(c._id) === String(category.parent));
+            return parent ? getCategoryDisplayName(parent) : t('adminCategories.unknown');
         };
 
         const getSubcategories = (parentId) => {
-            return categories.value.filter(cat => cat.parent === parentId);
+            if (!parentId) return [];
+            return categories.value.filter(cat => String(cat.parent) === String(parentId));
         };
 
-        const formatDate = (date) => {
-            return new Date(date).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
+        const formatDate = (date) => new Date(date).toLocaleDateString('en-US', {
+            year: 'numeric', month: 'long', day: 'numeric'
+        });
+
+        const openAddModal = () => {
+            editingCategory.value = null;
+            selectedRootId.value = '';
+            selectedSubId.value = '';
+            selectedSubSubId.value = '';
+            formData.value = { name: '', description: '', active: true, frName: '', frDescription: '' };
+            showAddModal.value = true;
         };
 
-        // Actions
-        const handleSubmit = async () => {
-            try {
-                if (selectedCategory.value) {
-                    await fetch(`/api/admin/categories/${selectedCategory.value._id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(formData.value)
-                    });
-                    toast.success(t('adminCategories.toasts.updated'));
-                } else {
-                    await fetch('/api/admin/categories', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(formData.value)
-                    });
-                    toast.success(t('adminCategories.toasts.created'));
-                }
-                closeModal();
-                fetchCategories();
-            } catch (error) {
-                console.error('Error saving category:', error);
-                toast.error(t('adminCategories.toasts.saveFailed'));
+        const editCategory = (category) => {
+            editingCategory.value = category;
+
+            // Pre-populate the 3-level selector based on ancestors
+            const ancestors = category.ancestors || [];
+            selectedRootId.value = ancestors[0] ? String(ancestors[0]) : (category.parent && category.level === 1 ? String(category.parent) : '');
+            selectedSubId.value = ancestors[1] ? String(ancestors[1]) : (category.parent && category.level === 2 ? String(category.parent) : '');
+            selectedSubSubId.value = category.parent && category.level === 3 ? String(category.parent) : '';
+
+            // If editing a level-0 root category: clear all
+            if (!category.parent) {
+                selectedRootId.value = '';
+                selectedSubId.value = '';
+                selectedSubSubId.value = '';
             }
+
+            formData.value = {
+                name: category.name || '',
+                description: category.description || '',
+                active: category.active !== false,
+                frName: category.translations?.fr?.name || '',
+                frDescription: category.translations?.fr?.description || '',
+            };
+            showAddModal.value = true;
         };
 
         const selectCategory = (category) => {
             selectedCategory.value = category;
         };
 
-        const editCategory = (category) => {
-            formData.value = {
-                name: category.name,
-                description: category.description,
-                parent: category.parent || '',
-                active: category.active
-            };
-            selectedCategory.value = category;
-            showAddModal.value = true;
+        const handleSubmit = async () => {
+            saving.value = true;
+            try {
+                const translations = {};
+                if (formData.value.frName || formData.value.frDescription) {
+                    translations.fr = {};
+                    if (formData.value.frName) translations.fr.name = formData.value.frName;
+                    if (formData.value.frDescription) translations.fr.description = formData.value.frDescription;
+                }
+
+                const payload = {
+                    name: formData.value.name,
+                    description: formData.value.description,
+                    parent: resolvedParentId.value || null,
+                    active: formData.value.active,
+                    ...(Object.keys(translations).length ? { translations } : {}),
+                };
+
+                if (editingCategory.value) {
+                    await apiClient.put(`/admin/categories/${editingCategory.value._id}`, payload);
+                    toast.success(t('adminCategories.toasts.updated'));
+                } else {
+                    await apiClient.post('/admin/categories', payload);
+                    toast.success(t('adminCategories.toasts.created'));
+                }
+                closeModal();
+                await fetchCategories();
+            } catch (error) {
+                console.error('Error saving category:', error);
+                const serverMsg = error.response?.data?.message;
+                toast.error(serverMsg || t('adminCategories.toasts.saveFailed'));
+            } finally {
+                saving.value = false;
+            }
         };
 
         const confirmDelete = (category) => {
@@ -342,61 +546,74 @@ export default {
 
         const deleteCategory = async () => {
             try {
-                await fetch(`/api/admin/categories/${categoryToDelete.value._id}`, {
-                    method: 'DELETE'
-                });
+                await apiClient.delete(`/admin/categories/${categoryToDelete.value._id}`);
                 toast.success(t('adminCategories.toasts.deleted'));
                 if (selectedCategory.value?._id === categoryToDelete.value._id) {
-                    selectedCategory.value = null
+                    selectedCategory.value = null;
                 }
                 showDeleteModal.value = false;
                 categoryToDelete.value = null;
                 await fetchCategories();
             } catch (error) {
                 console.error('Error deleting category:', error);
-                toast.error(t('adminCategories.toasts.deleteFailed'));
+                const serverMsg = error.response?.data?.message || '';
+                if (serverMsg.includes('subcategor')) {
+                    toast.error(t('adminCategories.toasts.deleteHasSubcategories'));
+                } else if (serverMsg.includes('product')) {
+                    toast.error(t('adminCategories.toasts.deleteHasProducts'));
+                } else {
+                    toast.error(t('adminCategories.toasts.deleteFailed'));
+                }
             }
         };
 
         const closeModal = () => {
             showAddModal.value = false;
-            selectedCategory.value = null;
-            formData.value = {
-                name: '',
-                description: '',
-                parent: '',
-                active: true
-            };
+            editingCategory.value = null;
+            selectedRootId.value = '';
+            selectedSubId.value = '';
+            selectedSubSubId.value = '';
+            formData.value = { name: '', description: '', active: true, frName: '', frDescription: '' };
         };
 
         const handleSearch = _.debounce(() => {
             selectedCategory.value = null;
         }, 300);
 
-        const expandAll = () => {
-            allExpanded.value = !allExpanded.value;
-        };
+        const expandAll = () => { allExpanded.value = !allExpanded.value; };
 
-        // Lifecycle hooks
-        onMounted(() => {
-            fetchCategories();
-        });
+        onMounted(fetchCategories);
 
         return {
             categories,
             selectedCategory,
+            editingCategory,
             showAddModal,
             showDeleteModal,
             categoryToDelete,
             formData,
             loading,
+            saving,
             searchQuery,
             allExpanded,
+            locale,
             filteredCategories,
-            availableParents,
+            rootFilteredCategories,
+            rootCategories,
+            selectedRootId,
+            selectedSubId,
+            selectedSubSubId,
+            resolvedParentId,
+            placementSummary,
+            onRootChange,
+            onSubChange,
+            subCategoriesOf,
+            getRootById,
+            getSubById,
             handleSubmit,
             selectCategory,
             editCategory,
+            openAddModal,
             confirmDelete,
             deleteCategory,
             closeModal,
@@ -404,6 +621,9 @@ export default {
             expandAll,
             getParentName,
             getSubcategories,
+            getCategoryDisplayName,
+            getCategoryDisplayDescription,
+            getCategoryPath,
             formatDate,
             t
         };

@@ -74,14 +74,14 @@
                         <div class="flex items-baseline gap-1 sm:gap-2 mb-1 sm:mb-2">
                             <!-- Current Price -->
                             <div class="flex items-baseline">
-                                <span class="text-[10px] sm:text-[12px] font-normal text-black">₦</span>
+                                <span class="text-[10px] sm:text-[12px] font-normal text-black">{{ currencySymbol }}</span>
                                 <span class="text-sm sm:text-[18px] font-bold text-black">{{ formatPrice(product.price)
                                     }}</span>
                             </div>
 
                             <!-- Original Price -->
                             <div v-if="product.originalPrice" class="flex items-baseline text-gray-400">
-                                <span class="text-[8px] sm:text-[10px] mr-0.5">₦</span>
+                                <span class="text-[8px] sm:text-[10px] mr-0.5">{{ currencySymbol }}</span>
                                 <span class="text-[10px] sm:text-xs line-through">{{ formatPrice(product.originalPrice)
                                     }}</span>
                             </div>
@@ -203,6 +203,7 @@ import { useI18n } from 'vue-i18n';
 import { useProductStore } from '../store/productStore';
 import { useWishlistStore } from '../store/wishlistStore';
 import { useUserStore } from '../store/user';
+import { useCountryStore } from '../store/countryStore';
 import { useCartStore } from '../store/cart';
 import { useRouter } from 'vue-router';
 import { toast } from 'vue-sonner';
@@ -310,7 +311,13 @@ export default {
         const productStore = useProductStore();
         const wishlistStore = useWishlistStore();
         const userStore = useUserStore();
+        const countryStore = useCountryStore();
         const cartStore = useCartStore();
+
+        const currencySymbol = computed(() => {
+            const currency = countryStore.currency || "NGN";
+            return currency === "XOF" ? "CFA" : "₦";
+        });
         const router = useRouter();
         const showDeleteModal = ref(false);
         const isDeleting = ref(false);
@@ -392,7 +399,14 @@ export default {
         });
 
         const formatPrice = (price) => {
-            return price?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            if (price === undefined || price === null) return "";
+            const baseCurrency = props.product.currency || "NGN";
+            const converted = countryStore.convertPrice(price, baseCurrency);
+            const locale = countryStore.currency === "XOF" ? "fr-FR" : "en-NG";
+            return new Intl.NumberFormat(locale, {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            }).format(converted);
         }
 
         const formatSoldCount = (count) => {
@@ -549,6 +563,7 @@ export default {
             isDeleting,
             closeDeleteModal,
             confirmDelete,
+            currencySymbol,
 
             formatPrice,
             formatSoldCount,

@@ -91,7 +91,7 @@
                         <div>
                             <h3 class="font-semibold text-[#2d3642]">{{ t('faqPage.liveChat') }}</h3>
                             <p class="text-gray-600 text-sm">{{ t('faqPage.available247') }}</p>
-                            <router-link to="/help/live-help" class="text-[#24a6bb] hover:underline text-sm">
+                            <router-link to="/page/help/live-help" class="text-[#24a6bb] hover:underline text-sm">
                                 {{ t('faqPage.startChat') }} ->
                             </router-link>
                         </div>
@@ -184,7 +184,7 @@ const faqs = computed(() => [
         answer: t('faqPage.faqs.trackOrder.answer'),
         links: [
             { url: '/account/orders', text: t('faqPage.faqs.trackOrder.linkOrders') },
-            { url: '/help/order-tracking', text: t('faqPage.faqs.trackOrder.linkGuide') }
+            { url: '/page/help/transaction-guide-help', text: t('faqPage.faqs.trackOrder.linkGuide') }
         ]
     },
     {
@@ -202,8 +202,8 @@ const faqs = computed(() => [
         question: t('faqPage.faqs.paymentMethods.question'),
         answer: t('faqPage.faqs.paymentMethods.answer'),
         links: [
-            { url: '/help/payment-methods', text: t('faqPage.faqs.paymentMethods.linkMethods') },
-            { url: '/help/payment-security', text: t('faqPage.faqs.paymentMethods.linkSecurity') }
+            { url: '/page/help/transaction-guide-help', text: t('faqPage.faqs.paymentMethods.linkMethods') },
+            { url: '/page/help/transaction-guide-help', text: t('faqPage.faqs.paymentMethods.linkSecurity') }
         ]
     },
     {
@@ -212,8 +212,8 @@ const faqs = computed(() => [
         question: t('faqPage.faqs.refund.question'),
         answer: t('faqPage.faqs.refund.answer'),
         links: [
-            { url: '/help/refund-policy', text: t('faqPage.faqs.refund.linkPolicy') },
-            { url: '/help/how-to-return', text: t('faqPage.faqs.refund.linkProcess') }
+            { url: '/page/help/how-to-return', text: t('faqPage.faqs.refund.linkPolicy') },
+            { url: '/page/help/how-to-return', text: t('faqPage.faqs.refund.linkProcess') }
         ]
     },
     {
@@ -222,7 +222,7 @@ const faqs = computed(() => [
         question: t('faqPage.faqs.shippingCosts.question'),
         answer: t('faqPage.faqs.shippingCosts.answer'),
         links: [
-            { url: '/help/shipping-rates', text: t('faqPage.faqs.shippingCosts.linkRates') }
+            { url: '/page/help/transaction-guide-help', text: t('faqPage.faqs.shippingCosts.linkRates') }
         ]
     },
     {
@@ -231,7 +231,7 @@ const faqs = computed(() => [
         question: t('faqPage.faqs.deliveryTime.question'),
         answer: t('faqPage.faqs.deliveryTime.answer'),
         links: [
-            { url: '/help/delivery-times', text: t('faqPage.faqs.deliveryTime.linkTimeframes') }
+            { url: '/page/help/transaction-guide-help', text: t('faqPage.faqs.deliveryTime.linkTimeframes') }
         ]
     },
     {
@@ -240,8 +240,8 @@ const faqs = computed(() => [
         question: t('faqPage.faqs.returnPolicy.question'),
         answer: t('faqPage.faqs.returnPolicy.answer'),
         links: [
-            { url: '/help/how-to-return', text: t('faqPage.faqs.returnPolicy.linkInstructions') },
-            { url: '/help/return-policy', text: t('faqPage.faqs.returnPolicy.linkFullPolicy') }
+            { url: '/page/help/how-to-return', text: t('faqPage.faqs.returnPolicy.linkInstructions') },
+            { url: '/page/help/how-to-return', text: t('faqPage.faqs.returnPolicy.linkFullPolicy') }
         ]
     },
     {
@@ -251,7 +251,7 @@ const faqs = computed(() => [
         answer: t('faqPage.faqs.returnItem.answer'),
         links: [
             { url: '/account/orders', text: t('faqPage.faqs.returnItem.linkStart') },
-            { url: '/help/return-guide', text: t('faqPage.faqs.returnItem.linkGuide') }
+            { url: '/page/help/how-to-return', text: t('faqPage.faqs.returnItem.linkGuide') }
         ]
     }
 ]);

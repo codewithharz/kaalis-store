@@ -690,6 +690,28 @@ exports.becomeSeller = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
+    // Check if a seller profile already exists for this user to prevent duplicate registrations
+    const existingSeller = await Seller.findOne({ user: userId });
+    if (existingSeller) {
+      if (!user.isSeller || !user.sellerProfile) {
+        user.isSeller = true;
+        user.sellerProfile = existingSeller._id;
+        await user.save();
+        return res.status(200).json({
+          success: true,
+          message: "Seller profile restored successfully",
+          user: {
+            ...user.toObject(),
+            sellerProfile: existingSeller,
+          },
+        });
+      }
+      return res.status(400).json({
+        success: false,
+        message: "You already have an active seller profile.",
+      });
+    }
+
     if (user.isSeller) {
       return res
         .status(400)

@@ -125,8 +125,13 @@ exports.getProductsByCategory = async (req, res) => {
     const { categorySlug } = req.params;
     const locale = getCategoryRequestLocale(req);
 
-    // Find the category by slug
-    const category = await Category.findOne({ slug: categorySlug });
+    // Find the category by slug or by ID if categorySlug is a valid ObjectId
+    const isObjectId = mongoose.Types.ObjectId.isValid(categorySlug);
+    const category = await Category.findOne(
+      isObjectId 
+        ? { _id: categorySlug }
+        : { slug: categorySlug }
+    );
 
     if (!category) {
       return res.status(404).json({ message: "Category not found" });
@@ -150,8 +155,11 @@ exports.getProductsByCategory = async (req, res) => {
       `Fetching products for category: ${category.name} (${allCategoryIds.length} categories included)`
     );
 
-    // Find products with this category OR any subcategory
-    const products = await Product.find({ category: { $in: allCategoryIds } })
+    // Find products with this category OR any subcategory that are available
+    const products = await Product.find({ 
+      category: { $in: allCategoryIds },
+      isAvailable: { $ne: false }
+    })
       .populate("seller", "name")
       .select(
         "name description price images discount averageRating numberOfRatings brand"

@@ -42,7 +42,7 @@
                     <h2 class="text-5xl font-extrabold mb-4 animate-pulse">{{ t('becomeSellerFormPage.heroTitle') }}</h2>
                     <p class="text-lg mb-4 animate-fade-in">{{ t('becomeSellerFormPage.heroSubtitle') }}</p>
                     <p class="text-md">{{ t('becomeSellerFormPage.heroCtaText') }}</p>
-                    <router-link to="/seller-store"
+                    <router-link :to="{ name: 'UserSellerDashboard' }"
                         class="text-white font-bold py-2 px-4 button-hover bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white hover:text-white rounded-r focus:outline-none mt-4">{{ t('becomeSellerFormPage.visitStore') }}</router-link>
                 </div>
             </div>
@@ -51,7 +51,7 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useUserStore } from "../store/user.js";
 import { useRouter } from 'vue-router';
@@ -66,6 +66,13 @@ export default {
         const storeName = ref("");
         const storeDescription = ref("");
         const errorMessage = ref("");
+
+        onMounted(() => {
+            if (userStore.isSeller) {
+                toast.info("You are already a seller. Redirecting to your dashboard...");
+                router.replace({ name: 'UserSellerDashboard' });
+            }
+        });
 
         const submitSellerForm = async () => {
             try {

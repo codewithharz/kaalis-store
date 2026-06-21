@@ -15,6 +15,7 @@ const addressSchema = new mongoose.Schema(
     email: { type: String },
     phone: { type: String, required: true }, // 3
     isDefault: { type: Boolean, default: false },
+    isDispatch: { type: Boolean, default: false },
   },
   {
     timestamps: true,

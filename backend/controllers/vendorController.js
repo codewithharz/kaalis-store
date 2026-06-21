@@ -91,6 +91,11 @@ const vendorController = {
         status: "pending",
       }).sort({ scheduledDate: 1 });
 
+      const aggregatingPayout = await VendorPayout.findOne({
+        vendorId: req.user._id,
+        status: "aggregating",
+      });
+
       const pendingAmounts = {};
       const processingAmounts = {};
       const processedAmounts = {};
@@ -138,6 +143,7 @@ const vendorController = {
           platformFeeAmounts,
           orderCounts,
           nextPayoutDate: nextPayout?.scheduledDate || null,
+          nextPayoutStatus: nextPayout ? "pending" : (aggregatingPayout ? "aggregating" : null),
           platformFee:
             platformSettings.payment.checkoutPlatformFeePercent ||
             payoutConfig.fees.default.platformFee * 100,
@@ -400,6 +406,11 @@ const vendorController = {
         status: "pending",
       }).sort({ scheduledDate: 1 });
 
+      const aggregatingPayout = await VendorPayout.findOne({
+        vendorId: req.user._id,
+        status: "aggregating",
+      });
+
       // Get payment preferences
       const vendor = await User.findById(req.user._id).select(
         "paymentMethod currency bankDetails paystack"
@@ -408,6 +419,7 @@ const vendorController = {
       res.json({
         stats,
         nextPayoutDate: nextPayout?.scheduledDate || null,
+        nextPayoutStatus: nextPayout ? "pending" : (aggregatingPayout ? "aggregating" : null),
         platformFee:
           platformSettings.payment.checkoutPlatformFeePercent ||
           payoutConfig.fees.default.platformFee * 100,

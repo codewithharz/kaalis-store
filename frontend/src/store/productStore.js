@@ -42,15 +42,11 @@ export const useProductStore = defineStore("product", {
     async fetchProducts({ page = 1, limit = 20 } = {}) {
       try {
         const userStore = useUserStore();
-        const token = userStore.token || localStorage.getItem("token");
-        const response = await axios.get("/products", {
+        const response = await apiClient.get("/products", {
           params: {
             page,
             limit,
             sort: "-createdAt", // Keep the sort parameter as it's used in the controller
-          },
-          headers: {
-            Authorization: `Bearer ${token}`,
           },
         });
         // this.products = response.data;
@@ -204,15 +200,9 @@ export const useProductStore = defineStore("product", {
           };
         }
 
-        toast.success("Product rated successfully");
         return response.data;
       } catch (error) {
         console.error("Error rating product:", error);
-        if (error.response?.data?.message) {
-          toast.error(error.response.data.message);
-        } else {
-          toast.error("Failed to rate product");
-        }
         throw error;
       }
     },

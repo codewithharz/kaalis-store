@@ -284,6 +284,20 @@
                                         :placeholder="t('addressBook.postalCodePlaceholder')">
                                 </div>
                             </div>
+
+                            <!-- Seller Dispatch Address (Only for Sellers) -->
+                            <div v-if="isSeller" class="space-y-2 md:col-span-2 mt-2">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" v-model="form.isDispatch"
+                                        class="w-4 h-4 rounded text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                    <span class="ml-2 text-sm font-semibold text-gray-700">
+                                        🔴 {{ t('addressBook.setAsDispatch') }}
+                                    </span>
+                                </label>
+                                <p class="text-xs text-gray-500 ml-6">
+                                    {{ t('addressBook.dispatchHint') }}
+                                </p>
+                            </div>
                         </div>
 
                         <!-- Tips Section -->
@@ -335,6 +349,7 @@
 import { computed, ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAddressStore } from '../store/addressStore';
+import { useUserStore } from '../store/user';
 import AddressCard from './AddressCard.vue';
 import {
     PlusCircle, X, UserRound, Phone, MapPin, Home, MapPinned, Building2, Map, Globe, Loader2
@@ -359,8 +374,10 @@ export default {
     setup() {
         const { t } = useI18n();
         const addressStore = useAddressStore();
+        const userStore = useUserStore();
         const addresses = computed(() => addressStore.addresses);
         const isLoading = ref(false);
+        const isSeller = computed(() => userStore.isSeller);
 
         const form = ref({
             firstName: '',
@@ -373,6 +390,7 @@ export default {
             state: '',
             country: '',
             place: '',
+            isDispatch: false,
             id: null
         });
 
@@ -385,6 +403,7 @@ export default {
         const openForm = (address = null) => {
             if (address) {
                 form.value = { ...address };
+                form.value.isDispatch = address.isDispatch || false;
                 form.value.id = address._id;
             } else {
                 form.value = {
@@ -398,6 +417,7 @@ export default {
                     state: '',
                     country: '',
                     place: '',
+                    isDispatch: false,
                     id: null
                 };
             }
@@ -423,6 +443,7 @@ export default {
                     houseNo: form.value.houseNo,
                     place: form.value.place,
                     phone: form.value.phone,
+                    isDispatch: form.value.isDispatch || false,
                 };
 
                 if (form.value.id) {
@@ -450,6 +471,7 @@ export default {
             form,
             showForm,
             isLoading,
+            isSeller,
             openForm,
             closeForm,
             saveAddress,

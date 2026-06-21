@@ -129,11 +129,11 @@
                     <h3 class="font-semibold text-[#24a6bb] mb-4">{{ t('sellerBasicConceptsPage.helpTitle') }}</h3>
                     <p class="text-gray-600 mb-4">{{ t('sellerBasicConceptsPage.helpBody') }}</p>
                     <div class="flex space-x-4">
-                        <router-link to="/seller/academy"
+                        <router-link to="/page/seller/bruthol-academy"
                             class="bg-[#24a6bb] text-white px-4 py-2 rounded-lg hover:bg-[#1a7f8f] transition-colors">
                             {{ t('sellerBasicConceptsPage.visitAcademy') }}
                         </router-link>
-                        <router-link to="/help/live-help"
+                        <router-link to="/page/help/live-help"
                             class="border border-[#24a6bb] text-[#24a6bb] px-4 py-2 rounded-lg hover:bg-[#24a6bb] hover:text-white transition-colors">
                             {{ t('sellerBasicConceptsPage.contactSupport') }}
                         </router-link>

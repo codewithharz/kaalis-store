@@ -2,16 +2,16 @@
   <div v-if="currentOrder"
     class="bg-white rounded-lg sm:rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300">
     <!-- Order Header with Gradient -->
-    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100 p-4 sm:p-6">
+    <div class="bg-gradient-to-r from-orange-50/30 to-amber-50/20 border-b border-gray-100 p-4 sm:p-6">
       <div class="flex flex-col gap-4">
         <div class="flex-1">
           <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
             <div class="flex items-center gap-2 sm:gap-3">
-              <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+              <div class="w-2 h-2 bg-[#ff934b] rounded-full animate-pulse"></div>
               <span class="text-xs sm:text-sm font-semibold text-gray-600">{{ t('orderCard.orderId') }}</span>
             </div>
             <a href="#"
-              class="text-blue-600 hover:text-blue-700 font-mono text-xs sm:text-sm bg-blue-50 px-2 py-1 rounded-md transition-colors self-start">
+              class="text-[#ff934b] hover:text-[#ff5e62] font-mono text-xs sm:text-sm bg-orange-50 px-2 py-1 rounded-md transition-colors self-start">
               {{ currentOrder.orderId }}
             </a>
           </div>
@@ -55,22 +55,24 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div class="flex items-center gap-3">
             <div
-              class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
+              class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#ff934b] to-[#ff5e62] rounded-lg flex items-center justify-center shadow-sm">
               <Store class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <div>
               <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                 <span class="font-semibold text-gray-900 text-sm sm:text-base">{{ sellerInfo.storeName }}</span>
                 <div v-if="sellerInfo.isVerified"
-                  class="flex items-center bg-blue-100 px-2 py-1 rounded-full self-start">
-                  <BadgeCheck class="w-3 h-3 text-blue-600 mr-1" />
-                  <span class="text-xs text-blue-600 font-medium">{{ t('orderCard.verified') }}</span>
+                  class="flex items-center bg-orange-50 px-2 py-1 rounded-full self-start">
+                  <BadgeCheck class="w-3 h-3 text-[#ff934b] mr-1" />
+                  <span class="text-xs text-[#ff934b] font-medium">{{ t('orderCard.verified') }}</span>
                 </div>
               </div>
               <div class="flex items-center text-amber-500 mt-1">
                 <Star class="w-3 h-3 sm:w-4 sm:h-4 fill-current mr-1" />
                 <span class="text-xs sm:text-sm font-medium">{{ sellerInfo.averageRating || 0 }}</span>
-                <span class="text-xs text-gray-500 ml-1">{{ t('orderCard.reviewsCount', { count: sellerInfo.totalReviews || 0 }) }}</span>
+                <span class="text-xs text-gray-500 ml-1">{{ t('orderCard.reviewsCount', {
+                  count: sellerInfo.totalReviews
+                  || 0 }) }}</span>
               </div>
             </div>
           </div>
@@ -88,7 +90,7 @@
     </div>
 
     <!-- Enhanced Timeline Component -->
-    <div class="bg-gradient-to-r from-gray-50 to-blue-50/30 border-b border-gray-100">
+    <div class="bg-gradient-to-r from-gray-50 to-orange-50/10 border-b border-gray-100">
       <OrderTimeline :order="currentOrder" class="p-4 sm:p-6" />
     </div>
 
@@ -97,10 +99,10 @@
       <!-- Loading State -->
       <div v-if="isLoading" class="flex justify-center items-center py-6 sm:py-8">
         <div class="relative">
-          <div class="animate-spin h-6 w-6 sm:h-8 sm:w-8 border-3 border-blue-500 rounded-full border-t-transparent">
+          <div class="animate-spin h-6 w-6 sm:h-8 sm:w-8 border-3 border-[#ff934b] rounded-full border-t-transparent">
           </div>
           <div
-            class="absolute inset-0 animate-ping h-6 w-6 sm:h-8 sm:w-8 border-2 border-blue-300 rounded-full opacity-75">
+            class="absolute inset-0 animate-ping h-6 w-6 sm:h-8 sm:w-8 border-2 border-[#ff934b]/30 rounded-full opacity-75">
           </div>
         </div>
       </div>
@@ -108,7 +110,7 @@
       <!-- Multiple Products Display -->
       <div class="space-y-3 sm:space-y-4">
         <div v-for="(product, index) in orderProducts" :key="index"
-          class="flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-r from-white to-gray-50 rounded-lg sm:rounded-xl border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all duration-200">
+          class="flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-r from-white to-gray-50 rounded-lg sm:rounded-xl border border-gray-100 hover:border-orange-200 hover:shadow-md transition-all duration-200">
 
           <!-- Product Image with Modern Styling -->
           <div class="w-full sm:w-24 lg:w-32 h-24 sm:h-24 lg:h-32 relative group">
@@ -131,7 +133,8 @@
               <!-- Add variant details -->
               <div v-if="product.variant" class="text-xs sm:text-sm text-gray-500 mt-1 flex flex-wrap gap-x-3 gap-y-1">
                 <span v-if="product.variant.color">
-                  {{ t('orderCard.color') }}: {{ typeof product.variant.color === 'object' ? product.variant.color.name :
+                  {{ t('orderCard.color') }}: {{ typeof product.variant.color === 'object' ? product.variant.color.name
+                    :
                     product.variant.color }}
                 </span>
                 <span v-for="(attr, attrIdx) in product.variant.attributes" :key="attrIdx">
@@ -145,7 +148,7 @@
               </div>
               <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                 <div class="flex items-center gap-2">
-                  <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                  <span class="w-2 h-2 bg-[#ff934b] rounded-full"></span>
                   <span class="text-gray-600">{{ t('orderCard.quantity') }}</span>
                   <span class="font-semibold text-gray-900">{{ product.quantity }}</span>
                 </div>
@@ -159,13 +162,20 @@
 
             <!-- Quick Actions with Modern Buttons -->
             <div class="flex flex-wrap gap-2">
-              <button v-if="currentOrder.status === 'Delivered'" @click="rateProduct(product)"
-                class="inline-flex items-center px-2 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-medium rounded-md sm:rounded-lg hover:from-yellow-500 hover:to-orange-600 transition-all duration-200 transform hover:scale-105 shadow-sm">
-                <Star class="w-3 h-3 mr-1" />
-                {{ t('orderCard.rateProduct') }}
-              </button>
+              <template v-if="currentOrder.status === 'Delivered'">
+                <button v-if="!isProductRated(product.product?._id)" @click="rateProduct(product)"
+                  class="inline-flex items-center px-2 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-medium rounded-md sm:rounded-lg hover:from-yellow-500 hover:to-orange-600 transition-all duration-200 transform hover:scale-105 shadow-sm">
+                  <Star class="w-3 h-3 mr-1" />
+                  {{ t('orderCard.rateProduct') }}
+                </button>
+                <span v-else
+                  class="inline-flex items-center px-2.5 py-1.5 bg-green-50 text-green-700 text-xs font-semibold rounded-md sm:rounded-lg border border-green-200">
+                  <Check class="w-3 h-3 mr-1" />
+                  {{ t('orderCard.rated') }}
+                </span>
+              </template>
               <button @click="reorderProduct(product)"
-                class="inline-flex items-center px-2 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs font-medium rounded-md sm:rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-sm">
+                class="inline-flex items-center px-2 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] text-white text-xs font-bold rounded-md sm:rounded-lg hover:from-[#ff5e62] hover:to-[#ff934b] transition-all duration-200 transform hover:scale-105 shadow-sm">
                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
@@ -180,7 +190,7 @@
 
       <!-- Enhanced Order Summary -->
       <div
-        class="mt-4 sm:mt-6 p-3 sm:p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg sm:rounded-xl border border-gray-200">
+        class="mt-4 sm:mt-6 p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-orange-50/10 rounded-lg sm:rounded-xl border border-slate-200/80">
         <div class="flex flex-col gap-3 sm:gap-4">
           <div class="space-y-2">
             <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
@@ -204,7 +214,7 @@
                 <span class="text-xs sm:text-sm text-gray-600">{{ t('orderCard.totalAmount') }}</span>
               </div>
               <span class="font-bold text-base sm:text-lg text-gray-900">₦{{ formatAmount(currentOrder.totalAmount)
-                }}</span>
+              }}</span>
             </div>
           </div>
         </div>
@@ -219,7 +229,7 @@
         </button>
 
         <button @click="handleTrackOrder"
-          class="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-sm text-xs sm:text-sm">
+          class="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white rounded-lg font-bold transition-all duration-200 transform hover:scale-105 shadow-sm text-xs sm:text-sm">sm">
           <MapPin class="w-3 h-3 sm:w-4 sm:h-4" />
           <span>{{ t('orderCard.trackOrder') }}</span>
         </button>
@@ -246,11 +256,11 @@
     <div
       class="bg-white w-full max-w-4xl rounded-lg sm:rounded-2xl shadow-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
       <!-- Modal Header with Gradient -->
-      <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-4 sm:p-6 text-white">
+      <div class="bg-gradient-to-r from-[#ff934b] to-[#ff5e62] p-4 sm:p-6 text-white">
         <div class="flex justify-between items-center">
           <div>
             <h3 class="text-lg sm:text-xl font-bold">{{ t('orderCard.orderDetails') }}</h3>
-            <p class="text-blue-100 text-xs sm:text-sm mt-1">{{ t('orderCard.completeOrderInformation') }}</p>
+            <p class="text-orange-50 text-xs sm:text-sm mt-1">{{ t('orderCard.completeOrderInformation') }}</p>
           </div>
           <button @click="showOrderDetailsModal = false"
             class="p-2 hover:bg-white/20 rounded-lg transition-colors close-button">
@@ -262,10 +272,12 @@
       <!-- Modal Content with Modern Styling -->
       <div class="p-4 sm:p-6 overflow-y-auto max-h-[calc(95vh-120px)] sm:max-h-[calc(90vh-140px)]">
         <!-- Order ID and Date -->
-        <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg sm:rounded-xl">
+        <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-orange-50/10 rounded-lg sm:rounded-xl">
           <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
             <div>
-              <p class="text-base sm:text-lg font-bold text-gray-900">{{ t('orderCard.orderNumber', { id: currentOrder.orderId }) }}</p>
+              <p class="text-base sm:text-lg font-bold text-gray-900">{{ t('orderCard.orderNumber', {
+                id:
+                  currentOrder.orderId }) }}</p>
               <p class="text-xs sm:text-sm text-gray-600 flex items-center gap-2 mt-1">
                 <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -287,16 +299,16 @@
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div class="flex items-center gap-3">
               <div
-                class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg sm:rounded-xl flex items-center justify-center">
+                class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#ff934b] to-[#ff5e62] rounded-lg sm:rounded-xl flex items-center justify-center shadow-sm">
                 <Store class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div>
                 <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                   <span class="font-bold text-gray-900 text-sm sm:text-base">{{ sellerInfo.storeName }}</span>
                   <div v-if="sellerInfo.isVerified"
-                    class="flex items-center bg-blue-100 px-2 py-1 rounded-full self-start">
-                    <BadgeCheck class="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 mr-1" />
-                    <span class="text-xs text-blue-600 font-medium">{{ t('orderCard.verified') }}</span>
+                    class="flex items-center bg-orange-50 px-2 py-1 rounded-full self-start">
+                    <BadgeCheck class="w-3 h-3 sm:w-4 sm:h-4 text-[#ff934b] mr-1" />
+                    <span class="text-xs text-[#ff934b] font-medium">{{ t('orderCard.verified') }}</span>
                   </div>
                 </div>
                 <div class="flex items-center text-amber-500 mt-1">
@@ -311,7 +323,7 @@
         <!-- Products with Modern Cards -->
         <div class="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
           <h4 class="font-bold text-gray-900 text-base sm:text-lg flex items-center gap-2">
-            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-[#ff934b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
             </svg>
@@ -330,12 +342,13 @@
                 <!-- Add variant details -->
                 <div v-if="product.variant" class="text-xs sm:text-sm text-gray-500 mt-1">
                   <span v-if="product.variant.size">{{ t('orderCard.size') }}: {{ product.variant.size }}</span>
-                  <span v-if="product.variant.color" class="ml-2">{{ t('orderCard.color') }}: {{ typeof product.variant.color === 'object' ?
+                  <span v-if="product.variant.color" class="ml-2">{{ t('orderCard.color') }}: {{ typeof
+                    product.variant.color === 'object' ?
                     product.variant.color.name : product.variant.color }}</span>
                 </div>
                 <div class="mt-2 space-y-1">
                   <div class="flex items-center gap-2 text-xs sm:text-sm">
-                    <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                    <span class="w-2 h-2 bg-[#ff934b] rounded-full"></span>
                     <span class="text-gray-600">{{ t('orderCard.quantity') }}</span>
                     <span class="font-medium">{{ product.quantity }}</span>
                   </div>
@@ -352,26 +365,31 @@
 
         <!-- Order Summary with Modern Design -->
         <div
-          class="p-3 sm:p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg sm:rounded-xl border-2 border-gray-100">
+          class="p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-orange-50/10 rounded-lg sm:rounded-xl border-2 border-slate-100">
           <h4 class="font-bold text-gray-900 mb-3 text-sm sm:text-base">{{ t('orderCard.orderSummary') }}</h4>
           <div class="space-y-2">
             <div class="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-sm gap-1">
               <span class="text-gray-600">{{ t('orderCard.subtotal') }}</span>
-              <span class="font-semibold bg-white px-2 py-1 rounded-md self-start sm:self-auto">₦{{ formatAmount(currentOrder.subtotal || currentOrder.totalAmount) }}</span>
+              <span class="font-semibold bg-white px-2 py-1 rounded-md self-start sm:self-auto">₦{{
+                formatAmount(currentOrder.subtotal || currentOrder.totalAmount) }}</span>
             </div>
-            <div v-if="rewardBreakdown.coupon > 0" class="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-sm gap-1 text-green-600">
+            <div v-if="rewardBreakdown.coupon > 0"
+              class="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-sm gap-1 text-green-600">
               <span>{{ t('orderCard.couponDiscount') }}</span>
               <span>-₦{{ formatAmount(rewardBreakdown.coupon) }}</span>
             </div>
-            <div v-if="rewardBreakdown.specialOffer > 0" class="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-sm gap-1 text-green-600">
+            <div v-if="rewardBreakdown.specialOffer > 0"
+              class="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-sm gap-1 text-green-600">
               <span>{{ t('orderCard.specialOfferDiscount') }}</span>
               <span>-₦{{ formatAmount(rewardBreakdown.specialOffer) }}</span>
             </div>
-            <div v-if="rewardBreakdown.cluesBucks > 0" class="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-sm gap-1 text-green-600">
+            <div v-if="rewardBreakdown.cluesBucks > 0"
+              class="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-sm gap-1 text-green-600">
               <span>{{ t('orderCard.cluesBucksDiscount') }}</span>
               <span>-₦{{ formatAmount(rewardBreakdown.cluesBucks) }}</span>
             </div>
-            <div v-if="rewardBreakdown.storeCredit > 0" class="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-sm gap-1 text-green-600">
+            <div v-if="rewardBreakdown.storeCredit > 0"
+              class="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-sm gap-1 text-green-600">
               <span>{{ t('orderCard.storeCreditDiscount') }}</span>
               <span>-₦{{ formatAmount(rewardBreakdown.storeCredit) }}</span>
             </div>
@@ -392,7 +410,7 @@
         <div v-if="currentOrder.address"
           class="mt-4 sm:mt-6 p-3 sm:p-4 bg-white border-2 border-gray-100 rounded-lg sm:rounded-xl">
           <h4 class="font-bold text-gray-900 mb-3 flex items-center gap-2 text-sm sm:text-base">
-            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-[#ff934b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -423,11 +441,11 @@
     class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
     <div class="bg-white w-full max-w-2xl rounded-lg sm:rounded-2xl shadow-2xl max-h-[95vh] overflow-y-auto">
       <!-- Modal Header -->
-      <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-4 sm:p-6 text-white rounded-t-lg sm:rounded-t-2xl">
+      <div class="bg-gradient-to-r from-[#ff934b] to-[#ff5e62] p-4 sm:p-6 text-white rounded-t-lg sm:rounded-t-2xl">
         <div class="flex justify-between items-center">
           <div>
             <h3 class="text-lg sm:text-xl font-bold">{{ t('orderCard.trackYourOrder') }}</h3>
-            <p class="text-blue-100 text-xs sm:text-sm mt-1">{{ t('orderCard.realTimeTracking') }}</p>
+            <p class="text-orange-50 text-xs sm:text-sm mt-1">{{ t('orderCard.realTimeTracking') }}</p>
           </div>
           <button @click="showTrackingModal = false" class="p-2 hover:bg-white/20 rounded-lg transition-colors">
             <X class="w-5 h-5 sm:w-6 sm:h-6" />
@@ -438,8 +456,10 @@
       <!-- Modal Content -->
       <div class="p-4 sm:p-6">
         <!-- Order Info -->
-        <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg sm:rounded-xl">
-          <p class="font-bold text-gray-900 text-sm sm:text-base">{{ t('orderCard.orderNumber', { id: currentOrder.orderId }) }}</p>
+        <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-orange-50/10 rounded-lg sm:rounded-xl">
+          <p class="font-bold text-gray-900 text-sm sm:text-base">{{ t('orderCard.orderNumber', {
+            id:
+              currentOrder.orderId }) }}</p>
           <p class="text-xs sm:text-sm text-gray-600">{{ formatDate(currentOrder.createdAt) }}</p>
         </div>
 
@@ -461,7 +481,7 @@
             <!-- Status Content -->
             <div class="flex-1 pb-4 sm:pb-6">
               <div class="p-3 rounded-lg"
-                :class="isCurrent(status) ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50'">
+                :class="isCurrent(status) ? 'bg-orange-50 border border-orange-200' : 'bg-gray-50'">
                 <p class="font-semibold text-gray-900 text-sm sm:text-base">{{ translateStatus(status) }}</p>
                 <p class="text-xs sm:text-sm text-gray-600">{{ getStatusDescription(status) }}</p>
                 <p v-if="getStatusTimestamp(status)" class="text-xs text-gray-500 mt-2">
@@ -549,7 +569,8 @@
                 </div>
               </div>
               <p class="mt-2 text-xs sm:text-sm font-medium text-gray-700">
-                {{ t('orderCard.subtotal') }} <span class="text-green-600 font-bold">₦{{ formatAmount(product.product?.price *
+                {{ t('orderCard.subtotal') }} <span class="text-green-600 font-bold">₦{{
+                  formatAmount(product.product?.price *
                   product.quantity) }}</span>
               </p>
             </div>
@@ -569,30 +590,35 @@
           </h4>
           <div class="space-y-3 sm:space-y-4">
             <div>
-              <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">{{ t('orderCard.streetAddress') }}</label>
+              <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">{{ t('orderCard.streetAddress')
+                }}</label>
               <input type="text" v-model="modifyForm.address.street"
                 class="w-full border-2 border-gray-200 rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-colors text-sm">
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">{{ t('orderCard.city') }}</label>
+                <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">{{ t('orderCard.city')
+                  }}</label>
                 <input type="text" v-model="modifyForm.address.city"
                   class="w-full border-2 border-gray-200 rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-colors text-sm">
               </div>
               <div>
-                <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">{{ t('orderCard.state') }}</label>
+                <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">{{ t('orderCard.state')
+                  }}</label>
                 <input type="text" v-model="modifyForm.address.state"
                   class="w-full border-2 border-gray-200 rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-colors text-sm">
               </div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">{{ t('orderCard.country') }}</label>
+                <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">{{ t('orderCard.country')
+                  }}</label>
                 <input type="text" v-model="modifyForm.address.country"
                   class="w-full border-2 border-gray-200 rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-colors text-sm">
               </div>
               <div>
-                <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">{{ t('orderCard.postalCode') }}</label>
+                <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">{{ t('orderCard.postalCode')
+                  }}</label>
                 <input type="text" v-model="modifyForm.address.postalCode"
                   class="w-full border-2 border-gray-200 rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-colors text-sm">
               </div>
@@ -673,9 +699,9 @@
 
         <!-- Order Information Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-6 sm:mb-8">
-          <div class="bg-blue-50 p-3 sm:p-4 rounded-lg">
+          <div class="bg-orange-50/50 p-3 sm:p-4 rounded-lg">
             <h3 class="text-gray-800 font-bold mb-3 flex items-center gap-2 text-sm sm:text-base">
-              <svg class="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 text-[#ff934b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                 </path>
@@ -751,8 +777,10 @@
               <thead class="bg-gray-100">
                 <tr>
                   <th class="py-3 px-4 text-left font-semibold text-gray-800 text-sm">{{ t('orderCard.product') }}</th>
-                  <th class="py-3 px-4 text-center font-semibold text-gray-800 text-sm">{{ t('orderCard.quantity') }}</th>
-                  <th class="py-3 px-4 text-right font-semibold text-gray-800 text-sm">{{ t('orderCard.unitPrice') }}</th>
+                  <th class="py-3 px-4 text-center font-semibold text-gray-800 text-sm">{{ t('orderCard.quantity') }}
+                  </th>
+                  <th class="py-3 px-4 text-right font-semibold text-gray-800 text-sm">{{ t('orderCard.unitPrice') }}
+                  </th>
                   <th class="py-3 px-4 text-right font-semibold text-gray-800 text-sm">{{ t('orderCard.total') }}</th>
                 </tr>
               </thead>
@@ -802,9 +830,9 @@
 
         <!-- Modern Footer -->
         <div class="text-center space-y-4 sm:space-y-6 pt-4 sm:pt-6 border-t-2 border-gray-200">
-          <div class="bg-blue-50 p-4 sm:p-6 rounded-lg">
-            <h4 class="text-lg sm:text-xl font-bold text-blue-800 mb-2">{{ t('orderCard.thankYouTitle') }}</h4>
-            <p class="text-blue-700 text-sm sm:text-base">{{ t('orderCard.thankYouBody') }}</p>
+          <div class="bg-orange-50/50 p-4 sm:p-6 rounded-lg">
+            <h4 class="text-lg sm:text-xl font-bold text-orange-800 mb-2">{{ t('orderCard.thankYouTitle') }}</h4>
+            <p class="text-orange-700 text-sm sm:text-base">{{ t('orderCard.thankYouBody') }}</p>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600">
@@ -838,7 +866,7 @@
           {{ t('orderCard.close') }}
         </button>
         <button type="button" @click="printOrderDetails"
-          class="px-4 sm:px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 font-medium transition-all transform hover:scale-105 shadow-sm text-sm sm:text-base order-1 sm:order-2">
+          class="px-4 sm:px-6 py-2 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] text-white rounded-lg hover:from-[#ff5e62] hover:to-[#ff934b] font-bold transition-all transform hover:scale-105 shadow-sm text-sm sm:text-base order-1 sm:order-2">
           <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
@@ -885,7 +913,8 @@
 
         <!-- Rating Stars -->
         <div class="mb-4 sm:mb-6">
-          <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-3">{{ t('orderCard.yourRating') }}</label>
+          <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-3">{{ t('orderCard.yourRating')
+            }}</label>
           <div class="flex gap-1 sm:gap-2 justify-center sm:justify-start">
             <button v-for="star in 5" :key="star" @click="rating = star"
               class="focus:outline-none transition-transform hover:scale-110">
@@ -903,7 +932,8 @@
 
         <!-- Review Text -->
         <div class="mb-4 sm:mb-6">
-          <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">{{ t('orderCard.yourReviewOptional') }}</label>
+          <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">{{ t('orderCard.yourReviewOptional')
+            }}</label>
           <textarea v-model="reviewText" rows="4"
             class="w-full border-2 border-gray-200 rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 transition-colors resize-none text-sm"
             :placeholder="t('orderCard.reviewPlaceholder')"></textarea>
@@ -933,6 +963,7 @@ import { useUserStore } from '../store/user';
 import { useSellerStore } from '../store/sellerStore';
 import OrderTimeline from './OrderTimeline.vue';
 import JsBarcode from 'jsbarcode';
+import { toast } from 'vue-sonner';
 
 import { computed, ref, onMounted, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -1042,8 +1073,8 @@ export default {
     const getStatusClass = (status) => {
       const classes = {
         'Pending': 'bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 border border-yellow-200',
-        'Processing': 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200',
-        'Shipped': 'bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-800 border border-purple-200',
+        'Processing': 'bg-gradient-to-r from-orange-100 to-amber-100 text-orange-855 border border-orange-200',
+        'Shipped': 'bg-gradient-to-r from-amber-100 to-[#ff934b]/20 text-[#ff934b] border border-[#ff934b]/30',
         'Delivered': 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200',
         'Cancelled': 'bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-200'
       };
@@ -1096,6 +1127,13 @@ export default {
       reviewText.value = '';
     };
 
+    const isProductRated = (productId) => {
+      if (!props.order?.ratedProducts) return false;
+      return props.order.ratedProducts.some(
+        rp => (rp.product?._id || rp.product)?.toString() === productId?.toString() && rp.rated
+      );
+    };
+
     const submitRating = async () => {
       if (rating.value === 0 || !selectedProductForRating.value) {
         return;
@@ -1109,11 +1147,17 @@ export default {
           reviewText.value
         );
 
+        toast.success(t('pendingReviewsPage.reviewSubmitted'));
         closeRatingModal();
         // You might want to emit an event to refresh the order data
         emit('order-updated');
       } catch (error) {
         console.error('Error submitting rating:', error);
+        if (error.response?.data?.message === 'You have already rated this product') {
+          toast.error(t('pendingReviewsPage.alreadyRated'));
+        } else {
+          toast.error(t('pendingReviewsPage.failedSubmit'));
+        }
       } finally {
         isSubmittingRating.value = false;
       }
@@ -1273,7 +1317,7 @@ export default {
         return 'border-green-500 bg-green-100 text-green-600';
       }
       if (isCurrent(status)) {
-        return 'border-blue-500 bg-blue-100 text-blue-600';
+        return 'border-[#ff934b] bg-orange-50 text-[#ff934b]';
       }
       return 'border-gray-300 bg-gray-100 text-gray-400';
     };
@@ -1444,7 +1488,7 @@ export default {
             padding-top: 1rem;
           }
           .bg-blue-50 {
-            background-color: #eff6ff;
+            background-color: #fff7ed;
           }
           .bg-green-50 {
             background-color: #f0fdf4;
@@ -1557,6 +1601,7 @@ export default {
       getRatingLabel,
       contactSeller,
       rateProduct,
+      isProductRated,
       reorderProduct,
 
       showTrackingModal,

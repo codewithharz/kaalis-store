@@ -70,7 +70,7 @@
                 <div class="space-y-4">
                     <div v-for="activity in recentActivities" :key="activity.id" class="flex items-start space-x-3">
                         <div class="p-2 rounded-full" :class="activity.bgColor">
-                            <component :is="activity.icon" class="w-4 h-4" :class="activity.iconColor" />
+                            <component :is="resolveIcon(activity.icon)" class="w-4 h-4" :class="activity.iconColor" />
                         </div>
                         <div>
                             <p class="text-sm font-medium">{{ activity.message }}</p>
@@ -103,7 +103,8 @@
                         </div>
                         <div class="text-right">
                             <p class="font-medium">₦{{ product.price }}</p>
-                            <p class="text-sm text-gray-500">{{ t('adminDashboard.salesCount', { count: product.sales }) }}</p>
+                            <p class="text-sm text-gray-500">{{ t('adminDashboard.salesCount', { count: product.sales })
+                                }}</p>
                         </div>
                     </div>
                 </div>
@@ -235,6 +236,22 @@ const stats = computed(() => [
         changeColor: adminStore.dashboardStats.revenueGrowth >= 0 ? 'text-green-500' : 'text-red-500'
     }
 ])
+
+const iconComponents = {
+    Users,
+    Package,
+    ShoppingCart,
+    Settings,
+    AlertCircle,
+    DollarSign,
+};
+
+const resolveIcon = (icon) => {
+    if (typeof icon === 'string') {
+        return iconComponents[icon] || AlertCircle;
+    }
+    return icon || AlertCircle;
+};
 
 const chartData = computed(() => ({
     users: adminStore.dashboardStats.userStats || [],

@@ -28,19 +28,20 @@ const cluesBucksRoutes = require("./routes/cluesBucksRoutes");
 const specialOfferRoutes = require("./routes/specialOfferRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const reportRoutes = require("./routes/reportRoutes");
+const returnRoutes = require("./routes/returnRoutes");
 const roleRoutes = require("./routes/roleRoutes");
 const shipmentRoutes = require("./routes/shipmentRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const sellerRoutes = require("./routes/sellerRoutes");
-const shippingRulesRoutes = require("./routes/shippingRules");
 const paymentRoutes = require("./routes/paymentRoutes");
 const paystackRoutes = require("./routes/paystackRoutes");
 const opayRoutes = require("./routes/opayRoutes");
 const vendorPayoutRoutes = require("./routes/vendorPayoutRoutes");
 const afriExchangeWebhookRoutes = require("./routes/afriExchangeWebhookRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
+const supportRoutes = require("./routes/supportRoutes");
 const platformSettingsController = require("./controllers/platformSettingsController");
 // const { initPayoutCron } = require("./config/cronJobs"); // REMOVED: Cron disabled, using manual processing
 const {
@@ -380,18 +381,19 @@ app.use("/api/cluesbucks", cluesBucksRoutes); // CluesBucks routes
 app.use("/api/special-offers", specialOfferRoutes); //special Offer routes
 app.use("/api/orders", orderRoutes); // Order inventory routes
 app.use("/api/reports", reportRoutes); // Reports inventory routes roleRoutes
+app.use("/api/returns", returnRoutes); // Returns routes
 app.use("/api/roles", roleRoutes); // Roles inventory routes
 app.use("/api/shipments", shipmentRoutes); // Shipment inventory routes
 app.use("/api/wishlists", wishlistRoutes); // wishlist inventory routes
 app.use("/api/notifications", notificationRoutes); // Notification inventory routes
 app.use("/api/messages", messageRoutes); // Message inventory routes
 app.use("/api/seller", sellerRoutes); // seller inventory routes
-app.use("/api/shipping-rules", shippingRulesRoutes);
 app.use("/api/payment", paymentRoutes); // Paystack and OPay routes
 app.use("/api/paystack", paystackRoutes); // Paystack routes
 app.use("/api/opay", opayRoutes);
 app.use("/api/vendor-payout", vendorPayoutRoutes); // Vendor payout routes
 app.use("/api/upload", uploadRoutes); // Cloudinary upload routes
+app.use("/api/admin/support", supportRoutes); // Support/contact routes
 
 // Only enable test routes in development or test environment
 // Legacy multi-provider payout test routes are disabled because PayDunya and

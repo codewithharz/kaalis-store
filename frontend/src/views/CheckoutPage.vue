@@ -7,7 +7,8 @@
         </div>
         <div v-else-if="error" class="text-center py-8">
             <p class="text-xl text-red-600">{{ error }}</p>
-            <button @click="retryLoading" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">{{ t('checkout.retry') }}</button>
+            <button @click="retryLoading" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">{{ t('checkout.retry')
+            }}</button>
         </div>
         <div v-else class="flex flex-col lg:flex-row gap-8 checkout-content">
             <!-- Left Column (Scrollable Content) -->
@@ -28,15 +29,22 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <input v-model="addressForm.firstName" :placeholder="t('checkout.firstName')" required
                                 class="input-field">
-                            <input v-model="addressForm.lastName" :placeholder="t('checkout.lastName')" required class="input-field">
-                            <input v-model="addressForm.phone" :placeholder="t('checkout.phone')" required class="input-field">
-                            <input v-model="addressForm.email" :placeholder="t('checkout.email')" type="email" class="input-field">
-                            <input v-model="addressForm.street" :placeholder="t('checkout.street')" required class="input-field">
+                            <input v-model="addressForm.lastName" :placeholder="t('checkout.lastName')" required
+                                class="input-field">
+                            <input v-model="addressForm.phone" :placeholder="t('checkout.phone')" required
+                                class="input-field">
+                            <input v-model="addressForm.email" :placeholder="t('checkout.email')" type="email"
+                                class="input-field">
+                            <input v-model="addressForm.street" :placeholder="t('checkout.street')" required
+                                class="input-field">
                             <input v-model="addressForm.houseNo" :placeholder="t('checkout.houseNumber')" required
                                 class="input-field">
-                            <input v-model="addressForm.city" :placeholder="t('checkout.city')" required class="input-field">
-                            <input v-model="addressForm.state" :placeholder="t('checkout.state')" required class="input-field">
-                            <input v-model="addressForm.country" :placeholder="t('checkout.country')" required class="input-field">
+                            <input v-model="addressForm.city" :placeholder="t('checkout.city')" required
+                                class="input-field">
+                            <input v-model="addressForm.state" :placeholder="t('checkout.state')" required
+                                class="input-field">
+                            <input v-model="addressForm.country" :placeholder="t('checkout.country')" required
+                                class="input-field">
                             <input v-model="addressForm.postalCode" :placeholder="t('checkout.postalCode')" required
                                 class="input-field">
                         </div>
@@ -51,14 +59,12 @@
 
                 <!-- Order Items -->
                 <div class="bg-white shadow-md rounded-lg p-4 sm:p-6">
-                    <h2 class="text-xl font-semibold mb-4">{{ t('checkout.orderItems') }} <span class="text-sm font-medium text-gray-500">({{ checkoutItems.length }})</span></h2>
+                    <h2 class="text-xl font-semibold mb-4">{{ t('checkout.orderItems') }} <span
+                            class="text-sm font-medium text-gray-500">({{ checkoutItems.length }})</span></h2>
                     <div v-if="checkoutItems.length === 0" class="text-center py-4">
                         <p class="text-gray-600">{{ t('checkout.noSelectedItems') }}</p>
-                        <button
-                            type="button"
-                            @click="router.push({ name: 'Cart' })"
-                            class="mt-3 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                        >
+                        <button type="button" @click="router.push({ name: 'Cart' })"
+                            class="mt-3 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
                             {{ t('checkout.returnToCart') }}
                         </button>
                     </div>
@@ -67,8 +73,10 @@
                         class="mb-4 rounded-lg border border-gray-100 p-3 sm:p-4 lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start lg:gap-6">
                         <div class="flex min-w-0 items-start gap-3 sm:gap-4">
                             <img v-if="item.product?.images?.length > 0" :src="item.product.images[0]"
-                                :alt="item.product?.name || 'Product image'" class="h-16 w-16 flex-shrink-0 rounded object-cover sm:h-20 sm:w-20">
-                            <div v-else class="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded bg-gray-200 sm:h-20 sm:w-20">
+                                :alt="item.product?.name || 'Product image'"
+                                class="h-16 w-16 flex-shrink-0 rounded object-cover sm:h-20 sm:w-20">
+                            <div v-else
+                                class="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded bg-gray-200 sm:h-20 sm:w-20">
                                 <span class="text-gray-400">{{ t('checkout.loadingItem') }}</span>
                             </div>
                             <div class="min-w-0 flex-1">
@@ -79,8 +87,9 @@
                                 <!-- Add variant details -->
                                 <div v-if="item.variant" class="text-sm text-gray-600 mb-1 flex flex-wrap gap-x-2">
                                     <span v-if="item.variant.color">
-                                        {{ t('cart.color') }}: {{ typeof item.variant.color === 'object' ? item.variant.color.name :
-                                        item.variant.color }}
+                                        {{ t('cart.color') }}: {{ typeof item.variant.color === 'object' ?
+                                            item.variant.color.name :
+                                            item.variant.color }}
                                     </span>
                                     <span v-for="(attr, attrIdx) in item.variant.attributes" :key="attrIdx">
                                         {{ attr.name }}: {{ attr.value }}
@@ -99,24 +108,28 @@
                                     <span v-if="item.product?.description && item.product.description.length > 100"
                                         @click="toggleDescription(item.product)"
                                         class="text-blue-500 cursor-pointer text-sm">
-                                        {{ item.product?.showFullDescription ? t('cart.readLess') : t('cart.readMore') }}
+                                        {{ item.product?.showFullDescription ? t('cart.readLess') : t('cart.readMore')
+                                        }}
                                     </span>
                                 </div>
                             </div>
                         </div>
-                        <div class="mt-3 flex w-full items-center justify-between gap-4 border-t border-gray-100 pt-3 sm:mt-4 lg:mt-0 lg:w-auto lg:min-w-[180px] lg:flex-col lg:items-end lg:justify-start lg:border-t-0 lg:border-l lg:border-gray-100 lg:pt-0 lg:pl-6">
+                        <div
+                            class="mt-3 flex w-full items-center justify-between gap-4 border-t border-gray-100 pt-3 sm:mt-4 lg:mt-0 lg:w-auto lg:min-w-[180px] lg:flex-col lg:items-end lg:justify-start lg:border-t-0 lg:border-l lg:border-gray-100 lg:pt-0 lg:pl-6">
                             <div class="flex items-center rounded-full bg-gray-100 px-2 py-1">
                                 <button @click="decrementQuantity(item)" class="rounded-full bg-white p-1 shadow-sm"
                                     :disabled="loadingItems[item.product?._id] || !item.product?._id">
                                     <Minus class="w-3 h-3" />
                                 </button>
-                                <span class="mx-3 min-w-[24px] text-center text-sm font-medium">{{ item.quantity }}</span>
+                                <span class="mx-3 min-w-[24px] text-center text-sm font-medium">{{ item.quantity
+                                }}</span>
                                 <button @click="incrementQuantity(item)" class="rounded-full bg-white p-1 shadow-sm"
                                     :disabled="loadingItems[item.product?._id] || !item.product?._id">
                                     <Plus class="w-3 h-3" />
                                 </button>
                             </div>
-                            <span class="text-right text-base font-semibold sm:text-lg">{{ formatMoney(getCheckoutItemUnitPrice(item) * item.quantity) }}</span>
+                            <span class="text-right text-base font-semibold sm:text-lg">{{
+                                formatMoney(getCheckoutItemUnitPrice(item) * item.quantity) }}</span>
                         </div>
                     </div>
                 </div>
@@ -127,7 +140,8 @@
                 <div class="bg-white shadow-md rounded-lg p-4 sm:p-6 sticky-summary">
                     <h2 class="text-xl font-semibold mb-4">{{ t('checkout.summary') }}</h2>
                     <div class="flex justify-between mb-2">
-                        <span>{{ t('checkout.summary') === t('cart.summary') ? t('cart.subtotal') : t('cart.subtotal') }}</span>
+                        <span>{{ t('checkout.summary') === t('cart.summary') ? t('cart.subtotal') : t('cart.subtotal')
+                        }}</span>
                         <span>{{ formatMoney(subtotal) }}</span>
                     </div>
                     <div class="flex justify-between mb-2">
@@ -135,18 +149,67 @@
                         <span>{{ shippingFee === 0 ? t('checkout.free') : formatMoney(shippingFee) }}</span>
                     </div>
 
+                    <!-- Payment Methods -->
+                    <div class="border-t my-4 pt-4">
+                        <h3 class="font-semibold mb-3">{{ t('checkout.paymentMethod') }}</h3>
+                        <div class="space-y-3">
+                            <label v-for="option in paymentOptions" :key="option.value"
+                                class="flex items-center cursor-pointer p-2 border rounded-lg hover:border-[#24a6bb] transition"
+                                :class="{ 'border-[#24a6bb] bg-cyan-50': paymentMethod === option.value }">
+                                <input type="radio" :value="option.value" v-model="paymentMethod"
+                                    class="w-4 h-4 text-[#24a6bb] focus:ring-[#24a6bb]">
+                                <div class="ml-3 flex items-center gap-2">
+                                    <img v-if="option.logo" :src="option.logo" :alt="option.label" class="h-4">
+                                    <span v-else
+                                        class="text-xs font-semibold px-2 py-1 rounded bg-gray-900 text-white">AFX</span>
+                                    <span class="text-sm font-medium">{{ option.label }}</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div v-if="paymentMethod === 'AfriExchange'"
+                            class="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                            <p class="font-medium">{{ afriExchangeCheckoutTitle }}</p>
+                            <p class="mt-1 text-amber-800">{{ afriExchangeCheckoutBody }}</p>
+                            <div v-if="hasLinkedAfriExchangeAccount"
+                                class="mt-3 rounded-md border border-amber-200 bg-white/80 p-3">
+                                <p class="text-xs font-semibold uppercase tracking-wide text-amber-700">
+                                    {{ t('checkout.afriExchangeLinkedWalletLabel') }}
+                                </p>
+                                <p class="mt-1 break-all font-medium text-amber-950">
+                                    {{ afriExchangeLinkedIdentity }}
+                                </p>
+                                <p class="mt-2 text-xs text-amber-800">
+                                    {{ t('checkout.afriExchangeFundWalletHint') }}
+                                </p>
+                            </div>
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                <button v-if="!hasLinkedAfriExchangeAccount && afriExchangeSignupUrl" type="button"
+                                    @click="openAfriExchangeSignup"
+                                    class="rounded-md bg-gray-900 px-3 py-2 text-xs font-medium text-white hover:bg-gray-800">
+                                    {{ t('checkout.createAfriExchangeAccount') }}
+                                </button>
+                                <button type="button" @click="goToAfriExchangeLinking"
+                                    class="rounded-md border border-amber-300 bg-white px-3 py-2 text-xs font-medium text-amber-900 hover:bg-amber-100">
+                                    {{ hasLinkedAfriExchangeAccount ? t('checkout.updateAfriExchangeLink') :
+                                        t('checkout.linkAfriExchangeAccount') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Coupons -->
                     <div class="border-t my-4 pt-4">
                         <div class="flex justify-between items-center mb-2">
                             <span class="font-medium">{{ t('checkout.coupon') }}</span>
                             <span v-if="cartStore.coupon"
-                                class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">{{ t('checkout.applied') }}</span>
+                                class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">{{
+                                    t('checkout.applied') }}</span>
                         </div>
                         <div v-if="cartStore.coupon" class="bg-green-50 p-2 rounded text-sm">
                             <div class="flex justify-between items-center">
                                 <span class="font-medium text-green-700">{{ cartStore.coupon.code }}</span>
-                                <button @click="removeCoupon"
-                                    class="text-red-500 text-xs hover:underline">{{ t('checkout.remove') }}</button>
+                                <button @click="removeCoupon" class="text-red-500 text-xs hover:underline">{{
+                                    t('checkout.remove') }}</button>
                             </div>
                             <div v-if="discount > 0" class="flex justify-between mt-1 text-green-600">
                                 <span>{{ t('checkout.savings') }}</span>
@@ -183,10 +246,10 @@
                                 {{ t('cart.apply') }}
                             </button>
                         </div>
-                    <div v-if="cluesBucksDiscount > 0" class="flex justify-between mt-2 text-green-600 text-sm">
-                        <span>{{ t('checkout.pointsDiscount') }}</span>
-                        <span>-{{ formatMoney(cluesBucksDiscount) }}</span>
-                    </div>
+                        <div v-if="cluesBucksDiscount > 0" class="flex justify-between mt-2 text-green-600 text-sm">
+                            <span>{{ t('checkout.pointsDiscount') }}</span>
+                            <span>-{{ formatMoney(cluesBucksDiscount) }}</span>
+                        </div>
                     </div>
 
                     <!-- Store Credit -->
@@ -198,9 +261,9 @@
                             </span>
                         </div>
                         <div class="flex items-center justify-between gap-2">
-                            <input v-model="storeCreditToUse" type="number" step="0.01" min="0" :max="storeCreditBalance"
-                                class="w-28 px-2 py-1 border rounded text-sm" :disabled="!storeCreditBalance"
-                                placeholder="0.00" />
+                            <input v-model="storeCreditToUse" type="number" step="0.01" min="0"
+                                :max="storeCreditBalance" class="w-28 px-2 py-1 border rounded text-sm"
+                                :disabled="!storeCreditBalance" placeholder="0.00" />
                             <button @click="applyStoreCredit"
                                 :disabled="!storeCreditToUse || Number(storeCreditToUse) > storeCreditBalance"
                                 class="bg-emerald-600 text-white px-3 py-1 rounded text-sm hover:bg-emerald-700 disabled:opacity-50">
@@ -218,7 +281,8 @@
                         <div class="flex justify-between items-center mb-2">
                             <span class="font-medium">{{ t('checkout.specialOffers') }}</span>
                             <span v-if="hasValidOfferAccess"
-                                class="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full">{{ t('checkout.active') }}</span>
+                                class="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full">{{
+                                    t('checkout.active') }}</span>
                             <button v-else-if="cluesBucksBalance >= 500" @click="handleSpecialOfferRedeem"
                                 class="text-xs text-[#24a6bb] hover:underline">{{ t('checkout.unlock') }}</button>
                         </div>
@@ -235,58 +299,9 @@
                                 <span>-{{ formatMoney(specialOfferDiscount) }}</span>
                             </div>
                         </div>
-                        <p v-else-if="hasValidOfferAccess" class="text-xs text-gray-500">{{ t('checkout.noOffersForCart') }}</p>
+                        <p v-else-if="hasValidOfferAccess" class="text-xs text-gray-500">{{
+                            t('checkout.noOffersForCart') }}</p>
                         <p v-else class="text-xs text-gray-500">{{ t('checkout.unlockExclusiveDeals') }}</p>
-                    </div>
-
-                    <!-- Payment Methods -->
-                    <div class="border-t my-4 pt-4">
-                        <h3 class="font-semibold mb-3">{{ t('checkout.paymentMethod') }}</h3>
-                        <div class="space-y-3">
-                            <label v-for="option in paymentOptions" :key="option.value"
-                                class="flex items-center cursor-pointer p-2 border rounded-lg hover:border-[#24a6bb] transition"
-                                :class="{ 'border-[#24a6bb] bg-cyan-50': paymentMethod === option.value }">
-                                <input type="radio" :value="option.value" v-model="paymentMethod"
-                                    class="w-4 h-4 text-[#24a6bb] focus:ring-[#24a6bb]">
-                                <div class="ml-3 flex items-center gap-2">
-                                    <img v-if="option.logo" :src="option.logo" :alt="option.label" class="h-4">
-                                    <span v-else class="text-xs font-semibold px-2 py-1 rounded bg-gray-900 text-white">AFX</span>
-                                    <span class="text-sm font-medium">{{ option.label }}</span>
-                                </div>
-                            </label>
-                        </div>
-                        <div v-if="paymentMethod === 'AfriExchange'" class="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-                            <p class="font-medium">{{ afriExchangeCheckoutTitle }}</p>
-                            <p class="mt-1 text-amber-800">{{ afriExchangeCheckoutBody }}</p>
-                            <div v-if="hasLinkedAfriExchangeAccount" class="mt-3 rounded-md border border-amber-200 bg-white/80 p-3">
-                                <p class="text-xs font-semibold uppercase tracking-wide text-amber-700">
-                                    {{ t('checkout.afriExchangeLinkedWalletLabel') }}
-                                </p>
-                                <p class="mt-1 break-all font-medium text-amber-950">
-                                    {{ afriExchangeLinkedIdentity }}
-                                </p>
-                                <p class="mt-2 text-xs text-amber-800">
-                                    {{ t('checkout.afriExchangeFundWalletHint') }}
-                                </p>
-                            </div>
-                            <div class="mt-3 flex flex-wrap gap-2">
-                                <button
-                                    v-if="!hasLinkedAfriExchangeAccount && afriExchangeSignupUrl"
-                                    type="button"
-                                    @click="openAfriExchangeSignup"
-                                    class="rounded-md bg-gray-900 px-3 py-2 text-xs font-medium text-white hover:bg-gray-800"
-                                >
-                                    {{ t('checkout.createAfriExchangeAccount') }}
-                                </button>
-                                <button
-                                    type="button"
-                                    @click="goToAfriExchangeLinking"
-                                    class="rounded-md border border-amber-300 bg-white px-3 py-2 text-xs font-medium text-amber-900 hover:bg-amber-100"
-                                >
-                                    {{ hasLinkedAfriExchangeAccount ? t('checkout.updateAfriExchangeLink') : t('checkout.linkAfriExchangeAccount') }}
-                                </button>
-                            </div>
-                        </div>
                     </div>
 
                     <div class="border-t pt-4 flex justify-between font-bold text-lg mb-4">
@@ -297,7 +312,7 @@
                         <span class="text-gray-600">US $ {{ ((Math.floor(total * exchangeRate) + Math.ceil((total *
                             exchangeRate % 1) * 100) / 100) * 1.01).toFixed(2) }}</span>
                     </div>
-                    <button @click="placeOrder" :disabled="isPlaceOrderDisabled"
+                    <button ref="placeOrderButtonRef" @click="confirmPlaceOrder" :disabled="isPlaceOrderDisabled"
                         class="w-full bg-[#24a6bb] text-white py-3 rounded-lg hover:bg-[#1c8a9e] transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium shadow-md">
                         {{ isProcessingPayment ? t('checkout.processing') : t('checkout.placeOrder') }}
                     </button>
@@ -312,7 +327,8 @@
                             <img :src="paymentImages.paystackLogo" alt="Paystack" class="h-5">
                             <img :src="paymentImages.opayLogo" alt="OPay" class="h-5">
                         </div>
-                        <div v-else class="flex items-center gap-2 rounded-full bg-gray-900 px-3 py-1.5 text-xs font-semibold tracking-wide text-white">
+                        <div v-else
+                            class="flex items-center gap-2 rounded-full bg-gray-900 px-3 py-1.5 text-xs font-semibold tracking-wide text-white">
                             <span>AFX</span>
                             <span>AfriExchange</span>
                         </div>
@@ -320,6 +336,77 @@
                 </div>
             </div>
         </div>
+
+        <!-- Floating Bouncing Scroll Indicator -->
+        <div class="fixed bottom-6 left-0 right-0 z-40 pointer-events-none">
+            <div class="container mx-auto px-4">
+                <div class="flex flex-col lg:flex-row gap-8">
+                    <!-- Left column: Empty space on desktop to clear the main content area -->
+                    <div class="hidden lg:block lg:w-2/3"></div>
+                    <!-- Right column: Scroll indicator is centered here under the sticky summary card -->
+                    <div class="w-full lg:w-1/3 flex justify-center">
+                        <transition name="fade">
+                            <div v-if="showScrollIndicator" @click="scrollToCheckoutButton"
+                                class="bg-[#24a6bb]/90 hover:bg-[#24a6bb] text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 cursor-pointer transition-all duration-300 backdrop-blur-sm pointer-events-auto animate-bounce-down">
+                                <span class="text-xs font-semibold uppercase tracking-wider">{{
+                                    t('checkout.scrollToOrder') || 'Scroll to Place Order' }}</span>
+                                <ChevronDown class="w-4 h-4" />
+                            </div>
+                        </transition>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Confirmation Modal -->
+        <transition name="fade">
+            <div v-if="showConfirmModal"
+                class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-3 sm:px-4">
+                <div
+                    class="bg-white rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md p-6 sm:p-8 transform transition-all">
+                    <div class="text-center mb-6">
+                        <div class="w-12 h-12 rounded-full bg-cyan-50 flex items-center justify-center mx-auto mb-4">
+                            <CreditCard class="w-6 h-6 text-[#24a6bb]" />
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">{{ t('checkout.confirmOrderTitle')
+                            || 'Confirm Your Order' }}</h3>
+                        <p class="text-sm text-gray-500">
+                            {{ t('checkout.confirmOrderBody') ||
+                                'Please review your order details before completing the checkout.' }}
+                        </p>
+                    </div>
+
+                    <!-- Order Summary Review -->
+                    <div class="space-y-4 border-t border-b py-4 mb-6 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">{{ t('checkout.paymentMethod') }}</span>
+                            <span class="font-semibold text-gray-900">{{ paymentMethod }}</span>
+                        </div>
+                        <div class="flex justify-between" v-if="selectedAddress">
+                            <span class="text-gray-500">{{ t('checkout.shipTo') || 'Ship To' }}</span>
+                            <span class="font-semibold text-gray-900 text-right truncate max-w-[200px]">
+                                {{ selectedAddress.street }}, {{ selectedAddress.city }}
+                            </span>
+                        </div>
+                        <div class="flex justify-between text-base font-bold text-gray-900 border-t pt-3 mt-3">
+                            <span>{{ t('cart.total') }}</span>
+                            <span>{{ formatMoney(total) }}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row justify-end gap-3">
+                        <button @click="showConfirmModal = false"
+                            class="px-4 py-2.5 text-gray-700 font-medium hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors order-2 sm:order-1 text-sm">
+                            {{ t('common.cancel') || 'Cancel' }}
+                        </button>
+                        <button @click="executePlaceOrder"
+                            class="px-5 py-2.5 bg-[#24a6bb] hover:bg-[#1c8a9e] text-white rounded-lg font-medium shadow-md transition-colors order-1 sm:order-2 text-sm flex items-center justify-center gap-2">
+                            <span>{{ t('checkout.confirmAndPay') || 'Confirm & Pay' }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </transition>
     </div>
 </template>
 
@@ -336,7 +423,7 @@ import { usePaymentStore } from '../store/paymentStore.js';
 import { useUserStore } from '../store/user.js';
 import { useCountryStore } from '../store/countryStore.js';
 import { toast } from 'vue-sonner';
-import { CreditCard, Minus, Plus } from 'lucide-vue-next';
+import { CreditCard, Minus, Plus, ChevronDown } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import apiClient from '../api/axios';
 import axios from 'axios';
@@ -385,6 +472,9 @@ const promoCode = ref('');
 
 const paymentStore = usePaymentStore();
 const isProcessingPayment = ref(false);
+const showScrollIndicator = ref(false);
+const showConfirmModal = ref(false);
+const placeOrderButtonRef = ref(null);
 
 const checkoutCurrency = computed(() => countryStore.currency || 'NGN');
 const checkoutCurrencySymbol = computed(() => getCurrencySymbol(checkoutCurrency.value));
@@ -671,6 +761,10 @@ watch(() => checkoutItems.value, (newItems) => {
     }
 }, { deep: true });
 
+watch(() => selectedAddress.value, (newAddress) => {
+    updateShippingFee();
+}, { deep: true });
+
 watch(() => stats.value?.currentBalance, (newBalance) => {
     if (newBalance < appliedCluesBucks.value) {
         appliedCluesBucks.value = 0;
@@ -705,6 +799,17 @@ onMounted(async () => {
                 toast.error(t('checkout.paymentNotInitialized'));
             }
         }
+
+        // Setup IntersectionObserver for floating scroll indicator
+        if ('IntersectionObserver' in window && placeOrderButtonRef.value) {
+            const observer = new IntersectionObserver((entries) => {
+                const entry = entries[0];
+                showScrollIndicator.value = !entry.isIntersecting;
+            }, {
+                threshold: 0.1
+            });
+            observer.observe(placeOrderButtonRef.value);
+        }
     } catch (error) {
         console.error('Error initializing checkout:', error);
         toast.error(t('checkout.failedInitializeCheckout'));
@@ -733,19 +838,46 @@ const openAfriExchangeSignup = () => {
 const updateShippingFee = () => {
     if (!productStore || !productStore.shippingRules) {
         console.warn('Shipping rules not available, using default fee');
-        shippingFee.value = 5.99;
+        shippingFee.value = countryStore.currency === 'XOF' ? countryStore.convertPrice(999.99, 'NGN') : 999.99;
         return;
     }
-    let fee = productStore.shippingRules.baseShippingFee || 0;
-    if (subtotal.value > (productStore.shippingRules.freeShippingThreshold || 0)) {
+
+    // Resolve base cost, matching shipping zone regions if selectedAddress matches
+    let fee = productStore.shippingRules.baseCost ?? productStore.shippingRules.baseShippingFee ?? 0;
+
+    if (selectedAddress.value && productStore.shippingRules.zones?.length) {
+        const state = selectedAddress.value.state?.toLowerCase().trim();
+        const country = selectedAddress.value.country?.toLowerCase().trim();
+
+        const matchingZone = productStore.shippingRules.zones.find(zone => {
+            if (!zone.regions) return false;
+            const regionsList = zone.regions.split(',').map(r => r.toLowerCase().trim());
+            return regionsList.includes(state) || regionsList.includes(country);
+        });
+
+        if (matchingZone) {
+            fee = matchingZone.rate;
+        }
+    }
+
+    const freeShippingThreshold = countryStore.convertPrice(
+        productStore.shippingRules.freeThreshold ?? productStore.shippingRules.freeShippingThreshold ?? 0,
+        'NGN'
+    );
+
+    if (subtotal.value > freeShippingThreshold) {
         fee = 0;
     } else if (checkoutItems.value) {
         checkoutItems.value.forEach(item => {
             if (item && item.product) {
+                // Safely handle category fees if present in custom shippingRules (fallback compatibility)
                 const categoryFee = (productStore.shippingRules.categoryFees && item.product.category)
-                    ? (productStore.shippingRules.categoryFees.get(item.product.category.toString()) || 0)
+                    ? (typeof productStore.shippingRules.categoryFees.get === 'function'
+                        ? (productStore.shippingRules.categoryFees.get(item.product.category.toString()) || 0)
+                        : (productStore.shippingRules.categoryFees[item.product.category.toString()] || 0))
                     : 0;
                 fee += categoryFee;
+
                 const weightFee = ((item.product.unit && item.product.unit.value) || 0)
                     * item.quantity
                     * (productStore.shippingRules.perWeightUnitFee || 0);
@@ -761,7 +893,7 @@ const updateShippingFee = () => {
             }
         }
     }
-    shippingFee.value = Number(fee.toFixed(2));
+    shippingFee.value = Number(countryStore.convertPrice(fee, 'NGN').toFixed(2));
 };
 
 const getCheckoutItemKey = (item) => `${item.product?._id || 'unknown'}-${item.variant?._id || 'default'}`;
@@ -837,12 +969,15 @@ const removeCoupon = async () => {
 
 const getCheckoutItemUnitPrice = (item) => {
     const variantPrice = Number(item?.variant?.price);
+    let price = 0;
     if (Number.isFinite(variantPrice) && variantPrice > 0) {
-        return variantPrice;
+        price = variantPrice;
+    } else {
+        const productPrice = Number(item?.product?.price);
+        price = Number.isFinite(productPrice) && productPrice > 0 ? productPrice : 0;
     }
-
-    const productPrice = Number(item?.product?.price);
-    return Number.isFinite(productPrice) && productPrice > 0 ? productPrice : 0;
+    const baseCurrency = item.product?.currency || 'NGN';
+    return countryStore.convertPrice(price, baseCurrency);
 };
 
 const prepareItemsForPayload = (items, totalDiscount, subtotalAmount) => {
@@ -909,7 +1044,7 @@ const applyStoreCredit = () => {
     toast.success(t('checkout.appliedStoreCredit', { amount: appliedStoreCredit.value.toFixed(2) }));
 };
 
-const updateTotal = () => {};
+const updateTotal = () => { };
 
 const buildPurchasedCartItems = (items) => items.map((item) => ({
     productId: item.product?._id,
@@ -920,6 +1055,38 @@ const buildPurchasedCartItems = (items) => items.map((item) => ({
 const isAfriExchangeInsufficientBalanceError = (error) => {
     const message = error?.response?.data?.message || error?.message || '';
     return message.toLowerCase().includes('insufficient buyer ct balance');
+};
+
+const scrollToCheckoutButton = () => {
+    if (placeOrderButtonRef.value) {
+        placeOrderButtonRef.value.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+};
+
+const confirmPlaceOrder = () => {
+    // Initial validations before showing modal
+    if (!selectedAddress.value || !validateAddress(selectedAddress.value) || !checkoutItems.value?.length) {
+        if (!selectedAddress.value) {
+            toast.error(t('checkout.selectShippingAddress'));
+        } else if (!validateAddress(selectedAddress.value)) {
+            // validateAddress shows toast
+        } else if (!checkoutItems.value?.length) {
+            toast.error(t('checkout.noSelectedItems'));
+        }
+        return;
+    }
+
+    if (paymentMethod.value === 'AfriExchange' && !hasLinkedAfriExchangeAccount.value) {
+        toast.error(t('checkout.afriExchangeSetupRequiredToast'));
+        return;
+    }
+
+    showConfirmModal.value = true;
+};
+
+const executePlaceOrder = async () => {
+    showConfirmModal.value = false;
+    await placeOrder();
 };
 
 const placeOrder = async () => {
@@ -955,19 +1122,31 @@ const placeOrder = async () => {
         const totalDiscount = couponDiscount + cluesBucksDiscount + offerDiscount + storeCreditAmount;
         const amountAfterDiscount = Math.max(0, subtotalAmount - totalDiscount);
         const preparedItems = prepareItemsForPayload(checkoutItems.value, totalDiscount, subtotalAmount);
-        const totalVendorAmount = preparedItems.reduce((sum, item) => sum + item.vendorAmount, 0);
+        
+        const sellerUser = checkoutItems.value[0]?.product?.user;
+        const fulfillmentType = (sellerUser && typeof sellerUser === 'object' && sellerUser.sellerProfile?.fulfillmentType) || 'platform';
+        
+        const totalVendorAmountRaw = preparedItems.reduce((sum, item) => sum + item.vendorAmount, 0);
         const basePlatformFee = preparedItems.reduce((sum, item) => sum + item.platformFee, 0);
-        const totalPlatformFee = basePlatformFee + currentShippingFee;
+        
+        const totalVendorAmount = fulfillmentType === 'vendor' ? totalVendorAmountRaw + currentShippingFee : totalVendorAmountRaw;
+        const totalPlatformFee = fulfillmentType === 'vendor' ? basePlatformFee : basePlatformFee + currentShippingFee;
         const totalWithShipping = amountAfterDiscount + currentShippingFee;
         const pointsEarned = Math.floor(amountAfterDiscount / 100);
         const purchasedCartItems = buildPurchasedCartItems(checkoutItems.value);
         const purchasedEntireCart = checkoutItems.value.length === cartStore.items.length;
+
+        const settings = getCachedPlatformRuntimeSettings();
+        const rates = settings.currencyConversion || { ngnToXofRate: 0.42, xofToNgnRate: 2.38 };
+        const orderExchangeRate = checkoutCurrency.value === 'XOF' ? (rates.ngnToXofRate || 0.42) : (rates.xofToNgnRate || 2.38);
 
         // Create order
         const orderData = {
             address: selectedAddress.value,
             paymentMethod: paymentMethod.value,
             currency: checkoutCurrency.value,
+            exchangeRate: orderExchangeRate,
+            originalCurrency: checkoutCurrency.value === 'XOF' ? 'NGN' : 'XOF',
             seller: checkoutItems.value[0].product.user,
             products: preparedItems,
             subtotal: subtotalAmount,
@@ -995,6 +1174,10 @@ const placeOrder = async () => {
                 checkoutRail: paymentMethod.value,
                 specialOfferId: bestSpecialOffer.value?._id || null,
                 specialOfferDiscount: offerDiscount,
+                exchangeRatesUsed: {
+                    ngnToXofRate: rates.ngnToXofRate || 0.42,
+                    xofToNgnRate: rates.xofToNgnRate || 2.38,
+                }
             },
         };
 
@@ -1421,5 +1604,33 @@ const editAddress = () => {
 
 .input-field:focus {
     border-color: #24a6bb;
+}
+
+/* Scroll indicator bounce down keyframes */
+@keyframes bounce-down {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(6px);
+    }
+}
+
+.animate-bounce-down {
+    animation: bounce-down 1.5s infinite ease-in-out;
+}
+
+/* Fade transition */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
 }
 </style>

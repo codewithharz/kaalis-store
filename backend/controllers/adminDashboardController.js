@@ -75,7 +75,7 @@ const buildAdminPaymentQuery = async (params = {}) => {
   }
 
   if (paymentMethod) {
-    query.paymentMethod = paymentMethod;
+    query.paymentMethod = { $regex: new RegExp(`^${paymentMethod}$`, "i") };
   }
 
   if (currency) {
@@ -419,6 +419,125 @@ exports.getDashboardStats = async (req, res) => {
       ),
     };
 
+    // Calculate popular products (top 5 by sales count from Orders)
+    const popularProductsRaw = await Order.aggregate([
+      { $match: { status: { $ne: "Cancelled" } } },
+      { $unwind: "$products" },
+      {
+        $group: {
+          _id: "$products.product",
+          sales: { $sum: "$products.quantity" },
+        },
+      },
+      { $sort: { sales: -1 } },
+      { $limit: 5 },
+    ]);
+
+    const popularProducts = [];
+    for (const item of popularProductsRaw) {
+      if (item._id) {
+        const prod = await Product.findById(item._id)
+          .populate("category", "name")
+          .lean();
+        if (prod) {
+          popularProducts.push({
+            id: prod._id,
+            name: prod.name,
+            category: prod.category?.name || "Uncategorized",
+            price: prod.price || 0,
+            sales: item.sales,
+            image: prod.images?.[0] || prod.image || "/placeholder.jpg",
+          });
+        }
+      }
+    }
+
+    if (popularProducts.length === 0) {
+      const recentProds = await Product.find()
+        .populate("category", "name")
+        .limit(5)
+        .lean();
+      recentProds.forEach(prod => {
+        popularProducts.push({
+          id: prod._id,
+          name: prod.name,
+          category: prod.category?.name || "Uncategorized",
+          price: prod.price || 0,
+          sales: 0,
+          image: prod.images?.[0] || prod.image || "/placeholder.jpg",
+        });
+      });
+    }
+
+    // Generate recent activities from actual recent orders and user registrations
+    const [recentOrders, recentUsers] = await Promise.all([
+      Order.find()
+        .populate("user", "firstName lastName email")
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .lean(),
+      User.find()
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .lean(),
+    ]);
+
+    const activities = [];
+
+    recentOrders.forEach((order) => {
+      const customerName = order.user
+        ? `${order.user.firstName || ""} ${order.user.lastName || ""}`.trim() || order.user.email
+        : "Guest";
+      activities.push({
+        id: `order-${order._id}`,
+        message: `Order received: #${order.orderId} from ${customerName}`,
+        time: order.createdAt,
+        timestamp: new Date(order.createdAt).getTime(),
+        icon: "ShoppingCart",
+        bgColor: "bg-blue-100",
+        iconColor: "text-blue-600",
+      });
+    });
+
+    recentUsers.forEach((user) => {
+      const name = `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email || "New User";
+      activities.push({
+        id: `user-${user._id}`,
+        message: `User registered: ${name}`,
+        time: user.createdAt,
+        timestamp: new Date(user.createdAt).getTime(),
+        icon: "Users",
+        bgColor: "bg-green-100",
+        iconColor: "text-green-600",
+      });
+    });
+
+    // Sort combined activities by timestamp desc
+    activities.sort((a, b) => b.timestamp - a.timestamp);
+    const recentActivities = activities.slice(0, 5).map((act) => {
+      const diff = Date.now() - act.timestamp;
+      let timeStr = new Date(act.time).toLocaleDateString();
+      const minutes = Math.floor(diff / 60000);
+      if (minutes < 1) {
+        timeStr = "just now";
+      } else if (minutes < 60) {
+        timeStr = `${minutes} min ago`;
+      } else {
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) {
+          timeStr = `${hours} hours ago`;
+        }
+      }
+      return {
+        id: act.id,
+        message: act.message,
+        time: timeStr,
+        icon: act.icon,
+        bgColor: act.bgColor,
+        iconColor: act.iconColor,
+      };
+    });
+
     res.json({
       stats: {
         totalUsers: currentUsers,
@@ -451,6 +570,8 @@ exports.getDashboardStats = async (req, res) => {
       orderStats: formatStats(orderStats),
       productStats: formatStats(productStats),
       revenueStats: formatStats(revenueStats),
+      recentActivities,
+      popularProducts,
     });
   } catch (error) {
     console.error("Error in getDashboardStats:", error);
@@ -793,11 +914,56 @@ exports.getAdminCategories = async (req, res) => {
 
     let query = {};
     if (search) {
-      query.name = { $regex: search, $options: "i" };
+      // Search in English name OR French translation name
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { "translations.fr.name": { $regex: search, $options: "i" } },
+      ];
     }
 
-    const categories = await Category.find(query).sort({ name: 1 });
-    res.json(categories);
+    const categories = await Category.find(query).sort({ level: 1, name: 1 }).lean();
+
+    // Load all categories for ancestors mapping to ensure correct cumulative counts
+    const allCategories = await Category.find({}, "_id parent ancestors").lean();
+
+    // Aggregate product counts per category in a single query
+    const productCounts = await Product.aggregate([
+      { $group: { _id: "$category", count: { $sum: 1 } } },
+    ]);
+
+    // Build category map of _id to ancestors list
+    const categoryMap = {};
+    allCategories.forEach((c) => {
+      categoryMap[String(c._id)] = {
+        ancestors: (c.ancestors || []).map((anc) => String(anc)),
+      };
+    });
+
+    const countMap = {};
+    productCounts.forEach((p) => {
+      if (!p._id) return;
+      const catIdStr = String(p._id);
+      const count = p.count;
+
+      // Add to direct category count
+      countMap[catIdStr] = (countMap[catIdStr] || 0) + count;
+
+      // Add to all ancestor category counts
+      const catInfo = categoryMap[catIdStr];
+      if (catInfo && catInfo.ancestors) {
+        catInfo.ancestors.forEach((ancId) => {
+          countMap[ancId] = (countMap[ancId] || 0) + count;
+        });
+      }
+    });
+
+    // Attach productsCount to each returned category
+    const categoriesWithCount = categories.map((cat) => ({
+      ...cat,
+      productsCount: countMap[String(cat._id)] || 0,
+    }));
+
+    res.json(categoriesWithCount);
   } catch (error) {
     res
       .status(500)
@@ -805,15 +971,122 @@ exports.getAdminCategories = async (req, res) => {
   }
 };
 
+
+exports.createCategory = async (req, res) => {
+  try {
+    const { name, description, parent, active, translations } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: "Category name is required" });
+    }
+
+    // Build the slug
+    let slugParts = [name.toLowerCase().replace(/[^a-z0-9]+/g, "-")];
+    let level = 0;
+    let ancestors = [];
+
+    if (parent) {
+      const parentCategory = await Category.findById(parent).lean();
+      if (!parentCategory) {
+        return res.status(404).json({ message: "Parent category not found" });
+      }
+      // Resolve full ancestor chain
+      ancestors = [...(parentCategory.ancestors || []), parentCategory._id];
+      level = ancestors.length;
+      // Prepend parent's slug prefix
+      slugParts = [parentCategory.slug, ...slugParts];
+    }
+
+    const slug = slugParts.join("-");
+
+    // Check for duplicate slug
+    const existing = await Category.findOne({ slug });
+    if (existing) {
+      return res.status(409).json({ message: "A category with this name already exists under the same parent" });
+    }
+
+    const newCategory = new Category({
+      name: name.trim(),
+      slug,
+      description: description || "",
+      parent: parent || null,
+      level,
+      ancestors,
+      active: active !== undefined ? active : true,
+      translations: translations || {},
+    });
+
+    await newCategory.save();
+    res.status(201).json(newCategory);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error creating category", error: error.message });
+  }
+};
+
 exports.updateCategory = async (req, res) => {
   const { id } = req.params;
   try {
-    const category = await Category.findByIdAndUpdate(id, req.body, {
-      new: true,
-    });
-    if (!category) {
+    const { name, description, parent, active, translations } = req.body;
+
+    const existing = await Category.findById(id);
+    if (!existing) {
       return res.status(404).json({ message: "Category not found" });
     }
+
+    // Build update payload
+    const update = {};
+    if (name !== undefined) update.name = name.trim();
+    if (description !== undefined) update.description = description;
+    if (active !== undefined) update.active = active;
+
+    // Merge translations deeply so partial updates don't wipe existing translations
+    if (translations) {
+      update.translations = {
+        ...(existing.translations ? existing.translations.toObject ? existing.translations.toObject() : existing.translations : {}),
+        ...translations,
+      };
+      if (translations.fr) {
+        update["translations.fr"] = {
+          ...(existing.translations?.fr || {}),
+          ...translations.fr,
+        };
+        delete update.translations;
+        update["translations.fr"] = {
+          ...(existing.translations?.fr || {}),
+          ...translations.fr,
+        };
+      }
+    }
+
+    // Re-generate slug and hierarchy if name or parent changed
+    const nameChanged = name !== undefined && name.trim() !== existing.name;
+    const parentChanged = parent !== undefined && String(parent || "") !== String(existing.parent || "");
+
+    if (nameChanged || parentChanged) {
+      const resolvedParent = parent !== undefined ? parent : existing.parent;
+      let slugParts = [(name || existing.name).toLowerCase().replace(/[^a-z0-9]+/g, "-")];
+      let level = 0;
+      let ancestors = [];
+
+      if (resolvedParent) {
+        const parentCategory = await Category.findById(resolvedParent).lean();
+        if (!parentCategory) {
+          return res.status(404).json({ message: "Parent category not found" });
+        }
+        ancestors = [...(parentCategory.ancestors || []), parentCategory._id];
+        level = ancestors.length;
+        slugParts = [parentCategory.slug, ...slugParts];
+      }
+
+      update.slug = slugParts.join("-");
+      update.level = level;
+      update.ancestors = ancestors;
+      update.parent = resolvedParent || null;
+    }
+
+    const category = await Category.findByIdAndUpdate(id, { $set: update }, { new: true });
     res.json(category);
   } catch (error) {
     res
@@ -830,6 +1103,14 @@ exports.deleteCategory = async (req, res) => {
     if (productsCount > 0) {
       return res.status(400).json({
         message: "Cannot delete category with associated products",
+      });
+    }
+
+    // Check if it has subcategories
+    const subcategoriesCount = await Category.countDocuments({ parent: id });
+    if (subcategoriesCount > 0) {
+      return res.status(400).json({
+        message: "Cannot delete category that has subcategories. Delete subcategories first.",
       });
     }
 
@@ -983,6 +1264,121 @@ exports.getAdminOrders = async (req, res) => {
       };
     });
 
+    // ─── Calculate Stats Summary for all orders matching the query ───
+    const summary = {
+      totalRevenue: { NGN: 0, XOF: 0 },
+      totalPlatformFees: { NGN: 0, XOF: 0 },
+      totalShippingFees: { NGN: 0, XOF: 0 },
+      averageOrderValue: { NGN: 0, XOF: 0 },
+      todayOrders: 0,
+      processingToday: 0,
+      paymentMethodStats: [],
+      periods: {
+        today: { orders: 0, revenue: { NGN: 0, XOF: 0 } },
+        week: { orders: 0, revenue: { NGN: 0, XOF: 0 } },
+        month: { orders: 0, revenue: { NGN: 0, XOF: 0 } },
+        year: { orders: 0, revenue: { NGN: 0, XOF: 0 } },
+      },
+    };
+
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - 7);
+
+    const monthStart = new Date(now);
+    monthStart.setMonth(now.getMonth() - 1);
+
+    const yearStart = new Date(now);
+    yearStart.setFullYear(now.getFullYear() - 1);
+
+    const [financialStats, processingTodayCount, paymentStats] = await Promise.all([
+      Order.aggregate([
+        { $match: query },
+        {
+          $group: {
+            _id: { $toUpper: { $ifNull: ["$currency", "NGN"] } },
+            // Today
+            todayRevenue: {
+              $sum: { $cond: [{ $gte: ["$createdAt", todayStart] }, "$totalAmount", 0] },
+            },
+            todayCount: {
+              $sum: { $cond: [{ $gte: ["$createdAt", todayStart] }, 1, 0] },
+            },
+            // Week
+            weekRevenue: {
+              $sum: { $cond: [{ $gte: ["$createdAt", weekStart] }, "$totalAmount", 0] },
+            },
+            weekCount: {
+              $sum: { $cond: [{ $gte: ["$createdAt", weekStart] }, 1, 0] },
+            },
+            // Month
+            monthRevenue: {
+              $sum: { $cond: [{ $gte: ["$createdAt", monthStart] }, "$totalAmount", 0] },
+            },
+            monthCount: {
+              $sum: { $cond: [{ $gte: ["$createdAt", monthStart] }, 1, 0] },
+            },
+            // Year
+            yearRevenue: {
+              $sum: { $cond: [{ $gte: ["$createdAt", yearStart] }, "$totalAmount", 0] },
+            },
+            yearCount: {
+              $sum: { $cond: [{ $gte: ["$createdAt", yearStart] }, 1, 0] },
+            },
+            // Global
+            totalRevenue: { $sum: "$totalAmount" },
+            totalPlatformFees: { $sum: "$platformFee" },
+            totalShippingFees: { $sum: "$shippingFee" },
+            avgOrderValue: { $avg: "$totalAmount" },
+          },
+        },
+      ]),
+      Order.countDocuments({
+        ...query,
+        status: "Processing",
+        createdAt: { $gte: todayStart, $lte: todayEnd },
+      }),
+      Order.aggregate([
+        { $match: query },
+        {
+          $group: {
+            _id: "$paymentMethod",
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+    ]);
+
+    financialStats.forEach((stat) => {
+      const cur = stat._id === "XOF" ? "XOF" : "NGN";
+      summary.totalRevenue[cur] = stat.totalRevenue || 0;
+      summary.totalPlatformFees[cur] = stat.totalPlatformFees || 0;
+      summary.totalShippingFees[cur] = stat.totalShippingFees || 0;
+      summary.averageOrderValue[cur] = stat.avgOrderValue || 0;
+
+      // Period stats counts
+      summary.periods.today.orders += stat.todayCount || 0;
+      summary.periods.week.orders += stat.weekCount || 0;
+      summary.periods.month.orders += stat.monthCount || 0;
+      summary.periods.year.orders += stat.yearCount || 0;
+
+      // Period stats revenues
+      summary.periods.today.revenue[cur] = stat.todayRevenue || 0;
+      summary.periods.week.revenue[cur] = stat.weekRevenue || 0;
+      summary.periods.month.revenue[cur] = stat.monthRevenue || 0;
+      summary.periods.year.revenue[cur] = stat.yearRevenue || 0;
+    });
+
+    summary.todayOrders = summary.periods.today.orders;
+    summary.processingToday = processingTodayCount;
+    summary.paymentMethodStats = paymentStats.map((item) => ({
+      name: item._id || "Unknown",
+      value: item.count || 0,
+    }));
+
     res.status(200).json({
       orders: ordersWithAdminContext,
       pagination: {
@@ -991,6 +1387,7 @@ exports.getAdminOrders = async (req, res) => {
         limit: parseInt(limit),
         pages: Math.ceil(total / limit),
       },
+      summary,
     });
   } catch (error) {
     console.error("Error fetching orders:", error);
@@ -1438,6 +1835,9 @@ exports.getAdminPayments = async (req, res) => {
     const skip = (page - 1) * limit;
     const query = await buildAdminPaymentQuery(req.query);
 
+    const statsQuery = { ...query };
+    delete statsQuery.status;
+
     const [payments, total, summary] = await Promise.all([
       Payment.find(query)
         .populate("orderId", "orderId totalAmount currency status paymentMethod")
@@ -1447,7 +1847,7 @@ exports.getAdminPayments = async (req, res) => {
         .limit(limit),
       Payment.countDocuments(query),
       Payment.aggregate([
-        { $match: query },
+        { $match: statsQuery },
         {
           $group: {
             _id: {
@@ -1822,7 +2222,7 @@ exports.getAdminSellers = async (req, res) => {
       )
       .populate("products")
       .select(
-        "storeName storeDescription verificationStatus isVerified isVacationMode totalSales averageRating products reviews createdAt updatedAt statusNote"
+        "storeName storeDescription verificationStatus isVerified isVacationMode totalSales averageRating products reviews createdAt updatedAt statusNote fulfillmentType selfShippingApproved selfShippingRequestStatus"
       );
 
     if (useComputedSort) {
@@ -2046,9 +2446,16 @@ exports.getSellerById = async (req, res) => {
           0
         ) / portfolioRatingsCount
       : 0;
+  
+    const Address = require("../models/addressModels");
+    const address = await Address.findOne({ user: seller.user?._id, isDispatch: true }) || 
+                    await Address.findOne({ user: seller.user?._id, isDefault: true }) ||
+                    await Address.findOne({ user: seller.user?._id });
+    const phone = address ? address.phone : null;
 
     res.json({
       ...seller.toObject(),
+      phone,
       orderCount,
       cancelledOrders,
       cancellationRate: orderCount ? (cancelledOrders / orderCount) * 100 : 0,
@@ -2070,7 +2477,7 @@ exports.getSellerById = async (req, res) => {
 exports.updateSellerStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { verificationStatus, isVerified, note } = req.body;
+    const { verificationStatus, isVerified, note, fulfillmentType, selfShippingApproved, selfShippingRequestStatus } = req.body;
 
     const seller = await Seller.findById(id);
     if (!seller) {
@@ -2080,8 +2487,29 @@ exports.updateSellerStatus = async (req, res) => {
     // Update the verification status and verified flag
     seller.verificationStatus = verificationStatus;
     seller.isVerified = isVerified;
+    if (fulfillmentType) {
+      seller.fulfillmentType = fulfillmentType;
+    }
     if (note) {
       seller.statusNote = note;
+    }
+
+    // Sync self-shipping states
+    if (selfShippingApproved !== undefined) {
+      seller.selfShippingApproved = selfShippingApproved;
+      if (selfShippingApproved) {
+        seller.selfShippingRequestStatus = "approved";
+      } else {
+        seller.selfShippingRequestStatus = seller.selfShippingRequestStatus === "approved" ? "none" : seller.selfShippingRequestStatus;
+      }
+    }
+    if (selfShippingRequestStatus !== undefined) {
+      seller.selfShippingRequestStatus = selfShippingRequestStatus;
+      if (selfShippingRequestStatus === "approved") {
+        seller.selfShippingApproved = true;
+      } else {
+        seller.selfShippingApproved = false;
+      }
     }
 
     await seller.save();
@@ -2419,7 +2847,7 @@ exports.getAdminPayouts = async (req, res) => {
     }
 
     if (paymentMethod) {
-      query.paymentMethod = paymentMethod;
+      query.paymentMethod = { $regex: new RegExp(`^${paymentMethod}$`, "i") };
     }
 
     if (currency) {
@@ -2458,6 +2886,10 @@ exports.getAdminPayouts = async (req, res) => {
       ];
     }
 
+    const statsQuery = { ...query };
+    delete statsQuery.status;
+    delete statsQuery.scheduledDate;
+
     const [payouts, total, summary] = await Promise.all([
       VendorPayout.find(query)
         .populate("vendorId", "firstName lastName email afriExchange paymentMethod currency")
@@ -2467,6 +2899,7 @@ exports.getAdminPayouts = async (req, res) => {
         .limit(limit),
       VendorPayout.countDocuments(query),
       VendorPayout.aggregate([
+        { $match: statsQuery },
         {
           $group: {
             _id: {

@@ -347,26 +347,23 @@
                                     {{ t('userSellerDashboardPage.quickActions.downloadReports') }}
                                 </button>
 
-                                <!-- Additional Action Buttons -->
-                                <div class="pt-3 sm:pt-4 border-t border-gray-200 space-y-2 sm:space-y-3">
-                                    <button @click="productCategories"
-                                        class="w-full flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-slate-500 to-gray-600 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-slate-600 hover:to-gray-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-medium text-sm sm:text-base">
-                                        <FolderTree class="w-4 h-4 sm:w-5 sm:h-5" />
-                                        {{ t('userSellerDashboardPage.quickActions.productCategories') }}
-                                    </button>
+                                <button @click="goToAcademy"
+                                    class="w-full flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-rose-500 to-pink-600 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-rose-600 hover:to-pink-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-medium text-sm sm:text-base">
+                                    <GraduationCap class="w-4 h-4 sm:w-5 sm:h-5" />
+                                    {{ t('footer.brutholAcademy') }}
+                                </button>
 
-                                    <button @click="customerManagement"
-                                        class="w-full flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-pink-500 to-rose-600 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-pink-600 hover:to-rose-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-medium text-sm sm:text-base">
-                                        <Users class="w-4 h-4 sm:w-5 sm:h-5" />
-                                        {{ t('userSellerDashboardPage.quickActions.customerManagement') }}
-                                    </button>
+                                <button @click="goToBasicConcepts"
+                                    class="w-full flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-amber-600 hover:to-orange-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-medium text-sm sm:text-base">
+                                    <BookOpen class="w-4 h-4 sm:w-5 sm:h-5" />
+                                    {{ t('footer.basicConcepts') }}
+                                </button>
 
-                                    <button @click="supportTickets"
-                                        class="w-full flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-teal-600 hover:to-cyan-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-medium text-sm sm:text-base">
-                                        <TicketCheck class="w-4 h-4 sm:w-5 sm:h-5" />
-                                        {{ t('userSellerDashboardPage.quickActions.supportTickets') }}
-                                    </button>
-                                </div>
+                                <button @click="goToHelpSupport"
+                                    class="w-full flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-teal-500 to-emerald-600 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-teal-600 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-medium text-sm sm:text-base">
+                                    <HelpCircle class="w-4 h-4 sm:w-5 sm:h-5" />
+                                    {{ t('account.helpSupport') }}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -398,17 +395,32 @@
         <!-- Update Inventory Modal -->
         <div v-show="showUpdateInventory"
             class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
-            <div class="bg-white rounded-xl sm:rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl">
-                <div class="p-3 sm:p-4 border-b bg-gradient-to-r from-green-500 to-emerald-600 text-white">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-base sm:text-lg font-bold">{{ t('userSellerDashboardPage.modals.updateInventory') }}</h3>
+            <div class="bg-white border border-slate-100 rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl transition-all">
+                <!-- Modal Header with Brand Gradient -->
+                <div class="relative text-white overflow-hidden bg-gradient-to-r from-[#ff934b] to-[#ff5e62] p-4 sm:p-5">
+                    <!-- Decorative blur element inside header -->
+                    <div class="absolute inset-0">
+                        <div class="absolute inset-0 bg-black/5"></div>
+                        <div class="absolute -left-16 -top-16 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
+                        <div class="absolute -right-16 -bottom-16 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
+                    </div>
+                    <div class="relative flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-white/15 rounded-xl text-white backdrop-blur-sm shadow-sm">
+                                <Boxes class="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 class="text-lg sm:text-xl font-bold tracking-tight">{{ t('userSellerDashboardPage.modals.updateInventory') }}</h3>
+                                <p class="text-xs text-white/85 font-medium mt-0.5">{{ t('userSellerDashboardPage.modals.updateInventorySubtitle', 'Manage store items pricing, stock levels, and variants') }}</p>
+                            </div>
+                        </div>
                         <button @click="showUpdateInventory = false"
-                            class="p-1.5 sm:p-2 hover:bg-white/20 rounded-lg transition-colors">
+                            class="p-2 hover:bg-white/20 active:scale-95 rounded-xl transition-all duration-200">
                             <XIcon class="h-5 w-5 sm:h-6 sm:w-6" />
                         </button>
                     </div>
                 </div>
-                <div class="overflow-auto max-h-[calc(90vh-60px)] sm:max-h-[calc(90vh-80px)]">
+                <div class="overflow-auto max-h-[calc(90vh-80px)] sm:max-h-[calc(90vh-96px)] bg-slate-50/40">
                     <UpdateInventory @close="showUpdateInventory = false" />
                 </div>
             </div>
@@ -417,17 +429,32 @@
         <!-- Manage Promotions Modal -->
         <div v-if="showManagePromotions"
             class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
-            <div class="bg-white rounded-xl sm:rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl">
-                <div class="p-3 sm:p-4 border-b bg-gradient-to-r from-yellow-500 to-orange-600 text-white">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-base sm:text-lg font-bold">{{ t('userSellerDashboardPage.modals.managePromotions') }}</h3>
+            <div class="bg-white border border-slate-100 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl transition-all">
+                <!-- Modal Header with Brand Gradient -->
+                <div class="relative text-white overflow-hidden bg-gradient-to-r from-[#ff934b] to-[#ff5e62] p-4 sm:p-5">
+                    <!-- Decorative blur element inside header -->
+                    <div class="absolute inset-0">
+                        <div class="absolute inset-0 bg-black/5"></div>
+                        <div class="absolute -left-16 -top-16 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
+                        <div class="absolute -right-16 -bottom-16 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
+                    </div>
+                    <div class="relative flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-white/15 rounded-xl text-white backdrop-blur-sm shadow-sm">
+                                <TicketCheck class="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 class="text-lg sm:text-xl font-bold tracking-tight">{{ t('userSellerDashboardPage.modals.managePromotions') }}</h3>
+                                <p class="text-xs text-white/85 font-medium mt-0.5">{{ t('userSellerDashboardPage.modals.managePromotionsSubtitle', 'Create and manage custom discount coupons for your store') }}</p>
+                            </div>
+                        </div>
                         <button @click="showManagePromotions = false"
-                            class="p-1.5 sm:p-2 hover:bg-white/20 rounded-lg transition-colors">
+                            class="p-2 hover:bg-white/20 active:scale-95 rounded-xl transition-all duration-200">
                             <XIcon class="h-5 w-5 sm:h-6 sm:w-6" />
                         </button>
                     </div>
                 </div>
-                <div class="overflow-auto max-h-[calc(90vh-60px)] sm:max-h-[calc(90vh-80px)]">
+                <div class="overflow-auto max-h-[calc(90vh-80px)] sm:max-h-[calc(90vh-96px)] bg-slate-50/40">
                     <ManagePromotions @close="showManagePromotions = false" />
                 </div>
             </div>
@@ -456,7 +483,7 @@ import { useSellerStore } from '../store/sellerStore';
 import { useAddressStore } from '../store/addressStore';
 import {
     UserRound, CirclePlus, Boxes, Tag, AlignEndHorizontal, Banknote, ShoppingCart, Package, Users, XIcon, TrendingUp, Award, Clock,
-    ShoppingBag, Download, FolderTree, Settings, TicketCheck
+    ShoppingBag, Download, Settings, TicketCheck, GraduationCap, BookOpen, HelpCircle
 } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import Chart from 'chart.js/auto';
@@ -469,7 +496,7 @@ export default {
         ManagePromotions,
         EditSellerProfile,
         UserRound, CirclePlus, Boxes, Tag, AlignEndHorizontal, Banknote, ShoppingCart, Package, Users, XIcon, TrendingUp, Award, Clock,
-        ShoppingBag, Download, FolderTree, Settings, TicketCheck
+        ShoppingBag, Download, Settings, TicketCheck, GraduationCap, BookOpen, HelpCircle
     },
     setup() {
         const { t, locale } = useI18n();
@@ -876,10 +903,10 @@ export default {
         const viewAnalytics = () => router.push({ name: 'SellerAnalytics' });
         const manageOrders = () => router.push({ name: 'SellerManageOrders' });
         const downloadReports = () => router.push({ name: 'DownloadReports' });
-        const productCategories = () => router.push({ name: 'ProductCategories' });
-        const customerManagement = () => router.push({ name: 'CustomerManagement' });
         const settings = () => router.push({ name: 'Settings' });
-        const supportTickets = () => router.push({ name: 'SupportTickets' });
+        const goToAcademy = () => router.push('/page/seller/bruthol-academy');
+        const goToBasicConcepts = () => router.push('/page/seller/basic-concepts');
+        const goToHelpSupport = () => router.push('/account/help-and-support');
 
         const getDefaultAvatar = (userId, style = 'identicon') => {
             return `https://api.dicebear.com/6.x/${style}/svg?seed=${userId}`;
@@ -933,10 +960,10 @@ export default {
             viewAnalytics,
             manageOrders,
             downloadReports,
-            productCategories,
-            customerManagement,
             settings,
-            supportTickets,
+            goToAcademy,
+            goToBasicConcepts,
+            goToHelpSupport,
             becomeSeller,
             navigateToBecomeSeller,
             revenueOverview,

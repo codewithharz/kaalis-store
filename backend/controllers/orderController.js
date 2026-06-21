@@ -30,6 +30,8 @@ const createOrder = async (req, res) => {
       cluesBucks,
       storeCredit,
       currency = "NGN",
+      exchangeRate = 1,
+      originalCurrency,
       metadata = {},
     } = req.body;
     const userId = req.user._id;
@@ -140,6 +142,11 @@ const createOrder = async (req, res) => {
       throw new Error("Final total mismatch");
     }
 
+    // Fetch seller fulfillment type
+    const User = require("../models/userModels");
+    const sellerUser = await User.findById(seller).populate("sellerProfile");
+    const fulfillmentType = sellerUser?.sellerProfile?.fulfillmentType || "platform";
+
     // Validate fee split
     if (Math.abs(vendorAmount + platformFee - total) > 0.01) {
       // Calculate the base platform fee (8% of subtotal)
@@ -147,8 +154,11 @@ const createOrder = async (req, res) => {
         (sum, item) => sum + item.platformFee,
         0
       );
-      // Expected platform fee is base fee plus shipping
-      const expectedPlatformFee = basePlatformFee + shippingFee;
+      // Expected platform fee varies by fulfillment type
+      const expectedPlatformFee =
+        fulfillmentType === "vendor"
+          ? basePlatformFee
+          : basePlatformFee + shippingFee;
 
       console.log("Fee split mismatch:", {
         vendorAmount,
@@ -195,6 +205,8 @@ const createOrder = async (req, res) => {
       address,
       paymentMethod,
       currency,
+      exchangeRate,
+      originalCurrency,
       metadata,
       appliedCoupon,
       discount: couponDiscountValue,
@@ -230,11 +242,24 @@ const createOrder = async (req, res) => {
     // Reserve inventory when the order is created.
     // Cart clearing is handled only after confirmed payment success.
     await Promise.all(
-      products.map((item) =>
-        Product.findByIdAndUpdate(item.product, {
-          $inc: { quantity: -item.quantity },
-        })
-      )
+      products.map(async (item) => {
+        const variantId = item.variant?._id;
+        if (variantId) {
+          return Product.findOneAndUpdate(
+            { _id: item.product, "variants._id": variantId },
+            {
+              $inc: {
+                "variants.$.stock": -item.quantity,
+                stock: -item.quantity
+              }
+            }
+          );
+        } else {
+          return Product.findByIdAndUpdate(item.product, {
+            $inc: { stock: -item.quantity },
+          });
+        }
+      })
     );
 
     res
@@ -251,7 +276,6 @@ const createOrder = async (req, res) => {
 // Get order by ID (modified to check if the requester is the seller)
 const getOrderById = async (req, res) => {
   const { orderId } = req.params;
-  const { status, transactionId } = req.body;
 
   try {
     const order = await Order.findById(orderId)
@@ -261,8 +285,8 @@ const getOrderById = async (req, res) => {
         select: "name images price description brand",
       })
       .populate("user", "username email")
-      .populate("seller", "name email");
-    // .lean(); //Removed .lean() since we need to modify and save the document
+      .populate("seller", "name email")
+      .lean();
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
@@ -286,21 +310,12 @@ const getOrderById = async (req, res) => {
     ) {
       return res
         .status(403)
-        .json({ message: "Not authorized to update this order" });
+        .json({ message: "Not authorized to access this order" });
     }
-
-    // Update order status and transaction ID if provided
-    order.status = status;
-    if (transactionId) {
-      order.transactionId = transactionId;
-    }
-
-    const updatedOrder = await order.save();
 
     res.status(200).json({
       status: true,
-      message: "Order status updated",
-      order: updatedOrder,
+      order,
     });
   } catch (error) {
     console.error("Error fetching order:", error);
@@ -700,11 +715,24 @@ const cancelOrder = async (req, res) => {
       if (!targetOrder?.products?.length) return;
 
       await Promise.all(
-        targetOrder.products.map((item) =>
-          Product.findByIdAndUpdate(item.product, {
-            $inc: { quantity: item.quantity },
-          })
-        )
+        targetOrder.products.map(async (item) => {
+          const variantId = item.variant?._id;
+          if (variantId) {
+            return Product.findOneAndUpdate(
+              { _id: item.product, "variants._id": variantId },
+              {
+                $inc: {
+                  "variants.$.stock": item.quantity,
+                  stock: item.quantity
+                }
+              }
+            );
+          } else {
+            return Product.findByIdAndUpdate(item.product, {
+              $inc: { stock: item.quantity },
+            });
+          }
+        })
       );
     };
 

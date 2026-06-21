@@ -21,6 +21,10 @@ const DEFAULT_PLATFORM_SETTINGS = {
     timezone: "WAT",
     maintenanceMode: false,
   },
+  currencyConversion: {
+    ngnToXofRate: 0.42,
+    xofToNgnRate: 2.38,
+  },
   payment: {
     checkoutPlatformFeePercent: 8,
   },
@@ -108,6 +112,10 @@ const sanitizeForPersistence = (payload = {}) => ({
     timezone: payload.general?.timezone || "WAT",
     maintenanceMode: Boolean(payload.general?.maintenanceMode),
   },
+  currencyConversion: {
+    ngnToXofRate: Number(payload.currencyConversion?.ngnToXofRate ?? 0.42),
+    xofToNgnRate: Number(payload.currencyConversion?.xofToNgnRate ?? 2.38),
+  },
   payment: {
     checkoutPlatformFeePercent: Number(
       payload.payment?.checkoutPlatformFeePercent ?? 8
@@ -152,10 +160,10 @@ const sanitizeForPersistence = (payload = {}) => ({
     freeThreshold: Number(payload.shipping?.freeThreshold ?? 100),
     zones: Array.isArray(payload.shipping?.zones)
       ? payload.shipping.zones.map((zone) => ({
-          name: zone?.name?.trim?.() || "",
-          regions: zone?.regions?.trim?.() || "",
-          rate: Number(zone?.rate ?? 0),
-        }))
+        name: zone?.name?.trim?.() || "",
+        regions: zone?.regions?.trim?.() || "",
+        rate: Number(zone?.rate ?? 0),
+      }))
       : [],
   },
   afriExchange: {
@@ -167,8 +175,8 @@ const sanitizeForPersistence = (payload = {}) => ({
     defaultToken: payload.afriExchange?.defaultToken || "CT",
     allowedTokens: Array.isArray(payload.afriExchange?.allowedTokens)
       ? payload.afriExchange.allowedTokens
-          .map((value) => String(value || "").trim().toUpperCase())
-          .filter(Boolean)
+        .map((value) => String(value || "").trim().toUpperCase())
+        .filter(Boolean)
       : ["CT"],
     rails: {
       afriExchangeEnabled:

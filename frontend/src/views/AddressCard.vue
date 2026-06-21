@@ -1,8 +1,8 @@
 <template>
     <div
         class="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 hover:border-indigo-500 p-6 relative group">
-        <!-- Type Badge -->
-        <div class="absolute -top-3 left-4">
+        <!-- Badges -->
+        <div class="absolute -top-3 left-4 flex flex-wrap gap-2">
             <span :class="[
                 'px-3 py-1 text-xs font-medium rounded-full capitalize flex items-center gap-1.5',
                 address.place === 'home' ? 'bg-indigo-100 text-indigo-800' :
@@ -14,7 +14,11 @@
                         address.place === 'office' ? 'bg-emerald-500' :
                             'bg-amber-500'
                 ]"></span>
-                {{ address.place }}
+                {{ address.place || 'Other' }}
+            </span>
+            <span v-if="address.isDispatch" class="px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                {{ t('addressCard.dispatchAddress') }}
             </span>
         </div>
 

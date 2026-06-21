@@ -132,7 +132,7 @@ export default {
     name: 'SellerReviews',
     components: { ArrowLeft, Star },
     setup() {
-        const { t } = useI18n();
+        const { t, locale } = useI18n();
         const route = useRoute();
         const router = useRouter();
         const sellerStore = useSellerStore();
@@ -177,7 +177,8 @@ export default {
         };
 
         const formatDate = (dateString) => {
-            return new Date(dateString).toLocaleDateString('en-US', {
+            const activeLocale = locale.value === 'fr' ? 'fr-FR' : 'en-US';
+            return new Date(dateString).toLocaleDateString(activeLocale, {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'

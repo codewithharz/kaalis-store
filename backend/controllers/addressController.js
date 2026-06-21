@@ -16,6 +16,14 @@ const addAddress = async (req, res) => {
     const address = new Address({ ...req.body, user: req.user._id });
     await address.save();
 
+    // If this address is set as dispatch, reset other addresses for this user
+    if (address.isDispatch) {
+      await Address.updateMany(
+        { user: req.user._id, _id: { $ne: address._id } },
+        { isDispatch: false }
+      );
+    }
+
     // Respond with the newly created address
     res.status(201).json(address);
   } catch (error) {
@@ -45,6 +53,14 @@ const updateAddress = async (req, res) => {
       req.body,
       { new: true }
     );
+
+    if (address && address.isDispatch) {
+      await Address.updateMany(
+        { user: address.user, _id: { $ne: address._id } },
+        { isDispatch: false }
+      );
+    }
+
     res.json(address);
   } catch (error) {
     res.status(400).json({ message: error.message });

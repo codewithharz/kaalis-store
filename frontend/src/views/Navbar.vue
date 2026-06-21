@@ -23,15 +23,19 @@
                     </button>
                 </div>
                 <div class="flex space-x-2 md:space-x-4">
-                    <a href="#" class="hover:text-gray-700 text-[#374141]">{{ t('navbar.myDiscount') }}</a>
-                    <span class="hidden sm:inline">|</span>
-                    <a href="#" class="hover:text-gray-700 text-[#374141]">{{ t('navbar.coupons') }}</a>
-                    <span class="hidden sm:inline">|</span>
-                    <router-link to="/become-seller" class="hover:text-gray-700 text-[#374141] cursor-pointer">
-                        {{ t('navbar.sellOnBruthol') }}
+                    <router-link :to="isLoggedIn ? '/account/clues-bucks' : '/login'" class="hover:text-gray-700 text-[#374141] cursor-pointer">
+                        {{ t('navbar.myDiscount') }}
                     </router-link>
                     <span class="hidden sm:inline">|</span>
-                    <router-link to="/page/help/live-help" class="hover:text-gray-700 text-[#374141] cursor-pointer">
+                    <router-link :to="isLoggedIn ? '/account/clues-bucks' : '/page/campaigns'" class="hover:text-gray-700 text-[#374141] cursor-pointer">
+                        {{ t('navbar.coupons') }}
+                    </router-link>
+                    <span class="hidden sm:inline">|</span>
+                    <router-link :to="isSeller ? { name: 'UserSellerDashboard' } : '/become-seller'" class="hover:text-gray-700 text-[#374141] cursor-pointer">
+                        {{ isSeller ? t('userSellerDashboardPage.header.title') : t('navbar.sellOnBruthol') }}
+                    </router-link>
+                    <span class="hidden sm:inline">|</span>
+                    <router-link :to="isLoggedIn ? '/account/help-and-support' : '/page/help/help-and-support'" class="hover:text-gray-700 text-[#374141] cursor-pointer">
                         {{ t('navbar.helpSupport') }}
                     </router-link>
                 </div>
@@ -307,14 +311,14 @@
                         <h3 class="font-semibold text-base mb-3 text-gray-900">{{ t('navbar.quickLinks') }}</h3>
                         <ul class="space-y-1">
                             <li>
-                                <router-link to="/become-seller" @click="closeMenu"
+                                <router-link :to="isSeller ? { name: 'UserSellerDashboard' } : '/become-seller'" @click="closeMenu"
                                     class="flex items-center text-gray-700 hover:text-[#24a6bb] hover:bg-gray-50 py-2.5 px-3 rounded-lg transition-all duration-200">
                                     <Store class="w-5 h-5 mr-3" />
-                                    <span class="text-sm">{{ t('navbar.sellOnBruthol') }}</span>
+                                    <span class="text-sm">{{ isSeller ? t('userSellerDashboardPage.header.title') : t('navbar.sellOnBruthol') }}</span>
                                 </router-link>
                             </li>
                             <li>
-                                <router-link to="/page/help/live-help" @click="closeMenu"
+                                <router-link :to="isLoggedIn ? '/account/help-and-support' : '/page/help/help-and-support'" @click="closeMenu"
                                     class="flex items-center text-gray-700 hover:text-[#24a6bb] hover:bg-gray-50 py-2.5 px-3 rounded-lg transition-all duration-200">
                                     <HelpCircle class="w-5 h-5 mr-3" />
                                     <span class="text-sm">{{ t('navbar.helpSupport') }}</span>
@@ -466,6 +470,7 @@ export default {
         const { t, locale } = useI18n();
 
         const isLoggedIn = computed(() => userStore.isLoggedIn);
+        const isSeller = computed(() => userStore.isSeller);
         const user = computed(() => userStore.user || { username: 'Guest' });
         const cartCount = computed(() => cartStore.cartCount);
 
@@ -795,6 +800,7 @@ export default {
 
         return {
             isLoggedIn,
+            isSeller,
             user,
             t,
             logout,

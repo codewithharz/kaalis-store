@@ -316,7 +316,7 @@ export default {
     name: 'PendingReviewCard',
 
     setup() {
-        const { t } = useI18n();
+        const { t, locale } = useI18n();
         const orderStore = useOrderStore();
         const productStore = useProductStore();
         const loading = ref(true);
@@ -406,7 +406,8 @@ export default {
         };
 
         const formatDate = (dateString) => {
-            return new Date(dateString).toLocaleDateString('en-US', {
+            const activeLocale = locale.value === 'fr' ? 'fr-FR' : 'en-US';
+            return new Date(dateString).toLocaleDateString(activeLocale, {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
@@ -414,6 +415,7 @@ export default {
         };
 
         const handleImageError = (event) => {
+            event.target.onerror = null;
             event.target.src = '/placeholder-image.jpg';
         };
 

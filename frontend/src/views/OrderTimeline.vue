@@ -3,7 +3,7 @@
         <div class="relative">
             <!-- Enhanced Timeline Line with Gradient -->
             <div
-                class="absolute left-[20px] sm:left-1/2 h-full w-1 bg-gradient-to-b from-blue-200 via-purple-200 to-gray-200 rounded-full transform -translate-x-1/2 shadow-sm">
+                class="absolute left-[20px] sm:left-1/2 h-full w-1 bg-gradient-to-b from-[#ff934b]/30 via-orange-200 to-slate-200 rounded-full transform -translate-x-1/2 shadow-sm">
             </div>
 
             <!-- Timeline Items with Modern Design -->
@@ -16,14 +16,14 @@
                         <div :class="[
                             'p-4 sm:p-5 rounded-lg sm:rounded-xl shadow-lg border-2 transition-all duration-300 transform hover:scale-105 hover:shadow-xl relative overflow-hidden',
                             isCompleted(status) ? 'bg-gradient-to-br from-green-50 to-emerald-100 border-green-300 shadow-green-100' :
-                                isCurrent(status) ? 'bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-300 shadow-blue-100' :
+                                isCurrent(status) ? 'bg-gradient-to-br from-orange-50 to-amber-100 border-orange-300 shadow-orange-100' :
                                     'bg-gradient-to-br from-gray-50 to-slate-100 border-gray-300 shadow-gray-100'
                         ]">
                             <!-- Status Icon Background -->
                             <div :class="[
                                 'absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 opacity-10 transform rotate-12 translate-x-3 sm:translate-x-4 -translate-y-3 sm:-translate-y-4',
                                 isCompleted(status) ? 'text-green-500' :
-                                    isCurrent(status) ? 'text-blue-500' : 'text-gray-400'
+                                    isCurrent(status) ? 'text-[#ff934b]' : 'text-gray-400'
                             ]">
                                 <Check v-if="isCompleted(status)" class="w-full h-full" />
                                 <Clock v-else-if="isCurrent(status)" class="w-full h-full" />
@@ -36,12 +36,12 @@
                                     <div :class="[
                                         'w-2 h-2 sm:w-3 sm:h-3 rounded-full',
                                         isCompleted(status) ? 'bg-green-500' :
-                                            isCurrent(status) ? 'bg-blue-500 animate-pulse' : 'bg-gray-400'
+                                            isCurrent(status) ? 'bg-[#ff934b] animate-pulse' : 'bg-gray-400'
                                     ]"></div>
                                     <h4 :class="[
                                         'font-bold text-base sm:text-lg',
                                         isCompleted(status) ? 'text-green-800' :
-                                            isCurrent(status) ? 'text-blue-800' : 'text-gray-700'
+                                            isCurrent(status) ? 'text-orange-800' : 'text-gray-700'
                                     ]">{{ status.title }}</h4>
                                 </div>
 
@@ -52,18 +52,18 @@
                                     <div :class="[
                                         'p-1.5 sm:p-2 rounded-md sm:rounded-lg',
                                         isCompleted(status) ? 'bg-green-100' :
-                                            isCurrent(status) ? 'bg-blue-100' : 'bg-gray-100'
+                                            isCurrent(status) ? 'bg-orange-100' : 'bg-gray-100'
                                     ]">
                                         <Clock :class="[
                                             'w-3 h-3 sm:w-4 sm:h-4',
                                             isCompleted(status) ? 'text-green-600' :
-                                                isCurrent(status) ? 'text-blue-600' : 'text-gray-500'
+                                                isCurrent(status) ? 'text-[#ff934b]' : 'text-gray-500'
                                         ]" />
                                     </div>
                                     <span :class="[
                                         'text-xs font-medium px-2 py-1 rounded-full',
                                         isCompleted(status) ? 'bg-green-100 text-green-700' :
-                                            isCurrent(status) ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                                            isCurrent(status) ? 'bg-orange-100 text-[#ff934b]' : 'bg-gray-100 text-gray-600'
                                     ]">
                                         {{ formatDate(status.timestamp) }}
                                     </span>
@@ -77,7 +77,7 @@
                         <div :class="[
                             'w-10 h-10 sm:w-12 sm:h-12 rounded-full border-3 sm:border-4 flex items-center justify-center shadow-lg transition-all duration-300 transform hover:scale-110',
                             isCompleted(status) ? 'bg-gradient-to-br from-green-400 to-emerald-500 border-green-300 shadow-green-200' :
-                                isCurrent(status) ? 'bg-gradient-to-br from-blue-400 to-indigo-500 border-blue-300 shadow-blue-200 animate-pulse' :
+                                isCurrent(status) ? 'bg-gradient-to-br from-[#ff934b] to-[#ff5e62] border-orange-300 shadow-orange-200 animate-pulse' :
                                     'bg-gradient-to-br from-gray-300 to-slate-400 border-gray-200 shadow-gray-200'
                         ]">
                             <Check v-if="isCompleted(status)" class="w-5 h-5 sm:w-6 sm:h-6 text-white drop-shadow-sm" />
@@ -89,7 +89,7 @@
                         <!-- Connecting Line to Content (Mobile Only) -->
                         <div class="sm:hidden absolute left-10 w-6 sm:w-8 h-0.5 z-10" :class="[
                             isCompleted(status) ? 'bg-gradient-to-r from-green-400 to-green-200' :
-                                isCurrent(status) ? 'bg-gradient-to-r from-blue-400 to-blue-200' :
+                                isCurrent(status) ? 'bg-gradient-to-r from-[#ff934b] to-orange-200' :
                                     'bg-gradient-to-r from-gray-300 to-gray-200'
                         ]"></div>
                     </div>
@@ -139,10 +139,8 @@
 
                         <!-- Progress Bar -->
                         <div class="mt-3 bg-orange-200 rounded-full h-1.5 sm:h-2 overflow-hidden">
-                            <div :class="[
-                                'h-full bg-gradient-to-r from-orange-400 to-amber-500 rounded-full transition-all duration-1000',
-                                getProgressWidth()
-                            ]"></div>
+                            <div class="h-full bg-gradient-to-r from-orange-400 to-amber-500 rounded-full transition-all duration-1000"
+                                :style="{ width: getProgressWidth() }"></div>
                         </div>
 
                         <div class="flex justify-between mt-2 text-xs text-orange-600">
@@ -278,7 +276,7 @@ export default {
             const currentIndex = statusOrder.indexOf(props.order.status);
             const totalSteps = statusOrder.indexOf('Cancelled'); // Exclude cancelled from progress
             const progressPercentage = Math.min((currentIndex + 1) / totalSteps * 100, 100);
-            return `w-[${Math.round(progressPercentage)}%]`;
+            return `${Math.round(progressPercentage)}%`;
         };
 
         const getProgressText = () => {

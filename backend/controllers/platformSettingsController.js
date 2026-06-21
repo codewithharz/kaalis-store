@@ -42,6 +42,10 @@ exports.getPublicRuntimeSettings = async (req, res) => {
         timezone: settings.general.timezone,
         maintenanceMode: settings.general.maintenanceMode,
       },
+      currencyConversion: {
+        ngnToXofRate: settings.currencyConversion?.ngnToXofRate || 0.42,
+        xofToNgnRate: settings.currencyConversion?.xofToNgnRate || 2.38,
+      },
       payment: {
         checkoutPlatformFeePercent: settings.payment.checkoutPlatformFeePercent,
       },

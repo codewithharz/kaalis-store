@@ -73,6 +73,11 @@ const productSchema = new mongoose.Schema(
     seller: { type: mongoose.Schema.Types.ObjectId, ref: "Seller" },
     price: { type: Number, required: true, min: 0 },
     originalPrice: { type: Number, min: 0 },
+    currency: {
+      type: String,
+      enum: ["NGN", "XOF"],
+      default: "NGN",
+    },
     images: [{ type: String, required: true }],
     category: {
       type: mongoose.Schema.Types.ObjectId,

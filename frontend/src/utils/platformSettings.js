@@ -9,6 +9,10 @@ const DEFAULT_SETTINGS = {
     timezone: "WAT",
     maintenanceMode: false,
   },
+  currencyConversion: {
+    ngnToXofRate: 0.42,
+    xofToNgnRate: 2.38,
+  },
   payment: {
     checkoutPlatformFeePercent: 8,
   },
@@ -28,6 +32,10 @@ const normalizeSettings = (data = {}) => ({
   general: {
     ...DEFAULT_SETTINGS.general,
     ...(data.general || {}),
+  },
+  currencyConversion: {
+    ...DEFAULT_SETTINGS.currencyConversion,
+    ...(data.currencyConversion || {}),
   },
   payment: {
     ...DEFAULT_SETTINGS.payment,

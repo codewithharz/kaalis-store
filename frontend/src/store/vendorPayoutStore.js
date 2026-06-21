@@ -21,6 +21,7 @@ export const useVendorPayoutStore = defineStore("vendorPayout", {
       platformFeeAmounts: {},
       orderCounts: {},
       nextPayoutDate: null,
+      nextPayoutStatus: null,
       platformFee: 8, // Default platform fee percentage
     },
     error: null,
@@ -37,6 +38,7 @@ export const useVendorPayoutStore = defineStore("vendorPayout", {
     platformFeeAmounts: (state) => state.stats.platformFeeAmounts,
     orderCounts: (state) => state.stats.orderCounts,
     nextPayoutDate: (state) => state.stats.nextPayoutDate,
+    nextPayoutStatus: (state) => state.stats.nextPayoutStatus,
     platformFee: (state) => state.stats.platformFee,
   },
 
@@ -72,6 +74,7 @@ export const useVendorPayoutStore = defineStore("vendorPayout", {
           platformFeeAmounts: response.data.stats?.platformFeeAmounts || {},
           orderCounts: response.data.stats?.orderCounts || {},
           nextPayoutDate: response.data.stats?.nextPayoutDate || null,
+          nextPayoutStatus: response.data.stats?.nextPayoutStatus || response.data.nextPayoutStatus || null,
           platformFee: response.data.stats?.platformFee || 8,
         };
 
@@ -185,6 +188,7 @@ export const useVendorPayoutStore = defineStore("vendorPayout", {
           platformFeeAmounts: response.data.stats?.platformFeeAmounts || {},
           orderCounts: response.data.stats?.orderCounts || {},
           nextPayoutDate: response.data.nextPayoutDate,
+          nextPayoutStatus: response.data.stats?.nextPayoutStatus || response.data.nextPayoutStatus || null,
           platformFee: response.data.platformFee || 8,
         };
 

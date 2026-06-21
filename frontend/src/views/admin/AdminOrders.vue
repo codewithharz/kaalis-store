@@ -332,7 +332,7 @@
                                 </div>
                             </div>
                             <span :class="[
-                                'inline-flex px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap',
+                                'inline-flex px-2.5 py-1 text-xs font-semibold rounded-full whitespace-nowrap border shadow-sm',
                                 getStatusClass(order.status)
                             ]">
                                 {{ formatStatus(order.status) }}
@@ -415,101 +415,125 @@
             </div>
 
             <div class="hidden md:block max-h-[70vh] overflow-auto">
-                <table class="min-w-[1240px] w-full divide-y divide-gray-200 table-fixed">
-                    <thead class="sticky top-0 z-10 bg-gray-50 shadow-sm">
+                <table class="min-w-[1240px] w-full divide-y divide-slate-100 table-fixed">
+                    <thead class="sticky top-0 z-10 bg-slate-50 shadow-sm border-b border-slate-100">
                         <tr>
-                            <th scope="col" class="w-[16%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
+                            <th scope="col" class="w-[14%] px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                                 {{ t('adminOrders.table.orderId') }}</th>
-                            <th scope="col" class="w-[18%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
+                            <th scope="col" class="w-[20%] px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                                 {{ t('adminOrders.table.customer') }}</th>
-                            <th scope="col" class="w-[13%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th scope="col" class="w-[14%] px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                                 {{ t('adminOrders.table.paymentMethod') }}</th>
-                            <th scope="col" class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th scope="col" class="w-[11%] px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                                 {{ t('adminOrders.table.platformFee') }}</th>
-                            <th scope="col" class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th scope="col" class="w-[11%] px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                                 {{ t('adminOrders.table.vendorAmount') }}</th>
-                            <th scope="col" class="w-[14%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
+                            <th scope="col" class="w-[13%] px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                                 {{ t('adminOrders.table.date') }}</th>
-                            <th scope="col" class="w-[9%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th scope="col" class="w-[10%] px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                                 {{ t('adminOrders.table.total') }}
                             </th>
-                            <th scope="col" class="w-[8%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th scope="col" class="w-[10%] px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                                 {{ t('adminOrders.table.status') }}</th>
-                            <th scope="col" class="w-[12%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
+                            <th scope="col" class="w-[7%] px-6 py-3.5 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider w-20 whitespace-nowrap">
                                 {{ t('adminOrders.table.actions') }}</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody class="bg-white divide-y divide-slate-100">
                         <template v-if="loading">
                             <tr>
-                                <td colspan="9" class="px-6 py-4 text-center">
-                                    <div class="flex justify-center">
-                                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                <td colspan="9" class="px-6 py-12 text-center">
+                                    <div class="flex flex-col items-center justify-center text-slate-400">
+                                        <Loader2 class="h-8 w-8 animate-spin text-[#24a3b5] mb-2" />
+                                        <span class="text-sm font-medium">{{ t('adminPayouts.loading') }}</span>
                                     </div>
                                 </td>
                             </tr>
                         </template>
                         <template v-else>
-                            <tr v-for="order in orders" :key="order._id">
-                                <td class="px-6 py-4 align-top">
-                                    <div class="text-sm font-medium text-gray-900 break-all">
-                                        #{{ order.orderId }}
+                            <tr v-for="order in orders" :key="order._id" class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-6 py-4 align-middle whitespace-nowrap">
+                                    <button @click="viewOrderDetails(order)" 
+                                        class="inline-flex items-center gap-1 text-xs font-semibold text-[#24a3b5] hover:text-[#1d8b9a] hover:underline bg-[#24a3b5]/5 px-2 py-0.5 rounded border border-[#24a3b5]/10">
+                                        <span>#{{ order.orderId }}</span>
+                                        <ExternalLink class="h-3 w-3" />
+                                    </button>
+                                </td>
+                                <td class="px-6 py-4 align-middle whitespace-nowrap">
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600 uppercase border border-slate-200">
+                                            {{ getCustomerInitials(order.user) }}
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-semibold text-slate-800 leading-tight">{{ order.user?.username || t('adminOrders.unknown') }}</p>
+                                            <p class="text-xs text-slate-400 mt-0.5 leading-none break-all">{{ order.user?.email }}</p>
+                                        </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 align-top">
-                                    <div class="text-sm text-gray-900 break-words">
-                                        {{ order.user?.username || t('adminOrders.unknown') }}
-                                    </div>
-                                    <div class="text-sm text-gray-500 break-all">
-                                        {{ order.user?.email }}
-                                    </div>
-                                </td>
-
-
-                                <td class="px-6 py-4 align-top text-sm text-gray-500 break-words">{{ order.paymentMethod }}
-                                </td>
-                                <td class="px-6 py-4 align-top whitespace-nowrap text-sm text-gray-900">{{
-                                    formatCurrency(order.platformFee, order.currency) }}</td>
-                                <td class="px-6 py-4 align-top whitespace-nowrap text-sm text-gray-900">{{
-                                    formatCurrency(order.vendorAmount, order.currency) }}</td>
-
-
-                                <td class="px-6 py-4 align-top text-sm text-gray-500">
-                                    {{ formatDate(order.createdAt) }}
-                                </td>
-                                <td class="px-6 py-4 align-top whitespace-nowrap text-sm text-gray-900">
-                                    {{ formatCurrency(order.totalAmount, order.currency) }}
-                                </td>
-
-                                <td class="px-6 py-4 align-top whitespace-nowrap">
-                                    <span :class="[
-                                        'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
-                                        getStatusClass(order.status)
-                                    ]">
-                                        {{ formatStatus(order.status) }}
+                                <td class="px-6 py-4 align-middle whitespace-nowrap">
+                                    <span class="inline-flex items-center gap-1.5 text-xs text-slate-600 font-medium bg-slate-50 border border-slate-200/50 rounded-lg px-2.5 py-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                        {{ order.paymentMethod }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 align-top">
-                                    <div class="flex flex-wrap gap-x-3 gap-y-2 text-sm font-medium">
-                                    <button @click="viewOrderDetails(order)"
-                                        class="text-blue-600 hover:text-blue-900">
-                                        {{ t('adminOrders.actions.view') }}
-                                    </button>
-                                    <button v-if="order.paymentSummary?.reference"
-                                        @click="goToPayment(order.paymentSummary.reference)"
-                                        class="text-emerald-600 hover:text-emerald-900">
-                                        {{ t('adminOrders.actions.viewPayment') }}
-                                    </button>
-                                    <button v-if="order.payoutSummary?.transferReference || order.payoutSummary?.transactionReference || order.orderId"
-                                        @click="goToPayout(order)"
-                                        class="text-violet-600 hover:text-violet-900">
-                                        {{ t('adminOrders.actions.viewPayout') }}
-                                    </button>
-                                    <button @click="showUpdateStatus(order)"
-                                        class="text-indigo-600 hover:text-indigo-900">
-                                        {{ t('adminOrders.actions.update') }}
-                                    </button>
+                                <td class="px-6 py-4 align-middle whitespace-nowrap text-sm font-semibold text-slate-900">
+                                    <span class="font-mono">{{ formatCurrency(order.platformFee, order.currency) }}</span>
+                                </td>
+                                <td class="px-6 py-4 align-middle whitespace-nowrap text-sm font-semibold text-slate-900">
+                                    <span class="font-mono">{{ formatCurrency(order.vendorAmount, order.currency) }}</span>
+                                </td>
+                                <td class="px-6 py-4 align-middle whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <CalendarDays class="h-4 w-4 text-slate-400 flex-shrink-0" />
+                                        <div>
+                                            <p class="text-sm font-semibold text-slate-800 leading-tight">{{ formatJustDate(order.createdAt) }}</p>
+                                            <p class="text-xs text-slate-400 mt-0.5 leading-none">{{ formatJustTime(order.createdAt) }}</p>
+                                        </div>
                                     </div>
+                                </td>
+                                <td class="px-6 py-4 align-middle whitespace-nowrap text-sm font-semibold text-slate-900">
+                                    <span class="font-mono">{{ formatCurrency(order.totalAmount, order.currency) }}</span>
+                                </td>
+                                <td class="px-6 py-4 align-middle whitespace-nowrap">
+                                    <span :class="getStatusClass(order.status)"
+                                        class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm border">
+                                        <component :is="getStatusIcon(order.status)" class="h-3.5 w-3.5" :class="{ 'animate-spin': order.status === 'Processing' }" />
+                                        <span>{{ formatStatus(order.status) }}</span>
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 align-middle whitespace-nowrap text-center">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger as-child>
+                                            <button class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 focus:outline-none transition">
+                                                <MoreHorizontal class="h-4 w-4" />
+                                            </button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" class="w-48">
+                                            <DropdownMenuLabel class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1.5">Actions</DropdownMenuLabel>
+                                            
+                                            <DropdownMenuItem @click="viewOrderDetails(order)" class="flex items-center gap-2 cursor-pointer py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                                <ExternalLink class="h-4 w-4 text-slate-400" />
+                                                <span>{{ t('adminOrders.actions.view') }}</span>
+                                            </DropdownMenuItem>
+                                            
+                                            <DropdownMenuItem v-if="order.paymentSummary?.reference" @click="goToPayment(order.paymentSummary.reference)" class="flex items-center gap-2 cursor-pointer py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                                <ExternalLink class="h-4 w-4 text-slate-400" />
+                                                <span>{{ t('adminOrders.actions.viewPayment') }}</span>
+                                            </DropdownMenuItem>
+                                            
+                                            <DropdownMenuItem v-if="order.payoutSummary?.transferReference || order.payoutSummary?.transactionReference || order.orderId" @click="goToPayout(order)" class="flex items-center gap-2 cursor-pointer py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                                <ExternalLink class="h-4 w-4 text-slate-400" />
+                                                <span>{{ t('adminOrders.actions.viewPayout') }}</span>
+                                            </DropdownMenuItem>
+                                            
+                                            <DropdownMenuSeparator />
+                                            
+                                            <DropdownMenuItem @click="showUpdateStatus(order)" class="flex items-center gap-2 cursor-pointer py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                                <RefreshCcw class="h-4 w-4 text-slate-400" />
+                                                <span>{{ t('adminOrders.actions.update') }}</span>
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 </td>
                             </tr>
                         </template>
@@ -629,8 +653,20 @@ import {
     CheckCircle,
     CalendarClock,
     CalendarDays,
-    X
+    X,
+    MoreHorizontal,
+    ExternalLink,
+    Loader2,
+    RefreshCcw
 } from 'lucide-vue-next';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+    DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
 import {
     Chart as ChartJS,
     ArcElement,
@@ -680,6 +716,16 @@ export default {
         DialogFooter,
         DialogHeader,
         DialogTitle,
+        DropdownMenu,
+        DropdownMenuContent,
+        DropdownMenuItem,
+        DropdownMenuTrigger,
+        DropdownMenuSeparator,
+        DropdownMenuLabel,
+        MoreHorizontal,
+        ExternalLink,
+        Loader2,
+        RefreshCcw,
     },
 
     setup() {
@@ -706,13 +752,28 @@ export default {
         const totalItems = ref(0);
         const itemsPerPage = ref(10);
 
-        // Filters
         const filters = ref({
             search: '',
             status: '',
             currency: '',
             dateFrom: '',
             dateTo: ''
+        });
+
+        const summaryData = ref({
+            totalRevenue: { NGN: 0, XOF: 0 },
+            totalPlatformFees: { NGN: 0, XOF: 0 },
+            totalShippingFees: { NGN: 0, XOF: 0 },
+            averageOrderValue: { NGN: 0, XOF: 0 },
+            todayOrders: 0,
+            processingToday: 0,
+            paymentMethodStats: [],
+            periods: {
+                today: { orders: 0, revenue: { NGN: 0, XOF: 0 } },
+                week: { orders: 0, revenue: { NGN: 0, XOF: 0 } },
+                month: { orders: 0, revenue: { NGN: 0, XOF: 0 } },
+                year: { orders: 0, revenue: { NGN: 0, XOF: 0 } }
+            }
         });
 
         const todayCalendarDate = new CalendarDate(
@@ -761,117 +822,53 @@ export default {
 
         const calendarFromValue = computed(() => createCalendarDate(filters.value.dateFrom));
         const calendarToValue = computed(() => createCalendarDate(filters.value.dateTo));
-
         const availableStatuses = computed(() => {
-            const currentStatus = selectedOrder.value?.status;
+            const currentStatus = selectedOrder.value?.status?.toLowerCase();
             switch (currentStatus) {
                 case 'pending':
-                    return ['processing', 'cancelled'];
+                    return ['Processing', 'Cancelled'];
                 case 'processing':
-                    return ['shipped', 'cancelled'];
+                    return ['Shipped', 'Cancelled'];
                 case 'shipped':
-                    return ['delivered', 'returned'];
+                    return ['Delivered'];
                 case 'delivered':
-                    return ['returned'];
+                    return [];
                 default:
                     return orderStatuses;
             }
         });
 
-        // const totalRevenue = computed(() => {
-        //     return orders.value?.reduce((sum, order) => sum + order.totalAmount, 0) || 0;
-        // });
-
         const totalRevenue = computed(() => {
-            if (filters.value.status) {
-                // Show filtered revenue when status filter is active
-                return orders.value?.reduce((sum, order) =>
-                    order.status.toLowerCase() === filters.value.status.toLowerCase() ?
-                        sum + order.totalAmount : sum, 0) || 0;
-            }
-            return orders.value?.reduce((sum, order) => sum + order.totalAmount, 0) || 0;
+            const cur = filters.value.currency || 'NGN';
+            return summaryData.value.totalRevenue[cur] || 0;
         });
 
         const totalRevenueFormatted = computed(() =>
-            formatCurrencyTotals(sumAmountsByCurrency(orders.value, (order) => order.totalAmount))
+            formatCurrencyTotals(summaryData.value.totalRevenue)
         );
 
-
-        const paymentMethodStats = computed(() => {
-            const stats = orders.value?.reduce((acc, order) => {
-                acc[order.paymentMethod] = (acc[order.paymentMethod] || 0) + 1;
-                return acc;
-            }, {});
-
-            return Object.entries(stats || {}).map(([name, value]) => ({
-                name,
-                value
-            }));
-        });
-
-        const totalPlatformFees = computed(() => {
-            return orders.value?.reduce((sum, order) => sum + order.platformFee, 0) || 0;
-        });
+        const paymentMethodStats = computed(() => summaryData.value.paymentMethodStats || []);
 
         const totalPlatformFeesFormatted = computed(() =>
-            formatCurrencyTotals(sumAmountsByCurrency(orders.value, (order) => order.platformFee))
+            formatCurrencyTotals(summaryData.value.totalPlatformFees)
         );
-
-        const averageOrderValue = computed(() => {
-            if (!orders.value?.length) return 0;
-            return totalRevenue.value / orders.value.length;
-        });
 
         const totalAverageOrderValue = computed(() =>
-            formatAverageByCurrency(orders.value, (order) => order.totalAmount)
+            formatCurrencyTotals(summaryData.value.averageOrderValue)
         );
-
-        const shippingFees = computed(() => {
-            return orders.value?.reduce((sum, order) => sum + order.shippingFee, 0) || 0;
-        });
 
         const totalShippingFees = computed(() =>
-            formatCurrencyTotals(sumAmountsByCurrency(orders.value, (order) => order.shippingFee || 0))
+            formatCurrencyTotals(summaryData.value.totalShippingFees)
         );
 
-        const todayOrders = computed(() => {
-            const today = new Date().toISOString().split('T')[0];
-            return orders.value.filter(order =>
-                order.createdAt.split('T')[0] === today
-            ).length;
-        });
+        const todayOrders = computed(() => summaryData.value.todayOrders);
 
-        // const processingToday = computed(() => {
-        //     const today = new Date().toISOString().split('T')[0];
-        //     return orders.value.filter(order =>
-        //         order.createdAt.split('T')[0] === today &&
-        //         order.status === 'Processing'
-        //     ).length;
-        // });
-
-        const processingToday = computed(() => {
-            const now = new Date();
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-            return orders.value.filter(order => {
-                // Parse the order date
-                const orderDate = new Date(order.createdAt);
-                const orderDay = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate());
-
-                // Compare dates and check status with proper capitalization
-                return orderDay.getTime() === today.getTime() &&
-                    order.status === 'Processing';
-            }).length;
-        });
+        const processingToday = computed(() => summaryData.value.processingToday);
 
         const paymentMethodChartData = computed(() => {
-            const stats = orders.value?.reduce((acc, order) => {
-                acc[order.paymentMethod] = (acc[order.paymentMethod] || 0) + 1;
-                return acc;
-            }, {});
-
-            const labels = Object.keys(stats || {});
-            const data = Object.values(stats || {});
+            const stats = summaryData.value.paymentMethodStats || [];
+            const labels = stats.map(item => item.name);
+            const data = stats.map(item => item.value);
 
             return {
                 labels,
@@ -889,36 +886,15 @@ export default {
             };
         });
 
-        const getDateRange = () => {
-            const now = new Date();
-            const startDate = new Date();
-
-            switch (selectedPeriod.value) {
-                case 'Week':
-                    startDate.setDate(now.getDate() - 7);
-                    break;
-                case 'Month':
-                    startDate.setMonth(now.getMonth() - 1);
-                    break;
-                case 'Year':
-                    startDate.setFullYear(now.getFullYear() - 1);
-                    break;
-                default:
-                    startDate.setHours(0, 0, 0, 0);
-            }
-            return { startDate, endDate: now };
-        };
-
         const filteredOrders = computed(() => {
-            const { startDate } = getDateRange();
-            return orders.value.filter(order => new Date(order.createdAt) >= startDate).length;
+            const period = selectedPeriod.value.toLowerCase();
+            return summaryData.value.periods?.[period]?.orders || 0;
         });
 
         const filteredRevenue = computed(() => {
-            const { startDate } = getDateRange();
-            const filtered = orders.value
-                .filter(order => new Date(order.createdAt) >= startDate)
-            return formatCurrencyTotals(sumAmountsByCurrency(filtered, (order) => order.totalAmount));
+            const period = selectedPeriod.value.toLowerCase();
+            const rev = summaryData.value.periods?.[period]?.revenue || { NGN: 0, XOF: 0 };
+            return formatCurrencyTotals(rev);
         });
 
         // const viewOrderDetails = async (order) => {
@@ -1026,11 +1002,33 @@ export default {
         // Helper function to format numbers with commas
         const formatCurrency = (amount, currency = 'NGN') => {
             const resolvedCurrency = currency === 'XOF' ? 'XOF' : 'NGN';
-            return new Intl.NumberFormat('en-NG', {
+            let formatted = new Intl.NumberFormat(resolvedCurrency === 'XOF' ? 'fr-FR' : 'en-NG', {
                 style: 'currency',
                 currency: resolvedCurrency,
-                minimumFractionDigits: 2
-            }).format(amount);
+                minimumFractionDigits: resolvedCurrency === 'XOF' ? 0 : 2
+            }).format(amount || 0);
+
+            if (resolvedCurrency === 'XOF') {
+                formatted = formatted.replace(/F[\s\u202F\u00A0]*CFA/g, 'CFA');
+            }
+            return formatted;
+        };
+
+        const getCustomerInitials = (user) => {
+            if (!user) return 'UN';
+            const name = user.username || '';
+            return name.slice(0, 2).toUpperCase() || 'UN';
+        };
+
+        const getStatusIcon = (status) => {
+            const icons = {
+                Pending: Clock,
+                Processing: Loader2,
+                Shipped: TruckIcon,
+                Delivered: CheckCircle,
+                Cancelled: XCircleIcon
+            };
+            return icons[status] || Clock;
         };
 
         const sumAmountsByCurrency = (list, selector) => {
@@ -1091,18 +1089,24 @@ export default {
                 });
 
                 if (result.orders) {
-                    // Update order summary with totals from API
-                    orderSummary.value = {
-                        total: result.pagination.total,
-                        pending: filters.value.status.toLowerCase() === 'pending' ? result.pagination.total : 0,
-                        processing: filters.value.status.toLowerCase() === 'processing' ? result.pagination.total : 0,
-                        shipped: filters.value.status.toLowerCase() === 'shipped' ? result.pagination.total : 0,
-                        delivered: filters.value.status.toLowerCase() === 'delivered' ? result.pagination.total : 0,
-                        cancelled: filters.value.status.toLowerCase() === 'cancelled' ? result.pagination.total : 0
-                    };
-
                     orders.value = result.orders;
                     totalItems.value = result.pagination.total;
+
+                    if (result.summary) {
+                        summaryData.value = result.summary;
+                    }
+
+                    // Update order summary with totals from API
+                    const totalVal = result.pagination.total;
+                    const activeStatus = filters.value.status?.toLowerCase() || '';
+                    orderSummary.value = {
+                        total: totalVal,
+                        pending: activeStatus === 'pending' ? totalVal : 0,
+                        processing: activeStatus === 'processing' ? totalVal : 0,
+                        shipped: activeStatus === 'shipped' ? totalVal : 0,
+                        delivered: activeStatus === 'delivered' ? totalVal : 0,
+                        cancelled: activeStatus === 'cancelled' ? totalVal : 0
+                    };
                 }
             } catch (error) {
                 console.error('Error in fetchOrders:', error);
@@ -1256,19 +1260,36 @@ export default {
             });
         };
 
+        const formatJustDate = (date) => {
+            if (!date) return '';
+            return new Date(date).toLocaleDateString(locale.value === 'fr' ? 'fr-FR' : 'en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        };
+
+        const formatJustTime = (date) => {
+            if (!date) return '';
+            return new Date(date).toLocaleTimeString(locale.value === 'fr' ? 'fr-FR' : 'en-US', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        };
+
         const formatStatus = (status) => {
             return t(`adminOrders.statuses.${status?.toLowerCase?.()}`, status);
         };
 
         const getStatusClass = (status) => {
             const classes = {
-                Pending: 'bg-yellow-100 text-yellow-800',
-                Processing: 'bg-blue-100 text-blue-800',
-                Shipped: 'bg-purple-100 text-purple-800',
-                Delivered: 'bg-green-100 text-green-800',
-                Cancelled: 'bg-red-100 text-red-800'
+                Pending: 'bg-amber-50 text-amber-700 border border-amber-200/50',
+                Processing: 'bg-blue-50 text-blue-700 border border-blue-200/50',
+                Shipped: 'bg-purple-50 text-purple-700 border border-purple-200/50',
+                Delivered: 'bg-emerald-50 text-emerald-700 border border-emerald-200/50',
+                Cancelled: 'bg-rose-50 text-rose-700 border border-rose-200/50'
             };
-            return classes[status] || 'bg-gray-100 text-gray-800';
+            return classes[status] || 'bg-slate-50 text-slate-700 border border-slate-200/50';
         };
 
         const getTimelineIcon = (type) => {
@@ -1348,9 +1369,13 @@ export default {
             prevPage,
             nextPage,
             formatDate,
+            formatJustDate,
+            formatJustTime,
             formatDateFilterLabel,
             formatStatus,
             getStatusClass,
+            getStatusIcon,
+            getCustomerInitials,
             getTimelineIcon,
             getTimelineItemClass,
             fetchOrders,
@@ -1364,6 +1389,7 @@ export default {
             selectedPeriod,
             filteredOrders,
             filteredRevenue,
+            summaryData,
             t
         };
     }

@@ -98,6 +98,14 @@ const orderSchema = new mongoose.Schema(
       enum: ["NGN", "XOF"],
       default: "NGN",
     },
+    exchangeRate: {
+      type: Number,
+      default: 1,
+    },
+    originalCurrency: {
+      type: String,
+      enum: ["NGN", "XOF"],
+    },
     orderId: {
       type: String,
       unique: true,
@@ -124,8 +132,21 @@ orderSchema.pre("validate", async function (next) {
       this.orderId = `${counter.toString(36).padStart(6, "0")}-${timestamp}`;
     }
 
-    // Validate amounts
-    if (this.totalAmount) {
+    // Validate amounts - only run on initial creation or if financials were modified
+    const isFinancialModified = 
+      this.isNew || 
+      this.isModified("products") || 
+      this.isModified("subtotal") || 
+      this.isModified("totalAmount") || 
+      this.isModified("shippingFee") || 
+      this.isModified("vendorAmount") || 
+      this.isModified("platformFee") ||
+      this.isModified("discount") ||
+      this.isModified("discountBreakdown") ||
+      this.isModified("cluesBucks") ||
+      this.isModified("storeCredit");
+
+    if (this.totalAmount && isFinancialModified) {
       // Calculate subtotal from products
       const calculatedSubtotal = this.products.reduce((sum, item) => {
         return sum + item.price * item.quantity;
@@ -162,6 +183,11 @@ orderSchema.pre("validate", async function (next) {
         throw new Error("Total amount mismatch");
       }
 
+      // Fetch seller fulfillment type
+      const User = mongoose.model("User");
+      const sellerUser = await User.findById(this.seller).populate("sellerProfile");
+      const fulfillmentType = sellerUser?.sellerProfile?.fulfillmentType || "platform";
+
       // Validate vendor and platform fee splits
       const vendorAmountTotal = this.products.reduce((sum, item) => {
         return sum + item.vendorAmount;
@@ -172,15 +198,23 @@ orderSchema.pre("validate", async function (next) {
         return sum + item.platformFee;
       }, 0);
 
-      // Add shipping fee to expected platform fee
-      const expectedPlatformFee = platformFeeTotal + (this.shippingFee || 0);
+      // Expected platform and vendor shares vary by fulfillment type
+      const expectedPlatformFee =
+        fulfillmentType === "vendor"
+          ? platformFeeTotal
+          : platformFeeTotal + (this.shippingFee || 0);
+
+      const expectedVendorAmount =
+        fulfillmentType === "vendor"
+          ? vendorAmountTotal + (this.shippingFee || 0)
+          : vendorAmountTotal;
 
       // Verify platform fee
       if (Math.abs(expectedPlatformFee - this.platformFee) > 0.01) {
         throw new Error("Platform fee mismatch");
       }
-      // Verify vendor and platform fee splits
-      if (Math.abs(vendorAmountTotal - this.vendorAmount) > 0.01) {
+      // Verify vendor amount
+      if (Math.abs(expectedVendorAmount - this.vendorAmount) > 0.01) {
         throw new Error("Vendor amount mismatch");
       }
 

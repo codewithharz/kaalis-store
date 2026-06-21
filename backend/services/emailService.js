@@ -348,6 +348,40 @@ const sendAdminTriggeredPasswordResetEmail = async ({
     }),
   });
 
+const sendSupportContactEmail = async ({ to, name, email, subject, message, locale }) => {
+  const emailSubject = `${translate(locale, {
+    en: "New Support Message: ",
+    fr: "Nouveau message d'assistance : ",
+  })}${subject}`;
+
+  const title = translate(locale, {
+    en: "Support Inquiry Received",
+    fr: "Demande d'assistance reçue",
+  });
+
+  const bodyHtml = `
+    <p style="font-size: 16px;">${translate(locale, {
+      en: "A new support message has been submitted through the contact form.",
+      fr: "Un nouveau message d'assistance a été soumis via le formulaire de contact.",
+    })}</p>
+    <div style="background: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0;">
+      <p style="margin: 0; font-size: 14px; color: #495057;"><strong>${translate(locale, { en: "Name:", fr: "Nom :" })}</strong> ${name}</p>
+      <p style="margin: 6px 0 0 0; font-size: 14px; color: #495057;"><strong>${translate(locale, { en: "Email:", fr: "E-mail :" })}</strong> <a href="mailto:${email}">${email}</a></p>
+      <p style="margin: 6px 0 0 0; font-size: 14px; color: #495057;"><strong>${translate(locale, { en: "Subject:", fr: "Sujet :" })}</strong> ${subject}</p>
+    </div>
+    <div style="background: #ffffff; border-left: 4px solid #ff5e62; padding: 15px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin: 20px 0;">
+      <p style="margin: 0 0 8px 0; font-weight: bold; color: #343a40;">${translate(locale, { en: "Message:", fr: "Message :" })}</p>
+      <p style="margin: 0; font-size: 14px; color: #495057; white-space: pre-wrap; line-height: 1.5;">${message}</p>
+    </div>
+  `;
+
+  await sendEmail({
+    to,
+    subject: emailSubject,
+    html: wrapEmail({ title, bodyHtml, locale }),
+  });
+};
+
 module.exports = {
   normalizeLocale,
   sendPasswordResetRequestEmail,
@@ -356,4 +390,6 @@ module.exports = {
   sendAdminPasswordResetEmail,
   sendAdminCreatedEmail,
   sendAdminTriggeredPasswordResetEmail,
+  sendSupportContactEmail,
 };
+

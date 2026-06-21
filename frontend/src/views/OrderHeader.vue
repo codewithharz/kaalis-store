@@ -4,9 +4,9 @@
         <div class="">
             <ul class="flex space-x-10 px-6">
                 <li v-for="item in translatedOrderItems" :key="item.label"
-                    class="border-b-2 border-white hover:border-b-2 hover:border-[#24a3b5]">
+                    class="border-b-2 border-white hover:border-b-2 hover:border-[#ff934b]">
                     <router-link active-class="active-link" :to="item.link"
-                        class="flex items-center space-x-2 text-gray-500 hover:text-[#24a3b5] transition-all duration-300 ease-in-out">
+                        class="flex items-center space-x-2 text-gray-500 hover:text-[#ff934b] transition-all duration-300 ease-in-out">
                         <span class="font-medium text-sm">{{ item.label }}</span>
                     </router-link>
                 </li>
@@ -40,7 +40,7 @@ export default {
 <style scoped>
 .active-link {
     border-bottom-width: 2px;
-    border-color: #24a3b5;
+    border-color: #ff934b;
     padding-bottom: 0.5rem
 }
 </style>

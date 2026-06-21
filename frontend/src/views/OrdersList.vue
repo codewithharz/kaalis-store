@@ -1,7 +1,44 @@
 <template>
     <div class="mx-auto px-2 sm:px-4 lg:px-0">
-        <!-- Analytics Dashboard -->
-        <OrderAnalytics :orders="orders" class="mb-4 sm:mb-6" />
+        <!-- Analytics Dashboard – collapsible -->
+        <div class="mb-4 sm:mb-6">
+            <!-- Toggle Button -->
+            <button
+                @click="analyticsOpen = !analyticsOpen"
+                class="analytics-toggle w-full flex items-center justify-between px-5 py-3.5 bg-white rounded-xl sm:rounded-2xl shadow-md border border-orange-100 hover:shadow-lg hover:border-[#ff934b]/40 transition-all duration-200 group"
+            >
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-gradient-to-br from-[#ff934b] to-[#ff5e62] rounded-lg flex items-center justify-center shadow">
+                        <BarChart2 class="w-4 h-4 text-white" />
+                    </div>
+                    <div class="text-left">
+                        <span class="text-sm sm:text-base font-bold text-gray-900">{{ t('ordersPage.viewAnalytics') }}</span>
+                        <span class="ml-2 text-xs text-gray-400 hidden sm:inline">{{ analyticsOpen ? t('ordersPage.hideCharts') : t('ordersPage.showCharts') }}</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span v-if="!analyticsOpen" class="px-2.5 py-1 bg-orange-50 text-[#ff934b] text-xs font-semibold rounded-full border border-orange-100">
+                        {{ orders.length }} {{ t('ordersPage.ordersLabel') }}
+                    </span>
+                    <div class="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300"
+                         :class="analyticsOpen ? 'bg-[#ff934b] text-white rotate-180' : 'bg-orange-50 text-[#ff934b]'"
+                    >
+                        <ChevronDown class="w-4 h-4 transition-transform duration-300" />
+                    </div>
+                </div>
+            </button>
+
+            <!-- Collapsible Panel -->
+            <transition
+                name="analytics-slide"
+                @enter="onEnter"
+                @leave="onLeave"
+            >
+                <div v-if="analyticsOpen" class="mt-3 overflow-hidden">
+                    <OrderAnalytics :orders="orders" />
+                </div>
+            </transition>
+        </div>
 
         <!-- Enhanced Statistics Cards -->
         <div class="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-5">
@@ -88,7 +125,7 @@
                     <label class="block text-sm font-semibold text-gray-700 mb-2">{{ t('ordersPage.searchOrders') }}</label>
                     <div class="relative">
                         <input v-model="filters.search" type="text" :placeholder="t('ordersPage.searchPlaceholder')"
-                            class="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50 hover:bg-white text-sm sm:text-base" />
+                            class="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 border border-slate-200 rounded-lg sm:rounded-xl focus:outline-none focus:border-[#ff934b] focus:ring-4 focus:ring-[#ff934b]/10 transition-all bg-slate-50/30 hover:bg-white text-sm sm:text-base" />
                         <Search
                             class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2" />
                     </div>
@@ -101,7 +138,7 @@
                         <label class="block text-sm font-semibold text-gray-700 mb-2">{{ t('ordersPage.status') }}</label>
                         <div class="relative">
                             <select v-model="filters.status"
-                                class="appearance-none w-full bg-gray-50 hover:bg-white border-2 border-gray-200 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 pr-8 sm:pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors font-medium text-xs sm:text-sm">
+                                class="appearance-none w-full bg-slate-50/30 hover:bg-white border border-slate-200 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 pr-8 sm:pr-10 focus:outline-none focus:border-[#ff934b] focus:ring-4 focus:ring-[#ff934b]/10 transition-all font-medium text-xs sm:text-sm">
                                 <option value="all">{{ t('ordersPage.allStatuses') }}</option>
                                 <option value="pending">{{ t('ordersPage.pending') }}</option>
                                 <option value="processing">{{ t('ordersPage.processing') }}</option>
@@ -121,7 +158,7 @@
                         <label class="block text-sm font-semibold text-gray-700 mb-2">{{ t('ordersPage.dateRange') }}</label>
                         <div class="relative">
                             <select v-model="filters.dateRange"
-                                class="appearance-none w-full bg-gray-50 hover:bg-white border-2 border-gray-200 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 pr-8 sm:pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors font-medium text-xs sm:text-sm">
+                                class="appearance-none w-full bg-slate-50/30 hover:bg-white border border-slate-200 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 pr-8 sm:pr-10 focus:outline-none focus:border-[#ff934b] focus:ring-4 focus:ring-[#ff934b]/10 transition-all font-medium text-xs sm:text-sm">
                                 <option value="all">{{ t('ordersPage.allTime') }}</option>
                                 <option value="7">{{ t('ordersPage.last7Days') }}</option>
                                 <option value="30">{{ t('ordersPage.last30Days') }}</option>
@@ -142,7 +179,7 @@
                         <div class="flex gap-2">
                             <div class="relative flex-1">
                                 <select v-model="filters.sort"
-                                    class="appearance-none w-full bg-gray-50 hover:bg-white border-2 border-gray-200 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 pr-8 sm:pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors font-medium text-xs sm:text-sm">
+                                    class="appearance-none w-full bg-slate-50/30 hover:bg-white border border-slate-200 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 pr-8 sm:pr-10 focus:outline-none focus:border-[#ff934b] focus:ring-4 focus:ring-[#ff934b]/10 transition-all font-medium text-xs sm:text-sm">
                                     <option value="date-desc">{{ t('ordersPage.newestFirst') }}</option>
                                     <option value="date-asc">{{ t('ordersPage.oldestFirst') }}</option>
                                     <option value="amount-desc">{{ t('ordersPage.amountHighLow') }}</option>
@@ -166,16 +203,16 @@
 
             <!-- Results Summary -->
             <div
-                class="mt-4 sm:mt-6 p-3 sm:p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg sm:rounded-xl border border-gray-200">
+                class="mt-4 sm:mt-6 p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-orange-50/20 rounded-lg sm:rounded-xl border border-slate-200/80">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <span class="text-xs sm:text-sm font-medium text-gray-700">
+                        <div class="w-2 h-2 bg-[#ff934b] rounded-full"></div>
+                        <span class="text-xs sm:text-sm font-medium text-slate-700">
                             {{ t('ordersPage.showingOrders', { shown: paginatedOrders.length, total: filteredOrders.length }) }}
                         </span>
                     </div>
                     <div v-if="filters.search || filters.status !== 'all' || filters.dateRange !== 'all'"
-                        class="px-2 sm:px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium self-start sm:self-auto">
+                        class="px-2 sm:px-3 py-1 bg-[#ff934b]/10 text-[#ff934b] rounded-full text-xs font-bold self-start sm:self-auto">
                         {{ t('ordersPage.filtered') }}
                     </div>
                 </div>
@@ -187,10 +224,10 @@
             class="flex flex-col items-center justify-center py-12 sm:py-16 bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100">
             <div class="relative">
                 <div
-                    class="animate-spin h-10 w-10 sm:h-12 sm:w-12 border-3 border-blue-500 rounded-full border-t-transparent">
+                    class="animate-spin h-10 w-10 sm:h-12 sm:w-12 border-3 border-[#ff934b] rounded-full border-t-transparent">
                 </div>
-            <div
-                class="absolute inset-0 animate-ping h-10 w-10 sm:h-12 sm:w-12 border-2 border-blue-300 rounded-full opacity-75">
+                <div
+                    class="absolute inset-0 animate-ping h-10 w-10 sm:h-12 sm:w-12 border-2 border-[#ff934b]/30 rounded-full opacity-75">
                 </div>
             </div>
             <p class="mt-4 text-base sm:text-lg font-medium text-gray-700">{{ t('ordersPage.loadingOrders') }}</p>
@@ -215,13 +252,13 @@
         </div>
 
         <div v-else-if="!filteredOrders.length"
-            class="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl sm:rounded-2xl p-8 sm:p-12 text-center border-2 border-gray-200">
+            class="bg-gradient-to-br from-slate-50 to-orange-50/10 rounded-xl sm:rounded-2xl p-8 sm:p-12 text-center border border-slate-200">
             <div
-                class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-gray-400 to-slate-500 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-[#ff934b] to-[#ff5e62] rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-md">
                 <ShoppingBag class="w-8 h-8 sm:w-10 sm:h-10 text-white" />
             </div>
-            <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-3">{{ t('ordersPage.noOrdersFound') }}</h3>
-            <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">{{ filters.search || filters.status !== 'all' ||
+            <h3 class="text-lg sm:text-xl font-bold text-slate-800 mb-3">{{ t('ordersPage.noOrdersFound') }}</h3>
+            <p class="text-sm sm:text-base text-slate-600 mb-4 sm:mb-6">{{ filters.search || filters.status !== 'all' ||
                 filters.dateRange !== 'all'
                 ? t('ordersPage.adjustFilters')
                 : t('ordersPage.noOrdersYet') }}</p>
@@ -232,7 +269,7 @@
                     {{ t('ordersPage.clearFilters') }}
                 </button>
                 <button
-                    class="px-4 sm:px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all text-sm sm:text-base">
+                    class="px-4 sm:px-6 py-2 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white rounded-lg active:scale-95 transition-all text-sm sm:text-base shadow-sm">
                     {{ t('ordersPage.startShopping') }}
                 </button>
             </div>
@@ -259,10 +296,10 @@
                     <nav class="flex items-center justify-between sm:justify-center gap-2">
                         <!-- Previous Button -->
                         <button @click="currentPage = Math.max(1, currentPage - 1)" :disabled="currentPage === 1"
-                            class="flex items-center px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl border-2 font-medium transition-all text-xs sm:text-sm"
+                            class="flex items-center px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl border font-medium transition-all text-xs sm:text-sm"
                             :class="currentPage === 1
                                 ? 'text-gray-400 border-gray-200 cursor-not-allowed'
-                                : 'text-gray-700 border-gray-200 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50'">
+                                : 'text-slate-700 border-slate-200 hover:border-[#ff934b] hover:text-[#ff934b] hover:bg-[#ff934b]/5'">
                             <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -278,8 +315,8 @@
                                 <button v-if="page !== '...'" @click="currentPage = page"
                                     class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl font-medium transition-all text-xs sm:text-sm"
                                     :class="page === currentPage
-                                        ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
-                                        : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'">
+                                        ? 'bg-gradient-to-r from-[#ff934b] to-[#ff5e62] text-white shadow-md'
+                                        : 'text-slate-700 hover:bg-[#ff934b]/5 hover:text-[#ff934b]'">
                                     {{ page }}
                                 </button>
                                 <span v-else class="px-1 text-gray-400 text-xs sm:text-sm">...</span>
@@ -289,10 +326,10 @@
                         <!-- Next Button -->
                         <button @click="currentPage = Math.min(totalPages, currentPage + 1)"
                             :disabled="currentPage === totalPages"
-                            class="flex items-center px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl border-2 font-medium transition-all text-xs sm:text-sm"
+                            class="flex items-center px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl border font-medium transition-all text-xs sm:text-sm"
                             :class="currentPage === totalPages
                                 ? 'text-gray-400 border-gray-200 cursor-not-allowed'
-                                : 'text-gray-700 border-gray-200 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50'">
+                                : 'text-slate-700 border-slate-200 hover:border-[#ff934b] hover:text-[#ff934b] hover:bg-[#ff934b]/5'">
                             <span class="hidden sm:inline">{{ t('ordersPage.next') }}</span>
                             <svg class="w-3 h-3 sm:w-4 sm:h-4 ml-1" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
@@ -314,7 +351,7 @@ import { useOrderStore } from '../store/orderStore';
 import ProfileOrderCard from './ProfileOrderCard.vue';
 import OrderAnalytics from './OrderAnalytics.vue';
 
-import { Search, RefreshCw, ShoppingBag, Wallet, Calculator, PackageCheck, ChevronDown } from 'lucide-vue-next';
+import { Search, RefreshCw, ShoppingBag, Wallet, Calculator, PackageCheck, ChevronDown, BarChart2 } from 'lucide-vue-next';
 
 export default {
     name: 'OrdersList',
@@ -327,6 +364,7 @@ export default {
         Calculator,
         PackageCheck,
         ChevronDown,
+        BarChart2,
         OrderAnalytics,
     },
     setup() {
@@ -335,6 +373,29 @@ export default {
         const orders = ref([]);
         const isLoading = ref(true);
         const error = ref(null);
+
+        // Analytics panel toggle (collapsed by default)
+        const analyticsOpen = ref(false);
+
+        // JS-driven height transitions for smooth slide
+        const onEnter = (el) => {
+            el.style.height = '0';
+            el.style.opacity = '0';
+            requestAnimationFrame(() => {
+                el.style.transition = 'height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease';
+                el.style.height = el.scrollHeight + 'px';
+                el.style.opacity = '1';
+            });
+        };
+        const onLeave = (el) => {
+            el.style.height = el.scrollHeight + 'px';
+            el.style.opacity = '1';
+            requestAnimationFrame(() => {
+                el.style.transition = 'height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease';
+                el.style.height = '0';
+                el.style.opacity = '0';
+            });
+        };
 
         // Filters
         const filters = ref({
@@ -549,7 +610,7 @@ export default {
         };
 
         // Watch for filter changes to reset pagination
-        watch([filters], () => {
+        watch(filters, () => {
             currentPage.value = 1;
         }, { deep: true });
 
@@ -571,7 +632,10 @@ export default {
             resetFilters,
             formatAmount,
             getVisiblePages,
-            getVisiblePagesMobile
+            getVisiblePagesMobile,
+            analyticsOpen,
+            onEnter,
+            onLeave
         };
     }
 };

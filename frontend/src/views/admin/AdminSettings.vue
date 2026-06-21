@@ -3,95 +3,113 @@
         <div class="rounded-lg bg-white px-4 py-5 shadow-sm sm:px-6">
             <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-900">{{ t('adminSettings.title') }}</h2>
+                    <div class="flex items-center gap-3">
+                        <h2 class="text-2xl font-bold text-slate-900">{{ t('adminSettings.title') }}</h2>
+                        <span v-if="!isSuperAdmin"
+                            class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-800">
+                            {{ t('adminSettings.readOnly') }}
+                        </span>
+                    </div>
                     <p class="mt-1 max-w-3xl text-sm text-slate-600">
-                        Keep the platform fee, payout schedule, and rail availability aligned with the logic Kaalis is
-                        actually using at runtime.
+                        {{ t('adminSettings.subtitle') }}
                     </p>
                 </div>
-                <button
-                    type="button"
-                    @click="saveSettings"
-                    :disabled="loading || saving"
-                    class="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                    {{ saving ? 'Saving...' : t('adminSettings.saveChanges') }}
+                <button v-if="isSuperAdmin" type="button" @click="saveSettings" :disabled="loading || saving"
+                    class="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
+                    {{ saving ? t('adminSettings.saving') : t('adminSettings.saveChanges') }}
                 </button>
+            </div>
+            <div v-if="!isSuperAdmin" class="mt-4 rounded-md bg-slate-50 p-3 text-xs text-slate-600">
+                {{ t('adminSettings.readOnlyNotice') }}
             </div>
         </div>
 
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Checkout fee</p>
-                <p class="mt-2 text-2xl font-semibold text-slate-900">{{ settings.payment.checkoutPlatformFeePercent }}%</p>
-                <p class="mt-1 text-sm text-slate-500">Used when Kaalis creates order splits at checkout.</p>
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{
+                    t('adminSettings.stats.checkoutFee') }}</p>
+                <p class="mt-2 text-2xl font-semibold text-slate-900">{{ settings.payment.checkoutPlatformFeePercent }}%
+                </p>
+                <p class="mt-1 text-sm text-slate-500">{{ t('adminSettings.stats.checkoutFeeDesc') }}</p>
             </section>
             <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Default vendor share</p>
-                <p class="mt-2 text-2xl font-semibold text-slate-900">{{ settings.payouts.defaultTier.vendorSharePercent }}%</p>
-                <p class="mt-1 text-sm text-slate-500">Standard vendor settlement share for payout batches.</p>
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{
+                    t('adminSettings.stats.defaultVendorShare') }}</p>
+                <p class="mt-2 text-2xl font-semibold text-slate-900">{{ settings.payouts.defaultTier.vendorSharePercent
+                    }}%</p>
+                <p class="mt-1 text-sm text-slate-500">{{ t('adminSettings.stats.defaultVendorShareDesc') }}</p>
             </section>
             <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Premium vendor share</p>
-                <p class="mt-2 text-2xl font-semibold text-slate-900">{{ settings.payouts.premiumTier.vendorSharePercent }}%</p>
-                <p class="mt-1 text-sm text-slate-500">Applied later during premium payout settlement.</p>
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{
+                    t('adminSettings.stats.premiumVendorShare') }}</p>
+                <p class="mt-2 text-2xl font-semibold text-slate-900">{{ settings.payouts.premiumTier.vendorSharePercent
+                    }}%</p>
+                <p class="mt-1 text-sm text-slate-500">{{ t('adminSettings.stats.premiumVendorShareDesc') }}</p>
             </section>
             <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Maintenance mode</p>
-                <p class="mt-2 text-2xl font-semibold text-slate-900">{{ settings.general.maintenanceMode ? 'On' : 'Off' }}</p>
-                <p class="mt-1 text-sm text-slate-500">Public runtime flag from Kaalis platform settings.</p>
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{
+                    t('adminSettings.stats.maintenanceMode') }}</p>
+                <p class="mt-2 text-2xl font-semibold text-slate-900">
+                    {{ settings.general.maintenanceMode ? t('adminSettings.stats.maintenanceOn') :
+                        t('adminSettings.stats.maintenanceOff') }}
+                </p>
+                <p class="mt-1 text-sm text-slate-500">{{ t('adminSettings.stats.maintenanceModeDesc') }}</p>
             </section>
         </div>
 
         <div class="grid gap-6 xl:grid-cols-[220px_minmax(0,1fr)]">
             <aside class="rounded-lg bg-white p-3 shadow-sm">
                 <nav class="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
-                    <button
-                        v-for="tab in tabs"
-                        :key="tab.id"
-                        type="button"
-                        @click="currentTab = tab.id"
-                        :class="[
-                            'rounded-md px-3 py-2 text-left text-sm font-medium transition',
-                            currentTab === tab.id
-                                ? 'bg-slate-900 text-white'
-                                : 'text-slate-700 hover:bg-slate-100'
-                        ]"
-                    >
-                        {{ tab.name }}
+                    <button v-for="tab in tabs" :key="tab.id" type="button" @click="currentTab = tab.id" :class="[
+                        'rounded-md px-3 py-2 text-left text-sm font-medium transition',
+                        currentTab === tab.id
+                            ? 'bg-slate-900 text-white'
+                            : 'text-slate-700 hover:bg-slate-100'
+                    ]">
+                        {{ t('adminSettings.tabs.' + tab.id) }}
                     </button>
                 </nav>
             </aside>
 
             <div class="rounded-lg bg-white p-4 shadow-sm sm:p-6">
-                <div v-if="loading" class="py-12 text-center text-sm text-slate-500">Loading platform settings...</div>
+                <div v-if="loading" class="py-12 text-center text-sm text-slate-500">
+                    {{ t('adminSettings.loading') }}
+                </div>
 
                 <template v-else>
                     <div v-if="currentTab === 'general'" class="space-y-6">
                         <section>
-                            <h3 class="text-lg font-semibold text-slate-900">General</h3>
-                            <p class="mt-1 text-sm text-slate-500">Basic platform identity and runtime defaults.</p>
+                            <h3 class="text-lg font-semibold text-slate-900">{{ t('adminSettings.general.title') }}</h3>
+                            <p class="mt-1 text-sm text-slate-500">{{ t('adminSettings.general.subtitle') }}</p>
                         </section>
 
                         <div class="grid gap-4 md:grid-cols-2">
                             <label class="space-y-1 text-sm">
-                                <span class="font-medium text-slate-700">Platform name</span>
-                                <input v-model="settings.general.platformName" type="text" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                <span class="font-medium text-slate-700">{{ t('adminSettings.general.platformName')
+                                    }}</span>
+                                <input v-model="settings.general.platformName" :disabled="!isSuperAdmin" type="text"
+                                    class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                             </label>
                             <label class="space-y-1 text-sm">
-                                <span class="font-medium text-slate-700">Support email</span>
-                                <input v-model="settings.general.supportEmail" type="email" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                <span class="font-medium text-slate-700">{{ t('adminSettings.general.supportEmail')
+                                    }}</span>
+                                <input v-model="settings.general.supportEmail" :disabled="!isSuperAdmin" type="email"
+                                    class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                             </label>
                             <label class="space-y-1 text-sm">
-                                <span class="font-medium text-slate-700">Default currency</span>
-                                <select v-model="settings.general.currency" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                <span class="font-medium text-slate-700">{{ t('adminSettings.general.defaultCurrency')
+                                    }}</span>
+                                <select v-model="settings.general.currency" :disabled="!isSuperAdmin"
+                                    class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                                     <option value="NGN">NGN</option>
                                     <option value="XOF">XOF</option>
                                 </select>
                             </label>
                             <label class="space-y-1 text-sm">
-                                <span class="font-medium text-slate-700">Timezone</span>
-                                <select v-model="settings.general.timezone" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                <span class="font-medium text-slate-700">{{ t('adminSettings.general.timezone')
+                                    }}</span>
+                                <select v-model="settings.general.timezone" :disabled="!isSuperAdmin"
+                                    class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                                     <option value="WAT">WAT</option>
                                     <option value="UTC">UTC</option>
                                     <option value="GMT">GMT</option>
@@ -99,54 +117,83 @@
                             </label>
                         </div>
 
-                        <label class="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
-                            <input v-model="settings.general.maintenanceMode" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500">
+                        <label
+                            class="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
+                            <input v-model="settings.general.maintenanceMode" :disabled="!isSuperAdmin" type="checkbox"
+                                class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500 disabled:opacity-60">
                             <span>
-                                <span class="block font-medium text-slate-800">Maintenance mode</span>
-                                <span class="block text-slate-500">Expose a platform-wide flag for planned maintenance windows.</span>
+                                <span class="block font-medium text-slate-800">{{
+                                    t('adminSettings.general.maintenanceMode') }}</span>
+                                <span class="block text-slate-500">{{ t('adminSettings.general.maintenanceModeDesc')
+                                    }}</span>
                             </span>
                         </label>
                     </div>
 
                     <div v-else-if="currentTab === 'commerce'" class="space-y-6">
                         <section>
-                            <h3 class="text-lg font-semibold text-slate-900">Commerce</h3>
+                            <h3 class="text-lg font-semibold text-slate-900">{{ t('adminSettings.commerce.title') }}
+                            </h3>
                             <p class="mt-1 text-sm text-slate-500">
-                                This checkout fee is the number the storefront now uses when it creates vendor/platform splits.
+                                {{ t('adminSettings.commerce.subtitle') }}
                             </p>
                         </section>
 
                         <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
-                            <div class="rounded-lg border border-slate-200 p-4">
-                                <label class="space-y-1 text-sm">
-                                    <span class="font-medium text-slate-700">Checkout platform fee (%)</span>
-                                    <input
-                                        v-model.number="settings.payment.checkoutPlatformFeePercent"
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        step="0.1"
-                                        class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none"
-                                    >
-                                </label>
-                                <div class="mt-3 rounded-md bg-amber-50 p-3 text-sm text-amber-900">
-                                    <p class="font-medium">Source of truth</p>
-                                    <p class="mt-1">
-                                        Checkout uses this fee for order splits. Vendor payout tiers below can still settle vendors differently later.
-                                    </p>
+                            <div class="space-y-4">
+                                <div class="rounded-lg border border-slate-200 p-4">
+                                    <label class="space-y-1 text-sm block">
+                                        <span class="font-medium text-slate-700">{{
+                                            t('adminSettings.commerce.checkoutFeeLabel') }}</span>
+                                        <input v-model.number="settings.payment.checkoutPlatformFeePercent"
+                                            :disabled="!isSuperAdmin" type="number" min="0" max="100" step="0.1"
+                                            class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
+                                    </label>
+                                    <div class="mt-3 rounded-md bg-amber-50 p-3 text-sm text-amber-900">
+                                        <p class="font-medium">{{ t('adminSettings.commerce.sourceOfTruth') }}</p>
+                                        <p class="mt-1">
+                                            {{ t('adminSettings.commerce.sourceOfTruthDesc') }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div v-if="settings.currencyConversion" class="rounded-lg border border-slate-200 p-4">
+                                    <h4 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-4">{{
+                                        t('adminSettings.commerce.exchangeRatesTitle') }}</h4>
+                                    <div class="space-y-4">
+                                        <label class="space-y-1 text-sm block">
+                                            <span class="font-medium text-slate-700">{{
+                                                t('adminSettings.commerce.ngnToXofLabel') }}</span>
+                                            <input v-model.number="settings.currencyConversion.ngnToXofRate"
+                                                :disabled="!isSuperAdmin" type="number" min="0" step="0.0001"
+                                                class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
+                                        </label>
+                                        <label class="space-y-1 text-sm block">
+                                            <span class="font-medium text-slate-700">{{
+                                                t('adminSettings.commerce.xofToNgnLabel') }}</span>
+                                            <input v-model.number="settings.currencyConversion.xofToNgnRate"
+                                                :disabled="!isSuperAdmin" type="number" min="0" step="0.0001"
+                                                class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="rounded-lg border border-slate-200 p-4">
-                                <h4 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Payment rails</h4>
+                                <h4 class="text-sm font-semibold uppercase tracking-wide text-slate-500">{{
+                                    t('adminSettings.commerce.paymentRails') }}</h4>
                                 <div class="mt-4 space-y-3">
-                                    <div v-for="rail in paymentRails" :key="rail.key" class="flex items-center justify-between rounded-md border border-slate-100 px-3 py-2">
+                                    <div v-for="rail in paymentRails" :key="rail.key"
+                                        class="flex items-center justify-between rounded-md border border-slate-100 px-3 py-2">
                                         <div>
                                             <p class="text-sm font-medium text-slate-800">{{ rail.label }}</p>
                                             <p class="text-xs text-slate-500">{{ rail.description }}</p>
                                         </div>
-                                        <span :class="rail.enabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'" class="rounded-full px-2.5 py-1 text-xs font-semibold">
-                                            {{ rail.enabled ? 'Configured' : 'Unavailable' }}
+                                        <span
+                                            :class="rail.enabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'"
+                                            class="rounded-full px-2.5 py-1 text-xs font-semibold">
+                                            {{ rail.enabled ? t('adminSettings.commerce.configured') :
+                                                t('adminSettings.commerce.unavailable') }}
                                         </span>
                                     </div>
                                 </div>
@@ -156,80 +203,122 @@
 
                     <div v-else-if="currentTab === 'payouts'" class="space-y-6">
                         <section>
-                            <h3 class="text-lg font-semibold text-slate-900">Payouts</h3>
-                            <p class="mt-1 text-sm text-slate-500">These rules drive vendor settlement timing and share after orders are paid.</p>
+                            <h3 class="text-lg font-semibold text-slate-900">{{ t('adminSettings.payouts.title') }}</h3>
+                            <p class="mt-1 text-sm text-slate-500">{{ t('adminSettings.payouts.subtitle') }}</p>
                         </section>
 
                         <div class="grid gap-6 xl:grid-cols-2">
                             <section class="rounded-lg border border-slate-200 p-4">
-                                <h4 class="text-base font-semibold text-slate-900">Default tier</h4>
+                                <h4 class="text-base font-semibold text-slate-900">{{
+                                    t('adminSettings.payouts.defaultTier') }}</h4>
                                 <div class="mt-4 grid gap-4 sm:grid-cols-2">
                                     <label class="space-y-1 text-sm">
-                                        <span class="font-medium text-slate-700">Vendor share (%)</span>
-                                        <input v-model.number="settings.payouts.defaultTier.vendorSharePercent" type="number" min="0" max="100" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                        <span class="font-medium text-slate-700">{{
+                                            t('adminSettings.payouts.vendorShare') }}</span>
+                                        <input v-model.number="settings.payouts.defaultTier.vendorSharePercent"
+                                            :disabled="!isSuperAdmin" type="number" min="0" max="100"
+                                            class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                                     </label>
                                     <label class="space-y-1 text-sm">
-                                        <span class="font-medium text-slate-700">Holding period (days)</span>
-                                        <input v-model.number="settings.payouts.defaultTier.holdingPeriod" type="number" min="0" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                        <span class="font-medium text-slate-700">{{
+                                            t('adminSettings.payouts.holdingPeriod') }}</span>
+                                        <input v-model.number="settings.payouts.defaultTier.holdingPeriod"
+                                            :disabled="!isSuperAdmin" type="number" min="0"
+                                            class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                                     </label>
                                     <label class="space-y-1 text-sm">
-                                        <span class="font-medium text-slate-700">Minimum payout</span>
-                                        <input v-model.number="settings.payouts.defaultTier.minimumAmount" type="number" min="0" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                        <span class="font-medium text-slate-700">{{
+                                            t('adminSettings.payouts.minimumPayout') }}</span>
+                                        <input v-model.number="settings.payouts.defaultTier.minimumAmount"
+                                            :disabled="!isSuperAdmin" type="number" min="0"
+                                            class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                                     </label>
                                     <label class="space-y-1 text-sm">
-                                        <span class="font-medium text-slate-700">Batch size</span>
-                                        <input v-model.number="settings.payouts.defaultTier.batchSize" type="number" min="1" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                        <span class="font-medium text-slate-700">{{ t('adminSettings.payouts.batchSize')
+                                            }}</span>
+                                        <input v-model.number="settings.payouts.defaultTier.batchSize"
+                                            :disabled="!isSuperAdmin" type="number" min="1"
+                                            class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                                     </label>
                                 </div>
                             </section>
 
                             <section class="rounded-lg border border-slate-200 p-4">
-                                <h4 class="text-base font-semibold text-slate-900">Premium tier</h4>
+                                <h4 class="text-base font-semibold text-slate-900">{{
+                                    t('adminSettings.payouts.premiumTier') }}</h4>
                                 <div class="mt-4 grid gap-4 sm:grid-cols-2">
                                     <label class="space-y-1 text-sm">
-                                        <span class="font-medium text-slate-700">Vendor share (%)</span>
-                                        <input v-model.number="settings.payouts.premiumTier.vendorSharePercent" type="number" min="0" max="100" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                        <span class="font-medium text-slate-700">{{
+                                            t('adminSettings.payouts.vendorShare') }}</span>
+                                        <input v-model.number="settings.payouts.premiumTier.vendorSharePercent"
+                                            :disabled="!isSuperAdmin" type="number" min="0" max="100"
+                                            class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                                     </label>
                                     <label class="space-y-1 text-sm">
-                                        <span class="font-medium text-slate-700">Holding period (days)</span>
-                                        <input v-model.number="settings.payouts.premiumTier.holdingPeriod" type="number" min="0" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                        <span class="font-medium text-slate-700">{{
+                                            t('adminSettings.payouts.holdingPeriod') }}</span>
+                                        <input v-model.number="settings.payouts.premiumTier.holdingPeriod"
+                                            :disabled="!isSuperAdmin" type="number" min="0"
+                                            class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                                     </label>
                                     <label class="space-y-1 text-sm">
-                                        <span class="font-medium text-slate-700">Minimum payout</span>
-                                        <input v-model.number="settings.payouts.premiumTier.minimumAmount" type="number" min="0" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                        <span class="font-medium text-slate-700">{{
+                                            t('adminSettings.payouts.minimumPayout') }}</span>
+                                        <input v-model.number="settings.payouts.premiumTier.minimumAmount"
+                                            :disabled="!isSuperAdmin" type="number" min="0"
+                                            class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                                     </label>
                                     <label class="space-y-1 text-sm">
-                                        <span class="font-medium text-slate-700">Batch size</span>
-                                        <input v-model.number="settings.payouts.premiumTier.batchSize" type="number" min="1" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                        <span class="font-medium text-slate-700">{{ t('adminSettings.payouts.batchSize')
+                                            }}</span>
+                                        <input v-model.number="settings.payouts.premiumTier.batchSize"
+                                            :disabled="!isSuperAdmin" type="number" min="1"
+                                            class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                                     </label>
                                 </div>
                             </section>
                         </div>
 
                         <section class="rounded-lg border border-slate-200 p-4">
-                            <h4 class="text-base font-semibold text-slate-900">Retry and notifications</h4>
+                            <h4 class="text-base font-semibold text-slate-900">{{
+                                t('adminSettings.payouts.retryAndNotifications') }}</h4>
                             <div class="mt-4 grid gap-4 lg:grid-cols-2">
                                 <label class="space-y-1 text-sm">
-                                    <span class="font-medium text-slate-700">Max retry attempts</span>
-                                    <input v-model.number="settings.payouts.retryStrategy.maxAttempts" type="number" min="0" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                    <span class="font-medium text-slate-700">{{
+                                        t('adminSettings.payouts.maxRetryAttempts') }}</span>
+                                    <input v-model.number="settings.payouts.retryStrategy.maxAttempts"
+                                        :disabled="!isSuperAdmin" type="number" min="0"
+                                        class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                                 </label>
                                 <label class="space-y-1 text-sm">
-                                    <span class="font-medium text-slate-700">Reminder hours</span>
-                                    <input v-model.number="settings.payouts.notifications.reminderHours" type="number" min="0" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                    <span class="font-medium text-slate-700">{{ t('adminSettings.payouts.reminderHours')
+                                        }}</span>
+                                    <input v-model.number="settings.payouts.notifications.reminderHours"
+                                        :disabled="!isSuperAdmin" type="number" min="0"
+                                        class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                                 </label>
                             </div>
                             <div class="mt-4 grid gap-3 md:grid-cols-3">
-                                <label class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2 text-sm">
-                                    <input v-model="settings.payouts.notifications.sendVendorNotifications" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500">
-                                    <span>Notify vendors</span>
+                                <label
+                                    class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2 text-sm">
+                                    <input v-model="settings.payouts.notifications.sendVendorNotifications"
+                                        :disabled="!isSuperAdmin" type="checkbox"
+                                        class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500 disabled:opacity-60">
+                                    <span>{{ t('adminSettings.payouts.notifyVendors') }}</span>
                                 </label>
-                                <label class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2 text-sm">
-                                    <input v-model="settings.payouts.notifications.notifyOnFailure" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500">
-                                    <span>Notify on failure</span>
+                                <label
+                                    class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2 text-sm">
+                                    <input v-model="settings.payouts.notifications.notifyOnFailure"
+                                        :disabled="!isSuperAdmin" type="checkbox"
+                                        class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500 disabled:opacity-60">
+                                    <span>{{ t('adminSettings.payouts.notifyOnFailure') }}</span>
                                 </label>
-                                <label class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2 text-sm">
-                                    <input v-model="settings.payouts.notifications.notifyBeforePayout" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500">
-                                    <span>Notify before payout</span>
+                                <label
+                                    class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2 text-sm">
+                                    <input v-model="settings.payouts.notifications.notifyBeforePayout"
+                                        :disabled="!isSuperAdmin" type="checkbox"
+                                        class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500 disabled:opacity-60">
+                                    <span>{{ t('adminSettings.payouts.notifyBeforePayout') }}</span>
                                 </label>
                             </div>
                         </section>
@@ -237,58 +326,75 @@
 
                     <div v-else-if="currentTab === 'shipping'" class="space-y-6">
                         <section>
-                            <h3 class="text-lg font-semibold text-slate-900">Shipping</h3>
-                            <p class="mt-1 text-sm text-slate-500">Base shipping defaults used when storefront shipping rules fall back to platform values.</p>
+                            <h3 class="text-lg font-semibold text-slate-900">{{ t('adminSettings.shipping.title') }}
+                            </h3>
+                            <p class="mt-1 text-sm text-slate-500">{{ t('adminSettings.shipping.subtitle') }}</p>
                         </section>
 
                         <div class="grid gap-4 md:grid-cols-2">
                             <label class="space-y-1 text-sm">
-                                <span class="font-medium text-slate-700">Base shipping cost</span>
-                                <input v-model.number="settings.shipping.baseCost" type="number" min="0" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                <span class="font-medium text-slate-700">{{ t('adminSettings.shipping.baseCost')
+                                    }}</span>
+                                <input v-model.number="settings.shipping.baseCost" :disabled="!isSuperAdmin"
+                                    type="number" min="0"
+                                    class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                             </label>
                             <label class="space-y-1 text-sm">
-                                <span class="font-medium text-slate-700">Free shipping threshold</span>
-                                <input v-model.number="settings.shipping.freeThreshold" type="number" min="0" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                <span class="font-medium text-slate-700">{{ t('adminSettings.shipping.freeThreshold')
+                                    }}</span>
+                                <input v-model.number="settings.shipping.freeThreshold" :disabled="!isSuperAdmin"
+                                    type="number" min="0"
+                                    class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                             </label>
                         </div>
 
                         <section class="rounded-lg border border-slate-200 p-4">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <h4 class="text-base font-semibold text-slate-900">Shipping zones</h4>
-                                    <p class="text-sm text-slate-500">Optional fallback zones for admin-managed shipping defaults.</p>
+                                    <h4 class="text-base font-semibold text-slate-900">{{
+                                        t('adminSettings.shipping.shippingZones') }}</h4>
+                                    <p class="text-sm text-slate-500">{{ t('adminSettings.shipping.shippingZonesDesc')
+                                        }}</p>
                                 </div>
-                                <button type="button" @click="addShippingZone" class="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-                                    Add zone
+                                <button v-if="isSuperAdmin" type="button" @click="addShippingZone"
+                                    class="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                                    {{ t('adminSettings.shipping.addZone') }}
                                 </button>
                             </div>
 
                             <div class="mt-4 space-y-4">
-                                <div v-if="!settings.shipping.zones.length" class="rounded-md border border-dashed border-slate-200 p-4 text-sm text-slate-500">
-                                    No fallback shipping zones yet.
+                                <div v-if="!settings.shipping.zones.length"
+                                    class="rounded-md border border-dashed border-slate-200 p-4 text-sm text-slate-500">
+                                    {{ t('adminSettings.shipping.noZones') }}
                                 </div>
-                                <div
-                                    v-for="(zone, index) in settings.shipping.zones"
-                                    :key="index"
-                                    class="rounded-lg border border-slate-100 p-4"
-                                >
+                                <div v-for="(zone, index) in settings.shipping.zones" :key="index"
+                                    class="rounded-lg border border-slate-100 p-4">
                                     <div class="grid gap-4 lg:grid-cols-[1fr_1.2fr_180px]">
                                         <label class="space-y-1 text-sm">
-                                            <span class="font-medium text-slate-700">Zone name</span>
-                                            <input v-model="zone.name" type="text" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                            <span class="font-medium text-slate-700">{{
+                                                t('adminSettings.shipping.zoneName') }}</span>
+                                            <input v-model="zone.name" :disabled="!isSuperAdmin" type="text"
+                                                class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                                         </label>
                                         <label class="space-y-1 text-sm">
-                                            <span class="font-medium text-slate-700">Regions</span>
-                                            <input v-model="zone.regions" type="text" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none" placeholder="Lagos, Abuja, Dakar">
+                                            <span class="font-medium text-slate-700">{{
+                                                t('adminSettings.shipping.regions') }}</span>
+                                            <input v-model="zone.regions" :disabled="!isSuperAdmin" type="text"
+                                                class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500"
+                                                :placeholder="t('adminSettings.shipping.regionsPlaceholder')">
                                         </label>
                                         <label class="space-y-1 text-sm">
-                                            <span class="font-medium text-slate-700">Rate</span>
-                                            <input v-model.number="zone.rate" type="number" min="0" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                            <span class="font-medium text-slate-700">{{ t('adminSettings.shipping.rate')
+                                                }}</span>
+                                            <input v-model.number="zone.rate" :disabled="!isSuperAdmin" type="number"
+                                                min="0"
+                                                class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                                         </label>
                                     </div>
-                                    <div class="mt-3 flex justify-end">
-                                        <button type="button" @click="removeShippingZone(index)" class="text-sm font-medium text-rose-600 hover:text-rose-700">
-                                            Remove zone
+                                    <div v-if="isSuperAdmin" class="mt-3 flex justify-end">
+                                        <button type="button" @click="removeShippingZone(index)"
+                                            class="text-sm font-medium text-rose-600 hover:text-rose-700">
+                                            {{ t('adminSettings.shipping.removeZone') }}
                                         </button>
                                     </div>
                                 </div>
@@ -298,102 +404,151 @@
 
                     <div v-else-if="currentTab === 'afriexchange'" class="space-y-6">
                         <section>
-                            <h3 class="text-lg font-semibold text-slate-900">AfriExchange Integration</h3>
+                            <h3 class="text-lg font-semibold text-slate-900">{{ t('adminSettings.afriexchange.title') }}
+                            </h3>
                             <p class="mt-1 text-sm text-slate-500">
-                                Keep the Kaalis to AfriExchange merchant link visible, make the current CT strategy explicit,
-                                and expose the non-secret runtime values operators need most often.
+                                {{ t('adminSettings.afriexchange.subtitle') }}
                             </p>
                         </section>
 
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                             <section class="rounded-lg border border-slate-200 p-4">
-                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Integration status</p>
+                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{
+                                    t('adminSettings.afriexchange.integrationStatus') }}</p>
                                 <p class="mt-2 text-2xl font-semibold text-slate-900">{{ afriExchangeStatus.label }}</p>
                                 <p class="mt-1 text-sm text-slate-500">{{ afriExchangeStatus.description }}</p>
                             </section>
                             <section class="rounded-lg border border-slate-200 p-4">
-                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Linked merchant</p>
-                                <p class="mt-2 text-lg font-semibold text-slate-900">{{ settings.afriExchange.linkedMerchantName || 'Not set' }}</p>
-                                <p class="mt-1 break-all font-mono text-xs text-slate-500">{{ settings.afriExchange.linkedMerchantId || 'Merchant id missing' }}</p>
+                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{
+                                    t('adminSettings.afriexchange.linkedMerchant') }}</p>
+                                <p class="mt-2 text-lg font-semibold text-slate-900">{{
+                                    settings.afriExchange.linkedMerchantName || t('adminSettings.afriexchange.notSet')
+                                    }}</p>
+                                <p class="mt-1 break-all font-mono text-xs text-slate-500">{{
+                                    settings.afriExchange.linkedMerchantId ||
+                                    t('adminSettings.afriexchange.merchantIdMissing') }}</p>
                             </section>
                             <section class="rounded-lg border border-slate-200 p-4">
-                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Default token</p>
-                                <p class="mt-2 text-2xl font-semibold text-slate-900">{{ settings.afriExchange.defaultToken }}</p>
-                                <p class="mt-1 text-sm text-slate-500">Current live Kaalis AfriExchange token path.</p>
+                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{
+                                    t('adminSettings.afriexchange.defaultToken') }}</p>
+                                <p class="mt-2 text-2xl font-semibold text-slate-900">{{
+                                    settings.afriExchange.defaultToken }}</p>
+                                <p class="mt-1 text-sm text-slate-500">{{
+                                    t('adminSettings.afriexchange.defaultTokenDesc') }}</p>
                             </section>
                             <section class="rounded-lg border border-slate-200 p-4">
-                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Webhook secret</p>
+                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{
+                                    t('adminSettings.afriexchange.webhookSecret') }}</p>
                                 <p class="mt-2 text-2xl font-semibold text-slate-900">
-                                    {{ settings.runtime?.integrations?.afriExchange?.webhookSecretConfigured ? 'Configured' : 'Missing' }}
+                                    {{ settings.runtime?.integrations?.afriExchange?.webhookSecretConfigured ?
+                                        t('adminSettings.afriexchange.configuredInEnv') :
+                                        t('adminSettings.afriexchange.missingFromEnv') }}
                                 </p>
-                                <p class="mt-1 text-sm text-slate-500">Environment-backed secret status only.</p>
+                                <p class="mt-1 text-sm text-slate-500">{{
+                                    t('adminSettings.afriexchange.webhookSecretDesc') }}</p>
                             </section>
                             <section class="rounded-lg border border-slate-200 p-4">
-                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Last webhook received</p>
+                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{
+                                    t('adminSettings.afriexchange.lastWebhookReceived') }}</p>
                                 <p class="mt-2 text-sm font-semibold text-slate-900">
-                                    {{ formatAfriExchangeHealthTimestamp(settings.afriExchange.health?.lastWebhookReceivedAt) }}
+                                    {{
+                                        formatAfriExchangeHealthTimestamp(settings.afriExchange.health?.lastWebhookReceivedAt)
+                                    }}
                                 </p>
                                 <p class="mt-1 text-xs text-slate-500">
-                                    {{ settings.afriExchange.health?.lastWebhookEvent || 'No AfriExchange webhook recorded yet.' }}
+                                    {{ settings.afriExchange.health?.lastWebhookEvent ||
+                                        t('adminSettings.afriexchange.noWebhookYet') }}
                                 </p>
                             </section>
                         </div>
 
                         <div class="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
                             <section class="rounded-lg border border-slate-200 p-4">
-                                <h4 class="text-base font-semibold text-slate-900">Connection configuration</h4>
+                                <h4 class="text-base font-semibold text-slate-900">{{
+                                    t('adminSettings.afriexchange.connectionConfig') }}</h4>
                                 <div class="mt-4 grid gap-4 md:grid-cols-2">
                                     <label class="space-y-1 text-sm md:col-span-2">
-                                        <span class="font-medium text-slate-700">AfriExchange API base URL</span>
-                                        <input :value="settings.runtime?.integrations?.afriExchange?.apiBaseUrl || ''" type="text" disabled class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-slate-600 shadow-sm">
+                                        <span class="font-medium text-slate-700">{{
+                                            t('adminSettings.afriexchange.apiBaseUrl') }}</span>
+                                        <input :value="settings.runtime?.integrations?.afriExchange?.apiBaseUrl || ''"
+                                            type="text" disabled
+                                            class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-slate-600 shadow-sm">
                                     </label>
                                     <label class="space-y-1 text-sm md:col-span-2">
-                                        <span class="font-medium text-slate-700">AfriExchange web URL</span>
-                                        <input v-model="settings.afriExchange.webAppUrl" type="text" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none" placeholder="https://afri-x.vercel.app/">
+                                        <span class="font-medium text-slate-700">{{
+                                            t('adminSettings.afriexchange.webAppUrl') }}</span>
+                                        <input v-model="settings.afriExchange.webAppUrl" :disabled="!isSuperAdmin"
+                                            type="text"
+                                            class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500"
+                                            :placeholder="defaultAfriExchangeWebUrl">
                                     </label>
                                     <label class="space-y-1 text-sm">
-                                        <span class="font-medium text-slate-700">Linked merchant name</span>
-                                        <input v-model="settings.afriExchange.linkedMerchantName" type="text" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                        <span class="font-medium text-slate-700">{{
+                                            t('adminSettings.afriexchange.linkedMerchantName') }}</span>
+                                        <input v-model="settings.afriExchange.linkedMerchantName"
+                                            :disabled="!isSuperAdmin" type="text"
+                                            class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                                     </label>
                                     <label class="space-y-1 text-sm">
-                                        <span class="font-medium text-slate-700">Linked merchant ID</span>
-                                        <input v-model="settings.afriExchange.linkedMerchantId" type="text" class="w-full rounded-md border border-slate-200 px-3 py-2 font-mono text-xs shadow-sm focus:border-slate-400 focus:outline-none">
+                                        <span class="font-medium text-slate-700">{{
+                                            t('adminSettings.afriexchange.linkedMerchantId') }}</span>
+                                        <input v-model="settings.afriExchange.linkedMerchantId"
+                                            :disabled="!isSuperAdmin" type="text"
+                                            class="w-full rounded-md border border-slate-200 px-3 py-2 font-mono text-xs shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                                     </label>
                                     <label class="space-y-1 text-sm md:col-span-2">
-                                        <span class="font-medium text-slate-700">Expected webhook callback URL</span>
-                                        <input v-model="settings.afriExchange.webhookCallbackUrl" type="text" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none" placeholder="http://localhost:7788/api/afriexchange/webhooks">
+                                        <span class="font-medium text-slate-700">{{
+                                            t('adminSettings.afriexchange.webhookCallbackUrl') }}</span>
+                                        <input v-model="settings.afriExchange.webhookCallbackUrl"
+                                            :disabled="!isSuperAdmin" type="text"
+                                            class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500"
+                                            :placeholder="defaultAfriExchangeWebhookCallbackUrl">
                                     </label>
                                 </div>
                             </section>
 
                             <section class="rounded-lg border border-slate-200 p-4">
-                                <h4 class="text-base font-semibold text-slate-900">Runtime and secrets</h4>
+                                <h4 class="text-base font-semibold text-slate-900">{{
+                                    t('adminSettings.afriexchange.runtimeAndSecrets') }}</h4>
                                 <div class="mt-4 space-y-3">
                                     <div class="rounded-md border border-slate-100 px-3 py-2">
-                                        <p class="text-sm font-medium text-slate-800">API key</p>
+                                        <p class="text-sm font-medium text-slate-800">{{
+                                            t('adminSettings.afriexchange.apiKey') }}</p>
                                         <p class="mt-1 text-sm text-slate-500">
-                                            {{ settings.runtime?.integrations?.afriExchange?.apiKeyConfigured ? 'Configured in environment' : 'Missing from environment' }}
+                                            {{ settings.runtime?.integrations?.afriExchange?.apiKeyConfigured ?
+                                                t('adminSettings.afriexchange.configuredInEnv') :
+                                                t('adminSettings.afriexchange.missingFromEnv') }}
                                         </p>
                                     </div>
                                     <div class="rounded-md border border-slate-100 px-3 py-2">
-                                        <p class="text-sm font-medium text-slate-800">Webhook secret</p>
+                                        <p class="text-sm font-medium text-slate-800">{{
+                                            t('adminSettings.afriexchange.webhookSecret') }}</p>
                                         <p class="mt-1 text-sm text-slate-500">
-                                            {{ settings.runtime?.integrations?.afriExchange?.webhookSecretConfigured ? 'Configured in environment' : 'Missing from environment' }}
+                                            {{ settings.runtime?.integrations?.afriExchange?.webhookSecretConfigured ?
+                                                t('adminSettings.afriexchange.configuredInEnv') :
+                                                t('adminSettings.afriexchange.missingFromEnv') }}
                                         </p>
                                     </div>
                                     <div class="rounded-md border border-slate-100 px-3 py-2">
-                                        <p class="text-sm font-medium text-slate-800">Operator note</p>
+                                        <p class="text-sm font-medium text-slate-800">{{
+                                            t('adminSettings.afriexchange.operatorNote') }}</p>
                                         <p class="mt-1 text-sm text-slate-500">
-                                            {{ settings.runtime?.notes?.afriExchange || 'AfriExchange runtime note unavailable.' }}
+                                            {{ settings.runtime?.notes?.afriExchange ||
+                                                'AfriExchange runtime note unavailable.' }}
                                         </p>
                                     </div>
                                     <div class="rounded-md border border-slate-100 px-3 py-2">
-                                        <p class="text-sm font-medium text-slate-800">Webhook health</p>
+                                        <p class="text-sm font-medium text-slate-800">{{
+                                            t('adminSettings.afriexchange.webhookHealth') }}</p>
                                         <p class="mt-1 text-sm text-slate-500">
-                                            Status: {{ settings.afriExchange.health?.lastWebhookStatus || 'No webhook status yet' }}
+                                            {{ t('adminSettings.afriexchange.webhookHealthStatus') }}: {{
+                                                settings.afriExchange.health?.lastWebhookStatus ||
+                                                t('adminSettings.afriexchange.noWebhookStatus') }}
                                         </p>
                                         <p class="mt-1 break-all text-xs text-slate-400">
-                                            Reference: {{ settings.afriExchange.health?.lastWebhookReference || 'Not available yet' }}
+                                            {{ t('adminSettings.afriexchange.webhookHealthRef') }}: {{
+                                                settings.afriExchange.health?.lastWebhookReference ||
+                                                t('adminSettings.afriexchange.noWebhookRef') }}
                                         </p>
                                     </div>
                                 </div>
@@ -401,12 +556,15 @@
                         </div>
 
                         <section class="rounded-lg border border-slate-200 p-4">
-                            <h4 class="text-base font-semibold text-slate-900">Token strategy</h4>
+                            <h4 class="text-base font-semibold text-slate-900">{{
+                                t('adminSettings.afriexchange.tokenStrategy') }}</h4>
                             <div class="mt-4 grid gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
                                 <div class="space-y-4">
                                     <label class="space-y-1 text-sm">
-                                        <span class="font-medium text-slate-700">Default AfriExchange token</span>
-                                        <select v-model="settings.afriExchange.defaultToken" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none">
+                                        <span class="font-medium text-slate-700">{{
+                                            t('adminSettings.afriexchange.defaultTokenLabel') }}</span>
+                                        <select v-model="settings.afriExchange.defaultToken" :disabled="!isSuperAdmin"
+                                            class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500">
                                             <option value="CT">CT</option>
                                             <option value="NT">NT</option>
                                             <option value="USDT">USDT</option>
@@ -414,15 +572,15 @@
                                     </label>
 
                                     <div class="space-y-2 text-sm">
-                                        <span class="font-medium text-slate-700">Allowed tokens</span>
+                                        <span class="font-medium text-slate-700">{{
+                                            t('adminSettings.afriexchange.allowedTokens') }}</span>
                                         <div class="grid gap-2 sm:grid-cols-3">
-                                            <label v-for="token in tokenOptions" :key="token" class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2">
-                                                <input
-                                                    :checked="settings.afriExchange.allowedTokens.includes(token)"
-                                                    type="checkbox"
-                                                    class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500"
-                                                    @change="toggleAllowedToken(token)"
-                                                >
+                                            <label v-for="token in tokenOptions" :key="token"
+                                                class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2">
+                                                <input :checked="settings.afriExchange.allowedTokens.includes(token)"
+                                                    :disabled="!isSuperAdmin" type="checkbox"
+                                                    class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500 disabled:opacity-60"
+                                                    @change="toggleAllowedToken(token)">
                                                 <span>{{ token }}</span>
                                             </label>
                                         </div>
@@ -431,31 +589,48 @@
 
                                 <div class="space-y-4">
                                     <label class="space-y-1 text-sm">
-                                        <span class="font-medium text-slate-700">Settlement reason</span>
-                                        <textarea v-model="settings.afriExchange.notes.settlementReason" rows="4" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none"></textarea>
+                                        <span class="font-medium text-slate-700">{{
+                                            t('adminSettings.afriexchange.settlementReason') }}</span>
+                                        <textarea v-model="settings.afriExchange.notes.settlementReason"
+                                            :disabled="!isSuperAdmin" rows="4"
+                                            class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500"></textarea>
                                     </label>
                                     <label class="space-y-1 text-sm">
-                                        <span class="font-medium text-slate-700">Operator note</span>
-                                        <textarea v-model="settings.afriExchange.notes.operatorNote" rows="3" class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none" placeholder="Optional note for operators, rollout context, or upcoming token changes."></textarea>
+                                        <span class="font-medium text-slate-700">{{
+                                            t('adminSettings.afriexchange.operatorNoteLabel') }}</span>
+                                        <textarea v-model="settings.afriExchange.notes.operatorNote"
+                                            :disabled="!isSuperAdmin" rows="3"
+                                            class="w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500"
+                                            :placeholder="t('adminSettings.afriexchange.operatorNotePlaceholder')"></textarea>
                                     </label>
                                 </div>
                             </div>
                         </section>
 
                         <section class="rounded-lg border border-slate-200 p-4">
-                            <h4 class="text-base font-semibold text-slate-900">Rail availability</h4>
+                            <h4 class="text-base font-semibold text-slate-900">{{
+                                t('adminSettings.afriexchange.railAvailability') }}</h4>
                             <div class="mt-4 grid gap-3 md:grid-cols-3">
-                                <label class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2 text-sm">
-                                    <input v-model="settings.afriExchange.rails.afriExchangeEnabled" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500">
-                                    <span>AfriExchange enabled</span>
+                                <label
+                                    class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2 text-sm">
+                                    <input v-model="settings.afriExchange.rails.afriExchangeEnabled"
+                                        :disabled="!isSuperAdmin" type="checkbox"
+                                        class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500 disabled:opacity-60">
+                                    <span>{{ t('adminSettings.afriexchange.afriexchangeEnabled') }}</span>
                                 </label>
-                                <label class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2 text-sm">
-                                    <input v-model="settings.afriExchange.rails.paystackEnabled" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500">
-                                    <span>Paystack visible</span>
+                                <label
+                                    class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2 text-sm">
+                                    <input v-model="settings.afriExchange.rails.paystackEnabled"
+                                        :disabled="!isSuperAdmin" type="checkbox"
+                                        class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500 disabled:opacity-60">
+                                    <span>{{ t('adminSettings.afriexchange.paystackVisible') }}</span>
                                 </label>
-                                <label class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2 text-sm">
-                                    <input v-model="settings.afriExchange.rails.opayEnabled" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500">
-                                    <span>OPay visible</span>
+                                <label
+                                    class="flex items-center gap-3 rounded-md border border-slate-100 px-3 py-2 text-sm">
+                                    <input v-model="settings.afriExchange.rails.opayEnabled" :disabled="!isSuperAdmin"
+                                        type="checkbox"
+                                        class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500 disabled:opacity-60">
+                                    <span>{{ t('adminSettings.afriexchange.opayVisible') }}</span>
                                 </label>
                             </div>
                         </section>
@@ -471,12 +646,16 @@ import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { toast } from "vue-sonner";
 import apiClient from "@/api/axios";
+import { useAdminStore } from "@/store/admin";
 
 const { t } = useI18n();
+const adminStore = useAdminStore();
 
 const loading = ref(true);
 const saving = ref(false);
 const currentTab = ref("general");
+
+const isSuperAdmin = computed(() => adminStore.adminUser?.role === "SuperAdmin");
 
 const tabs = [
     { id: "general", name: "General" },
@@ -498,6 +677,10 @@ const createDefaultSettings = () => ({
         currency: "NGN",
         timezone: "WAT",
         maintenanceMode: false,
+    },
+    currencyConversion: {
+        ngnToXofRate: 0.42,
+        xofToNgnRate: 2.38,
     },
     payment: {
         checkoutPlatformFeePercent: 8,
@@ -599,6 +782,10 @@ const normalizeSettings = (payload = {}) => ({
         ...createDefaultSettings().general,
         ...(payload.general || {}),
     },
+    currencyConversion: {
+        ...createDefaultSettings().currencyConversion,
+        ...(payload.currencyConversion || {}),
+    },
     payment: {
         ...createDefaultSettings().payment,
         ...(payload.payment || {}),
@@ -680,21 +867,21 @@ const afriExchangeStatus = computed(() => {
 
     if (configured && linked) {
         return {
-            label: "Connected",
-            description: "Runtime secrets and merchant linkage are both in place.",
+            label: t("adminSettings.afriexchange.statusConnected"),
+            description: t("adminSettings.afriexchange.statusConnectedDesc"),
         };
     }
 
     if (configured || linked) {
         return {
-            label: "Needs attention",
-            description: "Some AfriExchange pieces are configured, but the full operator picture is incomplete.",
+            label: t("adminSettings.afriexchange.statusNeedsAttention"),
+            description: t("adminSettings.afriexchange.statusNeedsAttentionDesc"),
         };
     }
 
     return {
-        label: "Disabled",
-        description: "AfriExchange is not fully configured for this Kaalis environment.",
+        label: t("adminSettings.afriexchange.statusDisabled"),
+        description: t("adminSettings.afriexchange.statusDisabledDesc"),
     };
 });
 
@@ -716,13 +903,21 @@ const saveSettings = async () => {
     try {
         const payload = {
             general: settings.value.general,
+            currencyConversion: settings.value.currencyConversion,
             payment: settings.value.payment,
             payouts: settings.value.payouts,
             shipping: settings.value.shipping,
             afriExchange: settings.value.afriExchange,
         };
         const response = await apiClient.put("/admin/settings", payload);
-        settings.value = normalizeSettings(response.data?.settings || settings.value);
+        const normalized = normalizeSettings(response.data?.settings || settings.value);
+        settings.value = normalized;
+        localStorage.setItem("kaalisPlatformRuntimeSettings", JSON.stringify({
+            general: normalized.general,
+            currencyConversion: normalized.currencyConversion,
+            payment: normalized.payment,
+            runtime: normalized.runtime
+        }));
         toast.success(t("adminSettings.toasts.saved"));
     } catch (error) {
         console.error("Error saving settings:", error);
@@ -765,12 +960,12 @@ const toggleAllowedToken = (token) => {
 
 const formatAfriExchangeHealthTimestamp = (value) => {
     if (!value) {
-        return "No webhook received yet";
+        return t("adminSettings.afriexchange.noWebhookReceivedYet");
     }
 
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) {
-        return "No webhook received yet";
+        return t("adminSettings.afriexchange.noWebhookReceivedYet");
     }
 
     return new Intl.DateTimeFormat("en-US", {

@@ -57,11 +57,16 @@ export const useAddressStore = defineStore("address", {
               headers: { Authorization: `Bearer ${token}` },
             }
           );
-          const index = this.addresses.findIndex(
-            (a) => a._id === addressData._id
-          );
-          if (index !== -1) {
-            this.addresses[index] = response.data;
+          const updated = response.data;
+          if (updated.isDispatch) {
+            this.addresses = this.addresses.map((a) =>
+              a._id === updated._id ? updated : { ...a, isDispatch: false }
+            );
+          } else {
+            const index = this.addresses.findIndex((a) => a._id === updated._id);
+            if (index !== -1) {
+              this.addresses[index] = updated;
+            }
           }
           toast.success("Address updated successfully.");
         } else {
@@ -76,7 +81,11 @@ export const useAddressStore = defineStore("address", {
               headers: { Authorization: `Bearer ${token}` },
             }
           );
-          this.addresses.push(response.data);
+          const added = response.data;
+          if (added.isDispatch) {
+            this.addresses = this.addresses.map((a) => ({ ...a, isDispatch: false }));
+          }
+          this.addresses.push(added);
           toast.success("Address added successfully.");
         }
 
@@ -111,7 +120,11 @@ export const useAddressStore = defineStore("address", {
           }
         );
 
-        this.addresses.push(response.data); // Assumes API returns the new address
+        const added = response.data;
+        if (added.isDispatch) {
+          this.addresses = this.addresses.map((a) => ({ ...a, isDispatch: false }));
+        }
+        this.addresses.push(added); // Assumes API returns the new address
         localStorage.setItem("userAddresses", JSON.stringify(this.addresses));
         toast.success("Address added successfully.");
       } catch (error) {
@@ -147,10 +160,17 @@ export const useAddressStore = defineStore("address", {
           }
         );
         console.log("Updated address:", response.data);
+        const updated = response.data;
         // Update address in the addresses array
-        this.addresses = this.addresses.map((address) =>
-          address._id === addressId ? response.data : address
-        );
+        if (updated.isDispatch) {
+          this.addresses = this.addresses.map((a) =>
+            a._id === addressId ? updated : { ...a, isDispatch: false }
+          );
+        } else {
+          this.addresses = this.addresses.map((address) =>
+            address._id === addressId ? updated : address
+          );
+        }
         localStorage.setItem("userAddresses", JSON.stringify(this.addresses));
         toast.success("Address updated successfully.");
       } catch (error) {

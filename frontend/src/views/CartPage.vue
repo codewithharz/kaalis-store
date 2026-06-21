@@ -109,15 +109,21 @@
                             </div>
                         </div>
                         <div class="mt-3 flex w-full items-center justify-between gap-4 border-t border-gray-100 pt-3 sm:mt-4 lg:mt-0 lg:w-auto lg:min-w-[180px] lg:flex-col lg:items-end lg:justify-start lg:border-t-0 lg:border-l lg:border-gray-100 lg:pt-0 lg:pl-6">
-                            <div class="flex items-center rounded-full bg-gray-100 px-2 py-1">
-                                <button @click="decrementQuantity(item)" class="rounded-full bg-white p-1 shadow-sm"
-                                    :disabled="loadingItems[item.product?._id]">
-                                    <Minus class="w-3 h-3" />
-                                </button>
-                                <span class="mx-3 min-w-[24px] text-center text-sm font-medium">{{ item.quantity }}</span>
-                                <button @click="incrementQuantity(item)" class="rounded-full bg-white p-1 shadow-sm"
-                                    :disabled="loadingItems[item.product?._id]">
-                                    <Plus class="w-3 h-3" />
+                            <div class="flex items-center gap-3">
+                                <div class="flex items-center rounded-full bg-gray-100 px-2 py-1">
+                                    <button @click="decrementQuantity(item)" class="rounded-full bg-white p-1 shadow-sm"
+                                        :disabled="loadingItems[item.product?._id]">
+                                        <Minus class="w-3 h-3" />
+                                    </button>
+                                    <span class="mx-3 min-w-[24px] text-center text-sm font-medium">{{ item.quantity }}</span>
+                                    <button @click="incrementQuantity(item)" class="rounded-full bg-white p-1 shadow-sm"
+                                        :disabled="loadingItems[item.product?._id]">
+                                        <Plus class="w-3 h-3" />
+                                    </button>
+                                </div>
+                                <button @click="removeItem(item)" class="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition duration-200"
+                                    :disabled="loadingItems[item.product?._id]" :title="t('checkout.remove')">
+                                    <Trash2 class="w-4 h-4" />
                                 </button>
                             </div>
                             <span class="text-right text-base font-semibold sm:text-lg">
@@ -208,7 +214,7 @@
 
 <!-- vue 3 doesn't require explicit export default -->
 <script setup>
-import { ref, computed, onMounted, reactive } from 'vue';
+import { ref, computed, onMounted, reactive, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import {
@@ -300,7 +306,23 @@ const decrementQuantity = async (item) => {
         }
     } catch (error) {
         console.error('Error decrementing quantity:', error);
-        toast.error(t('cart.failedUpdateQuantity'));
+        const errorMsg = error.response?.data?.message || t('cart.failedUpdateQuantity');
+        toast.error(errorMsg);
+    } finally {
+        loadingItems[item.product._id] = false;
+    }
+};
+
+const removeItem = async (item) => {
+    if (loadingItems[item.product._id]) return;
+    loadingItems[item.product._id] = true;
+    try {
+        await cartStore.removeFromCart(item.product._id, item.variant?._id);
+        await refreshCart();
+        syncSelectAll();
+    } catch (error) {
+        console.error('Error removing item:', error);
+        toast.error(t('cart.failedRemoveItem') || 'Failed to remove item from cart');
     } finally {
         loadingItems[item.product._id] = false;
     }
@@ -308,12 +330,18 @@ const decrementQuantity = async (item) => {
 
 const incrementQuantity = async (item) => {
     if (loadingItems[item.product._id]) return;
+    const maxStock = item.variant ? (item.variant.stock ?? 0) : (item.product?.stock ?? 0);
+    if (item.quantity >= maxStock) {
+        toast.error(t('productDetails.exceedsStock', { stock: maxStock }) || `Cannot exceed available stock (${maxStock})`);
+        return;
+    }
     loadingItems[item.product._id] = true;
     try {
         await cartStore.updateQuantity(item.product._id, item.quantity + 1, item.variant?._id);
     } catch (error) {
         console.error('Error incrementing quantity:', error);
-        toast.error(t('cart.failedUpdateQuantity'));
+        const errorMsg = error.response?.data?.message || t('cart.failedUpdateQuantity');
+        toast.error(errorMsg);
     } finally {
         loadingItems[item.product._id] = false;
     }
@@ -326,8 +354,9 @@ const getItemPrice = (item) => {
     } else if (item.product) {
         price = item.product.price;
     }
-    const total = price * item.quantity;
-    return total;
+    const baseCurrency = item.product?.currency || 'NGN';
+    const convertedPrice = countryStore.convertPrice(price, baseCurrency);
+    return convertedPrice * item.quantity;
 };
 
 const formatTitle = (title) => {
@@ -431,18 +460,21 @@ const retryLoading = () => {
 const shippingCost = computed(() => {
     if (!productStore.shippingRules) {
         console.warn('Shipping rules not available, using default fee');
-        return 5.99; // Return a default value instead of setting shippingFee.value
+        return countryStore.currency === 'XOF' ? countryStore.convertPrice(5.99, 'NGN') : 5.99;
     }
 
     let fee = productStore.shippingRules.baseShippingFee || 0;
+    const freeShippingThreshold = countryStore.convertPrice(productStore.shippingRules.freeShippingThreshold || 0, 'NGN');
 
-    if (cartSubtotal.value > (productStore.shippingRules.freeShippingThreshold || 0)) {
+    if (cartSubtotal.value > freeShippingThreshold) {
         fee = 0;
     } else if (selectedItems.value) {
         selectedItems.value.forEach(item => {
             if (item && item.product) {
                 const categoryFee = (productStore.shippingRules.categoryFees && item.product.category)
-                    ? (productStore.shippingRules.categoryFees.get(item.product.category.toString()) || 0)
+                    ? (typeof productStore.shippingRules.categoryFees.get === 'function'
+                        ? (productStore.shippingRules.categoryFees.get(item.product.category.toString()) || 0)
+                        : (productStore.shippingRules.categoryFees[item.product.category.toString()] || 0))
                     : 0;
                 fee += categoryFee;
 
@@ -463,7 +495,11 @@ const shippingCost = computed(() => {
         }
     }
 
-    return Number(fee.toFixed(2));
+    return Number(countryStore.convertPrice(fee, 'NGN').toFixed(2));
+});
+
+watch(() => countryStore.currency, () => {
+    cartStore.calculateDiscount();
 });
 
 onMounted(async () => {

@@ -38,7 +38,7 @@
                             <span>{{ t('liveHelpPage.averageResponse') }}</span>
                         </div>
                     </div>
-                    <button
+                    <button @click="startChat"
                         class="w-full bg-[#24a6bb] text-white py-2 px-4 rounded-lg hover:bg-[#1a7f8f] transition-colors">
                         {{ t('liveHelpPage.startChat') }}
                     </button>
@@ -145,8 +145,10 @@ import {
     Phone,
     Clock,
 } from 'lucide-vue-next';
+import { toast } from 'vue-sonner';
+import apiClient from '@/api/axios';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const loading = ref(false);
 const form = ref({
     name: '',
@@ -164,25 +166,30 @@ const quickSolutions = computed(() => [
     {
         title: t('liveHelpPage.quick2Title'),
         description: t('liveHelpPage.quick2Body'),
-        link: '/help/how-to-return'
+        link: '/page/help/how-to-return'
     },
     {
         title: t('liveHelpPage.quick3Title'),
         description: t('liveHelpPage.quick3Body'),
-        link: '/help/payment-guide'
+        link: '/page/help/transaction-guide-help'
     },
     {
         title: t('liveHelpPage.quick4Title'),
         description: t('liveHelpPage.quick4Body'),
-        link: '/help/shipping-info'
+        link: '/page/help/transaction-guide-help'
     }
 ]);
 
 const submitEmailSupport = async () => {
     loading.value = true;
     try {
-        // Implement API call to submit support request
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated API call
+        await apiClient.post('/admin/support/contact', {
+            name: form.value.name,
+            email: form.value.email,
+            subject: form.value.subject,
+            message: form.value.message,
+            locale: locale.value
+        });
         // Reset form
         form.value = {
             name: '',
@@ -190,13 +197,18 @@ const submitEmailSupport = async () => {
             subject: '',
             message: ''
         };
-        // Show success message (implement your preferred notification system)
-        alert(t('liveHelpPage.success'));
+        // Show success message
+        toast.success(t('liveHelpPage.success'));
     } catch (error) {
-        // Handle error (implement your preferred error handling)
-        alert(t('liveHelpPage.failed'));
+        console.error("Error submitting support request:", error);
+        const errorMessage = error?.response?.data?.message || t('liveHelpPage.failed');
+        toast.error(errorMessage);
     } finally {
         loading.value = false;
     }
+};
+
+const startChat = () => {
+    toast.success(t('helpPage.liveChatSoon'));
 };
 </script>

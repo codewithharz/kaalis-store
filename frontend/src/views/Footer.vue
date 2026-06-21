@@ -87,15 +87,19 @@
                                 {{ t('footer.basicConcepts') }}
                             </router-link>
                         </li>
-                        <li><a href="/page/seller/bruthol-academy"
-                                class="text-xs md:text-sm text-gray-600 hover:text-[#24a6bb]">{{ t('footer.brutholAcademy') }}</a></li>
+                        <li>
+                            <router-link to="/page/seller/bruthol-academy"
+                                class="text-xs md:text-sm text-gray-600 hover:text-[#24a6bb]">
+                                {{ t('footer.brutholAcademy') }}
+                            </router-link>
+                        </li>
                     </ul>
                 </div>
 
                 <!-- Help Column -->
                 <div class="mb-6 md:mb-0">
                     <h3 class="font-semibold mb-2 md:mb-4 text-base md:text-lg">
-                        <router-link to="/page/help/live-help" class="text-black hover:text-[#24a6bb]">
+                        <router-link :to="userStore.isLoggedIn ? '/account/help-and-support' : '/page/help/help-and-support'" class="text-black hover:text-[#24a6bb]">
                             {{ t('footer.help') }}
                         </router-link>
                     </h3>

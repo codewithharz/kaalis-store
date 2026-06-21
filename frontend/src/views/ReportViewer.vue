@@ -187,6 +187,168 @@
             </div>
         </div>
 
+        <!-- Inventory Report Section -->
+        <div v-if="reportType === 'inventory'" class="space-y-6">
+            <!-- Inventory Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h4 class="text-sm font-medium text-gray-500 mb-2">{{ t('reportViewerPage.inventory.summary.totalProducts') }}</h4>
+                    <p class="text-2xl font-bold text-gray-900">{{ reportData.summary.totalProducts }}</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h4 class="text-sm font-medium text-gray-500 mb-2">{{ t('reportViewerPage.inventory.summary.lowStockItems') }}</h4>
+                    <p class="text-2xl font-bold text-amber-600">{{ reportData.summary.lowStockItems }}</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h4 class="text-sm font-medium text-gray-500 mb-2">{{ t('reportViewerPage.inventory.summary.outOfStockItems') }}</h4>
+                    <p class="text-2xl font-bold text-red-600">{{ reportData.summary.outOfStockItems }}</p>
+                </div>
+            </div>
+
+            <!-- Inventory Details Table -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+                <div class="px-6 py-4 border-b border-gray-100">
+                    <h3 class="text-lg font-semibold">{{ t('reportViewerPage.inventory.detailsTitle') }}</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ t('reportViewerPage.inventory.columns.productName') }}</th>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ t('reportViewerPage.inventory.columns.price') }}</th>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ t('reportViewerPage.inventory.columns.quantity') }}</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ t('reportViewerPage.inventory.columns.status') }}</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ t('reportViewerPage.inventory.columns.createdAt') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr v-for="product in reportData.data" :key="product._id" class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {{ product.name }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
+                                    {{ formatCurrency(product.price) }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 font-semibold">
+                                    {{ product.quantity }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <span v-if="product.quantity === 0" class="px-2.5 py-1 text-xs font-bold rounded-full bg-red-100 text-red-800">
+                                        {{ t('reportViewerPage.inventory.status.outOfStock') }}
+                                    </span>
+                                    <span v-else-if="product.quantity <= 10" class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800">
+                                        {{ t('reportViewerPage.inventory.status.lowStock') }}
+                                    </span>
+                                    <span v-else class="px-2.5 py-1 text-xs font-bold rounded-full bg-green-100 text-green-800">
+                                        {{ t('reportViewerPage.inventory.status.inStock') }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ formatDate(product.createdAt) }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Report Section -->
+        <div v-if="reportType === 'financial'" class="space-y-6">
+            <!-- Financial Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h4 class="text-sm font-medium text-gray-500 mb-2">{{ t('reportViewerPage.financial.summary.totalRevenue') }}</h4>
+                    <p class="text-2xl font-bold text-gray-900">{{ formatCurrency(reportData.summary.totalRevenue) }}</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h4 class="text-sm font-medium text-gray-500 mb-2">{{ t('reportViewerPage.financial.summary.totalMonths') }}</h4>
+                    <p class="text-2xl font-bold text-gray-900">{{ reportData.data.length }}</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h4 class="text-sm font-medium text-gray-500 mb-2">{{ t('reportViewerPage.financial.summary.avgMonthlyRevenue') }}</h4>
+                    <p class="text-2xl font-bold text-gray-900">
+                        {{ formatCurrency(reportData.summary.totalRevenue / Math.max(reportData.data.length, 1)) }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Financial Chart -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-lg font-semibold mb-4">{{ t('reportViewerPage.financial.chartTitle') }}</h3>
+                <div class="h-96">
+                    <canvas ref="financialChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Monthly Financial Table -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+                <div class="px-6 py-4 border-b border-gray-100">
+                    <h3 class="text-lg font-semibold">{{ t('reportViewerPage.financial.monthlyBreakdown') }}</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ t('reportViewerPage.financial.columns.month') }}</th>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ t('reportViewerPage.financial.columns.revenue') }}</th>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ t('reportViewerPage.financial.columns.orders') }}</th>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ t('reportViewerPage.financial.columns.avgOrderValue') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr v-for="monthItem in reportData.data" :key="monthItem._id" class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
+                                    {{ formatMonth(monthItem._id) }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
+                                    {{ formatCurrency(monthItem.revenue) }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
+                                    {{ monthItem.orderCount }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
+                                    {{ formatCurrency(monthItem.averageOrderValue) }}
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot class="bg-gray-50">
+                            <tr>
+                                <td class="px-6 py-3 text-left text-sm font-medium text-gray-900">{{ t('reportViewerPage.financial.total') }}</td>
+                                <td class="px-6 py-3 text-right text-sm font-medium text-gray-900 font-bold">
+                                    {{ formatCurrency(reportData.summary.totalRevenue) }}
+                                </td>
+                                <td class="px-6 py-3 text-right text-sm font-medium text-gray-900 font-bold">
+                                    {{ reportData.data.reduce((sum, m) => sum + m.orderCount, 0) }}
+                                </td>
+                                <td class="px-6 py-3 text-right text-sm font-medium text-gray-900 font-bold font-semibold">
+                                    {{ formatCurrency(reportData.summary.totalRevenue / Math.max(reportData.data.reduce((sum, m) => sum + m.orderCount, 0), 1)) }}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Report Metadata -->
         <div class="mt-8 text-sm text-gray-500 space-y-1">
             <p class="flex items-center gap-2">
@@ -225,7 +387,9 @@ export default {
     setup(props) {
         const { t, locale } = useI18n();
         const salesChart = ref(null);
+        const financialChart = ref(null);
         let chartInstance = null;
+        let financialChartInstance = null;
 
         const formatCurrency = (value) => {
             if (!value || isNaN(value)) return `${t('reportViewerPage.currencySymbol')}0`;
@@ -242,6 +406,16 @@ export default {
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit'
+            });
+        };
+
+        const formatMonth = (yearMonthStr) => {
+            if (!yearMonthStr) return '';
+            const [year, month] = yearMonthStr.split('-');
+            const d = new Date(year, parseInt(month) - 1);
+            return d.toLocaleDateString(locale.value === 'fr' ? 'fr-FR' : 'en-NG', {
+                year: 'numeric',
+                month: 'long'
             });
         };
 
@@ -290,8 +464,8 @@ export default {
                         {
                             label: t('reportViewerPage.sales.datasets.revenue'),
                             data: data.map(item => item.totalSales),
-                            borderColor: '#8b5cf6',
-                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            borderColor: '#ff934b',
+                            backgroundColor: 'rgba(255, 147, 75, 0.1)',
                             tension: 0.4,
                             fill: true,
                             yAxisID: 'revenue'
@@ -338,11 +512,11 @@ export default {
                             title: {
                                 display: true,
                                 text: t('reportViewerPage.sales.axes.revenue'),
-                                color: '#8b5cf6'
+                                color: '#ff934b'
                             },
                             ticks: {
                                 callback: value => formatCurrency(value),
-                                color: '#8b5cf6'
+                                color: '#ff934b'
                             },
                             grid: {
                                 drawOnChartArea: true,
@@ -375,18 +549,99 @@ export default {
             });
         };
 
+        const initFinancialChart = () => {
+            if (props.reportType !== 'financial' || !props.reportData?.data) return;
+
+            const ctx = financialChart.value?.getContext('2d');
+            if (!ctx) return;
+
+            if (financialChartInstance) {
+                financialChartInstance.destroy();
+            }
+
+            const data = props.reportData.data;
+            financialChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(item => {
+                        const [year, month] = item._id.split('-');
+                        const d = new Date(year, parseInt(month) - 1);
+                        return d.toLocaleDateString(locale.value === 'fr' ? 'fr-FR' : 'en-NG', {
+                            year: 'numeric',
+                            month: 'short'
+                        });
+                    }),
+                    datasets: [
+                        {
+                            label: t('reportViewerPage.financial.datasets.revenue'),
+                            data: data.map(item => item.revenue),
+                            borderColor: '#ff934b',
+                            backgroundColor: 'rgba(255, 147, 75, 0.2)',
+                            borderWidth: 2,
+                            borderRadius: 6,
+                            yAxisID: 'revenue'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        revenue: {
+                            type: 'linear',
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: t('reportViewerPage.financial.axes.revenue'),
+                                color: '#ff934b'
+                            },
+                            ticks: {
+                                callback: value => formatCurrency(value),
+                                color: '#ff934b'
+                            },
+                            grid: {
+                                drawOnChartArea: true,
+                                borderDash: [2, 2]
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        };
+
         onMounted(() => {
             initSalesChart();
+            initFinancialChart();
         });
 
         watch(() => props.reportData, () => {
             initSalesChart();
+            initFinancialChart();
         }, { deep: true });
 
         return {
             salesChart,
+            financialChart,
             formatCurrency,
             formatDate,
+            formatMonth,
             formatDateRange,
             getTotalSpent,
             t

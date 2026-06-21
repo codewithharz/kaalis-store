@@ -125,20 +125,20 @@
                         </ul>
                     </div>
                     <div>
-                        <div class="bg-[#e6f4f7] p-6 rounded-lg">
-                            <h3 class="font-semibold text-[#24a6bb] mb-4">{{ t('transactionGuidePage.needHelp') }}</h3>
-                            <p class="text-gray-600 mb-4">{{ t('transactionGuidePage.needHelpBody') }}</p>
-                            <div class="flex space-x-4">
-                                <router-link to="/help/live-help"
-                                    class="bg-[#24a6bb] text-white px-4 py-2 rounded-lg hover:bg-[#1a7f8f] transition-colors">
-                                    {{ t('transactionGuidePage.contactSupport') }}
-                                </router-link>
-                                <router-link to="/help/faq"
-                                    class="border border-[#24a6bb] text-[#24a6bb] px-4 py-2 rounded-lg hover:bg-[#24a6bb] hover:text-white transition-colors">
-                                    {{ t('transactionGuidePage.viewFaqs') }}
-                                </router-link>
+                            <div class="bg-[#e6f4f7] p-6 rounded-lg">
+                                <h3 class="font-semibold text-[#24a6bb] mb-4">{{ t('transactionGuidePage.needHelp') }}</h3>
+                                <p class="text-gray-600 mb-4">{{ t('transactionGuidePage.needHelpBody') }}</p>
+                                <div class="flex space-x-4">
+                                    <router-link to="/page/help/live-help"
+                                        class="bg-[#24a6bb] text-white px-4 py-2 rounded-lg hover:bg-[#1a7f8f] transition-colors">
+                                        {{ t('transactionGuidePage.contactSupport') }}
+                                    </router-link>
+                                    <router-link to="/page/help/frequently-asked-questions"
+                                        class="border border-[#24a6bb] text-[#24a6bb] px-4 py-2 rounded-lg hover:bg-[#24a6bb] hover:text-white transition-colors">
+                                        {{ t('transactionGuidePage.viewFaqs') }}
+                                    </router-link>
+                                </div>
                             </div>
-                        </div>
                     </div>
                 </div>
             </section>

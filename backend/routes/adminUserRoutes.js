@@ -120,6 +120,7 @@ router.put("/products/:id", adminAuthMiddleware, adminDashboardController.update
 router.delete("/products/:id", adminAuthMiddleware, adminDashboardController.deleteProduct);
 
 // Category Management Routes
+router.post("/categories", adminAuthMiddleware, isAdmin, adminDashboardController.createCategory);
 router.put("/categories/:id", adminAuthMiddleware, adminDashboardController.updateCategory);
 router.delete("/categories/:id", adminAuthMiddleware, adminDashboardController.deleteCategory);
 

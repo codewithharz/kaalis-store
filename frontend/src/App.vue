@@ -19,13 +19,14 @@
 </template>
 
 <script>
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import Navbar from './views/Navbar.vue';
 import Categories from './views/Categories.vue';
 import Footer from './views/Footer.vue';
 import { Toaster } from '@/components/ui/sonner';
 import { clickOutside } from './utils/clickOutside.js';
+import { fetchPlatformRuntimeSettings } from './utils/platformSettings.js';
 
 export default {
   components: {
@@ -49,6 +50,12 @@ export default {
     const closeMenu = () => {
       isMenuOpen.value = false;
     };
+
+    onMounted(() => {
+      fetchPlatformRuntimeSettings().catch((err) => {
+        console.warn("Failed to fetch platform settings on load:", err);
+      });
+    });
 
     return {
       isAdminRoute,
