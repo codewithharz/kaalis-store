@@ -348,11 +348,13 @@ const incrementQuantity = async (item) => {
 };
 
 const getItemPrice = (item) => {
+    const variantPrice = Number(item?.variant?.price);
     let price = 0;
-    if (item.variant) {
-        price = item.variant.price;
-    } else if (item.product) {
-        price = item.product.price;
+    if (Number.isFinite(variantPrice) && variantPrice > 0) {
+        price = variantPrice;
+    } else {
+        const productPrice = Number(item?.product?.price);
+        price = Number.isFinite(productPrice) && productPrice > 0 ? productPrice : 0;
     }
     const baseCurrency = item.product?.currency || 'NGN';
     const convertedPrice = countryStore.convertPrice(price, baseCurrency);
