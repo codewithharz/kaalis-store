@@ -1,4 +1,6 @@
 // backend/seeders/adminSeeder.js
+// run command: node seeders/adminSeeder.js
+
 const AdminUser = require("../models/adminUserModels");
 const crypto = require("crypto");
 const { sendAdminCreatedEmail } = require("../services/emailService");
@@ -7,14 +9,24 @@ const createInitialAdmin = async () => {
   try {
     console.log("[ADMIN SETUP] Starting admin initialization...");
 
-    const existingAdmin = await AdminUser.findOne({ role: "SuperAdmin" });
+    const email = process.env.ADMIN_EMAIL;
+    if (!email) {
+      console.error(
+        "[ADMIN SETUP] ERROR: ADMIN_EMAIL not set in environment variables"
+      );
+      return;
+    }
+
+    const existingAdmin = await AdminUser.findOne({ email: email });
     if (existingAdmin) {
-      console.log("[ADMIN SETUP] SuperAdmin already exists, skipping creation");
+      console.log(
+        `[ADMIN SETUP] Admin with email "${email}" already exists, skipping creation.`
+      );
       return;
     }
 
     console.log(
-      "[ADMIN SETUP] No existing SuperAdmin found, creating new admin..."
+      `[ADMIN SETUP] No existing admin found with email "${email}". Proceeding to create admin...`
     );
 
     const generateSecurePassword = () => {
@@ -46,14 +58,6 @@ const createInitialAdmin = async () => {
 
     const generatedPassword = generateSecurePassword();
     const username = `admin_${crypto.randomBytes(4).toString("hex")}`;
-    const email = process.env.ADMIN_EMAIL;
-
-    if (!email) {
-      console.error(
-        "[ADMIN SETUP] ERROR: ADMIN_EMAIL not set in environment variables"
-      );
-      return;
-    }
 
     console.log("[ADMIN SETUP] Creating admin with email:", email);
     console.log("[ADMIN SETUP] Generated username:", username);
@@ -76,23 +80,30 @@ const createInitialAdmin = async () => {
 
     console.log("[ADMIN SETUP] Attempting to send credentials email...");
 
-    await sendAdminCreatedEmail({
-      to: email,
-      username,
-      tempPassword: generatedPassword,
-      locale: "en",
-    });
-    console.log(
-      "[ADMIN SETUP] ✅ Credentials email sent successfully to:",
-      email
-    );
+    try {
+      await sendAdminCreatedEmail({
+        to: email,
+        username,
+        tempPassword: generatedPassword,
+        locale: "en",
+      });
+      console.log(
+        "[ADMIN SETUP] ✅ Credentials email sent successfully to:",
+        email
+      );
+    } catch (emailErr) {
+      console.error(
+        "[ADMIN SETUP] ⚠️ Email dispatch failed. Please check SMTP settings. Error:",
+        emailErr.message
+      );
+    }
 
     console.log("\n===========================================");
     console.log("🔐 ADMIN ACCOUNT CREATED SUCCESSFULLY 🔐");
     console.log("===========================================");
     console.log("Username:", username);
     console.log("Email:", email);
-    console.log("Check email for login credentials");
+    console.log("Password:", generatedPassword);
     console.log("===========================================\n");
   } catch (error) {
     console.error("[ADMIN SETUP] ❌ Error during admin creation:", error);
@@ -105,6 +116,25 @@ const createInitialAdmin = async () => {
 };
 
 module.exports = createInitialAdmin;
+
+if (require.main === module) {
+  require("dotenv").config();
+  const connectDB = require("../utils/db");
+  const mongoose = require("mongoose");
+
+  (async () => {
+    try {
+      await connectDB();
+      await createInitialAdmin();
+      console.log("[ADMIN SETUP] Standalone execution finished.");
+      await mongoose.connection.close();
+      process.exit(0);
+    } catch (err) {
+      console.error("[ADMIN SETUP] Standalone execution failed:", err);
+      process.exit(1);
+    }
+  })();
+}
 
 // // backend/seeders/adminSeeder.js
 // const AdminUser = require("../models/adminUserModels");

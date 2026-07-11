@@ -72,7 +72,8 @@
                 <span class="text-xs sm:text-sm font-medium">{{ sellerInfo.averageRating || 0 }}</span>
                 <span class="text-xs text-gray-500 ml-1">{{ t('orderCard.reviewsCount', {
                   count: sellerInfo.totalReviews
-                  || 0 }) }}</span>
+                    || 0
+                }) }}</span>
               </div>
             </div>
           </div>
@@ -214,7 +215,7 @@
                 <span class="text-xs sm:text-sm text-gray-600">{{ t('orderCard.totalAmount') }}</span>
               </div>
               <span class="font-bold text-base sm:text-lg text-gray-900">₦{{ formatAmount(currentOrder.totalAmount)
-              }}</span>
+                }}</span>
             </div>
           </div>
         </div>
@@ -229,7 +230,7 @@
         </button>
 
         <button @click="handleTrackOrder"
-          class="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white rounded-lg font-bold transition-all duration-200 transform hover:scale-105 shadow-sm text-xs sm:text-sm">sm">
+          class="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] text-white rounded-lg font-bold transition-all duration-200 transform hover:scale-105 shadow-sm text-xs sm:text-sm">
           <MapPin class="w-3 h-3 sm:w-4 sm:h-4" />
           <span>{{ t('orderCard.trackOrder') }}</span>
         </button>
@@ -277,7 +278,8 @@
             <div>
               <p class="text-base sm:text-lg font-bold text-gray-900">{{ t('orderCard.orderNumber', {
                 id:
-                  currentOrder.orderId }) }}</p>
+                  currentOrder.orderId
+              }) }}</p>
               <p class="text-xs sm:text-sm text-gray-600 flex items-center gap-2 mt-1">
                 <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -414,7 +416,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z">
+              </path>
             </svg>
             {{ t('orderCard.shippingAddress') }}
           </h4>
@@ -459,7 +462,8 @@
         <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-orange-50/10 rounded-lg sm:rounded-xl">
           <p class="font-bold text-gray-900 text-sm sm:text-base">{{ t('orderCard.orderNumber', {
             id:
-              currentOrder.orderId }) }}</p>
+              currentOrder.orderId
+          }) }}</p>
           <p class="text-xs sm:text-sm text-gray-600">{{ formatDate(currentOrder.createdAt) }}</p>
         </div>
 
@@ -571,7 +575,7 @@
               <p class="mt-2 text-xs sm:text-sm font-medium text-gray-700">
                 {{ t('orderCard.subtotal') }} <span class="text-green-600 font-bold">₦{{
                   formatAmount(product.product?.price *
-                  product.quantity) }}</span>
+                    product.quantity) }}</span>
               </p>
             </div>
           </div>
@@ -584,27 +588,28 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z">
+              </path>
             </svg>
             {{ t('orderCard.shippingAddress') }}
           </h4>
           <div class="space-y-3 sm:space-y-4">
             <div>
               <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">{{ t('orderCard.streetAddress')
-                }}</label>
+              }}</label>
               <input type="text" v-model="modifyForm.address.street"
                 class="w-full border-2 border-gray-200 rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-colors text-sm">
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">{{ t('orderCard.city')
-                  }}</label>
+                }}</label>
                 <input type="text" v-model="modifyForm.address.city"
                   class="w-full border-2 border-gray-200 rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-colors text-sm">
               </div>
               <div>
                 <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">{{ t('orderCard.state')
-                  }}</label>
+                }}</label>
                 <input type="text" v-model="modifyForm.address.state"
                   class="w-full border-2 border-gray-200 rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-colors text-sm">
               </div>
@@ -612,13 +617,13 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">{{ t('orderCard.country')
-                  }}</label>
+                }}</label>
                 <input type="text" v-model="modifyForm.address.country"
                   class="w-full border-2 border-gray-200 rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-colors text-sm">
               </div>
               <div>
                 <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">{{ t('orderCard.postalCode')
-                  }}</label>
+                }}</label>
                 <input type="text" v-model="modifyForm.address.postalCode"
                   class="w-full border-2 border-gray-200 rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-colors text-sm">
               </div>
@@ -914,7 +919,7 @@
         <!-- Rating Stars -->
         <div class="mb-4 sm:mb-6">
           <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-3">{{ t('orderCard.yourRating')
-            }}</label>
+          }}</label>
           <div class="flex gap-1 sm:gap-2 justify-center sm:justify-start">
             <button v-for="star in 5" :key="star" @click="rating = star"
               class="focus:outline-none transition-transform hover:scale-110">
@@ -933,7 +938,7 @@
         <!-- Review Text -->
         <div class="mb-4 sm:mb-6">
           <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">{{ t('orderCard.yourReviewOptional')
-            }}</label>
+          }}</label>
           <textarea v-model="reviewText" rows="4"
             class="w-full border-2 border-gray-200 rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 transition-colors resize-none text-sm"
             :placeholder="t('orderCard.reviewPlaceholder')"></textarea>

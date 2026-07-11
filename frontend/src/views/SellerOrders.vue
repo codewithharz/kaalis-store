@@ -662,7 +662,6 @@ export default {
             jumpToPage,
             selectedOrder,
             orderToUpdate,
-            getStatusColor,
             formatDate,
             formatCurrency,
             viewOrderDetails,
