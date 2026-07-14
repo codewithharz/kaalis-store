@@ -180,6 +180,38 @@ class PaymentController {
           });
         }
 
+        // ── Duplicate-charge guard ─────────────────────────────────────────────
+        // If a successful (or still-processing) payment already exists for this
+        // order, return it immediately instead of hitting AfriExchange again.
+        // This protects buyers who retry after a network failure that charged
+        // them but lost the server-side confirmation.
+        const existingPayment = await Payment.findOne({
+          orderId: order._id,
+          paymentMethod: "AfriExchange",
+          status: { $in: ["success", "processing"] },
+        });
+
+        if (existingPayment) {
+          logger.warn("AfriExchange duplicate-charge guard triggered", {
+            orderId: order._id,
+            existingPaymentId: existingPayment._id,
+            existingReference: existingPayment.reference,
+            existingStatus: existingPayment.status,
+          });
+          return res.status(200).json({
+            status: true,
+            data: {
+              reference: existingPayment.reference,
+              collectionId: existingPayment.afriExchangeData?.collectionId,
+              provider: "AfriExchange",
+              paymentStatus: existingPayment.status,
+              orderStatus: order.status,
+              duplicate: true,
+            },
+          });
+        }
+        // ──────────────────────────────────────────────────────────────────────
+
         const response = await axios.post(
           `${baseUrl.replace(/\/$/, "")}/integrations/kaalis/collections`,
           {
@@ -215,7 +247,11 @@ class PaymentController {
         }
 
         payment.reference = collection.reference;
-        payment.status = "success";
+        // Status is set to "processing" — it will be upgraded to "success"
+        // only when AfriExchange sends a confirmed collection webhook.
+        // Setting it optimistically to "success" masked failures where
+        // the charge went through but our DB write failed.
+        payment.status = "processing";
         payment.afriExchangeData = collection;
         await payment.save();
 

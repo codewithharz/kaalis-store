@@ -1,10 +1,18 @@
 const crypto = require("crypto");
+const mongoose = require("mongoose");
 const payoutService = require("../services/payoutService");
 const {
   updateAfriExchangeWebhookHealth,
 } = require("../services/platformSettingsService");
 const logger = require("../utils/logger");
 
+// ── Secret resolution ────────────────────────────────────────────────────────
+// Only use the value from environment variables — never hardcode fallback
+// secrets in source code. The old hardcoded strings have been removed because:
+//   - "f31937a28…" appeared in git history and should be considered compromised.
+//   - "webhook-shared-secret" / "your-shared-webhook-secret" are trivially guessable.
+// Set AFRIEXCHANGE_WEBHOOK_SECRET in your .env to a strong, randomly-generated
+// secret that you obtain from the AfriExchange merchant dashboard.
 const getWebhookSecret = () =>
   process.env.AFRIEXCHANGE_WEBHOOK_SECRET || process.env.AFRIEXCHANGE_KAALIS_API_KEY;
 
@@ -42,25 +50,25 @@ const verifySignature = (req) => {
     ? signature.slice("sha256=".length)
     : signature;
 
-  const secrets = [
-    getWebhookSecret(),
-    "f31937a28c0f0d6db27a600cf37fb80b5d854ea27eb29f9e3dfb4d2027dac7c8", // Neon DB Kaalis Webhook Secret
-    "webhook-shared-secret",
-    "your-shared-webhook-secret"
-  ].filter(Boolean);
+  const secret = getWebhookSecret();
 
-  for (const sec of secrets) {
-    const expected = crypto
-      .createHmac("sha256", sec)
-      .update(buildSignaturePayload(req))
-      .digest("hex");
-    
-    if (safeCompare(expected, normalizedSignature)) {
-      return {
-        valid: true,
-        message: "",
-      };
-    }
+  if (!secret) {
+    logger.error(
+      "AfriExchange webhook secret is not configured. Set AFRIEXCHANGE_WEBHOOK_SECRET in your environment."
+    );
+    return {
+      valid: false,
+      message: "Webhook secret not configured on server",
+    };
+  }
+
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(buildSignaturePayload(req))
+    .digest("hex");
+
+  if (safeCompare(expected, normalizedSignature)) {
+    return { valid: true, message: "" };
   }
 
   return {
@@ -69,6 +77,79 @@ const verifySignature = (req) => {
   };
 };
 
+// ── Collection event handler ─────────────────────────────────────────────────
+// Handles buyer-side collection events (charge confirmations, failures, reversals).
+// Previously these were silently ignored, which meant the system never learned
+// about failed or reversed charges and could not update payment records.
+const handleCollectionEvent = async (event, body) => {
+  const Payment = require("../models/paymentModels");
+  const Order = require("../models/orderModels");
+
+  const reference =
+    body?.data?.reference ||
+    body?.data?.collectionReference ||
+    body?.reference ||
+    "";
+
+  if (!reference) {
+    logger.warn("AfriExchange collection webhook missing reference", { event, body });
+    return { success: false, message: "Missing collection reference" };
+  }
+
+  const payment = await Payment.findOne({ reference });
+
+  if (!payment) {
+    logger.warn("AfriExchange collection webhook: payment record not found", {
+      event,
+      reference,
+    });
+    return { success: false, message: `Payment record not found for reference: ${reference}` };
+  }
+
+  if (event === "collection.completed") {
+    // Confirm the payment now that AfriExchange has verified the charge.
+    payment.status = "success";
+    await payment.save();
+
+    // Ensure the linked order reflects the confirmed payment.
+    await Order.findByIdAndUpdate(payment.orderId, {
+      $set: { status: "Processing", transactionId: reference },
+    });
+
+    logger.info("AfriExchange collection confirmed via webhook", {
+      reference,
+      paymentId: payment._id,
+    });
+    return { success: true, message: "Collection confirmed" };
+  }
+
+  if (
+    event === "collection.failed" ||
+    event === "collection.reversed" ||
+    event === "collection.cancelled" ||
+    event === "collection.canceled"
+  ) {
+    // Mark the payment as failed so the duplicate-charge guard in
+    // paymentController won't block a legitimate retry after a reversal.
+    payment.status = "failed";
+    await payment.save();
+
+    logger.warn("AfriExchange collection failed/reversed via webhook", {
+      event,
+      reference,
+      paymentId: payment._id,
+    });
+
+    return {
+      success: true,
+      message: `Collection marked as failed (event: ${event})`,
+    };
+  }
+
+  return { success: true, message: "Collection event acknowledged" };
+};
+
+// ── Main webhook handler ─────────────────────────────────────────────────────
 exports.handleAfriExchangeWebhook = async (req, res) => {
   const signatureCheck = verifySignature(req);
 
@@ -85,7 +166,8 @@ exports.handleAfriExchangeWebhook = async (req, res) => {
   }
 
   const event = req.body?.event || req.body?.type;
-  const allowedEvents = new Set([
+
+  const payoutEvents = new Set([
     "payout.processing",
     "payout.completed",
     "payout.failed",
@@ -93,7 +175,16 @@ exports.handleAfriExchangeWebhook = async (req, res) => {
     "payout.canceled",
   ]);
 
-  if (!allowedEvents.has(event)) {
+  const collectionEvents = new Set([
+    "collection.completed",
+    "collection.failed",
+    "collection.reversed",
+    "collection.cancelled",
+    "collection.canceled",
+  ]);
+
+  // ── Ignore any event type we don't handle ──────────────────────────────────
+  if (!payoutEvents.has(event) && !collectionEvents.has(event)) {
     return res.json({
       success: true,
       ignored: true,
@@ -102,23 +193,36 @@ exports.handleAfriExchangeWebhook = async (req, res) => {
   }
 
   try {
-    const result = await payoutService.applyAfriExchangePayoutUpdate(req.body);
+    let result;
 
+    if (collectionEvents.has(event)) {
+      // ── Buyer collection events ────────────────────────────────────────────
+      result = await handleCollectionEvent(event, req.body);
+    } else {
+      // ── Vendor payout events ───────────────────────────────────────────────
+      result = await payoutService.applyAfriExchangePayoutUpdate(req.body);
+    }
+
+    // Always update the webhook health heartbeat regardless of event type.
     await updateAfriExchangeWebhookHealth({
       event,
       reference:
         req.body?.data?.reference ||
         req.body?.data?.transferReference ||
         req.body?.data?.payoutReference ||
+        req.body?.data?.collectionReference ||
         req.body?.reference ||
         "",
       status:
-        req.body?.data?.status || req.body?.status || event.replace("payout.", ""),
+        req.body?.data?.status ||
+        req.body?.status ||
+        event.split(".")[1] ||
+        "",
       receivedAt: new Date(),
     });
 
     if (!result.success) {
-      logger.warn("AfriExchange webhook could not update payout", {
+      logger.warn("AfriExchange webhook could not update record", {
         event,
         message: result.message,
       });
