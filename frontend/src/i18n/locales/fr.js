@@ -4140,7 +4140,7 @@ export default {
     },
   },
   adminCategoryTree: {
-    itemsCount: "({count} elements)",
+    itemsCount: "({count} produits)",
     inactive: "Inactive",
   },
   adminUsers: {

@@ -13,7 +13,7 @@
             <div class="flex-1 min-w-0">
                 <span class="font-medium truncate">{{ displayName }}</span>
                 <span class="text-sm text-gray-500 ml-2">
-                    {{ t('adminCategoryTree.itemsCount', { count: getSubcategoriesCount }) }}
+                    {{ t('adminCategoryTree.itemsCount', { count: category.productsCount || 0 }) }}
                 </span>
             </div>
 

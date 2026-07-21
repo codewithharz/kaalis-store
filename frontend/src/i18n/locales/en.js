@@ -4079,7 +4079,7 @@ export default {
     },
   },
   adminCategoryTree: {
-    itemsCount: "({count} items)",
+    itemsCount: "({count} products)",
     inactive: "Inactive",
   },
   adminUsers: {
