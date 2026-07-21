@@ -1321,14 +1321,14 @@ export default {
                 // Process unit information
                 console.log('Processing unit information...');
                 updatedProduct.unit = {
-                    category: updatedProduct.unit.category || updatedProduct.unitCategory || '',
-                    baseUnit: updatedProduct.unit.baseUnit || '',
-                    conversionFactor: parseFloat(updatedProduct.unit.conversionFactor) || 1,
-                    value: parseFloat(updatedProduct.unit.value) || 1,
-                    displayUnit: updatedProduct.unit.displayUnit || '',
-                    packagingUnit: updatedProduct.unit.packagingUnit || '',
-                    precision: parseInt(updatedProduct.unit.precision) || 2,
-                    compoundUnit: updatedProduct.unit.compoundUnit || {},
+                    category: updatedProduct.unit?.category || updatedProduct.unitCategory || '',
+                    baseUnit: updatedProduct.unit?.baseUnit || '',
+                    conversionFactor: parseFloat(updatedProduct.unit?.conversionFactor) || 1,
+                    value: parseFloat(updatedProduct.unit?.value) || 1,
+                    displayUnit: updatedProduct.unit?.displayUnit || '',
+                    packagingUnit: updatedProduct.unit?.packagingUnit || '',
+                    precision: parseInt(updatedProduct.unit?.precision) || 2,
+                    compoundUnit: updatedProduct.unit?.compoundUnit || {},
                     regionSpecificDisplay: undefined,
                 };
                 console.log('Processed unit information:', updatedProduct.unit);

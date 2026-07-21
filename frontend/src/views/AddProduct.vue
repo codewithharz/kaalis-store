@@ -1533,8 +1533,8 @@ export default {
                 // Ensure unit information is properly set
                 productData.unit = {
                     ...productData.unit,
-                    packagingUnit: productData.unit.packagingUnit || '',
-                    compoundUnit: productData.unit.compoundUnit.numerator || productData.unit.compoundUnit.denominator
+                    packagingUnit: productData.unit?.packagingUnit || '',
+                    compoundUnit: productData.unit?.compoundUnit?.numerator || productData.unit?.compoundUnit?.denominator
                         ? {
                             numerator: productData.unit.compoundUnit.numerator,
                             denominator: productData.unit.compoundUnit.denominator
