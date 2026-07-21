@@ -36,6 +36,7 @@
                         
                         <div class="space-y-2">
                             <HierarchicalCategorySelector :categories="categories"
+                                v-model="product.category"
                                 v-model:selectedCategories="selectedCategories"
                                 @update:selectedCategories="updateSelectedCategories"
                                 class="focus:ring-2 focus:ring-[#ff934b]/20" />
@@ -1062,7 +1063,6 @@ export default {
 
             tagsInput.value = product.tags.join(', ');
             imagePreviews.value = [...product.images];
-            selectedCategories.value = fetchedProduct.category ? [fetchedProduct.category] : [];
             selectedSellerId.value = fetchedProduct.seller || fetchedProduct.user?.sellerProfile?._id || '';
         };
 
