@@ -126,9 +126,9 @@ export default {
         };
 
         // watch for changes in the categories and model value
-        watch(() => props.categories, (newCategories) => {
-            if (newCategories.length > 0 && props.modelValue) {
-                initializeCategories(props.modelValue);
+        watch([() => props.categories, () => props.modelValue], ([newCategories, newModelValue]) => {
+            if (newCategories?.length > 0 && newModelValue) {
+                initializeCategories(newModelValue);
             }
         }, { immediate: true });
 

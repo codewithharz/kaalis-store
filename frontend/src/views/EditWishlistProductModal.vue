@@ -1443,7 +1443,7 @@ export default {
                 //     updateSelectedCategories(newProduct.category);
                 // }
             }
-        }, { deep: true });
+        }, { deep: true, immediate: true });
 
         // Add a separate watch for categories to handle the case where categories load after the product
         watch(() => categories.value, (newCategories) => {
