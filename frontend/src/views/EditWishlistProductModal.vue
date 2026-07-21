@@ -156,7 +156,7 @@
                     <div class="bg-white border border-slate-100 rounded-2xl p-5 sm:p-6 shadow-sm space-y-5">
                         <div class="flex items-center gap-3 pb-3 border-b border-slate-50">
                             <div class="p-2 bg-[#ff934b]/10 rounded-lg text-[#ff934b]">
-                                <DollarSign class="w-4 h-4" />
+                                <Banknote class="w-4 h-4" />
                             </div>
                             <h3 class="text-base font-bold text-slate-800">{{ t('addProductPage.pricing') }}</h3>
                         </div>
@@ -166,9 +166,9 @@
                             <div class="space-y-2">
                                 <label class="text-sm font-semibold text-slate-700 block">{{ t('addProductPage.price') }}</label>
                                 <div class="relative rounded-xl border border-slate-200 focus-within:border-[#ff934b] focus-within:ring-4 focus-within:ring-[#ff934b]/10 bg-slate-50/30 transition-all duration-300">
-                                    <DollarSign class="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-sm">{{ currencySymbol }}</span>
                                     <input type="number" v-model.number="editingProduct.price"
-                                        class="w-full px-4 py-3 pl-10 text-slate-700 bg-transparent border-none focus:outline-none text-sm"
+                                        class="w-full px-4 py-3 pl-8 text-slate-700 bg-transparent border-none focus:outline-none text-sm"
                                         step="0.01" min="0" required />
                                 </div>
                                 <p class="text-xs font-semibold text-slate-500 pl-1">{{ formatPricePreview(editingProduct.price) }}</p>
@@ -178,9 +178,9 @@
                             <div class="space-y-2">
                                 <label class="text-sm font-semibold text-slate-700 block">{{ t('addProductPage.originalPrice') }}</label>
                                 <div class="relative rounded-xl border border-slate-200 focus-within:border-[#ff934b] focus-within:ring-4 focus-within:ring-[#ff934b]/10 bg-slate-50/30 transition-all duration-300">
-                                    <DollarSign class="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-sm">{{ currencySymbol }}</span>
                                     <input type="number" v-model.number="editingProduct.originalPrice"
-                                        class="w-full px-4 py-3 pl-10 text-slate-700 bg-transparent border-none focus:outline-none text-sm"
+                                        class="w-full px-4 py-3 pl-8 text-slate-700 bg-transparent border-none focus:outline-none text-sm"
                                         step="0.01" min="0" />
                                 </div>
                                 <p class="text-xs font-semibold text-slate-500 pl-1">{{ formatPricePreview(editingProduct.originalPrice) }}</p>
@@ -520,9 +520,9 @@
                                     <div class="space-y-2">
                                         <label class="text-xs font-semibold text-slate-700 block">{{ t('addProductPage.price') }}</label>
                                         <div class="relative rounded-xl border border-slate-200 focus-within:border-[#ff934b] focus-within:ring-4 focus-within:ring-[#ff934b]/10 bg-slate-50/30 transition-all duration-300">
-                                            <DollarSign class="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-xs">{{ currencySymbol }}</span>
                                             <input type="number" v-model.number="variant.price"
-                                                class="w-full px-4 py-2.5 pl-10 text-slate-700 bg-transparent border-none focus:outline-none text-xs"
+                                                class="w-full px-4 py-2.5 pl-8 text-slate-700 bg-transparent border-none focus:outline-none text-xs"
                                                 min="0" step="0.01" />
                                         </div>
                                         <p class="text-[10px] text-slate-400 pl-1">{{ formatPricePreview(variant.price) }}</p>
@@ -654,10 +654,9 @@
                                     <div class="flex-1 space-y-1 min-w-[120px]">
                                         <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Price / Unit</label>
                                         <div class="relative rounded-xl border border-slate-200 focus-within:border-[#ff934b] focus-within:ring-4 focus-within:ring-[#ff934b]/10 bg-slate-50/30 transition-all duration-300">
-                                            <DollarSign class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                            <input type="number" v-model.number="pricing.price"
-                                                :placeholder="t('addProductPage.bulkPricing.pricePerUnitPlaceholder')"
-                                                class="w-full px-3 py-2 pl-9 text-slate-700 bg-transparent border-none focus:outline-none text-xs"
+                                            <span class="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-xs">{{ currencySymbol }}</span>
+                                            <input type="number" v-model.number="pricing.price" :placeholder="t('addProductPage.bulkPricing.pricePerUnitPlaceholder')"
+                                                class="w-full px-3 py-2 pl-7 text-slate-700 bg-transparent border-none focus:outline-none text-xs"
                                                 step="0.01" min="0" />
                                         </div>
                                     </div>
@@ -767,7 +766,7 @@ import { formatCurrencyAmount, getCurrencyForCountry } from '../utils/countryCur
 import uploadService from '../services/uploadService';
 import { 
     X, UploadCloud, Trash2, ChevronDown, ChevronRight, Sparkles, Plus,
-    Tag, ShoppingBag, Award, Palette, FileText, Image as ImageIcon, DollarSign, Percent,
+    Tag, ShoppingBag, Award, Palette, FileText, Image as ImageIcon, Banknote, Percent,
     Package, Lock, Scale, Sliders, TrendingUp, Activity, Eye, Box, Layers, Barcode,
     Globe, Hash
 } from 'lucide-vue-next';
@@ -777,7 +776,7 @@ export default {
     name: 'EditWishlistProductModal',
     components: {
         HierarchicalCategorySelector, X, UploadCloud, Trash2, ChevronDown, ChevronRight, Sparkles, Plus,
-        Tag, ShoppingBag, Award, Palette, FileText, ImageIcon, DollarSign, Percent,
+        Tag, ShoppingBag, Award, Palette, FileText, ImageIcon, Banknote, Percent,
         Package, Lock, Scale, Sliders, TrendingUp, Activity, Eye, Box, Layers, Barcode,
         Globe, Hash
     },
@@ -815,6 +814,11 @@ export default {
             }
             return 'NGN';
         });
+
+        const currencySymbol = computed(() => {
+            return activeFormCurrency.value === 'XOF' ? 'CFA' : '₦';
+        });
+
         const formatPricePreview = (value) => formatCurrencyAmount(value, activeFormCurrency.value);
 
         const normalizeVariantForEdit = (variant = {}, fallbackColor = '#000000') => ({
@@ -1461,6 +1465,7 @@ export default {
             addBulkPricing,
             removeBulkPricing,
             tagsInput,
+            currencySymbol,
 
             mainColorName,
             allColors,
