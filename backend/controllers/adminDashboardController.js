@@ -689,10 +689,14 @@ exports.getAdminProducts = async (req, res) => {
 
     const total = await Product.countDocuments(query);
 
-    const normalizedProducts = products.map((product) => ({
-      ...product,
-      status: product.isAvailable ? "active" : "inactive",
-    }));
+    const normalizedProducts = products.map((product) => {
+      const firstSku = product.sku || product.variants?.find((v) => v.sku)?.sku || "N/A";
+      return {
+        ...product,
+        sku: firstSku,
+        status: product.isAvailable ? "active" : "inactive",
+      };
+    });
 
     res.json({
       products: normalizedProducts,

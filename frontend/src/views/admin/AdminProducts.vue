@@ -221,7 +221,7 @@
                                 {{ product.name }}
                             </div>
                             <div class="text-xs text-slate-400 mt-0.5 break-all">
-                                {{ t('adminProducts.sku', { value: product.sku }) }}
+                                {{ t('adminProducts.sku', { value: getProductSku(product) }) }}
                             </div>
                             <div class="mt-2 text-sm font-bold text-slate-900 font-mono">
                                 {{ formatPrice(product.price, product.seller?.user?.currency || product.user?.currency) }}
@@ -346,7 +346,7 @@
                                             {{ product.name }}
                                         </p>
                                         <p class="text-xs text-slate-400 mt-0.5 leading-none">
-                                            {{ t('adminProducts.sku', { value: product.sku }) }}
+                                            {{ t('adminProducts.sku', { value: getProductSku(product) }) }}
                                         </p>
                                     </div>
                                 </div>
@@ -777,6 +777,15 @@ export default {
             }
         };
 
+        const getProductSku = (product) => {
+            if (product.sku && product.sku !== 'N/A') return product.sku;
+            if (product.variants && product.variants.length > 0) {
+                const variantWithSku = product.variants.find(v => v.sku);
+                if (variantWithSku) return variantWithSku.sku;
+            }
+            return product.sku || 'N/A';
+        };
+
         const viewProduct = (product) => {
             router.push(`/product/${product._id}`);
         };
@@ -807,6 +816,7 @@ export default {
             formatPrice,
             formatDate,
             formatDateFilterLabel,
+            getProductSku,
             goToEditProduct,
             viewProduct,
             confirmDelete,

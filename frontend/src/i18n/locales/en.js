@@ -405,7 +405,7 @@ export default {
     readLess: "Read less",
     readMore: "Read more",
     selectedColor: "Selected Color",
-    primaryDisplayColor: "Primary Display Color",
+    primaryDisplayColor: "Color",
     quantity: "Quantity",
     lowStockAlert: "Low Stock Alert!",
     lowStockBody: "Only {count} items left. Order soon to avoid disappointment.",
