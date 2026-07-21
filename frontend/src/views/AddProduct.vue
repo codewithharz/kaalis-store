@@ -1067,7 +1067,7 @@ export default {
 
             tagsInput.value = product.tags.join(', ');
             imagePreviews.value = [...product.images];
-            selectedSellerId.value = fetchedProduct.seller || fetchedProduct.user?.sellerProfile?._id || '';
+            selectedSellerId.value = fetchedProduct.seller?._id || fetchedProduct.seller || fetchedProduct.user?.sellerProfile?._id || '';
         };
 
         onMounted(async () => {
