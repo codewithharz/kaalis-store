@@ -1112,37 +1112,14 @@ export default {
 
 
         // Update unit options based on selected category
-        const updateSelectedCategories = (categoryInput) => {
-            let categoryId = categoryInput;
-            if (typeof categoryInput === 'object' && categoryInput !== null) {
-                if (Array.isArray(categoryInput)) {
-                    // If array, try to get ID from first item or use the item itself if string
-                    categoryId = categoryInput[0]?._id || categoryInput[0];
+        const updateSelectedCategories = (newSelectedCategories) => {
+            if (Array.isArray(newSelectedCategories)) {
+                selectedCategories.value = newSelectedCategories;
+                if (selectedCategories.value.length > 0) {
+                    const lastCategory = selectedCategories.value[selectedCategories.value.length - 1];
+                    editingProduct.category = lastCategory._id || lastCategory;
                 } else {
-                    categoryId = categoryInput._id || categoryInput;
-                }
-            }
-
-            if (categories.value && categories.value.length > 0 && categoryId) {
-                const findCategoryPath = (categories, targetId, path = []) => {
-                    for (const category of categories) {
-                        if (category._id === targetId) {
-                            return [...path, category];
-                        }
-                        if (category.children && category.children.length > 0) {
-                            const result = findCategoryPath(category.children, targetId, [...path, category]);
-                            if (result) return result;
-                        }
-                    }
-                    return null;
-                };
-
-                const categoryPath = findCategoryPath(categories.value, categoryId);
-                if (categoryPath) {
-                    selectedCategories.value = categoryPath;
-                } else {
-                    console.warn(`Category with id ${categoryId} not found`);
-                    selectedCategories.value = [];
+                    editingProduct.category = null;
                 }
             }
         };
