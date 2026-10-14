@@ -1095,33 +1095,9 @@ const executePlaceOrder = async () => {
 
 const placeOrder = async () => {
     let createdOrder = null;
-
-    // ── AfriExchange retry guard ──────────────────────────────────────────────
-    // If a previous AfriExchange attempt created an order but lost the server
-    // confirmation (network error, timeout), we stored that orderId in
-    // localStorage. Reuse it so the backend's idempotency key stays the same
-    // and AfriExchange returns the existing charge instead of a new one.
+    let currentItemsSig = '';
+    let totalWithShipping = 0;
     let reusingPendingAfriExchangeOrder = false;
-    if (paymentMethod.value === 'AfriExchange') {
-        const stored = localStorage.getItem(AFRIEXCHANGE_PENDING_KEY);
-        if (stored) {
-            try {
-                const pending = JSON.parse(stored);
-                // Only reuse if it's recent (< 30 minutes) to avoid stale state.
-                const age = Date.now() - new Date(pending.timestamp).getTime();
-                if (pending.orderId && age < 30 * 60 * 1000) {
-                    createdOrder = { _id: pending.orderId };
-                    reusingPendingAfriExchangeOrder = true;
-                    console.log('Reusing pending AfriExchange order:', pending.orderId);
-                } else {
-                    localStorage.removeItem(AFRIEXCHANGE_PENDING_KEY);
-                }
-            } catch {
-                localStorage.removeItem(AFRIEXCHANGE_PENDING_KEY);
-            }
-        }
-    }
-    // ─────────────────────────────────────────────────────────────────────────
 
     // Initial validations
     if (!selectedAddress.value || !validateAddress(selectedAddress.value) || !checkoutItems.value?.length) {
@@ -1162,10 +1138,48 @@ const placeOrder = async () => {
         
         const totalVendorAmount = fulfillmentType === 'vendor' ? totalVendorAmountRaw + currentShippingFee : totalVendorAmountRaw;
         const totalPlatformFee = fulfillmentType === 'vendor' ? basePlatformFee : basePlatformFee + currentShippingFee;
-        const totalWithShipping = amountAfterDiscount + currentShippingFee;
+        totalWithShipping = amountAfterDiscount + currentShippingFee;
         const pointsEarned = Math.floor(amountAfterDiscount / 100);
         const purchasedCartItems = buildPurchasedCartItems(checkoutItems.value);
         const purchasedEntireCart = checkoutItems.value.length === cartStore.items.length;
+
+        currentItemsSig = checkoutItems.value
+            .map(i => `${i.product?._id || i.product}:${i.variant?._id || ''}:${i.quantity}`)
+            .sort()
+            .join('|');
+
+        // ── AfriExchange retry guard ──────────────────────────────────────────────
+        // If a previous AfriExchange attempt created an order but lost the server
+        // confirmation (network error, timeout), we stored that orderId in
+        // localStorage. Only reuse it if cart items, total amount, and currency
+        // match the pending order and it is fresh (< 30 min).
+        if (paymentMethod.value === 'AfriExchange') {
+            const stored = localStorage.getItem(AFRIEXCHANGE_PENDING_KEY);
+            if (stored) {
+                try {
+                    const pending = JSON.parse(stored);
+                    const age = Date.now() - new Date(pending.timestamp).getTime();
+                    const isRecent = age < 30 * 60 * 1000;
+                    const isSameAmount = typeof pending.amount === 'number'
+                        ? Math.abs(pending.amount - totalWithShipping) < 0.01
+                        : false;
+                    const isSameCurrency = !pending.currency || pending.currency === checkoutCurrency.value;
+                    const isSameItems = !pending.itemsSignature || pending.itemsSignature === currentItemsSig;
+
+                    if (pending.orderId && isRecent && isSameAmount && isSameCurrency && isSameItems) {
+                        createdOrder = { _id: pending.orderId };
+                        reusingPendingAfriExchangeOrder = true;
+                        console.log('Reusing pending AfriExchange order:', pending.orderId);
+                    } else {
+                        console.log('Discarding stale or mismatched pending AfriExchange order:', pending);
+                        localStorage.removeItem(AFRIEXCHANGE_PENDING_KEY);
+                    }
+                } catch {
+                    localStorage.removeItem(AFRIEXCHANGE_PENDING_KEY);
+                }
+            }
+        }
+        // ─────────────────────────────────────────────────────────────────────────
 
         const settings = getCachedPlatformRuntimeSettings();
         const rates = settings.currencyConversion || { ngnToXofRate: 0.42, xofToNgnRate: 2.38 };
@@ -1400,22 +1414,33 @@ const placeOrder = async () => {
         );
 
         if (paymentMethod.value === 'AfriExchange' && createdOrder?._id) {
-            // ── AfriExchange: do NOT cancel the order on failure ──────────────
-            // The charge may have already gone through on the AfriExchange side
-            // even if our server-side confirmation failed. Cancelling the order
-            // and letting the buyer create a new one (with a new orderId) breaks
-            // the idempotency key and causes a double charge.
-            //
-            // Instead, save the orderId so the next attempt reuses it, which
-            // causes the backend to hit the duplicate-charge guard and return
-            // the existing payment reference.
-            if (!reusingPendingAfriExchangeOrder) {
-                localStorage.setItem(AFRIEXCHANGE_PENDING_KEY, JSON.stringify({
-                    orderId: createdOrder._id,
-                    timestamp: new Date().toISOString(),
-                }));
+            // ── AfriExchange error handling ──────────────────────────────────
+            // If the failure was a 400 Bad Request or 404 Not Found (e.g. order not
+            // payable, amount mismatch, or order not found), this pending order is
+            // invalid or already consumed. Discard it immediately so the user can
+            // create a clean order on their next attempt without getting stuck.
+            const isNonRecoverableOrderError =
+                error.response?.status === 400 ||
+                error.response?.status === 404;
+
+            if (isNonRecoverableOrderError) {
+                console.log('Non-recoverable order error detected, clearing pending AfriExchange order:', createdOrder._id);
+                localStorage.removeItem(AFRIEXCHANGE_PENDING_KEY);
+            } else {
+                // If it was a network failure or 5xx server glitch, the charge may
+                // have already hit AfriExchange. Save the order details so the next
+                // attempt reuses this orderId and hits the duplicate-charge guard.
+                if (!reusingPendingAfriExchangeOrder) {
+                    localStorage.setItem(AFRIEXCHANGE_PENDING_KEY, JSON.stringify({
+                        orderId: createdOrder._id,
+                        amount: totalWithShipping,
+                        currency: checkoutCurrency.value,
+                        itemsSignature: currentItemsSig,
+                        timestamp: new Date().toISOString(),
+                    }));
+                }
+                toast.info('Your order is saved. Please try again to complete payment — you will not be charged twice.');
             }
-            toast.info('Your order is saved. Please try again to complete payment — you will not be charged twice.');
         } else if (createdOrder?._id) {
             // For other payment methods it is safe to cancel the order.
             try {

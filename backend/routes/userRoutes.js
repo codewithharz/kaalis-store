@@ -13,6 +13,7 @@ const {
   getUserProducts,
   requestPasswordReset,
   resetPassword,
+  verifyResetPasswordToken,
   verifyEmail,
   resendVerificationEmail,
   changePassword,
@@ -32,6 +33,7 @@ router.post("/resend-verification", resendVerificationEmail);
 
 // Password routes
 router.post("/request-password-reset", requestPasswordReset); // Request password reset
+router.get("/reset-password/:token/verify", verifyResetPasswordToken); // Verify token status
 router.post("/reset-password/:token", resetPassword); // Reset password
 router.post("/change-password", userAuthMiddleware, changePassword); // Change password
 

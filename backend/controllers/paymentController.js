@@ -71,6 +71,39 @@ class PaymentController {
         });
       }
 
+      // ── Duplicate-charge guard for AfriExchange ──────────────────────────────
+      // If a successful (or still-processing) payment already exists for this
+      // order, return it immediately instead of failing on order status or hitting
+      // AfriExchange again. This protects buyers who retry after a network glitch.
+      if (normalizedPaymentMethod === "AfriExchange") {
+        const existingPayment = await Payment.findOne({
+          orderId: order._id,
+          paymentMethod: "AfriExchange",
+          status: { $in: ["success", "processing"] },
+        });
+
+        if (existingPayment) {
+          logger.warn("AfriExchange duplicate-charge guard triggered", {
+            orderId: order._id,
+            existingPaymentId: existingPayment._id,
+            existingReference: existingPayment.reference,
+            existingStatus: existingPayment.status,
+          });
+          return res.status(200).json({
+            status: true,
+            data: {
+              reference: existingPayment.reference,
+              collectionId: existingPayment.afriExchangeData?.collectionId,
+              provider: "AfriExchange",
+              paymentStatus: existingPayment.status,
+              orderStatus: order.status,
+              duplicate: true,
+            },
+          });
+        }
+      }
+      // ─────────────────────────────────────────────────────────────────────────
+
       // Validate order state
       if (order.status !== "Pending") {
         return res.status(400).json({
@@ -247,11 +280,9 @@ class PaymentController {
         }
 
         payment.reference = collection.reference;
-        // Status is set to "processing" — it will be upgraded to "success"
-        // only when AfriExchange sends a confirmed collection webhook.
-        // Setting it optimistically to "success" masked failures where
-        // the charge went through but our DB write failed.
-        payment.status = "processing";
+        // If AfriExchange already completed the collection synchronously,
+        // mark it "success" immediately; otherwise keep "processing" pending webhook.
+        payment.status = collection.status === "completed" ? "success" : "processing";
         payment.afriExchangeData = collection;
         await payment.save();
 
@@ -380,7 +411,15 @@ class PaymentController {
       const limit = parseInt(req.query.limit) || 10;
       const skip = (page - 1) * limit;
 
-      const payments = await Payment.find({ "metadata.userId": req.user._id })
+      const userCondition = {
+        $or: [
+          { "metadata.userId": req.user._id },
+          { "metadata.userId": req.user._id.toString() },
+          ...(req.user.email ? [{ email: req.user.email.toLowerCase() }] : []),
+        ],
+      };
+
+      const payments = await Payment.find(userCondition)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -389,9 +428,7 @@ class PaymentController {
           select: "orderId totalAmount status vendorAmount platformFee currency paymentMethod",
         });
 
-      const total = await Payment.countDocuments({
-        "metadata.userId": req.user._id,
-      });
+      const total = await Payment.countDocuments(userCondition);
 
       return res.status(200).json({
         status: true,
@@ -660,9 +697,10 @@ class PaymentController {
           },
         });
       } catch (error) {
+        logger.error("Error tokenizing card:", error);
         return res.status(400).json({
           status: false,
-          message: "Invalid card details",
+          message: error.message || "Invalid card details. Please check your card information.",
         });
       }
     } catch (error) {

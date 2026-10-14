@@ -454,7 +454,25 @@ exports.getUserProducts = async (req, res) => {
 exports.requestPasswordReset = async (req, res) => {
   const { email, locale } = req.body;
   try {
-    const user = await User.findOne({ email });
+    const normalizedEmail = (email || "").trim().toLowerCase();
+    if (!normalizedEmail) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({
+      $or: [
+        { email: normalizedEmail },
+        {
+          email: {
+            $regex: new RegExp(
+              `^${normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+              "i"
+            ),
+          },
+        },
+      ],
+    });
+
     if (!user) {
       return res.status(404).json({
         message:
@@ -462,10 +480,21 @@ exports.requestPasswordReset = async (req, res) => {
       });
     }
 
-    // Generate a reset token
-    const token = crypto.randomBytes(20).toString("hex");
-    user.resetPasswordToken = token;
-    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    // If an existing token is still active and fresh (more than 15 min remaining),
+    // reuse it so multiple clicks do not invalidate earlier emails in transit.
+    let token = user.resetPasswordToken;
+    const isTokenStillFresh =
+      token &&
+      user.resetPasswordExpires &&
+      new Date(user.resetPasswordExpires).getTime() > Date.now() + 15 * 60 * 1000;
+
+    if (!isTokenStillFresh) {
+      token = crypto.randomBytes(20).toString("hex");
+      user.resetPasswordToken = token;
+    }
+
+    // Refresh expiration for 1 full hour
+    user.resetPasswordExpires = new Date(Date.now() + 3600000);
     user.preferredLanguage = normalizeLocale(locale || user.preferredLanguage);
     await user.save();
 
@@ -482,18 +511,56 @@ exports.requestPasswordReset = async (req, res) => {
       .json({ message: "Password reset instructions sent to email" });
   } catch (error) {
     console.error("Error during password reset request:", error);
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.verifyResetPasswordToken = async (req, res) => {
+  const { token } = req.params;
+  const cleanToken = (token || "").trim().replace(/\/+$/, "");
+  try {
+    const now = new Date();
+    const user = await User.findOne({
+      resetPasswordToken: cleanToken,
+      resetPasswordExpires: { $gt: now },
+    });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ valid: false, message: "Password reset token is invalid or has expired" });
+    }
+
+    res.status(200).json({ valid: true, email: user.email });
+  } catch (error) {
+    console.error("Error verifying reset token:", error);
+    res.status(500).json({ valid: false, message: "Server error" });
   }
 };
 
 exports.resetPassword = async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
+  const cleanToken = (token || "").trim().replace(/\/+$/, "");
+
+  if (!cleanToken) {
+    return res
+      .status(400)
+      .json({ message: "Password reset token is invalid or has expired" });
+  }
+
+  if (!password || password.length < 6) {
+    return res
+      .status(400)
+      .json({ message: "Password must be at least 6 characters long" });
+  }
+
   try {
-    // Find user by reset token and check if the token is expired
+    const now = new Date();
+    // Find user by reset token and check if the token is not expired
     const user = await User.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() },
+      resetPasswordToken: cleanToken,
+      resetPasswordExpires: { $gt: now },
     });
 
     if (!user) {
@@ -502,7 +569,7 @@ exports.resetPassword = async (req, res) => {
         .json({ message: "Password reset token is invalid or has expired" });
     }
 
-    // Hash new password
+    // Hash new password and clear reset token
     user.password = await bcrypt.hash(password, 10);
     user.resetPasswordToken = undefined; // Clear the reset token
     user.resetPasswordExpires = undefined; // Clear the expiration date
@@ -512,7 +579,7 @@ exports.resetPassword = async (req, res) => {
     res.status(200).json({ message: "Password has been successfully reset" });
   } catch (error) {
     console.error("Server error during password reset:", error);
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 

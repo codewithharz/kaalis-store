@@ -11,8 +11,9 @@
                         required />
                 </div>
                 <button type="submit"
-                    class="w-full text-white font-bold py-2 px-4 button-hover bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] rounded-r focus:outline-none">
-                    {{ t('passwordRecovery.requestButton') }}
+                    :disabled="loading"
+                    class="w-full text-white font-bold py-2 px-4 button-hover bg-gradient-to-r from-[#ff934b] to-[#ff5e62] hover:from-[#ff5e62] hover:to-[#ff934b] rounded focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed">
+                    {{ loading ? 'Sending instructions...' : t('passwordRecovery.requestButton') }}
                 </button>
             </form>
             <p v-if="message" class="mt-4 text-center" :class="{ 'text-green-500': !error, 'text-red-500': error }">
@@ -37,13 +38,26 @@ export default {
             email: '',
             message: '',
             error: false,
+            loading: false,
         };
     },
     methods: {
         async requestReset() {
+            if (this.loading) return;
+
+            const cleanEmail = (this.email || '').trim();
+            if (!cleanEmail) {
+                toast.error('Please enter a valid email address');
+                return;
+            }
+
+            this.loading = true;
+            this.error = false;
+            this.message = '';
+
             try {
                 await apiClient.post('/users/request-password-reset', {
-                    email: this.email,
+                    email: cleanEmail,
                     locale: localStorage.getItem('locale') || 'en',
                 });
                 this.message = this.t('passwordRecovery.requestSuccess');
@@ -55,6 +69,8 @@ export default {
                 this.message = error.response?.data?.message || this.t('auth.genericError');
                 this.error = true;
                 toast.error(this.message);
+            } finally {
+                this.loading = false;
             }
         },
     },

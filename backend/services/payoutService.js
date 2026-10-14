@@ -617,6 +617,23 @@ class PayoutService {
 
       const data = response.data?.data;
 
+      if (
+        data?.vendorAfriExchangeUserId &&
+        vendor._id &&
+        (vendor.afriExchange?.userId !== data.vendorAfriExchangeUserId ||
+          vendor.afriExchange?.walletAddress !== data.vendorWalletAddress)
+      ) {
+        try {
+          const User = require("../models/userModels");
+          await User.findByIdAndUpdate(vendor._id, {
+            "afriExchange.userId": data.vendorAfriExchangeUserId,
+            "afriExchange.walletAddress": data.vendorWalletAddress,
+          });
+        } catch (syncErr) {
+          logger.warn("Could not sync updated vendor AfriExchange identifiers:", syncErr.message);
+        }
+      }
+
       return {
         success: !!response.data?.success,
         reference: data?.reference,
@@ -631,7 +648,10 @@ class PayoutService {
       );
       return {
         success: false,
-        message: error.message,
+        message:
+          error.response?.data?.message ||
+          error.response?.data?.error?.message ||
+          error.message,
       };
     }
   }

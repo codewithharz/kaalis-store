@@ -30,7 +30,7 @@
                             <div>
                                 <p class="text-xs sm:text-sm text-gray-500">{{ t('paymentMethodsPage.defaultPayment') }}</p>
                                 <p class="text-base sm:text-lg font-medium text-gray-900 break-words">
-                                    {{ defaultCard ? t('paymentMethodsPage.creditCard') : t('paymentMethodsPage.notSet') }}
+                                    {{ defaultPaymentText }}
                                 </p>
                             </div>
                             <div
@@ -144,8 +144,8 @@
                                         <div class="flex items-center gap-3 sm:gap-6">
                                             <div
                                                 class="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-lg sm:rounded-xl shadow-md flex items-center justify-center flex-shrink-0">
-                                                <img :src="getCardTypeIcon(card.type)"
-                                                    class="w-8 h-8 sm:w-10 sm:h-10 object-contain" :alt="card.type" />
+                                                <img :src="getCardTypeIcon(card.cardType || card.type)"
+                                                    class="w-8 h-8 sm:w-10 sm:h-10 object-contain" :alt="card.cardType || card.type" />
                                             </div>
                                             <div class="min-w-0 flex-1">
                                                 <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
@@ -161,7 +161,7 @@
                                                     <div
                                                         class="flex items-center gap-1 text-xs sm:text-sm text-gray-500">
                                                         <Calendar class="w-3 h-3 sm:w-4 sm:h-4" />
-                                                        <span>{{ t('paymentMethodsPage.expires', { month: card.expiryMonth, year: card.expiryYear }) }}</span>
+                                                        <span>{{ t('paymentMethodsPage.expires', { month: card.expiryMonth || card.expMonth, year: card.expiryYear || card.expYear }) }}</span>
                                                     </div>
                                                     <div
                                                         class="flex items-center gap-1 text-xs sm:text-sm text-gray-500">
@@ -489,8 +489,8 @@
                             <div class="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                                 <div
                                     class="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-lg shadow-sm flex items-center justify-center flex-shrink-0">
-                                    <img :src="getCardTypeIcon(card.type)" class="w-6 h-6 sm:w-8 sm:h-8 object-contain"
-                                        :alt="card.type" />
+                                    <img :src="getCardTypeIcon(card.cardType || card.type)" class="w-6 h-6 sm:w-8 sm:h-8 object-contain"
+                                        :alt="card.cardType || card.type" />
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
@@ -501,7 +501,7 @@
                                             {{ t('paymentMethodsPage.default') }}
                                         </span>
                                     </div>
-                                    <p class="text-xs sm:text-sm text-gray-500">{{ t('paymentMethodsPage.expires', { month: card.expMonth, year: card.expYear }) }}</p>
+                                    <p class="text-xs sm:text-sm text-gray-500">{{ t('paymentMethodsPage.expires', { month: card.expiryMonth || card.expMonth, year: card.expiryYear || card.expYear }) }}</p>
                                 </div>
                             </div>
                             <button @click="handleDeleteAndReplace(card.id)" :disabled="card.isDefault" :class="[
@@ -560,7 +560,7 @@ const user = computed(() => userStore.user);
 const savedCards = computed(() => paymentStore.savedCards);
 
 // const isSeller = computed(() => userStore.user?.role === 'seller');
-const isSeller = computed(() => userStore.user?.isSeller === true);
+const isSeller = computed(() => Boolean(userStore.user?.isSeller || userStore.user?.role === 'seller' || userStore.isSeller));
 
 // State
 const activeTab = ref('cards');
@@ -572,12 +572,10 @@ const transactionItemsPerPage = 5;
 const showAddCardModal = ref(false);
 const showDeleteModal = ref(false);
 const cardToDelete = ref(null);
-// const isSubmitting = ref(false);
-// const isDeleting = ref(false);
+const isDeleting = ref(false);
 
 // Use store's loading states
 const isSubmitting = computed(() => paymentStore.isProcessing);
-const isDeleting = computed(() => paymentStore.isProcessing);
 
 const cardForm = ref({
     number: '',
@@ -696,6 +694,13 @@ const defaultCard = computed(() =>
     paymentStore.savedCards.find(card => card.isDefault)
 );
 
+const defaultPaymentText = computed(() => {
+    if (defaultCard.value) return t('paymentMethodsPage.creditCard');
+    if (userStore.user?.afriExchange?.walletAddress || userStore.user?.afriExchange?.accountEmail) return 'AfriExchange CT';
+    if (userStore.user?.paymentMethod) return userStore.user.paymentMethod;
+    return t('paymentMethodsPage.notSet');
+});
+
 const lastTransactionDate = computed(() => {
     const latestTransaction = paymentStore.paymentHistory?.[0];
     if (!latestTransaction?.createdAt) {
@@ -718,7 +723,7 @@ const getCardIcon = computed(() => {
 
     if (number.startsWith('4')) return '/icons/visa.svg';
     if (/^5[1-5]/.test(number)) return '/icons/mastercard.svg';
-    if (/^506/.test(number)) return '/icons/verve.svg';
+    if (/^3[47]/.test(number)) return '/icons/amex.svg';
     return '/icons/generic-card.svg';
 });
 
@@ -774,7 +779,11 @@ const getDefaultBackground = () => {
 
 const getCardTypeIcon = (type) => {
     if (!type) return '/icons/generic-card.svg';
-    return `/icons/${type.toLowerCase()}.svg`;
+    const lower = String(type).toLowerCase();
+    if (lower.includes('visa')) return '/icons/visa.svg';
+    if (lower.includes('master')) return '/icons/mastercard.svg';
+    if (lower.includes('amex') || lower.includes('american')) return '/icons/amex.svg';
+    return '/icons/generic-card.svg';
 };
 
 const closeAddCardModal = () => {
@@ -798,32 +807,30 @@ const fetchOrderDetails = async (orderId) => {
 onMounted(async () => {
     try {
         const orderStore = useOrderStore();
-        // const userStore = useUserStore();
 
-        // First load saved cards and payment history
-        await Promise.all([
+        // Load saved cards and payment history safely
+        const results = await Promise.allSettled([
             paymentStore.loadSavedCards(),
             paymentStore.getPaymentHistory()
         ]);
+
+        results.forEach((res, index) => {
+            if (res.status === 'rejected') {
+                console.error(`Failed to load ${index === 0 ? 'cards' : 'history'}:`, res.reason);
+            }
+        });
 
         // Then fetch all orders if we have payment history
         if (paymentStore.paymentHistory?.length) {
             const orderIds = paymentStore.paymentHistory.map(t => t.orderId).filter(Boolean);
 
-            // Use Promise.all to wait for all order fetches
-            // const orders = await Promise.all(
-            //     orderIds.map(orderId => orderStore.getOrderById(orderId))
-            // );
-
             // Important: Use getOrderByOrderId instead of getOrderById
             const orders = await Promise.all(
-                orderIds.map(orderId => orderStore.getOrderByOrderId(orderId))
+                orderIds.map(orderId => orderStore.getOrderByOrderId(orderId).catch(() => null))
             );
-
 
             // Filter out any null responses and save to payment store
             paymentStore.orders = orders.filter(Boolean);
-
             console.log('Loaded orders:', paymentStore.orders);
         }
     } catch (error) {
@@ -1166,8 +1173,7 @@ const closeCardLimitModal = () => {
 };
 
 const handleDeleteAndReplace = (cardId) => {
-    cardToDeleteAndReplace.value = cardId;
-    showDeleteReplaceModal.value = true;
+    deleteAndAddNew(cardId);
 };
 
 const deleteAndAddNew = async (cardId) => {

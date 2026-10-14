@@ -28,7 +28,17 @@ export const useVendorPayoutStore = defineStore("vendorPayout", {
   }),
 
   getters: {
-    pendingAmount: (state) => state.stats.pendingAmount,
+    pendingAmount: (state) => {
+      const userStore = useUserStore();
+      const curr =
+        userStore.user?.currency ||
+        (state.stats.pendingAmounts?.XOF ? "XOF" : "NGN");
+      return (
+        state.stats.pendingAmounts?.[curr] ??
+        state.stats.pendingAmount ??
+        0
+      );
+    },
     pendingAmounts: (state) => state.stats.pendingAmounts,
     processingAmounts: (state) => state.stats.processingAmounts,
     processedAmounts: (state) => state.stats.processedAmounts,
@@ -53,13 +63,16 @@ export const useVendorPayoutStore = defineStore("vendorPayout", {
 
         const pendingAmounts =
           response.data.stats?.pendingAmounts ||
-          response.data.stats?.pendingAmount ||
-          {};
-        const activeCurrency = userStore.user?.currency || response.data.stats?.currency || "NGN";
+          (typeof response.data.stats?.pendingAmount === "object"
+            ? response.data.stats.pendingAmount
+            : {});
+        const activeCurrency =
+          userStore.user?.currency ||
+          (pendingAmounts.XOF ? "XOF" : "NGN");
         const pendingAmount =
           typeof response.data.stats?.pendingAmount === "number"
             ? response.data.stats.pendingAmount
-            : pendingAmounts[activeCurrency] || 0;
+            : pendingAmounts[activeCurrency] ?? 0;
 
         // Update both payouts and stats
         this.payouts = response.data.payouts;

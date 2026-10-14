@@ -3110,3 +3110,70 @@ in the Root Directory, we cannot edit the Build Command and Output Directory
 sp, what do we do,
 
 check /Users/harz/Downloads/Bruthol/kaalis-store/kaalis-store-master very careful and see what we have modified in our /Users/harz/Downloads/Bruthol/kaalis-store codes 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Overall, **2.05% total fee is very fair and highly competitive** for crypto-fiat on/off-ramps, especially in African and emerging markets.
+
+Here is a breakdown of how it compares to industry alternatives and why it represents good value:
+
+---
+
+### 📊 Market Comparison
+
+| Platform / Service | Typical Total Cost to User | Notes |
+| :--- | :---: | :--- |
+| **AfriX** | **2.05%** | Transparent fee with **0% hidden exchange spread** (1:1 local token peg). |
+| **Global Ramps** *(MoonPay, Transak)* | **3.5% – 5.5% + fixed fee** | High card processing & international bank fees. |
+| **African Crypto Apps** *(Yellow Card, Chipper)* | **2.0% – 3.5%** | Often advertises low fees but bakes 1.5%–2% into FX exchange spreads. |
+| **Binance P2P / Bybit P2P** | **1.5% – 3.0%** | 0% platform fee, but P2P merchant bid/ask spreads average 1.5%–3.0%. |
+| **Traditional Remittance** *(Western Union, RIA)* | **5.0% – 8.0%+** | High FX markup + transfer fees. |
+
+---
+
+### Why 2.05% is Fair for Users
+
+1. **No Hidden Spreads**: 
+   Many platforms claim "0% Fee" or "1% Fee" but manipulate the exchange rate (e.g., selling 1 USDT at ₦1,550 instead of market rate ₦1,500). AfriX operates on a transparent 1:1 token peg (`1 NT = ₦1`), so the 2.05% you see is the **exact total cost**.
+
+2. **Sustains Agent Liquidity (~1.05%)**: 
+   Peer-to-peer agents take on local banking limits, transfer fees, and liquidity risks. Giving agents ~1.05% ensures agents stay active, leading to **faster payment fulfillment** for users.
+
+3. **Covers Gas & Security (~1.00%)**: 
+   The platform covers blockchain transaction (gas) fees, smart contract execution, and escrow dispute protection without charging extra processing fees.
+
+---
+
+### 💡 Suggestions to Make It Even Better (Optional Enhancements)
+
+While 2.05% is great for micro and standard transactions, here are ways to make it even more attractive:
+
+* **Volume-Based Tiering**: Lower fees for larger transactions (e.g., `2.05%` for under ₦100k, `1.5%` for ₦100k–₦1M, `1.0%` for > ₦1M).
+* **Agent Competition**: Allow higher-tier agents to offer competitive commission rates (e.g., 0.5%–1.0%) to win higher transaction volume.
+* **Loyalty Discount**: Give active users or high-frequency traders a 10%–20% fee reduction on platform fees.

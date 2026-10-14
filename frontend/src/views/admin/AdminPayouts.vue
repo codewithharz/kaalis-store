@@ -122,7 +122,12 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 bg-white">
-                        <tr v-for="payout in payouts" :key="payout.id" class="hover:bg-slate-50/50 transition-colors">
+                        <tr v-for="payout in payouts" :key="payout.id" class="hover:bg-slate-50/50 transition-colors"
+                            :class="{
+                                'bg-cyan-50/30': simulatingPayoutId === payout.id,
+                                'bg-rose-50/30': failingPayoutId === payout.id,
+                                'bg-amber-50/30': checkingPayoutId === payout.id
+                            }">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center gap-3">
                                     <div class="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600 uppercase border border-slate-200">
@@ -151,7 +156,22 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span :class="statusClass(payout)"
+                                <span v-if="simulatingPayoutId === payout.id"
+                                    class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm border bg-cyan-50 text-cyan-700 border-cyan-200">
+                                    <Loader2 class="h-3.5 w-3.5 animate-spin text-cyan-600" />
+                                    <span>{{ t('adminPayouts.actions.simulating') }}</span>
+                                </span>
+                                <span v-else-if="failingPayoutId === payout.id"
+                                    class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm border bg-rose-50 text-rose-700 border-rose-200">
+                                    <Loader2 class="h-3.5 w-3.5 animate-spin text-rose-600" />
+                                    <span>{{ t('adminPayouts.actions.simulating') }}</span>
+                                </span>
+                                <span v-else-if="checkingPayoutId === payout.id"
+                                    class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm border bg-amber-50 text-amber-700 border-amber-200">
+                                    <RefreshCcw class="h-3.5 w-3.5 animate-spin text-amber-600" />
+                                    <span>{{ t('adminPayouts.actions.checking') }}</span>
+                                </span>
+                                <span v-else :class="statusClass(payout)"
                                     class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm border">
                                     <component :is="statusIcon(payout)" class="h-3.5 w-3.5" :class="{ 'animate-spin': payout.status === 'processing' }" />
                                     <span>{{ statusLabel(payout) }}</span>
@@ -176,8 +196,11 @@
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger as-child>
-                                        <button class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 focus:outline-none transition">
-                                            <MoreHorizontal class="h-4 w-4" />
+                                        <button :disabled="simulatingPayoutId === payout.id || failingPayoutId === payout.id || checkingPayoutId === payout.id"
+                                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 focus:outline-none transition disabled:opacity-75 disabled:cursor-wait">
+                                            <Loader2 v-if="simulatingPayoutId === payout.id || failingPayoutId === payout.id || checkingPayoutId === payout.id"
+                                                class="h-4 w-4 animate-spin text-cyan-600" />
+                                            <MoreHorizontal v-else class="h-4 w-4" />
                                         </button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" class="w-48">
@@ -544,8 +567,10 @@ const canSimulateFailure = (payout) => {
 
 const checkStatus = async (payout) => {
     checkingPayoutId.value = payout.id;
+    const toastId = toast.loading(t('adminPayouts.actions.checking'));
     try {
         const response = await apiClient.post(`/admin/payouts/${payout.id}/check-status`);
+        toast.dismiss(toastId);
         const result = response.data.result || {};
         const nextStatus = result.currentStatus || result.status || 'checked';
         const previousStatus = result.previousStatus || payout.status;
@@ -560,6 +585,7 @@ const checkStatus = async (payout) => {
 
         await fetchPayouts(pagination.value.page);
     } catch (error) {
+        toast.dismiss(toastId);
         console.error('Failed to check payout status:', error);
         toast.error(error.response?.data?.message || t('adminPayouts.toasts.checkStatusFailed'));
     } finally {
@@ -569,11 +595,14 @@ const checkStatus = async (payout) => {
 
 const simulateProcessing = async (payout) => {
     simulatingPayoutId.value = payout.id;
+    const toastId = toast.loading(t('adminPayouts.toasts.simulatingProcessing'));
     try {
         const response = await apiClient.post(`/admin/payouts/${payout.id}/simulate-afriexchange-processing`);
+        toast.dismiss(toastId);
         toast.success(t('adminPayouts.toasts.simulateSuccess'));
         await fetchPayouts(pagination.value.page);
     } catch (error) {
+        toast.dismiss(toastId);
         console.error('Failed to simulate AfriExchange processing payout:', error);
         toast.error(error.response?.data?.message || t('adminPayouts.toasts.simulateFailed'));
     } finally {
@@ -583,11 +612,14 @@ const simulateProcessing = async (payout) => {
 
 const simulateFailure = async (payout) => {
     failingPayoutId.value = payout.id;
+    const toastId = toast.loading(t('adminPayouts.toasts.simulatingFailure'));
     try {
         const response = await apiClient.post(`/admin/payouts/${payout.id}/simulate-afriexchange-failure`);
+        toast.dismiss(toastId);
         toast.success(t('adminPayouts.toasts.simulateSuccessFail'));
         await fetchPayouts(pagination.value.page);
     } catch (error) {
+        toast.dismiss(toastId);
         console.error('Failed to simulate AfriExchange payout failure:', error);
         toast.error(error.response?.data?.message || t('adminPayouts.toasts.simulateFailed'));
     } finally {

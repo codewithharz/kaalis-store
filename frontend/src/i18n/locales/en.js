@@ -3653,6 +3653,9 @@ export default {
       "Payouts are scheduled automatically and released by admin after the payout date.",
     setupBankAccount: "Setup Bank Account",
     setupAccount: "Setup Account",
+    changeAccount: "Change Payout Account",
+    refresh: "Refresh",
+    walletAddress: "Wallet",
     bankAccountConnected: "Bank Account Connected",
     bankAccount: "Bank Account",
     linkAfriExchange: "Link AfriExchange Account",
@@ -3662,6 +3665,11 @@ export default {
     loadingPayouts: "Loading your payouts...",
     notScheduled: "Not scheduled",
     aggregatingThreshold: "Accumulating (Threshold not met)",
+    viewIn: "View in",
+    exportCsv: "Export CSV",
+    searchPlaceholder: "Search by ref, order, amount…",
+    breakdown: "Details",
+    clearFilters: "Clear filters",
     stats: {
       pendingPayout: "Pending Payout",
       processedPayouts: "Processed Payouts",
@@ -3675,8 +3683,10 @@ export default {
     columns: {
       date: "Date",
       amount: "Amount",
+      currency: "Currency",
       status: "Status",
       reference: "Reference",
+      order: "Order",
     },
     statuses: {
       pending: "Pending",
@@ -3685,7 +3695,34 @@ export default {
       ready: "Ready for payout",
       processing: "Processing",
       processed: "Processed",
+      completed: "Completed",
       failed: "Failed",
+    },
+    filters: {
+      all: "All",
+    },
+    failedBanner: {
+      title: "Action Required: Payout Failed",
+      subtitle: "One or more payouts could not be processed. Please review your payout account details.",
+      tip1: "Verify your bank account or AfriExchange wallet is still active",
+      tip2: "Ensure your account details are up to date",
+      tip3: "Contact support if the issue persists after updating your details",
+      cta: "Update Payout Account",
+      dismiss: "Dismiss this notice",
+    },
+    modal: {
+      title: "Payout Breakdown",
+      order: "Order",
+      grossSale: "Gross Sale",
+      platformFee: "Platform Fee",
+      netPayout: "Net Payout",
+      method: "Payment Method",
+      failureReason: "Failure Reason",
+      close: "Close",
+    },
+    noResults: {
+      title: "No matching payouts",
+      subtitle: "Try adjusting your filters or search query.",
     },
     empty: {
       title: "No Payouts Yet",
@@ -3693,8 +3730,11 @@ export default {
     },
     toasts: {
       loadFailed: "Failed to load payout data",
+      copied: "Reference copied to clipboard",
+      csvExported: "Payout statement exported as CSV",
     },
   },
+
   userProductsPage: {
     title: "My Products",
     subtitle: "Manage and organize your product listings",
@@ -4694,6 +4734,8 @@ export default {
       statusProcessing: "Payout is still processing",
       statusUnchanged: "Payout is already {status}",
       checkStatusFailed: "Failed to check payout status",
+      simulatingProcessing: "Simulating AfriExchange payout processing...",
+      simulatingFailure: "Simulating AfriExchange payout failure...",
       simulateSuccess: "AfriExchange processing simulation created",
       simulateSuccessFail: "AfriExchange payout failure simulated",
       simulateFailed: "Failed to simulate AfriExchange payout",

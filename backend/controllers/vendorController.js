@@ -44,6 +44,7 @@ const vendorController = {
         vendorId: req.user._id,
       })
         .sort({ processedAt: -1, scheduledDate: -1, createdAt: -1 })
+        .populate({ path: 'orderId', select: 'orderNumber status totalAmount platformFee vendorAmount currency' })
         .limit(50);
 
       const payoutTotals = await VendorPayout.aggregate([
