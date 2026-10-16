@@ -2930,7 +2930,7 @@ exports.getAdminPayouts = async (req, res) => {
     const [payouts, total, summary] = await Promise.all([
       VendorPayout.find(query)
         .populate("vendorId", "firstName lastName email afriExchange paymentMethod currency")
-        .populate("orderId", "orderId totalAmount currency status transactionId")
+        .populate("orderId", "orderId totalAmount platformFee vendorAmount shippingFee currency status transactionId")
         .sort({ scheduledDate: 1, createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit),

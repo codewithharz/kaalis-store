@@ -324,9 +324,67 @@
                             </div>
                         </div>
 
+                        <!-- Payout Breakdown -->
+                        <div class="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                            <h4 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Payout Breakdown</h4>
+                            <div class="mt-4 space-y-3">
+                                <!-- Order Total -->
+                                <div class="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
+                                    <span class="text-sm font-medium text-slate-600">Order Total</span>
+                                    <span class="text-sm font-semibold text-slate-900">
+                                        {{ formatCurrency(selectedPayout.order?.totalAmount, selectedPayout.currency) }}
+                                    </span>
+                                </div>
+                                <!-- Platform Fee -->
+                                <div class="flex items-center justify-between rounded-xl bg-red-50 px-4 py-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="inline-flex h-2 w-2 rounded-full bg-red-400"></span>
+                                        <span class="text-sm font-medium text-red-700">Platform Fee (8%)</span>
+                                    </div>
+                                    <span class="text-sm font-semibold text-red-700">
+                                        − {{ formatCurrency(selectedPayout.order?.platformFee, selectedPayout.currency) }}
+                                    </span>
+                                </div>
+                                <!-- Shipping Fee (if any) -->
+                                <div v-if="selectedPayout.order?.shippingFee > 0" class="flex items-center justify-between rounded-xl bg-amber-50 px-4 py-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="inline-flex h-2 w-2 rounded-full bg-amber-400"></span>
+                                        <span class="text-sm font-medium text-amber-700">Shipping Fee</span>
+                                    </div>
+                                    <span class="text-sm font-semibold text-amber-700">
+                                        {{ formatCurrency(selectedPayout.order?.shippingFee, selectedPayout.currency) }}
+                                    </span>
+                                </div>
+                                <!-- Divider -->
+                                <div class="border-t border-slate-200 pt-3">
+                                    <div class="flex items-center justify-between rounded-xl bg-emerald-50 px-4 py-3">
+                                        <div class="flex items-center gap-2">
+                                            <span class="inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                                            <span class="text-sm font-semibold text-emerald-700">Vendor Payout (92%)</span>
+                                        </div>
+                                        <span class="text-base font-bold text-emerald-700">
+                                            {{ formatCurrency(selectedPayout.order?.vendorAmount ?? selectedPayout.amount, selectedPayout.currency) }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <!-- Visual proportion bar -->
+                                <div v-if="selectedPayout.order?.totalAmount" class="mt-2 overflow-hidden rounded-full bg-slate-100 h-2">
+                                    <div
+                                        class="h-2 rounded-full bg-emerald-500"
+                                        :style="{ width: ((selectedPayout.order?.vendorAmount ?? selectedPayout.amount) / selectedPayout.order.totalAmount * 100).toFixed(1) + '%' }"
+                                    ></div>
+                                </div>
+                                <p v-if="selectedPayout.order?.totalAmount" class="text-right text-xs text-slate-400">
+                                    {{ ((selectedPayout.order?.vendorAmount ?? selectedPayout.amount) / selectedPayout.order.totalAmount * 100).toFixed(1) }}% of order goes to vendor
+                                </p>
+                            </div>
+                        </div>
+
                         <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
                             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                                 <h4 class="text-sm font-semibold uppercase tracking-wide text-slate-500">{{ t('adminPayouts.details.recordLabel') }}</h4>
+
+
                                 <div class="mt-4 space-y-3 rounded-xl bg-slate-50 p-4 text-sm text-slate-700">
                                     <p class="break-all"><span class="font-medium text-slate-900">{{ t('adminPayouts.details.transferReference') }}</span> {{ selectedPayout.transferReference || t('adminPayouts.details.notAvailable') }}</p>
                                     <p class="break-all"><span class="font-medium text-slate-900">{{ t('adminPayouts.details.transactionReference') }}</span> {{ selectedPayout.transactionReference || t('adminPayouts.details.notAvailable') }}</p>
