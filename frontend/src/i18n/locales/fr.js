@@ -4118,7 +4118,8 @@ export default {
       totalUsers: "Total des utilisateurs",
       totalProducts: "Total des produits",
       totalOrders: "Total des commandes",
-      revenue: "Revenus",
+      revenue: "Revenus bruts",
+      platformFees: "Gains de la plateforme (8%)",
     },
   },
   adminCategories: {
@@ -4770,6 +4771,8 @@ export default {
       close: "Fermer",
     },
     stats: {
+      platformFees: "Gains de la plateforme (8%)",
+      platformFeesDetail: "Frais de 8% accumules sur les versements",
       readyPayouts: "Paiements prets",
       readyPayoutsDetail: "Paiements en attente dont la date de versement est arrivee",
       pendingPayouts: "Paiements en attente",

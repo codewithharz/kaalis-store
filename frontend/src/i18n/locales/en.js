@@ -4057,7 +4057,8 @@ export default {
       totalUsers: "Total Users",
       totalProducts: "Total Products",
       totalOrders: "Total Orders",
-      revenue: "Revenue",
+      revenue: "Gross Revenue",
+      platformFees: "Platform Earnings (8%)",
     },
   },
   adminCategories: {
@@ -4709,6 +4710,8 @@ export default {
       close: "Close",
     },
     stats: {
+      platformFees: "Platform Earnings (8%)",
+      platformFeesDetail: "Accumulated 8% fee on settlements",
       readyPayouts: "Ready Payouts",
       readyPayoutsDetail: "Pending payouts whose scheduled date has arrived",
       pendingPayouts: "Pending Payouts",

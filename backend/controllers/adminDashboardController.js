@@ -185,7 +185,7 @@ exports.getDashboardStats = async (req, res) => {
     previousStartDate.setDate(previousStartDate.getDate() - days);
 
     // Get current period counts
-    const [currentUsers, currentProducts, currentOrders, currentRevenue] =
+    const [currentUsers, currentProducts, currentOrders, currentRevenue, currentPlatformFees] =
       await Promise.all([
         User.countDocuments({
           createdAt: { $gte: previousStartDate, $lte: endDate },
@@ -210,13 +210,26 @@ exports.getDashboardStats = async (req, res) => {
             },
           },
         ]),
+        Order.aggregate([
+          {
+            $match: {
+              createdAt: { $gte: previousStartDate, $lte: endDate },
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: "$platformFee" },
+            },
+          },
+        ]),
       ]);
 
     // Get previous period counts
     const previousPeriodStart = new Date(previousStartDate);
     previousPeriodStart.setDate(previousPeriodStart.getDate() - days);
 
-    const [prevUsers, prevProducts, prevOrders, prevRevenue] =
+    const [prevUsers, prevProducts, prevOrders, prevRevenue, prevPlatformFees] =
       await Promise.all([
         User.countDocuments({
           createdAt: {
@@ -250,6 +263,22 @@ exports.getDashboardStats = async (req, res) => {
             $group: {
               _id: null,
               total: { $sum: "$amount" },
+            },
+          },
+        ]),
+        Order.aggregate([
+          {
+            $match: {
+              createdAt: {
+                $gte: previousPeriodStart,
+                $lt: previousStartDate,
+              },
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: "$platformFee" },
             },
           },
         ]),
@@ -544,6 +573,7 @@ exports.getDashboardStats = async (req, res) => {
         totalProducts: currentProducts,
         totalOrders: currentOrders,
         totalRevenue: currentRevenue[0]?.total || 0,
+        totalPlatformFees: currentPlatformFees[0]?.total || 0,
         userGrowth: parseFloat(
           calculateGrowth(currentUsers, prevUsers).toFixed(2)
         ),
@@ -557,6 +587,12 @@ exports.getDashboardStats = async (req, res) => {
           calculateGrowth(
             currentRevenue[0]?.total || 0,
             prevRevenue[0]?.total || 0
+          ).toFixed(2)
+        ),
+        platformFeeGrowth: parseFloat(
+          calculateGrowth(
+            currentPlatformFees[0]?.total || 0,
+            prevPlatformFees[0]?.total || 0
           ).toFixed(2)
         ),
         avgUsers: parseFloat((currentUsers / days).toFixed(2)),
@@ -2938,33 +2974,59 @@ exports.getAdminPayouts = async (req, res) => {
       VendorPayout.aggregate([
         { $match: statsQuery },
         {
+          $lookup: {
+            from: "orders",
+            localField: "orderId",
+            foreignField: "_id",
+            as: "orderData",
+          },
+        },
+        {
+          $unwind: {
+            path: "$orderData",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
           $group: {
             _id: {
               status: "$status",
-              currency: "$currency",
+              currency: { $ifNull: ["$currency", "NGN"] },
             },
             total: { $sum: "$amount" },
+            platformFees: { $sum: { $ifNull: ["$orderData.platformFee", 0] } },
+            orderTotal: { $sum: { $ifNull: ["$orderData.totalAmount", 0] } },
             count: { $sum: 1 },
           },
         },
       ]),
     ]);
 
-    const summaryByStatus = summary.reduce((acc, item) => {
-      const statusKey = item._id.status || "unknown";
-      const currencyKey = item._id.currency || "NGN";
+    const summaryByStatus = {};
+    const totalPlatformFees = { NGN: 0, XOF: 0 };
+    const totalVendorPayouts = { NGN: 0, XOF: 0 };
 
-      if (!acc[statusKey]) {
-        acc[statusKey] = {};
+    summary.forEach((item) => {
+      const statusKey = item._id.status || "unknown";
+      const currencyKey = (item._id.currency || "NGN").toUpperCase();
+
+      if (!summaryByStatus[statusKey]) {
+        summaryByStatus[statusKey] = {};
       }
 
-      acc[statusKey][currencyKey] = {
+      summaryByStatus[statusKey][currencyKey] = {
         amount: item.total,
+        platformFees: item.platformFees,
+        orderTotal: item.orderTotal,
         count: item.count,
       };
 
-      return acc;
-    }, {});
+      if (totalPlatformFees[currencyKey] === undefined) totalPlatformFees[currencyKey] = 0;
+      if (totalVendorPayouts[currencyKey] === undefined) totalVendorPayouts[currencyKey] = 0;
+
+      totalPlatformFees[currencyKey] += item.platformFees || 0;
+      totalVendorPayouts[currencyKey] += item.total || 0;
+    });
 
     const readyCount = await VendorPayout.countDocuments({
       status: "pending",
@@ -2994,6 +3056,8 @@ exports.getAdminPayouts = async (req, res) => {
       })),
       summary: {
         byStatus: summaryByStatus,
+        totalPlatformFees,
+        totalVendorPayouts,
         readyCount,
       },
       pagination: {

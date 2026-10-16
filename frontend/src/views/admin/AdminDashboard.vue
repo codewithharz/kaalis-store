@@ -7,7 +7,7 @@
             @next="handleNextPeriod" />
 
         <!-- Stats Overview -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-3">
             <div v-for="stat in stats" :key="stat.title"
                 class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
                 <div class="flex items-center">
@@ -128,6 +128,7 @@ import {
     Settings,
     AlertCircle,
     DollarSign,
+    TrendingUp,
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -234,6 +235,18 @@ const stats = computed(() => [
         bgColor: 'bg-yellow-100',
         iconColor: 'text-yellow-600',
         changeColor: adminStore.dashboardStats.revenueGrowth >= 0 ? 'text-green-500' : 'text-red-500'
+    },
+    {
+        title: t('adminDashboard.stats.platformFees') || 'Platform Earnings (8%)',
+        value: `₦${(adminStore.dashboardStats.totalPlatformFees || 0).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })}`,
+        change: adminStore.dashboardStats.platformFeeGrowth || 0,
+        icon: TrendingUp,
+        bgColor: 'bg-purple-100',
+        iconColor: 'text-purple-600',
+        changeColor: (adminStore.dashboardStats.platformFeeGrowth || 0) >= 0 ? 'text-green-500' : 'text-red-500'
     }
 ])
 
@@ -244,6 +257,7 @@ const iconComponents = {
     Settings,
     AlertCircle,
     DollarSign,
+    TrendingUp,
 };
 
 const resolveIcon = (icon) => {

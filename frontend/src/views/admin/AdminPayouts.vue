@@ -19,7 +19,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-4 mb-4 md:grid-cols-4">
+        <div class="grid grid-cols-1 gap-4 mb-4 sm:grid-cols-2 lg:grid-cols-5">
             <div v-for="card in summaryCards" :key="card.title" class="relative overflow-hidden rounded-xl bg-white p-5 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 flex items-start justify-between">
                 <div class="min-w-0">
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">{{ card.title }}</p>
@@ -462,7 +462,8 @@ import {
     Wallet, 
     Banknote,
     ChevronDown,
-    Send
+    Send,
+    TrendingUp
 } from 'lucide-vue-next';
 import {
     Dialog,
@@ -542,7 +543,23 @@ const formatStatusCountDetail = (status) => {
     return entries.map(([currency, data]) => t('adminPayouts.stats.payoutsCount', { count: data.count }) + ` (${currency})`).join(', ');
 };
 
+const formatPlatformFeesSummary = () => {
+    const feeTotals = summary.value.totalPlatformFees || {};
+    const entries = Object.entries(feeTotals).filter(([, amount]) => Number(amount || 0) > 0);
+    if (!entries.length) {
+        return formatCurrency(0, filters.value.currency || 'XOF');
+    }
+    return entries.map(([currency, amount]) => formatCurrency(amount, currency)).join(' / ');
+};
+
 const summaryCards = computed(() => [
+    {
+        title: t('adminPayouts.stats.platformFees') || 'Platform Earnings (8%)',
+        value: formatPlatformFeesSummary(),
+        detail: t('adminPayouts.stats.platformFeesDetail') || 'Accumulated 8% fee on settlements',
+        icon: TrendingUp,
+        iconClass: 'text-purple-600 bg-purple-50 border border-purple-100',
+    },
     {
         title: t('adminPayouts.stats.readyPayouts'),
         value: readyCount.value,
