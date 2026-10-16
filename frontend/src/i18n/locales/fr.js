@@ -4739,6 +4739,9 @@ export default {
     actions: {
       viewDetails: "Voir details",
       viewOrder: "Voir la commande",
+      processPayout: "Traiter le paiement",
+      payNow: "Payer maintenant (Forcer)",
+      retryPayout: "Reessayer le paiement",
       checkStatus: "Verifier le statut",
       checking: "Verification...",
       simulateProcessing: "Simuler traitement",
@@ -4789,6 +4792,9 @@ export default {
     toasts: {
       payoutRunComplete: "Traitement termine : {processed} traites, {failed} echoues",
       payoutRunFailed: "Echec du traitement des paiements",
+      processingSingle: "Traitement du paiement en cours...",
+      processSingleSuccess: "Paiement traite avec succes",
+      processSingleFailed: "Echec du traitement du paiement",
       reconcileComplete: "Reconciliation terminee : {checked} verifies, {failed} echoues",
       reconcileFailed: "Echec de la reconciliation AfriExchange",
       statusChanged: "Paiement passe de {previous} a {current}",

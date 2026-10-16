@@ -2594,6 +2594,39 @@ exports.processPayouts = async (req, res) => {
   }
 };
 
+exports.processSinglePayout = async (req, res) => {
+  try {
+    const payoutService = require("../services/payoutService");
+    const logger = require("../utils/logger");
+
+    logger.info(
+      `Single payout processing for ID ${req.params.id} initiated by admin: ${req.adminUser?.email || "unknown"}`
+    );
+
+    const result = await payoutService.processSinglePayout(
+      req.params.id,
+      req.body || {}
+    );
+
+    res.json({
+      success: !!result.success,
+      message: result.success
+        ? result.status === "processed"
+          ? "Payout processed successfully"
+          : "Payout initiated and is now processing"
+        : result.message || "Payout processing failed",
+      result,
+    });
+  } catch (error) {
+    console.error(`Error processing single payout ${req.params.id}:`, error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to process payout",
+      error: error.message,
+    });
+  }
+};
+
 exports.reconcileAfriExchangePayouts = async (req, res) => {
   try {
     const payoutService = require("../services/payoutService");

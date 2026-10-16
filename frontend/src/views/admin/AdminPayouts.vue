@@ -196,16 +196,22 @@
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger as-child>
-                                        <button :disabled="simulatingPayoutId === payout.id || failingPayoutId === payout.id || checkingPayoutId === payout.id"
+                                        <button :disabled="simulatingPayoutId === payout.id || failingPayoutId === payout.id || checkingPayoutId === payout.id || processingPayoutId === payout.id"
                                             class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 focus:outline-none transition disabled:opacity-75 disabled:cursor-wait">
-                                            <Loader2 v-if="simulatingPayoutId === payout.id || failingPayoutId === payout.id || checkingPayoutId === payout.id"
+                                            <Loader2 v-if="simulatingPayoutId === payout.id || failingPayoutId === payout.id || checkingPayoutId === payout.id || processingPayoutId === payout.id"
                                                 class="h-4 w-4 animate-spin text-cyan-600" />
                                             <MoreHorizontal v-else class="h-4 w-4" />
                                         </button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" class="w-48">
+                                    <DropdownMenuContent align="end" class="w-52">
                                         <DropdownMenuLabel class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1.5">Actions</DropdownMenuLabel>
                                         
+                                        <!-- Process Single Payout / Pay Now / Retry -->
+                                        <DropdownMenuItem v-if="canProcessSingle(payout)" @click="handleProcessSingle(payout)" :disabled="processingPayoutId === payout.id" class="flex items-center gap-2 cursor-pointer py-2 text-sm text-emerald-600 hover:bg-emerald-50 disabled:opacity-50 font-medium">
+                                            <Send class="h-4 w-4 text-emerald-600" :class="{ 'animate-spin': processingPayoutId === payout.id }" />
+                                            <span>{{ getProcessSingleLabel(payout) }}</span>
+                                        </DropdownMenuItem>
+
                                         <DropdownMenuItem @click="selectedPayout = payout" class="flex items-center gap-2 cursor-pointer py-2 text-sm text-slate-700 hover:bg-slate-50">
                                             <ExternalLink class="h-4 w-4 text-slate-400" />
                                             <span>{{ t('adminPayouts.actions.viewDetails') }}</span>
@@ -344,6 +350,16 @@
 
                         <div class="mt-6 flex flex-wrap justify-end gap-3">
                             <button
+                                v-if="canProcessSingle(selectedPayout)"
+                                @click="handleProcessSingle(selectedPayout)"
+                                :disabled="processingPayoutId === selectedPayout.id"
+                                class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
+                            >
+                                <Loader2 v-if="processingPayoutId === selectedPayout.id" class="h-4 w-4 animate-spin" />
+                                <Send v-else class="h-4 w-4" />
+                                <span>{{ getProcessSingleLabel(selectedPayout) }}</span>
+                            </button>
+                            <button
                                 v-if="selectedPayout.order?.orderId"
                                 @click="goToOrder(selectedPayout.order.orderId)"
                                 class="rounded-lg border border-indigo-200 px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50"
@@ -387,7 +403,8 @@ import {
     CreditCard, 
     Wallet, 
     Banknote,
-    ChevronDown
+    ChevronDown,
+    Send
 } from 'lucide-vue-next';
 import {
     Dialog,
@@ -412,6 +429,7 @@ const isLoading = ref(false);
 const isProcessing = ref(false);
 const isReconciling = ref(false);
 const checkingPayoutId = ref(null);
+const processingPayoutId = ref(null);
 const simulatingPayoutId = ref(null);
 const failingPayoutId = ref(null);
 const searchTimer = ref(null);
@@ -546,6 +564,51 @@ const reconcileAfriExchange = async () => {
         toast.error(error.response?.data?.message || t('adminPayouts.toasts.reconcileFailed'));
     } finally {
         isReconciling.value = false;
+    }
+};
+
+const canProcessSingle = (payout) => {
+    if (!payout) return false;
+    return payout.status === 'pending' || payout.status === 'failed' || payout.isReady;
+};
+
+const getProcessSingleLabel = (payout) => {
+    if (processingPayoutId.value === payout?.id) {
+        return t('adminPayouts.actions.processing');
+    }
+    if (payout?.status === 'failed') {
+        return t('adminPayouts.actions.retryPayout');
+    }
+    if (payout?.isReady) {
+        return t('adminPayouts.actions.processPayout');
+    }
+    return t('adminPayouts.actions.payNow');
+};
+
+const handleProcessSingle = async (payout) => {
+    if (!payout || processingPayoutId.value) return;
+    processingPayoutId.value = payout.id;
+    const toastId = toast.loading(t('adminPayouts.toasts.processingSingle'));
+    try {
+        const response = await apiClient.post(`/admin/payouts/${payout.id}/process`);
+        toast.dismiss(toastId);
+        if (response.data.success) {
+            toast.success(response.data.message || t('adminPayouts.toasts.processSingleSuccess'));
+            if (selectedPayout.value && selectedPayout.value.id === payout.id) {
+                selectedPayout.value = null;
+            }
+            await fetchPayouts(pagination.value.page);
+        } else {
+            toast.error(response.data.message || t('adminPayouts.toasts.processSingleFailed'));
+            await fetchPayouts(pagination.value.page);
+        }
+    } catch (error) {
+        toast.dismiss(toastId);
+        console.error('Failed to process single payout:', error);
+        toast.error(error.response?.data?.message || t('adminPayouts.toasts.processSingleFailed'));
+        await fetchPayouts(pagination.value.page);
+    } finally {
+        processingPayoutId.value = null;
     }
 };
 

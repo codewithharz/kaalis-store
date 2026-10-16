@@ -85,6 +85,7 @@ router.get("/payments/export", adminAuthMiddleware, isAdmin, adminDashboardContr
 router.get("/payouts", adminAuthMiddleware, isAdmin, adminDashboardController.getAdminPayouts);
 router.post("/payouts/reconcile-afriexchange", adminAuthMiddleware, isSuperAdmin, adminDashboardController.reconcileAfriExchangePayouts);
 router.post("/payouts/:id/check-status", adminAuthMiddleware, isAdmin, adminDashboardController.checkPayoutStatus);
+router.post("/payouts/:id/process", adminAuthMiddleware, isAdmin, adminDashboardController.processSinglePayout);
 if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
   router.post(
     "/payouts/:id/simulate-afriexchange-processing",

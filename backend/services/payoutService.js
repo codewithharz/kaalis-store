@@ -98,6 +98,86 @@ class PayoutService {
   }
 
   /**
+   * Process a single payout by ID
+   * @param {string} payoutId
+   * @param {object} options
+   */
+  async processSinglePayout(payoutId, options = {}) {
+    logger.info(`Starting single payout processing for ID: ${payoutId}`);
+
+    const payout = await VendorPayout.findById(payoutId).populate(
+      "vendorId",
+      "firstName lastName email paystack bankDetails afriExchange currency paymentMethod countryCode"
+    );
+
+    if (!payout) {
+      throw new Error(`Payout with ID ${payoutId} not found`);
+    }
+
+    if (payout.status === "processed") {
+      throw new Error("This payout has already been processed");
+    }
+
+    if (payout.status === "processing") {
+      throw new Error(
+        "This payout is currently processing. Use Check Status instead."
+      );
+    }
+
+    const vendor = payout.vendorId;
+    if (!vendor) {
+      throw new Error(`Vendor not found for payout ${payoutId}`);
+    }
+
+    let paymentMethod =
+      payout.paymentMethod || this.determinePaymentMethod(vendor);
+    const currency = payout.currency || vendor.currency || "NGN";
+
+    if (!this.hasValidPaymentSetup(vendor, paymentMethod)) {
+      const msg = `Vendor ${vendor._id} has no valid payment setup for ${paymentMethod}`;
+      logger.warn(msg);
+      await this.notifyVendorForPaymentSetup(vendor._id, paymentMethod);
+      throw new Error(msg);
+    }
+
+    try {
+      const payoutResult = await this.processPayoutWithMethod(
+        vendor,
+        payout,
+        paymentMethod,
+        currency
+      );
+
+      if (payoutResult.success) {
+        await this.updateSuccessfulPayout(payout, payoutResult);
+        return {
+          success: true,
+          status:
+            payoutResult.status === "completed" ||
+            payoutResult.status === "processed"
+              ? "processed"
+              : "processing",
+          payoutId: payout._id,
+          reference: payoutResult.reference || payoutResult.payoutId,
+          payoutResult,
+        };
+      } else {
+        const err = new Error(payoutResult.message || "Payout transfer failed");
+        await this.handleFailedPayout(payout, err);
+        return {
+          success: false,
+          status: "failed",
+          payoutId: payout._id,
+          message: payoutResult.message || "Payout transfer failed",
+        };
+      }
+    } catch (error) {
+      await this.handleFailedPayout(payout, error);
+      throw error;
+    }
+  }
+
+  /**
    * Get all pending payouts that are scheduled to be processed
    */
   async getPendingPayouts() {
@@ -802,7 +882,7 @@ class PayoutService {
       }
 
       // Update vendor stats
-      await this.updateVendorStats(payout.vendorId);
+      await this.updateVendorStats(payout.vendorId?._id || payout.vendorId);
 
       logger.info(`Successfully updated payout record ${payout._id}`);
     } catch (error) {
