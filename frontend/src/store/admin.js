@@ -298,7 +298,9 @@ export const useAdminStore = defineStore("admin", {
 
         // Fetch both stats simultaneously
         const [revenueResponse, dashboardResponse] = await Promise.all([
-          apiClient.get(`/admin/revenue-stats?days=${days}`),
+          apiClient.get(
+            `/admin/revenue-stats?days=${days}&startDate=${startDate.toISOString()}`
+          ),
           apiClient.get(
             `/admin/dashboard/stats?days=${days}&startDate=${startDate.toISOString()}`
           ),
@@ -307,10 +309,12 @@ export const useAdminStore = defineStore("admin", {
         if (dashboardResponse.data && revenueResponse.data) {
           // Process revenue data
           const revenueData =
-            revenueResponse.data.revenueData?.map((item) => ({
-              date: new Date(item.date).toISOString().split("T")[0],
-              value: item.amount,
-            })) || [];
+            dashboardResponse.data.revenueStats?.length > 0
+              ? dashboardResponse.data.revenueStats
+              : revenueResponse.data.revenueData?.map((item) => ({
+                  date: item.date,
+                  value: item.amount,
+                })) || [];
 
           // Update dashboard stats
           this.dashboardStats = {
@@ -319,7 +323,10 @@ export const useAdminStore = defineStore("admin", {
             userStats: dashboardResponse.data.userStats || [],
             orderStats: dashboardResponse.data.orderStats || [],
             productStats: dashboardResponse.data.productStats || [],
-            avgRevenue: revenueResponse.data.summary.averageDaily || 0,
+            avgRevenue:
+              dashboardResponse.data.stats?.avgRevenue ||
+              revenueResponse.data.summary?.averageDaily ||
+              0,
             avgUsers: dashboardResponse.data.stats.avgUsers || 0,
             avgOrders: dashboardResponse.data.stats.avgOrders || 0,
             avgProducts: dashboardResponse.data.stats.avgProducts || 0,

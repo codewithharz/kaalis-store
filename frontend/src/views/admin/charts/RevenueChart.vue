@@ -1,4 +1,4 @@
-# frontend/src/views/admin/charts/RevenueChart.vue
+<!-- frontend/src/views/admin/charts/RevenueChart.vue -->
 <template>
     <div class="w-full">
         <div class="flex justify-between items-center mb-4">

@@ -114,12 +114,15 @@ const chartData = computed(() => {
     try {
         const data = props.data[selectedMetric.value] || []
         return {
-            labels: data.map(item =>
-                new Date(item.date).toLocaleDateString(locale.value === 'fr' ? 'fr-FR' : 'en-US', {
+            labels: data.map(item => {
+                const d = typeof item.date === 'string' && item.date.length === 10
+                    ? new Date(item.date + 'T00:00:00')
+                    : new Date(item.date);
+                return d.toLocaleDateString(locale.value === 'fr' ? 'fr-FR' : 'en-US', {
                     month: 'short',
                     day: 'numeric'
-                })
-            ),
+                });
+            }),
             datasets: [
                 {
                     label: t(`adminStatsChart.metrics.${selectedMetric.value}`),
@@ -127,8 +130,13 @@ const chartData = computed(() => {
                     borderColor: getMetricColor.value,
                     backgroundColor: `${getMetricColor.value}20`,
                     fill: true,
-                    tension: 0.4,
-                    pointStyle: false
+                    tension: 0.3,
+                    pointStyle: 'circle',
+                    pointRadius: data.length <= 31 ? 3.5 : 0,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: getMetricColor.value,
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 1.5,
                 }
             ]
         }

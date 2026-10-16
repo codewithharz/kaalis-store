@@ -175,258 +175,59 @@ const toCsvCell = (value) => {
 exports.getDashboardStats = async (req, res) => {
   try {
     const days = parseInt(req.query.days) || 30;
-    const startDate = req.query.startDate
+    const targetDate = req.query.startDate
       ? new Date(req.query.startDate)
       : new Date();
+
+    const endDate = new Date(targetDate);
+    endDate.setHours(23, 59, 59, 999);
+
+    const startDate = new Date(targetDate);
+    startDate.setDate(startDate.getDate() - days + 1);
     startDate.setHours(0, 0, 0, 0);
 
-    const endDate = new Date(startDate);
-    const previousStartDate = new Date(startDate);
-    previousStartDate.setDate(previousStartDate.getDate() - days);
+    const prevPeriodEndDate = new Date(startDate);
+    prevPeriodEndDate.setMilliseconds(-1);
 
-    // Get current period counts
-    const [currentUsers, currentProducts, currentOrders, currentRevenue, currentPlatformFees] =
-      await Promise.all([
-        User.countDocuments({
-          createdAt: { $gte: previousStartDate, $lte: endDate },
-        }),
-        Product.countDocuments({
-          createdAt: { $gte: previousStartDate, $lte: endDate },
-        }),
-        Order.countDocuments({
-          createdAt: { $gte: previousStartDate, $lte: endDate },
-        }),
-        Payment.aggregate([
-          {
-            $match: {
-              status: "success",
-              createdAt: { $gte: previousStartDate, $lte: endDate },
-            },
-          },
-          {
-            $group: {
-              _id: null,
-              total: { $sum: "$amount" },
-            },
-          },
-        ]),
-        Order.aggregate([
-          {
-            $match: {
-              createdAt: { $gte: previousStartDate, $lte: endDate },
-            },
-          },
-          {
-            $group: {
-              _id: null,
-              total: { $sum: "$platformFee" },
-            },
-          },
-        ]),
-      ]);
+    const prevPeriodStartDate = new Date(startDate);
+    prevPeriodStartDate.setDate(prevPeriodStartDate.getDate() - days);
 
-    // Get previous period counts
-    const previousPeriodStart = new Date(previousStartDate);
-    previousPeriodStart.setDate(previousPeriodStart.getDate() - days);
-
-    const [prevUsers, prevProducts, prevOrders, prevRevenue, prevPlatformFees] =
-      await Promise.all([
-        User.countDocuments({
-          createdAt: {
-            $gte: previousPeriodStart,
-            $lt: previousStartDate,
-          },
-        }),
-        Product.countDocuments({
-          createdAt: {
-            $gte: previousPeriodStart,
-            $lt: previousStartDate,
-          },
-        }),
-        Order.countDocuments({
-          createdAt: {
-            $gte: previousPeriodStart,
-            $lt: previousStartDate,
-          },
-        }),
-        Payment.aggregate([
-          {
-            $match: {
-              status: "success",
-              createdAt: {
-                $gte: previousPeriodStart,
-                $lt: previousStartDate,
-              },
-            },
-          },
-          {
-            $group: {
-              _id: null,
-              total: { $sum: "$amount" },
-            },
-          },
-        ]),
-        Order.aggregate([
-          {
-            $match: {
-              createdAt: {
-                $gte: previousPeriodStart,
-                $lt: previousStartDate,
-              },
-            },
-          },
-          {
-            $group: {
-              _id: null,
-              total: { $sum: "$platformFee" },
-            },
-          },
-        ]),
-      ]);
-
-    // Calculate growth rates
-    const calculateGrowth = (current, previous) => {
-      return previous === 0
-        ? current > 0
-          ? 100
-          : 0
-        : ((current - previous) / previous) * 100;
+    // Format YYYY-MM-DD using local calendar date
+    const formatDateKey = (d) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
     };
 
-    // Calculate total counts
-    const [totalUsers, totalProducts, totalOrders] = await Promise.all([
+    // Calculate total catalog counts (all-time registered users & products)
+    const [totalUsers, totalProducts] = await Promise.all([
       User.countDocuments(),
       Product.countDocuments(),
-      Order.countDocuments(),
     ]);
 
-    // Get daily stats for the period
-    const [userStats, orderStats, productStats, revenueStats] =
-      await Promise.all([
-        // User stats by day
-        User.aggregate([
-          {
-            $match: {
-              createdAt: { $gte: previousStartDate, $lte: endDate },
-            },
-          },
-          {
-            $group: {
-              _id: {
-                $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
-              },
-              value: { $sum: 1 },
-            },
-          },
-          { $sort: { _id: 1 } },
-        ]),
-
-        // Order stats by day
-        Order.aggregate([
-          {
-            $match: {
-              createdAt: { $gte: previousStartDate, $lte: endDate },
-            },
-          },
-          {
-            $group: {
-              _id: {
-                $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
-              },
-              value: { $sum: 1 },
-            },
-          },
-          { $sort: { _id: 1 } },
-        ]),
-
-        // Product stats by day
-        Product.aggregate([
-          {
-            $match: {
-              createdAt: { $gte: previousStartDate, $lte: endDate },
-            },
-          },
-          {
-            $group: {
-              _id: {
-                $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
-              },
-              value: { $sum: 1 },
-            },
-          },
-          { $sort: { _id: 1 } },
-        ]),
-
-        // Revenue stats by day
-        Payment.aggregate([
-          {
-            $match: {
-              status: "success",
-              createdAt: { $gte: previousStartDate, $lte: endDate },
-            },
-          },
-          {
-            $group: {
-              _id: {
-                $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
-              },
-              value: { $sum: "$amount" },
-            },
-          },
-          { $sort: { _id: 1 } },
-        ]),
-      ]);
-
-    // Format the response
-    const formatStats = (stats) =>
-      stats.map((stat) => ({
-        date: stat._id,
-        value: stat.value,
-      }));
-
-    // Calculate growth percentages
-    const currentPeriodStats = {
-      users: userStats.reduce((sum, stat) => sum + stat.value, 0),
-      orders: orderStats.reduce((sum, stat) => sum + stat.value, 0),
-      products: productStats.reduce((sum, stat) => sum + stat.value, 0),
-      revenue: revenueStats.reduce((sum, stat) => sum + stat.value, 0),
-    };
-
-    const previousPeriod = await Promise.all([
+    // Current period counts
+    const [
+      currentUsers,
+      currentProducts,
+      currentOrders,
+      currentRevenueAgg,
+      currentPlatformFeesAgg,
+    ] = await Promise.all([
       User.countDocuments({
-        createdAt: {
-          $lt: previousStartDate,
-          $gte: new Date(
-            previousStartDate.getTime() - days * 24 * 60 * 60 * 1000
-          ),
-        },
-      }),
-      Order.countDocuments({
-        createdAt: {
-          $lt: previousStartDate,
-          $gte: new Date(
-            previousStartDate.getTime() - days * 24 * 60 * 60 * 1000
-          ),
-        },
+        createdAt: { $gte: startDate, $lte: endDate },
       }),
       Product.countDocuments({
-        createdAt: {
-          $lt: previousStartDate,
-          $gte: new Date(
-            previousStartDate.getTime() - days * 24 * 60 * 60 * 1000
-          ),
-        },
+        createdAt: { $gte: startDate, $lte: endDate },
+      }),
+      Order.countDocuments({
+        createdAt: { $gte: startDate, $lte: endDate },
       }),
       Payment.aggregate([
         {
           $match: {
             status: "success",
-            createdAt: {
-              $lt: previousStartDate,
-              $gte: new Date(
-                previousStartDate.getTime() - days * 24 * 60 * 60 * 1000
-              ),
-            },
+            createdAt: { $gte: startDate, $lte: endDate },
           },
         },
         {
@@ -436,17 +237,147 @@ exports.getDashboardStats = async (req, res) => {
           },
         },
       ]),
+      Order.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: startDate, $lte: endDate },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: "$platformFee" },
+          },
+        },
+      ]),
     ]);
 
-    const growth = {
-      users: calculateGrowth(currentPeriodStats.users, previousPeriod[0]),
-      orders: calculateGrowth(currentPeriodStats.orders, previousPeriod[1]),
-      products: calculateGrowth(currentPeriodStats.products, previousPeriod[2]),
-      revenue: calculateGrowth(
-        currentPeriodStats.revenue,
-        previousPeriod[3][0]?.total || 0
-      ),
+    // Previous period counts for growth
+    const [
+      prevUsers,
+      prevProducts,
+      prevOrders,
+      prevRevenueAgg,
+      prevPlatformFeesAgg,
+    ] = await Promise.all([
+      User.countDocuments({
+        createdAt: { $gte: prevPeriodStartDate, $lte: prevPeriodEndDate },
+      }),
+      Product.countDocuments({
+        createdAt: { $gte: prevPeriodStartDate, $lte: prevPeriodEndDate },
+      }),
+      Order.countDocuments({
+        createdAt: { $gte: prevPeriodStartDate, $lte: prevPeriodEndDate },
+      }),
+      Payment.aggregate([
+        {
+          $match: {
+            status: "success",
+            createdAt: { $gte: prevPeriodStartDate, $lte: prevPeriodEndDate },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: "$amount" },
+          },
+        },
+      ]),
+      Order.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: prevPeriodStartDate, $lte: prevPeriodEndDate },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: "$platformFee" },
+          },
+        },
+      ]),
+    ]);
+
+    const calculateGrowth = (current, previous) => {
+      if (previous === 0) return current > 0 ? 100 : 0;
+      return ((current - previous) / previous) * 100;
     };
+
+    const currentRevenue = currentRevenueAgg[0]?.total || 0;
+    const prevRevenue = prevRevenueAgg[0]?.total || 0;
+    const currentPlatformFees = currentPlatformFeesAgg[0]?.total || 0;
+    const prevPlatformFees = prevPlatformFeesAgg[0]?.total || 0;
+
+    // Get daily stats for the period
+    const [userStatsAgg, orderStatsAgg, productStatsAgg, revenueStatsAgg] =
+      await Promise.all([
+        User.aggregate([
+          { $match: { createdAt: { $gte: startDate, $lte: endDate } } },
+          {
+            $group: {
+              _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+              value: { $sum: 1 },
+            },
+          },
+        ]),
+        Order.aggregate([
+          { $match: { createdAt: { $gte: startDate, $lte: endDate } } },
+          {
+            $group: {
+              _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+              value: { $sum: 1 },
+            },
+          },
+        ]),
+        Product.aggregate([
+          { $match: { createdAt: { $gte: startDate, $lte: endDate } } },
+          {
+            $group: {
+              _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+              value: { $sum: 1 },
+            },
+          },
+        ]),
+        Payment.aggregate([
+          {
+            $match: {
+              status: "success",
+              createdAt: { $gte: startDate, $lte: endDate },
+            },
+          },
+          {
+            $group: {
+              _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+              value: { $sum: "$amount" },
+            },
+          },
+        ]),
+      ]);
+
+    // Build complete zero-filled daily series so graph always has points for every day in period
+    const buildDailySeries = (start, end, aggResults) => {
+      const map = new Map();
+      aggResults.forEach((item) => {
+        if (item._id) map.set(item._id, item.value || 0);
+      });
+
+      const series = [];
+      const cur = new Date(start);
+      while (cur <= end) {
+        const dateStr = formatDateKey(cur);
+        series.push({
+          date: dateStr,
+          value: map.get(dateStr) || 0,
+        });
+        cur.setDate(cur.getDate() + 1);
+      }
+      return series;
+    };
+
+    const userStats = buildDailySeries(startDate, endDate, userStatsAgg);
+    const orderStats = buildDailySeries(startDate, endDate, orderStatsAgg);
+    const productStats = buildDailySeries(startDate, endDate, productStatsAgg);
+    const revenueStats = buildDailySeries(startDate, endDate, revenueStatsAgg);
 
     // Calculate popular products (top 5 by sales count from Orders)
     const popularProductsRaw = await Order.aggregate([
@@ -569,11 +500,11 @@ exports.getDashboardStats = async (req, res) => {
 
     res.json({
       stats: {
-        totalUsers: currentUsers,
-        totalProducts: currentProducts,
+        totalUsers,
+        totalProducts,
         totalOrders: currentOrders,
-        totalRevenue: currentRevenue[0]?.total || 0,
-        totalPlatformFees: currentPlatformFees[0]?.total || 0,
+        totalRevenue: currentRevenue,
+        totalPlatformFees: currentPlatformFees,
         userGrowth: parseFloat(
           calculateGrowth(currentUsers, prevUsers).toFixed(2)
         ),
@@ -584,28 +515,20 @@ exports.getDashboardStats = async (req, res) => {
           calculateGrowth(currentOrders, prevOrders).toFixed(2)
         ),
         revenueGrowth: parseFloat(
-          calculateGrowth(
-            currentRevenue[0]?.total || 0,
-            prevRevenue[0]?.total || 0
-          ).toFixed(2)
+          calculateGrowth(currentRevenue, prevRevenue).toFixed(2)
         ),
         platformFeeGrowth: parseFloat(
-          calculateGrowth(
-            currentPlatformFees[0]?.total || 0,
-            prevPlatformFees[0]?.total || 0
-          ).toFixed(2)
+          calculateGrowth(currentPlatformFees, prevPlatformFees).toFixed(2)
         ),
         avgUsers: parseFloat((currentUsers / days).toFixed(2)),
         avgOrders: parseFloat((currentOrders / days).toFixed(2)),
         avgProducts: parseFloat((currentProducts / days).toFixed(2)),
-        avgRevenue: parseFloat(
-          ((currentRevenue[0]?.total || 0) / days).toFixed(2)
-        ),
+        avgRevenue: parseFloat((currentRevenue / days).toFixed(2)),
       },
-      userStats: formatStats(userStats),
-      orderStats: formatStats(orderStats),
-      productStats: formatStats(productStats),
-      revenueStats: formatStats(revenueStats),
+      userStats,
+      orderStats,
+      productStats,
+      revenueStats,
       recentActivities,
       popularProducts,
     });
@@ -1758,20 +1681,23 @@ exports.updateUserPermissions = async (req, res) => {
 exports.getRevenueStats = async (req, res) => {
   try {
     const days = parseInt(req.query.days) || 30; // Default to 30 days
+    const targetDate = req.query.startDate
+      ? new Date(req.query.startDate)
+      : new Date();
 
-    // Calculate date range
-    const endDate = new Date();
+    const endDate = new Date(targetDate);
     endDate.setHours(23, 59, 59, 999);
 
-    const startDate = new Date();
+    const startDate = new Date(targetDate);
     startDate.setDate(startDate.getDate() - days + 1);
     startDate.setHours(0, 0, 0, 0);
 
-    console.log("Date range:", {
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-      days,
-    });
+    const formatDateKey = (d) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
 
     // Get all payments within the date range
     const payments = await Payment.find({
@@ -1782,11 +1708,9 @@ exports.getRevenueStats = async (req, res) => {
       },
     }).sort({ createdAt: 1 });
 
-    console.log(`Found ${payments.length} payments in date range`);
-
     // Group payments by date
     const dailyRevenue = payments.reduce((acc, payment) => {
-      const date = new Date(payment.createdAt).toISOString().split("T")[0];
+      const date = formatDateKey(new Date(payment.createdAt));
       acc[date] = (acc[date] || 0) + payment.amount;
       return acc;
     }, {});
@@ -1796,7 +1720,7 @@ exports.getRevenueStats = async (req, res) => {
     const currentDate = new Date(startDate);
 
     while (currentDate <= endDate) {
-      const dateStr = currentDate.toISOString().split("T")[0];
+      const dateStr = formatDateKey(currentDate);
       revenueData.push({
         date: dateStr,
         amount: dailyRevenue[dateStr] || 0,
