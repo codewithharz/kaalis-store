@@ -31,7 +31,7 @@
 </template>
 
 <script>
-import { ref, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAdminStore } from '@/store/admin';
 import { ChevronDown } from 'lucide-vue-next';
@@ -63,7 +63,13 @@ ChartJS.register(
 export default {
     name: 'RevenueChart',
     components: { Line, ChevronDown },
-    setup() {
+    props: {
+        currency: {
+            type: String,
+            default: 'all'
+        }
+    },
+    setup(props) {
         const { t, locale } = useI18n();
         const adminStore = useAdminStore();
         const selectedPeriod = ref('30');
@@ -82,11 +88,21 @@ export default {
             }]
         });
 
+        const activeSymbol = computed(() => {
+            if (props.currency === 'XOF' || adminStore.selectedCurrency === 'XOF') return 'CFA';
+            return '₦';
+        });
+
+        const isZeroDecimal = computed(() => {
+            return props.currency === 'XOF' || adminStore.selectedCurrency === 'XOF';
+        });
+
         const formatAmount = (value) => {
-            if (!Number.isFinite(value) || isNaN(value)) return '₦0.00';
-            if (value >= 1000000) return `₦${(value / 1000000).toFixed(1)}M`;
-            if (value >= 1000) return `₦${(value / 1000).toFixed(1)}K`;
-            return `₦${value.toFixed(2)}`;
+            const sym = activeSymbol.value;
+            if (!Number.isFinite(value) || isNaN(value)) return `${sym} 0`;
+            if (value >= 1000000) return `${sym} ${(value / 1000000).toFixed(1)}M`;
+            if (value >= 1000) return `${sym} ${(value / 1000).toFixed(1)}K`;
+            return `${sym} ${value.toFixed(isZeroDecimal.value ? 0 : 2)}`;
         };
 
         const chartOptions = {
@@ -203,7 +219,10 @@ export default {
                 isLoading.value = true;
                 chartError.value = '';
 
-                const response = await adminStore.fetchRevenueStats(Number(selectedPeriod.value));
+                const response = await adminStore.fetchRevenueStats(
+                    Number(selectedPeriod.value),
+                    props.currency || adminStore.selectedCurrency
+                );
 
                 if (response?.revenueData?.length) {
                     const { labels, values } = processData(response.revenueData);
@@ -233,6 +252,10 @@ export default {
         };
 
         watch(selectedPeriod, () => {
+            fetchData();
+        });
+
+        watch(() => props.currency, () => {
             fetchData();
         });
 

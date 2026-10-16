@@ -18,6 +18,7 @@ const bcrypt = require("bcrypt");
 const {
   sendAdminTriggeredPasswordResetEmail,
 } = require("../services/emailService");
+const { getPlatformSettings } = require("../services/platformSettingsService");
 const mongoose = require("mongoose");
 
 const normalizePaymentCurrency = (currency) => {
@@ -179,6 +180,25 @@ exports.getDashboardStats = async (req, res) => {
       ? new Date(req.query.startDate)
       : new Date();
 
+    const rawCurrency = (req.query.currency || "all").toString().trim().toUpperCase();
+    const currencyFilter = ["NGN", "XOF", "CT"].includes(rawCurrency)
+      ? (rawCurrency === "CT" ? "XOF" : rawCurrency)
+      : "ALL";
+
+    const settings = await getPlatformSettings();
+    const xofToNgnRate = Number(settings?.currencyConversion?.xofToNgnRate || 2.7);
+    const currencySymbol = currencyFilter === "XOF" ? "CFA" : "₦";
+
+    let orderCurrencyMatch = {};
+    let paymentCurrencyMatch = {};
+    if (currencyFilter === "NGN") {
+      orderCurrencyMatch = { currency: { $in: ["NGN", null] } };
+      paymentCurrencyMatch = { currency: { $in: ["NGN", null] } };
+    } else if (currencyFilter === "XOF") {
+      orderCurrencyMatch = { currency: { $in: ["XOF", "CT"] } };
+      paymentCurrencyMatch = { currency: { $in: ["XOF", "CT"] } };
+    }
+
     const endDate = new Date(targetDate);
     endDate.setHours(23, 59, 59, 999);
 
@@ -206,54 +226,13 @@ exports.getDashboardStats = async (req, res) => {
       Product.countDocuments(),
     ]);
 
-    // Current period counts
+    // Current and previous period counts and sums
     const [
       currentUsers,
       currentProducts,
       currentOrders,
       currentRevenueAgg,
       currentPlatformFeesAgg,
-    ] = await Promise.all([
-      User.countDocuments({
-        createdAt: { $gte: startDate, $lte: endDate },
-      }),
-      Product.countDocuments({
-        createdAt: { $gte: startDate, $lte: endDate },
-      }),
-      Order.countDocuments({
-        createdAt: { $gte: startDate, $lte: endDate },
-      }),
-      Payment.aggregate([
-        {
-          $match: {
-            status: "success",
-            createdAt: { $gte: startDate, $lte: endDate },
-          },
-        },
-        {
-          $group: {
-            _id: null,
-            total: { $sum: "$amount" },
-          },
-        },
-      ]),
-      Order.aggregate([
-        {
-          $match: {
-            createdAt: { $gte: startDate, $lte: endDate },
-          },
-        },
-        {
-          $group: {
-            _id: null,
-            total: { $sum: "$platformFee" },
-          },
-        },
-      ]),
-    ]);
-
-    // Previous period counts for growth
-    const [
       prevUsers,
       prevProducts,
       prevOrders,
@@ -261,6 +240,45 @@ exports.getDashboardStats = async (req, res) => {
       prevPlatformFeesAgg,
     ] = await Promise.all([
       User.countDocuments({
+        createdAt: { $gte: startDate, $lte: endDate },
+      }),
+      Product.countDocuments({
+        createdAt: { $gte: startDate, $lte: endDate },
+      }),
+      Order.countDocuments({
+        createdAt: { $gte: startDate, $lte: endDate },
+        ...orderCurrencyMatch,
+      }),
+      Payment.aggregate([
+        {
+          $match: {
+            status: "success",
+            createdAt: { $gte: startDate, $lte: endDate },
+            ...paymentCurrencyMatch,
+          },
+        },
+        {
+          $group: {
+            _id: currencyFilter === "ALL" ? "$currency" : null,
+            total: { $sum: "$amount" },
+          },
+        },
+      ]),
+      Order.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: startDate, $lte: endDate },
+            ...orderCurrencyMatch,
+          },
+        },
+        {
+          $group: {
+            _id: currencyFilter === "ALL" ? "$currency" : null,
+            total: { $sum: "$platformFee" },
+          },
+        },
+      ]),
+      User.countDocuments({
         createdAt: { $gte: prevPeriodStartDate, $lte: prevPeriodEndDate },
       }),
       Product.countDocuments({
@@ -268,17 +286,19 @@ exports.getDashboardStats = async (req, res) => {
       }),
       Order.countDocuments({
         createdAt: { $gte: prevPeriodStartDate, $lte: prevPeriodEndDate },
+        ...orderCurrencyMatch,
       }),
       Payment.aggregate([
         {
           $match: {
             status: "success",
             createdAt: { $gte: prevPeriodStartDate, $lte: prevPeriodEndDate },
+            ...paymentCurrencyMatch,
           },
         },
         {
           $group: {
-            _id: null,
+            _id: currencyFilter === "ALL" ? "$currency" : null,
             total: { $sum: "$amount" },
           },
         },
@@ -287,11 +307,12 @@ exports.getDashboardStats = async (req, res) => {
         {
           $match: {
             createdAt: { $gte: prevPeriodStartDate, $lte: prevPeriodEndDate },
+            ...orderCurrencyMatch,
           },
         },
         {
           $group: {
-            _id: null,
+            _id: currencyFilter === "ALL" ? "$currency" : null,
             total: { $sum: "$platformFee" },
           },
         },
@@ -303,10 +324,21 @@ exports.getDashboardStats = async (req, res) => {
       return ((current - previous) / previous) * 100;
     };
 
-    const currentRevenue = currentRevenueAgg[0]?.total || 0;
-    const prevRevenue = prevRevenueAgg[0]?.total || 0;
-    const currentPlatformFees = currentPlatformFeesAgg[0]?.total || 0;
-    const prevPlatformFees = prevPlatformFeesAgg[0]?.total || 0;
+    const sumConverted = (aggResults, rate) => {
+      if (currencyFilter !== "ALL") {
+        return aggResults[0]?.total || 0;
+      }
+      return (aggResults || []).reduce((acc, row) => {
+        const isXof = row._id === "XOF" || row._id === "CT";
+        const val = Number(row.total || 0);
+        return acc + (isXof ? val * rate : val);
+      }, 0);
+    };
+
+    const currentRevenue = parseFloat(sumConverted(currentRevenueAgg, xofToNgnRate).toFixed(2));
+    const prevRevenue = parseFloat(sumConverted(prevRevenueAgg, xofToNgnRate).toFixed(2));
+    const currentPlatformFees = parseFloat(sumConverted(currentPlatformFeesAgg, xofToNgnRate).toFixed(2));
+    const prevPlatformFees = parseFloat(sumConverted(prevPlatformFeesAgg, xofToNgnRate).toFixed(2));
 
     // Get daily stats for the period
     const [userStatsAgg, orderStatsAgg, productStatsAgg, revenueStatsAgg] =
@@ -321,7 +353,12 @@ exports.getDashboardStats = async (req, res) => {
           },
         ]),
         Order.aggregate([
-          { $match: { createdAt: { $gte: startDate, $lte: endDate } } },
+          {
+            $match: {
+              createdAt: { $gte: startDate, $lte: endDate },
+              ...orderCurrencyMatch,
+            },
+          },
           {
             $group: {
               _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
@@ -343,11 +380,15 @@ exports.getDashboardStats = async (req, res) => {
             $match: {
               status: "success",
               createdAt: { $gte: startDate, $lte: endDate },
+              ...paymentCurrencyMatch,
             },
           },
           {
             $group: {
-              _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+              _id: {
+                date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                currency: "$currency",
+              },
               value: { $sum: "$amount" },
             },
           },
@@ -374,10 +415,33 @@ exports.getDashboardStats = async (req, res) => {
       return series;
     };
 
+    const buildRevenueDailySeries = (start, end, aggResults, rate) => {
+      const map = new Map();
+      (aggResults || []).forEach((item) => {
+        const dateStr = typeof item._id === "object" ? item._id?.date : item._id;
+        if (!dateStr) return;
+        const isXof = item._id?.currency === "XOF" || item._id?.currency === "CT";
+        const amt = Number(item.value || 0) * (currencyFilter === "ALL" && isXof ? rate : 1);
+        map.set(dateStr, (map.get(dateStr) || 0) + amt);
+      });
+
+      const series = [];
+      const cur = new Date(start);
+      while (cur <= end) {
+        const dateStr = formatDateKey(cur);
+        series.push({
+          date: dateStr,
+          value: parseFloat((map.get(dateStr) || 0).toFixed(2)),
+        });
+        cur.setDate(cur.getDate() + 1);
+      }
+      return series;
+    };
+
     const userStats = buildDailySeries(startDate, endDate, userStatsAgg);
     const orderStats = buildDailySeries(startDate, endDate, orderStatsAgg);
     const productStats = buildDailySeries(startDate, endDate, productStatsAgg);
-    const revenueStats = buildDailySeries(startDate, endDate, revenueStatsAgg);
+    const revenueStats = buildRevenueDailySeries(startDate, endDate, revenueStatsAgg, xofToNgnRate);
 
     // Calculate popular products (top 5 by sales count from Orders)
     const popularProductsRaw = await Order.aggregate([
@@ -505,6 +569,9 @@ exports.getDashboardStats = async (req, res) => {
         totalOrders: currentOrders,
         totalRevenue: currentRevenue,
         totalPlatformFees: currentPlatformFees,
+        currency: currencyFilter,
+        currencySymbol,
+        xofToNgnRate,
         userGrowth: parseFloat(
           calculateGrowth(currentUsers, prevUsers).toFixed(2)
         ),
@@ -1685,6 +1752,22 @@ exports.getRevenueStats = async (req, res) => {
       ? new Date(req.query.startDate)
       : new Date();
 
+    const rawCurrency = (req.query.currency || "all").toString().trim().toUpperCase();
+    const currencyFilter = ["NGN", "XOF", "CT"].includes(rawCurrency)
+      ? (rawCurrency === "CT" ? "XOF" : rawCurrency)
+      : "ALL";
+
+    const settings = await getPlatformSettings();
+    const xofToNgnRate = Number(settings?.currencyConversion?.xofToNgnRate || 2.7);
+    const currencySymbol = currencyFilter === "XOF" ? "CFA" : "₦";
+
+    let paymentCurrencyMatch = {};
+    if (currencyFilter === "NGN") {
+      paymentCurrencyMatch = { currency: { $in: ["NGN", null] } };
+    } else if (currencyFilter === "XOF") {
+      paymentCurrencyMatch = { currency: { $in: ["XOF", "CT"] } };
+    }
+
     const endDate = new Date(targetDate);
     endDate.setHours(23, 59, 59, 999);
 
@@ -1706,12 +1789,15 @@ exports.getRevenueStats = async (req, res) => {
         $gte: startDate,
         $lte: endDate,
       },
+      ...paymentCurrencyMatch,
     }).sort({ createdAt: 1 });
 
-    // Group payments by date
+    // Group payments by date, converting XOF to NGN if in ALL mode
     const dailyRevenue = payments.reduce((acc, payment) => {
       const date = formatDateKey(new Date(payment.createdAt));
-      acc[date] = (acc[date] || 0) + payment.amount;
+      const isXof = payment.currency === "XOF" || payment.currency === "CT";
+      const amount = (payment.amount || 0) * (currencyFilter === "ALL" && isXof ? xofToNgnRate : 1);
+      acc[date] = (acc[date] || 0) + amount;
       return acc;
     }, {});
 
@@ -1723,14 +1809,14 @@ exports.getRevenueStats = async (req, res) => {
       const dateStr = formatDateKey(currentDate);
       revenueData.push({
         date: dateStr,
-        amount: dailyRevenue[dateStr] || 0,
+        amount: parseFloat((dailyRevenue[dateStr] || 0).toFixed(2)),
       });
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
     // Calculate summary statistics
-    const totalRevenue = revenueData.reduce((sum, day) => sum + day.amount, 0);
-    const averageDaily = totalRevenue / revenueData.length;
+    const totalRevenue = parseFloat(revenueData.reduce((sum, day) => sum + day.amount, 0).toFixed(2));
+    const averageDaily = parseFloat((totalRevenue / (revenueData.length || 1)).toFixed(2));
 
     // Calculate previous period for growth comparison
     const previousStartDate = new Date(startDate);
@@ -1739,31 +1825,28 @@ exports.getRevenueStats = async (req, res) => {
     const previousEndDate = new Date(startDate);
     previousEndDate.setDate(previousEndDate.getDate() - 1);
 
-    const previousPeriodRevenue = await Payment.aggregate([
-      {
-        $match: {
-          status: "success",
-          createdAt: {
-            $gte: previousStartDate,
-            $lte: previousEndDate,
-          },
-        },
+    const prevPayments = await Payment.find({
+      status: "success",
+      createdAt: {
+        $gte: previousStartDate,
+        $lte: previousEndDate,
       },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: "$amount" },
-        },
-      },
-    ]);
+      ...paymentCurrencyMatch,
+    });
 
-    const previousTotal = previousPeriodRevenue[0]?.total || 0;
+    const previousTotal = prevPayments.reduce((sum, p) => {
+      const isXof = p.currency === "XOF" || p.currency === "CT";
+      const amount = (p.amount || 0) * (currencyFilter === "ALL" && isXof ? xofToNgnRate : 1);
+      return sum + amount;
+    }, 0);
+
     const growth =
       previousTotal !== 0
         ? ((totalRevenue - previousTotal) / previousTotal) * 100
         : 0;
 
     console.log("Revenue summary:", {
+      currency: currencyFilter,
       totalRevenue,
       averageDaily,
       growth,
@@ -1775,6 +1858,9 @@ exports.getRevenueStats = async (req, res) => {
     res.json({
       success: true,
       revenueData,
+      currency: currencyFilter,
+      currencySymbol,
+      xofToNgnRate,
       summary: {
         totalRevenue,
         averageDaily,

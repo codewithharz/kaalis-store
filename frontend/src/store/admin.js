@@ -7,12 +7,16 @@ export const useAdminStore = defineStore("admin", {
   state: () => ({
     adminUser: JSON.parse(localStorage.getItem("adminUser")) || null,
     token: localStorage.getItem("adminToken") || null,
+    selectedCurrency: "all",
     dashboardStats: {
       totalUsers: 0,
       totalProducts: 0,
       totalOrders: 0,
       totalRevenue: 0,
       totalPlatformFees: 0,
+      currency: "ALL",
+      currencySymbol: "₦",
+      xofToNgnRate: 2.7,
       userGrowth: 0,
       productGrowth: 0,
       orderGrowth: 0,
@@ -281,9 +285,16 @@ export const useAdminStore = defineStore("admin", {
       }
     },
 
-    async fetchDashboardStats({ period = "30d", startDate = new Date() } = {}) {
+    async fetchDashboardStats({
+      period = "30d",
+      startDate = new Date(),
+      currency = null,
+    } = {}) {
       this.isLoading = true;
       try {
+        const activeCurrency = currency || this.selectedCurrency || "all";
+        this.selectedCurrency = activeCurrency;
+
         // Convert period to days
         const days =
           period === "7d"
@@ -296,13 +307,13 @@ export const useAdminStore = defineStore("admin", {
             ? 365
             : 30;
 
-        // Fetch both stats simultaneously
+        // Fetch both stats simultaneously with currency param
         const [revenueResponse, dashboardResponse] = await Promise.all([
           apiClient.get(
-            `/admin/revenue-stats?days=${days}&startDate=${startDate.toISOString()}`
+            `/admin/revenue-stats?days=${days}&startDate=${startDate.toISOString()}&currency=${activeCurrency}`
           ),
           apiClient.get(
-            `/admin/dashboard/stats?days=${days}&startDate=${startDate.toISOString()}`
+            `/admin/dashboard/stats?days=${days}&startDate=${startDate.toISOString()}&currency=${activeCurrency}`
           ),
         ]);
 
@@ -319,6 +330,9 @@ export const useAdminStore = defineStore("admin", {
           // Update dashboard stats
           this.dashboardStats = {
             ...dashboardResponse.data.stats,
+            currency: dashboardResponse.data.stats?.currency || activeCurrency.toUpperCase(),
+            currencySymbol: dashboardResponse.data.stats?.currencySymbol || (activeCurrency === "XOF" ? "CFA" : "₦"),
+            xofToNgnRate: dashboardResponse.data.stats?.xofToNgnRate || 2.7,
             revenueStats: revenueData,
             userStats: dashboardResponse.data.userStats || [],
             orderStats: dashboardResponse.data.orderStats || [],
@@ -360,11 +374,12 @@ export const useAdminStore = defineStore("admin", {
       }
     },
 
-    async fetchRevenueStats(days = 7) {
+    async fetchRevenueStats(days = 7, currency = null) {
       try {
+        const activeCurrency = currency || this.selectedCurrency || "all";
         console.log("Fetching revenue stats...");
         const response = await apiClient.get(
-          `/admin/revenue-stats?days=${days}`
+          `/admin/revenue-stats?days=${days}&currency=${activeCurrency}`
         );
         console.log("Revenue stats response:", response.data);
         return response.data;

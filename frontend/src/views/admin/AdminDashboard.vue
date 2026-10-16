@@ -1,10 +1,26 @@
 <!-- frontend/src/views/admin/AdminDashboard.vue -->
 <template>
     <div>
-        <!-- Time Period Selector -->
-        <TimePeriodSelector v-model="selectedPeriod" :current-date="periodStartDate"
-            :is-current-period="isCurrentPeriod" :is-loading="adminStore.isLoading" @prev="handlePrevPeriod"
-            @next="handleNextPeriod" />
+        <!-- Time Period & Currency Selector -->
+        <TimePeriodSelector
+            v-model="selectedPeriod"
+            v-model:currency="selectedCurrency"
+            :current-date="periodStartDate"
+            :is-current-period="isCurrentPeriod"
+            :is-loading="adminStore.isLoading"
+            @prev="handlePrevPeriod"
+            @next="handleNextPeriod"
+        />
+
+        <!-- Currency Conversion Info Banner (When 'all' mode is active) -->
+        <div v-if="selectedCurrency === 'all' && adminStore.dashboardStats?.xofToNgnRate"
+            class="flex items-center justify-between px-4 py-2 mb-3 bg-blue-50/80 border border-blue-100 rounded-lg text-xs text-blue-700">
+            <div class="flex items-center gap-1.5 font-medium">
+                <Globe class="w-4 h-4 text-blue-500 flex-shrink-0" />
+                <span>{{ t('adminDashboard.convertedAtRate', { rate: adminStore.dashboardStats.xofToNgnRate }) }}</span>
+            </div>
+            <span class="text-blue-500 font-mono text-[11px] hidden sm:inline">(All Franc CFA converted to ₦)</span>
+        </div>
 
         <!-- Stats Overview -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-3">
@@ -86,7 +102,7 @@
             <!-- Revenue Chart -->
             <div class="bg-white rounded-lg shadow-sm p-6">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">{{ t('adminDashboard.revenueOverviewTitle') }}</h3>
-                <RevenueChart />
+                <RevenueChart :currency="selectedCurrency" />
             </div>
 
             <!-- Popular Products -->
@@ -129,16 +145,26 @@ import {
     AlertCircle,
     DollarSign,
     TrendingUp,
+    Globe,
 } from 'lucide-vue-next'
 
 const router = useRouter()
 const { t } = useI18n()
 const adminStore = useAdminStore()
 
-// Time period management
+// Time period & currency management
 const selectedPeriod = ref('30d')
+const selectedCurrency = ref(adminStore.selectedCurrency || 'all')
 const periodStartDate = ref(new Date())
 const isCurrentPeriod = ref(true)
+
+const currencySymbol = computed(() => {
+    return adminStore.dashboardStats.currencySymbol || (selectedCurrency.value === 'XOF' ? 'CFA' : '₦')
+})
+
+const isZeroDecimal = computed(() => {
+    return adminStore.dashboardStats.currency === 'XOF' || selectedCurrency.value === 'XOF'
+})
 
 // Initialize with default activities
 const recentActivities = ref([
@@ -226,9 +252,9 @@ const stats = computed(() => [
     },
     {
         title: t('adminDashboard.stats.revenue'),
-        value: `₦${adminStore.dashboardStats.totalRevenue.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
+        value: `${currencySymbol.value} ${Number(adminStore.dashboardStats.totalRevenue || 0).toLocaleString(undefined, {
+            minimumFractionDigits: isZeroDecimal.value ? 0 : 2,
+            maximumFractionDigits: isZeroDecimal.value ? 0 : 2
         })}`,
         change: adminStore.dashboardStats.revenueGrowth || 0,
         icon: DollarSign,
@@ -238,9 +264,9 @@ const stats = computed(() => [
     },
     {
         title: t('adminDashboard.stats.platformFees') || 'Platform Earnings (8%)',
-        value: `₦${(adminStore.dashboardStats.totalPlatformFees || 0).toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
+        value: `${currencySymbol.value} ${Number(adminStore.dashboardStats.totalPlatformFees || 0).toLocaleString(undefined, {
+            minimumFractionDigits: isZeroDecimal.value ? 0 : 2,
+            maximumFractionDigits: isZeroDecimal.value ? 0 : 2
         })}`,
         change: adminStore.dashboardStats.platformFeeGrowth || 0,
         icon: TrendingUp,
@@ -344,7 +370,8 @@ const fetchData = async () => {
     try {
         const response = await adminStore.fetchDashboardStats({
             period: selectedPeriod.value,
-            startDate: periodStartDate.value
+            startDate: periodStartDate.value,
+            currency: selectedCurrency.value
         })
         console.log('Dashboard response:', response)
 
@@ -364,6 +391,12 @@ const fetchData = async () => {
 watch(selectedPeriod, () => {
     periodStartDate.value = new Date()
     isCurrentPeriod.value = true
+    fetchData()
+})
+
+// Watch currency filter changes
+watch(selectedCurrency, (newCurrency) => {
+    adminStore.selectedCurrency = newCurrency
     fetchData()
 })
 

@@ -4121,6 +4121,14 @@ export default {
       revenue: "Revenus bruts",
       platformFees: "Gains de la plateforme (8%)",
     },
+    currencyFilter: {
+      label: "Devise",
+      all: "Tout (₦)",
+      allTitle: "Toutes les devises converties en Naira",
+      ngn: "NGN",
+      xof: "XOF / CT",
+    },
+    convertedAtRate: "Comprend les Francs CFA convertis à 1 XOF = ₦{rate}",
   },
   adminCategories: {
     title: "Gestion des categories",

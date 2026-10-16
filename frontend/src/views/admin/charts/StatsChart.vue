@@ -77,6 +77,8 @@ ChartJS.register(
     Filler
 )
 
+import { useAdminStore } from '@/store/admin'
+
 const props = defineProps({
     data: {
         type: Object,
@@ -88,6 +90,7 @@ const props = defineProps({
     }
 })
 const { t, locale } = useI18n()
+const adminStore = useAdminStore()
 
 const selectedMetric = ref('revenue')
 const isLoading = ref(false)
@@ -103,12 +106,21 @@ const getMetricColor = computed(() => {
     return colors[selectedMetric.value]
 })
 
+const activeSymbol = computed(() => {
+    return adminStore.dashboardStats.currencySymbol || (adminStore.selectedCurrency === 'XOF' ? 'CFA' : '₦')
+})
+
+const isZeroDecimal = computed(() => {
+    return adminStore.dashboardStats.currency === 'XOF' || adminStore.selectedCurrency === 'XOF'
+})
+
 const formatAmount = (value) => {
-    if (!Number.isFinite(value) || isNaN(value)) return '₦0.00';
-    if (value >= 1000000) return `₦${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `₦${(value / 1000).toFixed(1)}K`;
-    return `₦${value.toFixed(2)}`;
-};
+    const sym = activeSymbol.value
+    if (!Number.isFinite(value) || isNaN(value)) return `${sym} 0`
+    if (value >= 1000000) return `${sym} ${(value / 1000000).toFixed(1)}M`
+    if (value >= 1000) return `${sym} ${(value / 1000).toFixed(1)}K`
+    return `${sym} ${value.toFixed(isZeroDecimal.value ? 0 : 2)}`
+}
 
 const chartData = computed(() => {
     try {

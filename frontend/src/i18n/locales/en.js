@@ -4060,6 +4060,14 @@ export default {
       revenue: "Gross Revenue",
       platformFees: "Platform Earnings (8%)",
     },
+    currencyFilter: {
+      label: "Currency",
+      all: "All (₦)",
+      allTitle: "All currencies converted to Naira",
+      ngn: "NGN",
+      xof: "XOF / CT",
+    },
+    convertedAtRate: "Includes Franc CFA converted at 1 XOF = ₦{rate}",
   },
   adminCategories: {
     title: "Category Management",
